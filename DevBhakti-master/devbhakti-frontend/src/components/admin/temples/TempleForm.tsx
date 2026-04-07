@@ -1,0 +1,863 @@
+"use client";
+
+import React, { useState, useEffect } from "react";
+import {
+    ArrowLeft,
+    Upload,
+    X,
+    Plus,
+    Layout,
+    Building2,
+    MapPin,
+    Clock,
+    ImageIcon,
+    Trash2
+} from "lucide-react";
+import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
+import { Textarea } from "@/components/ui/textarea";
+import { Separator } from "@/components/ui/separator";
+import { useToast } from "@/hooks/use-toast";
+import { ImageCropper } from "@/components/admin/ImageCropper";
+import { Switch } from "@/components/ui/switch";
+import { Label } from "@/components/ui/label";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { useLanguage, Language } from "@/context/LanguageContext";
+import { API_URL } from "@/config/apiConfig";
+import { fetchCommissionSlabsAdmin } from "@/api/adminController";
+
+interface TempleFormProps {
+    mode: "create" | "edit";
+    initialData?: any;
+    onSubmit: (formData: FormData) => Promise<void>;
+    isLoading: boolean;
+    allPoojas: any[];
+    onAddMasterPooja?: (name: string) => Promise<string | null>;
+}
+
+export function TempleForm({
+    mode,
+    initialData,
+    onSubmit,
+    isLoading,
+    allPoojas,
+    onAddMasterPooja
+}: TempleFormProps) {
+    const { t, language, setLanguage } = useLanguage();
+    const { toast } = useToast();
+
+    // Form State
+    const [formData, setFormData] = useState({
+        name: "",
+        email: "",
+        phone: "",
+        name_en: "",
+        name_hi: "",
+        name_mr: "",
+        location_en: "",
+        location_hi: "",
+        location_mr: "",
+        fullAddress_en: "",
+        fullAddress_hi: "",
+        fullAddress_mr: "",
+        category_en: "",
+        category_hi: "",
+        category_mr: "",
+
+        description_en: "",
+        description_hi: "",
+        description_mr: "",
+        viewers: "",
+        templePhone: "",
+        website: "",
+        mapUrl: "",
+        rating: "0",
+        reviewsCount: "0",
+        slug: "",
+        subdomain: "",
+        urlType: "slug",
+        isActive: "true",
+        liveStatus: "false",
+        poojaCommissionRate: "5.0",
+        productCommissionRate: "10.0",
+        operatingHours: [
+            { label: "Morning", start: "07:00 AM", end: "01:00 PM", active: true },
+            { label: "Evening", start: "05:00 PM", end: "10:00 PM", active: true }
+        ],
+    });
+
+    const [selectedPoojaIds, setSelectedPoojaIds] = useState<string[]>([]);
+    const [inlineEvents, setInlineEvents] = useState<any[]>([]);
+    const [marketplaceSlabs, setMarketplaceSlabs] = useState<any[]>([]);
+    const [poojaSlabs, setPoojaSlabs] = useState<any[]>([]);
+    const [marketplaceRateType, setMarketplaceRateType] = useState<"DEFAULT" | "CUSTOM">("DEFAULT");
+    const [poojaRateType, setPoojaRateType] = useState<"DEFAULT" | "CUSTOM">("DEFAULT");
+
+    // Images State
+    const [mainImage, setMainImage] = useState<File | null>(null);
+    const [mainImagePreview, setMainImagePreview] = useState<string>("");
+    const [existingMainImage, setExistingMainImage] = useState<string>("");
+    const [heroImages, setHeroImages] = useState<File[]>([]);
+    const [heroPreviews, setHeroPreviews] = useState<string[]>([]);
+    const [existingHeroImages, setExistingHeroImages] = useState<string[]>([]);
+
+    // Cropping State
+    const [showCropper, setShowCropper] = useState(false);
+    const [tempImage, setTempImage] = useState<string | null>(null);
+    const [cropType, setCropType] = useState<"main" | "hero">("main");
+    const [cropTitle, setCropTitle] = useState("Crop Image");
+    const [initialAspect, setInitialAspect] = useState(16 / 9);
+
+    const [newPoojaName, setNewPoojaName] = useState("");
+    const [isAddingPooja, setIsAddingPooja] = useState(false);
+
+    useEffect(() => {
+        if (mode === "edit" && initialData) {
+            const stripPrefix = (ph: string) => {
+                if (!ph) return "";
+                let clean = ph.replace(/\D/g, '');
+                if (clean.length === 12 && clean.startsWith('91')) return clean.substring(2);
+                return clean;
+            };
+
+            const tData = initialData.temple || {};
+            setFormData({
+                name: initialData.name || "",
+                email: initialData.email || "",
+                phone: stripPrefix(initialData.phone || ""),
+                name_en: tData.name_en || tData.name || "",
+                name_hi: tData.name_hi || "",
+                name_mr: tData.name_mr || "",
+                location_en: tData.location_en || tData.location || "",
+                location_hi: tData.location_hi || "",
+                location_mr: tData.location_mr || "",
+                fullAddress_en: tData.fullAddress_en || tData.fullAddress || "",
+                fullAddress_hi: tData.fullAddress_hi || "",
+                fullAddress_mr: tData.fullAddress_mr || "",
+                category_en: tData.category_en || tData.category || "",
+                category_hi: tData.category_hi || "",
+                category_mr: tData.category_mr || "",
+
+                description_en: tData.description_en || tData.description || "",
+                description_hi: tData.description_hi || "",
+                description_mr: tData.description_mr || "",
+                viewers: tData.viewers || "",
+                templePhone: stripPrefix(tData.phone || ""),
+                website: tData.website || "",
+                mapUrl: tData.mapUrl || "",
+                rating: String(tData.rating || "0"),
+                reviewsCount: String(tData.reviewsCount || "0"),
+                slug: tData.slug || "",
+                subdomain: tData.subdomain || "",
+                urlType: tData.urlType || "slug",
+                isActive: String(tData.isActive ?? true),
+                liveStatus: String(tData.liveStatus || false),
+                poojaCommissionRate: String(tData.poojaCommissionRate || "5.0"),
+                productCommissionRate: String(tData.productCommissionRate || "10.0"),
+                operatingHours: tData.operatingHours || [
+                    { label: "Morning", start: "07:00 AM", end: "01:00 PM", active: true },
+                    { label: "Evening", start: "05:00 PM", end: "10:00 PM", active: true }
+                ],
+            });
+
+            setExistingMainImage(tData.image || "");
+            setExistingHeroImages(tData.heroImages || []);
+
+            if (tData.poojas) {
+                setSelectedPoojaIds(tData.poojas.map((p: any) => p.masterPoojaId || p.id));
+            }
+
+            if (tData.events) {
+                setInlineEvents(tData.events.map((ev: any) => ({
+                    name: ev.name,
+                    date: ev.date,
+                    description: ev.description || ""
+                })));
+            }
+            
+            // Load existing slabs
+            if (tData.id) {
+                // Slabs are usually fetched via a separate API call. 
+            }
+        }
+    }, [mode, initialData]);
+
+    // Fetch slabs if in edit mode
+    useEffect(() => {
+        if (mode === "edit" && initialData?.temple?.id) {
+            loadSlabs(initialData.temple.id);
+        } else if (mode === "create") {
+            loadGlobalSlabs();
+        }
+    }, [mode, initialData]);
+
+    const loadGlobalSlabs = async () => {
+        try {
+            const mRes = await fetchCommissionSlabsAdmin('GLOBAL', undefined, 'MARKETPLACE');
+            if (mRes.success) setMarketplaceSlabs(mRes.data);
+            const pRes = await fetchCommissionSlabsAdmin('GLOBAL', undefined, 'POOJA');
+            if (pRes.success) setPoojaSlabs(pRes.data);
+        } catch (e) {
+            console.error("Error loading global slabs", e);
+        }
+    };
+
+    const loadSlabs = async (templeId: string) => {
+        try {
+            const mRes = await fetchCommissionSlabsAdmin('TEMPLE', templeId, 'MARKETPLACE');
+            if (mRes.success && mRes.data.length > 0) {
+                const dedupe = (list: any[]) => list.filter((s, i, self) => i === self.findIndex(t => t.minAmount === s.minAmount));
+                setMarketplaceSlabs(dedupe(mRes.data));
+                setMarketplaceRateType("CUSTOM");
+            } else {
+                const globalM = await fetchCommissionSlabsAdmin('GLOBAL', undefined, 'MARKETPLACE');
+                if (globalM.success) setMarketplaceSlabs(globalM.data);
+            }
+
+            const pRes = await fetchCommissionSlabsAdmin('TEMPLE', templeId, 'POOJA');
+            if (pRes.success && pRes.data.length > 0) {
+                const dedupe = (list: any[]) => list.filter((s, i, self) => i === self.findIndex(t => t.minAmount === s.minAmount));
+                setPoojaSlabs(dedupe(pRes.data));
+                setPoojaRateType("CUSTOM");
+            } else {
+                const globalP = await fetchCommissionSlabsAdmin('GLOBAL', undefined, 'POOJA');
+                if (globalP.success) setPoojaSlabs(globalP.data);
+            }
+        } catch (e) {
+            console.error("Error loading temple slabs", e);
+        }
+    };
+
+    const handleMarketplaceRateTypeChange = async (checked: boolean) => {
+        const newType = checked ? "CUSTOM" : "DEFAULT";
+        setMarketplaceRateType(newType);
+        if (newType === "DEFAULT") {
+            const res = await fetchCommissionSlabsAdmin('GLOBAL', undefined, 'MARKETPLACE');
+            if (res.success) setMarketplaceSlabs(res.data);
+        }
+    };
+
+    const handlePoojaRateTypeChange = async (checked: boolean) => {
+        const newType = checked ? "CUSTOM" : "DEFAULT";
+        setPoojaRateType(newType);
+        if (newType === "DEFAULT") {
+            const res = await fetchCommissionSlabsAdmin('GLOBAL', undefined, 'POOJA');
+            if (res.success) setPoojaSlabs(res.data);
+        }
+    };
+
+    const getFullImageUrl = (path: string) => {
+        if (!path) return "";
+        if (path.startsWith('http')) return path;
+        return `${API_URL.replace('/api', '')}${path}`;
+    };
+
+    const handleMainImageChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+        const file = e.target.files?.[0];
+        if (file) {
+            const reader = new FileReader();
+            reader.onload = () => {
+                setTempImage(reader.result as string);
+                setCropType("main");
+                setCropTitle(t('registration_form.crop_modal.profile_title'));
+                setInitialAspect(16 / 9);
+                setShowCropper(true);
+            };
+            reader.readAsDataURL(file);
+            e.target.value = '';
+        }
+    };
+
+    const handleHeroImagesChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+        const files = Array.from(e.target.files || []);
+        if (files.length > 0) {
+            const reader = new FileReader();
+            reader.onload = () => {
+                setTempImage(reader.result as string);
+                setCropType("hero");
+                setCropTitle(t('registration_form.crop_modal.banner_title'));
+                setInitialAspect(1920 / 800);
+                setShowCropper(true);
+            };
+            reader.readAsDataURL(files[0]);
+            e.target.value = '';
+        }
+    };
+
+    const handleCropComplete = (croppedFile: File) => {
+        if (cropType === "main") {
+            setMainImage(croppedFile);
+            setMainImagePreview(URL.createObjectURL(croppedFile));
+        } else {
+            setHeroImages(prev => [...prev, croppedFile]);
+            setHeroPreviews(prev => [...prev, URL.createObjectURL(croppedFile)]);
+        }
+        setShowCropper(false);
+        setTempImage(null);
+    };
+
+    const removeHeroImage = (index: number, isExisting: boolean) => {
+        if (isExisting) {
+            setExistingHeroImages(prev => prev.filter((_, i) => i !== index));
+        } else {
+            setHeroImages(prev => prev.filter((_, i) => i !== index));
+            setHeroPreviews(prev => prev.filter((_, i) => i !== index));
+        }
+    };
+
+    const togglePooja = (id: string) => {
+        setSelectedPoojaIds(prev =>
+            prev.includes(id) ? prev.filter(pid => pid !== id) : [...prev, id]
+        );
+    };
+
+    const handleAddNewMasterPooja = async () => {
+        if (!newPoojaName.trim() || !onAddMasterPooja) return;
+        setIsAddingPooja(true);
+        try {
+            const newId = await onAddMasterPooja(newPoojaName.trim());
+            if (newId) {
+                setNewPoojaName("");
+                setSelectedPoojaIds(prev => [...prev, newId]);
+            }
+        } finally {
+            setIsAddingPooja(false);
+        }
+    };
+
+    const handleSubmit = async (e: React.FormEvent) => {
+        e.preventDefault();
+        const fd = new FormData();
+        
+        Object.entries(formData).forEach(([key, value]) => {
+            if (Array.isArray(value) || typeof value === 'object') {
+                fd.append(key, JSON.stringify(value));
+            } else {
+                fd.append(key, String(value));
+            }
+        });
+
+        fd.append("poojaIds", JSON.stringify(selectedPoojaIds));
+        fd.append("inlineEvents", JSON.stringify(inlineEvents));
+        
+        if (mainImage) fd.append("image", mainImage);
+        heroImages.forEach(file => fd.append("heroImages", file));
+        
+        if (mode === "edit") {
+            fd.append("existingHeroImages", JSON.stringify(existingHeroImages));
+        }
+
+        // Combine both slab types for backend
+        const combinedSlabs = [
+            ...marketplaceSlabs.map(s => ({ ...s, category: 'MARKETPLACE' })),
+            ...poojaSlabs.map(s => ({ ...s, category: 'POOJA' }))
+        ];
+        fd.append("commissionSlabs", JSON.stringify(combinedSlabs));
+
+        await onSubmit(fd);
+    };
+
+    return (
+        <>
+            {showCropper && tempImage && (
+                <ImageCropper
+                    image={tempImage}
+                    title={cropTitle}
+                    initialAspect={initialAspect}
+                    lockAspect={true}
+                    onCropComplete={handleCropComplete}
+                    onCancel={() => {
+                        setShowCropper(false);
+                        setTempImage(null);
+                    }}
+                />
+            )}
+
+            <Tabs value={language} onValueChange={(v) => setLanguage(v as Language)} className="w-full">
+                <TabsList className="mb-6 grid w-full max-w-md grid-cols-3">
+                    <TabsTrigger value="en">English (EN)</TabsTrigger>
+                    <TabsTrigger value="hi">हिंदी (HI)</TabsTrigger>
+                    <TabsTrigger value="mr">मराठी (MR)</TabsTrigger>
+                </TabsList>
+
+                <form onSubmit={handleSubmit} className="space-y-8">
+                    {/* Multilingual Contents */}
+                    {["en", "hi", "mr"].map((lang) => (
+                        <TabsContent key={lang} value={lang} className="space-y-8 mt-0">
+                            
+                            {/* Account Identity */}
+                            <div className="bg-card border rounded-xl p-8 shadow-sm space-y-6">
+                                <div className="flex items-center gap-2 text-primary font-bold">
+                                    <Layout className="w-5 h-5" />
+                                    <h2 className="text-xl">{t('registration_form.sections.admin')}</h2>
+                                </div>
+                                <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                                    <div className="space-y-2">
+                                        <label className="text-sm font-semibold text-slate-700">{t('registration_form.labels.admin_name')}</label>
+                                        <Input
+                                            value={formData.name}
+                                            onChange={e => setFormData({ ...formData, name: e.target.value })}
+                                            placeholder={t('registration_form.placeholders.admin_name')}
+                                            required
+                                        />
+                                    </div>
+                                    <div className="space-y-2">
+                                        <label className="text-sm font-semibold text-slate-700">{t('registration_form.labels.email')}</label>
+                                        <Input
+                                            type="email"
+                                            value={formData.email}
+                                            onChange={e => setFormData({ ...formData, email: e.target.value })}
+                                            placeholder={t('registration_form.placeholders.email')}
+                                        />
+                                    </div>
+                                    <div className="space-y-2">
+                                        <label className="text-sm font-semibold text-slate-700">{t('registration_form.labels.phone')}</label>
+                                        <div className="relative">
+                                            <span className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-500 font-semibold border-r border-slate-300 pr-2">+91</span>
+                                            <Input
+                                                type="tel"
+                                                maxLength={10}
+                                                value={formData.phone}
+                                                onChange={e => setFormData({ ...formData, phone: e.target.value.replace(/\D/g, '') })}
+                                                placeholder="10-digit number"
+                                                className="pl-14"
+                                                 required
+                                            />
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+
+                            {/* Temple Profile */}
+                            <div className="bg-card border rounded-xl p-8 shadow-sm space-y-6">
+                                <div className="flex items-center gap-2 text-primary font-bold">
+                                    <Building2 className="w-5 h-5" />
+                                    <h2 className="text-xl">{t('registration_form.sections.profile')}</h2>
+                                </div>
+
+                                <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                                    <div className="space-y-2 md:col-span-2">
+                                        <label className="text-sm font-semibold text-slate-700">
+                                            {t('registration_form.labels.temple_name')} {lang === 'en' ? '*' : '(Optional)'}
+                                        </label>
+                                        <Input
+                                            value={(formData as any)[`name_${lang}`]}
+                                            onChange={e => setFormData({ ...formData, [`name_${lang}`]: e.target.value })}
+                                            placeholder={t('registration_form.placeholders.temple_name')}
+                                            required={lang === 'en'}
+                                        />
+                                    </div>
+                                    <div className="space-y-2">
+                                        <label className="text-sm font-semibold text-slate-700">
+                                            {t('registration_form.labels.location')} {lang === 'en' ? '*' : ''}
+                                        </label>
+                                        <Input
+                                            value={(formData as any)[`location_${lang}`]}
+                                            onChange={e => setFormData({ ...formData, [`location_${lang}`]: e.target.value })}
+                                            placeholder={t('registration_form.placeholders.location')}
+                                            required={lang === 'en'}
+                                        />
+                                    </div>
+                                    <div className="space-y-2">
+                                        <label className="text-sm font-semibold text-slate-700">
+                                            {t('registration_form.labels.category')} {lang === 'en' ? '*' : ''}
+                                        </label>
+                                        <Input
+                                            value={(formData as any)[`category_${lang}`]}
+                                            onChange={e => setFormData({ ...formData, [`category_${lang}`]: e.target.value })}
+                                            placeholder={t('registration_form.placeholders.category')}
+                                            required={lang === 'en'}
+                                        />
+                                    </div>
+                                    <div className="space-y-2 md:col-span-full">
+                                        <label className="text-sm font-semibold text-slate-700">{t('registration_form.labels.address')}</label>
+                                        <Input
+                                            value={(formData as any)[`fullAddress_${lang}`]}
+                                            onChange={e => setFormData({ ...formData, [`fullAddress_${lang}`]: e.target.value })}
+                                            placeholder={t('registration_form.placeholders.address')}
+                                        />
+                                    </div>
+                                    <div className="space-y-2 md:col-span-full">
+                                        <label className="text-sm font-semibold text-slate-700">{t('registration_form.labels.description')}</label>
+                                        <Textarea
+                                            value={(formData as any)[`description_${lang}`]}
+                                            onChange={e => setFormData({ ...formData, [`description_${lang}`]: e.target.value })}
+                                            placeholder={t('registration_form.placeholders.description')}
+                                            rows={3}
+                                        />
+                                    </div>
+                                    
+                                    <div className="space-y-2">
+                                        <label className="text-sm font-semibold text-slate-700">Temple Phone</label>
+                                        <Input
+                                            value={formData.templePhone}
+                                            onChange={e => setFormData({ ...formData, templePhone: e.target.value })}
+                                            placeholder="Official Temple Mobile/Landline"
+                                        />
+                                    </div>
+                                    <div className="space-y-2">
+                                        <label className="text-sm font-semibold text-slate-700">Website</label>
+                                        <Input
+                                            value={formData.website}
+                                            onChange={e => setFormData({ ...formData, website: e.target.value })}
+                                            placeholder="https://..."
+                                        />
+                                    </div>
+                                    <div className="space-y-2">
+                                        <label className="text-sm font-semibold text-slate-700">Map URL</label>
+                                        <Input
+                                            value={formData.mapUrl}
+                                            onChange={e => setFormData({ ...formData, mapUrl: e.target.value })}
+                                            placeholder="Google Maps URL"
+                                        />
+                                    </div>
+                                    <div className="space-y-2">
+                                        <label className="text-sm font-semibold text-slate-700">Viewers</label>
+                                        <Input
+                                            value={formData.viewers}
+                                            onChange={e => setFormData({ ...formData, viewers: e.target.value })}
+                                            placeholder="e.g. 10000+"
+                                        />
+                                    </div>
+                                    <div className="space-y-2 md:col-span-2">
+                                        <label className="text-sm font-semibold text-slate-700">Reviews Count</label>
+                                        <Input
+                                            type="number"
+                                            value={formData.reviewsCount}
+                                            onChange={e => setFormData({ ...formData, reviewsCount: e.target.value })}
+                                            placeholder="0"
+                                        />
+                                    </div>
+                                </div>
+                            </div>
+
+                            {/* Available Poojas */}
+                            <div className="bg-card border rounded-xl p-8 shadow-sm space-y-6">
+                                <div className="flex items-center gap-2 text-primary font-bold">
+                                    <Layout className="w-5 h-5" />
+                                    <h2 className="text-xl">{t('registration_form.sections.available_poojas') || 'Available Poojas'}</h2>
+                                </div>
+                                <p className="text-sm text-slate-500">{t('registration_form.sections.available_poojas_subtitle') || 'Select poojas that are performed at this temple.'}</p>
+
+                                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+                                    {allPoojas?.map((pooja) => {
+                                        const poojaId = pooja.masterPoojaId || pooja.id;
+                                        return (
+                                            <label
+                                                key={poojaId}
+                                                className={`flex items-start gap-3 p-4 rounded-xl border-2 cursor-pointer transition-all ${
+                                                    selectedPoojaIds.includes(poojaId)
+                                                        ? "border-orange-500 bg-orange-50/50"
+                                                        : "border-slate-200 hover:border-slate-300"
+                                                }`}
+                                            >
+                                                <div className="flex h-5 items-center mt-0.5">
+                                                    <input
+                                                        type="checkbox"
+                                                        className="w-4 h-4 rounded border-slate-300 text-orange-500 focus:ring-orange-500"
+                                                        checked={selectedPoojaIds.includes(poojaId)}
+                                                        onChange={() => togglePooja(poojaId)}
+                                                    />
+                                                </div>
+                                                <div className="flex flex-col flex-1">
+                                                    <span className="font-semibold text-sm text-slate-900 leading-tight">
+                                                        {(pooja as any)[`name_${lang}`] || pooja.name_en || pooja.name}
+                                                    </span>
+                                                    {pooja.category && (
+                                                        <span className="text-xs text-slate-500 mt-1 capitalize leading-tight">
+                                                            {pooja.category}
+                                                        </span>
+                                                    )}
+                                                </div>
+                                            </label>
+                                        );
+                                    })}
+                                </div>
+
+                                {onAddMasterPooja && (
+                                    <div className="pt-4 mt-2">
+                                        <div className="flex flex-col sm:flex-row items-start sm:items-center gap-2">
+                                            <Input 
+                                                placeholder={t('registration_form.placeholders.add_pooja') || "Didn't find a pooja? Add a new one..."}
+                                                value={newPoojaName}
+                                                onChange={e => setNewPoojaName(e.target.value)}
+                                                className="max-w-xs"
+                                                onKeyDown={(e) => {
+                                                    if (e.key === 'Enter') {
+                                                        e.preventDefault();
+                                                        handleAddNewMasterPooja();
+                                                    }
+                                                }}
+                                            />
+                                            <Button 
+                                                type="button"
+                                                variant="outline"
+                                                onClick={handleAddNewMasterPooja}
+                                                disabled={isAddingPooja || !newPoojaName.trim()}
+                                            >
+                                                <Plus className="w-4 h-4 mr-1" />
+                                                {t('registration_form.buttons.add') || 'Add'}
+                                            </Button>
+                                        </div>
+                                    </div>
+                                )}
+                            </div>
+                        </TabsContent>
+                    ))}
+
+                    {/* Shared Sections (Images, Hours, Slugs etc) */}
+                    {/* Media */}
+                    <div className="bg-card border rounded-xl p-8 shadow-sm space-y-6">
+                        <div className="flex items-center gap-2 text-primary font-bold">
+                            <ImageIcon className="w-5 h-5" />
+                            <h2 className="text-xl">Media & Assets</h2>
+                        </div>
+
+                        <div className="grid grid-cols-1 md:grid-cols-2 gap-10">
+                            {/* Main Image */}
+                            <div className="space-y-4">
+                                <label className="text-sm font-semibold text-slate-700">Main Profile Image</label>
+                                <div className="border-2 border-dashed rounded-xl p-4 text-center hover:bg-slate-50 transition-colors cursor-pointer relative group">
+                                    <input type="file" accept="image/*" className="absolute inset-0 opacity-0 cursor-pointer" onChange={handleMainImageChange} />
+                                    {mainImagePreview || (mode === "edit" && existingMainImage) ? (
+                                        <div className="relative aspect-video rounded-lg overflow-hidden">
+                                            <img src={mainImagePreview || getFullImageUrl(existingMainImage)} className="w-full h-full object-cover" />
+                                            <div className="absolute inset-0 bg-black/40 opacity-0 group-hover:opacity-100 flex items-center justify-center">
+                                                <Upload className="text-white w-8 h-8" />
+                                            </div>
+                                        </div>
+                                    ) : (
+                                        <div className="py-8 flex flex-col items-center text-muted-foreground">
+                                            <Upload className="w-10 h-10 mb-2" />
+                                            <p className="text-sm">Click to upload main image</p>
+                                        </div>
+                                    )}
+                                </div>
+                            </div>
+
+                            {/* Hero Banners */}
+                            <div className="space-y-4">
+                                <label className="text-sm font-semibold text-slate-700">Hero Banners (Max 5)</label>
+                                <div className="grid grid-cols-3 gap-2">
+                                    {/* Existing Hero Images */}
+                                    {existingHeroImages.map((url, i) => (
+                                        <div key={`existing-${i}`} className="relative aspect-square rounded-lg overflow-hidden border group">
+                                            <img src={getFullImageUrl(url)} className="w-full h-full object-cover" />
+                                            <button type="button" onClick={() => removeHeroImage(i, true)} className="absolute top-1 right-1 bg-white/80 rounded-full p-1 shadow-sm opacity-0 group-hover:opacity-100">
+                                                <X className="w-3 h-3 text-destructive" />
+                                            </button>
+                                        </div>
+                                    ))}
+                                    {/* New Hero Images */}
+                                    {heroPreviews.map((url, i) => (
+                                        <div key={`new-${i}`} className="relative aspect-square rounded-lg overflow-hidden border group">
+                                            <img src={url} className="w-full h-full object-cover" />
+                                            <button type="button" onClick={() => removeHeroImage(i, false)} className="absolute top-1 right-1 bg-white/80 rounded-full p-1 shadow-sm opacity-0 group-hover:opacity-100">
+                                                <X className="w-3 h-3 text-destructive" />
+                                            </button>
+                                        </div>
+                                    ))}
+                                    {(existingHeroImages.length + heroImages.length) < 5 && (
+                                        <label className="border-2 border-dashed rounded-lg flex items-center justify-center aspect-square hover:bg-slate-50 cursor-pointer transition-colors">
+                                            <input type="file" multiple accept="image/*" className="hidden" onChange={handleHeroImagesChange} />
+                                            <Plus className="w-6 h-6 text-muted-foreground" />
+                                        </label>
+                                    )}
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    {/* URL Config */}
+                    <div className="bg-card border rounded-xl p-8 shadow-sm space-y-6">
+                        <div className="flex items-center gap-2 text-primary font-bold">
+                            <MapPin className="w-5 h-5" />
+                            <h2 className="text-xl">URL & Access Configuration</h2>
+                        </div>
+                        <div className="p-6 bg-gradient-to-br from-blue-50 to-indigo-50 rounded-xl border-2 border-blue-200 space-y-4">
+                            <div className="flex items-center gap-6">
+                                <label className="flex items-center gap-2 cursor-pointer">
+                                    <input type="radio" name="urlType" value="slug" checked={formData.urlType === "slug"} onChange={e => setFormData({ ...formData, urlType: e.target.value })} className="w-4 h-4 text-blue-600" />
+                                    <span className="text-sm font-semibold text-slate-700">Path-based (devbhakti.in/temples/...)</span>
+                                </label>
+                                <label className="flex items-center gap-2 cursor-pointer">
+                                    <input type="radio" name="urlType" value="subdomain" checked={formData.urlType === "subdomain"} onChange={e => setFormData({ ...formData, urlType: e.target.value })} className="w-4 h-4 text-blue-600" />
+                                    <span className="text-sm font-semibold text-slate-700">Subdomain (... .devbhakti.in)</span>
+                                </label>
+                            </div>
+
+                            <div className="flex items-center gap-1">
+                                {formData.urlType === "slug" ? (
+                                    <>
+                                        <span className="text-xs text-muted-foreground bg-white px-3 py-2 rounded-l-md border border-r-0 font-mono">devbhakti.in/temples/</span>
+                                        <Input
+                                            value={formData.slug}
+                                            onChange={e => {
+                                                const val = e.target.value.toLowerCase().replace(/[^a-z0-9-]+/g, '-');
+                                                setFormData({ ...formData, slug: val, subdomain: val });
+                                            }}
+                                            placeholder="temple-slug"
+                                            className="rounded-l-none font-mono"
+                                            required
+                                        />
+                                    </>
+                                ) : (
+                                    <>
+                                        <Input
+                                            value={formData.subdomain}
+                                            onChange={e => {
+                                                const val = e.target.value.toLowerCase().replace(/[^a-z0-9-]+/g, '-');
+                                                setFormData({ ...formData, subdomain: val, slug: val });
+                                            }}
+                                            placeholder="temple-subdomain"
+                                            className="rounded-r-none font-mono"
+                                            required
+                                        />
+                                        <span className="text-xs text-muted-foreground bg-white px-3 py-2 rounded-r-md border border-l-0 font-mono">.devbhakti.in</span>
+                                    </>
+                                )}
+                            </div>
+                        </div>
+                    </div>
+
+                    {/* Operating Hours */}
+                    <div className="bg-card border rounded-xl p-8 shadow-sm space-y-6">
+                        <div className="flex items-center gap-2 text-primary font-bold">
+                            <Clock className="w-5 h-5" />
+                            <h2 className="text-xl">Operating Hours</h2>
+                        </div>
+                        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                            {formData.operatingHours.map((slot, index) => (
+                                <div key={index} className="p-4 bg-slate-50 rounded-xl border border-slate-200 flex flex-col gap-3">
+                                    <div className="flex items-center justify-between">
+                                        <Input
+                                            value={slot.label}
+                                            onChange={e => {
+                                                const newHours = [...formData.operatingHours];
+                                                newHours[index].label = e.target.value;
+                                                setFormData({ ...formData, operatingHours: newHours });
+                                            }}
+                                            className="h-7 w-2/3 text-xs font-bold bg-transparent border-none"
+                                        />
+                                        <Switch
+                                            checked={slot.active}
+                                            onCheckedChange={checked => {
+                                                const newHours = [...formData.operatingHours];
+                                                newHours[index].active = checked;
+                                                setFormData({ ...formData, operatingHours: newHours });
+                                            }}
+                                        />
+                                    </div>
+                                    <div className="flex gap-4">
+                                        <Input value={slot.start} onChange={e => {
+                                            const newHours = [...formData.operatingHours];
+                                            newHours[index].start = e.target.value;
+                                            setFormData({ ...formData, operatingHours: newHours });
+                                        }} className="text-xs" disabled={!slot.active} placeholder="07:00 AM" />
+                                        <Input value={slot.end} onChange={e => {
+                                            const newHours = [...formData.operatingHours];
+                                            newHours[index].end = e.target.value;
+                                            setFormData({ ...formData, operatingHours: newHours });
+                                        }} className="text-xs" disabled={!slot.active} placeholder="01:00 PM" />
+                                    </div>
+                                </div>
+                            ))}
+                        </div>
+                    </div>
+
+                    {/* Commission Configuration */}
+                    <div className="bg-card border rounded-xl p-8 shadow-sm space-y-6">
+                        <div className="flex items-center gap-2 text-primary font-bold">
+                            <Layout className="w-5 h-5" />
+                            <h2 className="text-xl">Commission Configuration</h2>
+                        </div>
+
+                        <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
+                            {/* Marketplace Commission */}
+                            <div className="space-y-4">
+                                <div className="flex items-center justify-between">
+                                    <Label className="text-sm font-bold flex items-center gap-2">
+                                        Marketplace Commission
+                                        <span className={`text-[10px] px-2 py-0.5 rounded-full ${marketplaceRateType === 'CUSTOM' ? 'bg-orange-100 text-orange-600' : 'bg-blue-100 text-blue-600'}`}>
+                                            {marketplaceRateType}
+                                        </span>
+                                    </Label>
+                                    <div className="flex items-center gap-2">
+                                        <span className="text-xs text-muted-foreground">Custom Rates</span>
+                                        <Switch
+                                            checked={marketplaceRateType === "CUSTOM"}
+                                            onCheckedChange={handleMarketplaceRateTypeChange}
+                                        />
+                                    </div>
+                                </div>
+                                <div className="space-y-2">
+                                    {marketplaceSlabs.map((slab, i) => (
+                                        <div key={i} className="flex items-center gap-2 p-2 bg-slate-50 rounded-lg border">
+                                            <span className="text-xs font-mono text-slate-500 w-24">Starts at ₹{slab.minAmount}</span>
+                                            <input
+                                                type="number"
+                                                value={slab.percentage}
+                                                onChange={e => {
+                                                    const newSlabs = [...marketplaceSlabs];
+                                                    newSlabs[i].percentage = parseFloat(e.target.value);
+                                                    setMarketplaceSlabs(newSlabs);
+                                                }}
+                                                className="h-8 w-16 text-xs border rounded px-1"
+                                                disabled={marketplaceRateType === "DEFAULT"}
+                                            />
+                                            <span className="text-xs text-slate-500">%</span>
+                                        </div>
+                                    ))}
+                                </div>
+                            </div>
+
+                            {/* Pooja Commission */}
+                            <div className="space-y-4">
+                                <div className="flex items-center justify-between">
+                                    <Label className="text-sm font-bold flex items-center gap-2">
+                                        Pooja Commission
+                                        <span className={`text-[10px] px-2 py-0.5 rounded-full ${poojaRateType === 'CUSTOM' ? 'bg-orange-100 text-orange-600' : 'bg-blue-100 text-blue-600'}`}>
+                                            {poojaRateType}
+                                        </span>
+                                    </Label>
+                                    <div className="flex items-center gap-2">
+                                        <span className="text-xs text-muted-foreground">Custom Rates</span>
+                                        <Switch
+                                            checked={poojaRateType === "CUSTOM"}
+                                            onCheckedChange={handlePoojaRateTypeChange}
+                                        />
+                                    </div>
+                                </div>
+                                <div className="space-y-2">
+                                    {poojaSlabs.map((slab, i) => (
+                                        <div key={i} className="flex items-center gap-2 p-2 bg-slate-50 rounded-lg border">
+                                            <span className="text-xs font-mono text-slate-500 w-24">Starts at ₹{slab.minAmount}</span>
+                                            <input
+                                                type="number"
+                                                value={slab.percentage}
+                                                onChange={e => {
+                                                    const newSlabs = [...poojaSlabs];
+                                                    newSlabs[i].percentage = parseFloat(e.target.value);
+                                                    setPoojaSlabs(newSlabs);
+                                                }}
+                                                className="h-8 w-16 text-xs border rounded px-1"
+                                                disabled={poojaRateType === "DEFAULT"}
+                                            />
+                                            <span className="text-xs text-slate-500">%</span>
+                                        </div>
+                                    ))}
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div className="flex justify-end pt-8">
+                        <Button type="submit" size="lg" disabled={isLoading} className="px-12 rounded-full font-bold">
+                            {isLoading ? "Processing..." : (mode === "create" ? "Create Temple Account" : "Save Changes")}
+                        </Button>
+                    </div>
+                </form>
+            </Tabs>
+        </>
+    );
+}

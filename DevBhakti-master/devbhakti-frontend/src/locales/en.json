@@ -1,0 +1,2104 @@
+{
+  "common": {
+    "book_now": "Book Now",
+    "book_pooja": "Book Pooja",
+    "view_all": "View All",
+    "search": "Search",
+    "filter": "Filter",
+    "loading": "Loading...",
+    "error": "Error",
+    "success": "Success",
+    "back": "Go Back",
+    "not_found": "Not Found",
+    "know_more": "know more",
+    "hari_om": "Hari Om",
+    "action_failed": "Action failed",
+    "discard": "Discard",
+    "platform_name": "DevBhakti Sacred Services",
+    "logo_text": "DEV BHAKTI",
+    "add": "Add",
+    "add_paragraph": "Add Paragraph",
+    "add_step": "Add Step",
+    "add_faq": "Add Question",
+    "cancel": "Cancel",
+    "processing": "Processing...",
+    "english": "English",
+    "hindi": "Hindi",
+    "marathi": "Marathi",
+    "en_short": "EN",
+    "hi_short": "HI",
+    "mr_short": "MR",
+    "to": "to",
+    "of": "of"
+  },
+
+  "navbar": {
+    "home": "Home",
+    "poojas": "Poojas & Sevas",
+    "temples": "Sacred Temples",
+    "marketplace": "Sacred Items",
+    "live_darshan": "Live Darshan",
+    "login": "Login",
+    "signup": "Sign Up",
+    "logout": "Logout",
+    "my_profile": "My Profile",
+    "my_orders": "My Orders",
+    "my_bookings": "My Pooja Bookings",
+    "my_favorites": "My Favorites",
+    "temple_dashboard": "Temple Dashboard",
+    "temple_login": "Temple Login",
+    "temple_register": "Temple Registration",
+    "search_placeholder": "Search temples, poojas, products...",
+    "go_to_devotee_home": "Go to Devotee Home Page",
+    "accounts_bookings": "Accounts & Bookings",
+    "for_devotees": "For Devotees",
+    "view_sacred_profile": "View Sacred Profile",
+    "my_cart": "My Cart",
+    "language": "Language",
+    "Donation": "Donation"
+  },
+  "marketplace": {
+    "title": "Sacred Marketplace",
+    "subtitle": "Discover authentic devotional items directly from temples.",
+    "search_placeholder": "Search items...",
+    "explore": "Explore",
+    "filters": "Filters",
+    "all_products": "All Products",
+    "showing": "Showing",
+    "products": "products",
+    "add": "Add",
+    "sacred_item": "Sacred Item",
+    "limited_stock": "Limited Stock",
+    "out_of_stock": "OUT OF STOCK",
+    "highlights": "Highlights",
+    "highlights_default": [
+      "Directly from Temple Source",
+      "Blessed by Ved Pathis",
+      "Traditional Quality Standards",
+      "Carefully Packaged with Holy Ash",
+      "Community Support Contribution"
+    ],
+    "price": "Price",
+    "description": "Description",
+    "origin": "Origin",
+    "category": "Category",
+    "sku_code": "SKU Code",
+    "source": "Source",
+    "delivery": {
+      "check_availability": "Check Delivery Availability",
+      "pincode_placeholder": "Enter 6-digit Pincode",
+      "verify": "Verify",
+      "international_note": "Note: Currently Shipping to International locations is not available.",
+      "hurray_serviceable": "Hurray! Serviceable at",
+      "estimated_delivery": "Estimated Delivery by:",
+      "oops_unavailable": "Oops! Delivery Not Available",
+      "not_ship_yet": "We don't ship to this pincode yet."
+    },
+    "add_to_cart": "Add to cart",
+    "show_all_products": "Show All Products",
+    "show_paginated": "Show Paginated",
+    "page_info": "Page {{current}} of {{total}}",
+    "previous": "Previous",
+    "next": "Next",
+    "maintenance_contribution": "Part of the proceeds are contributed toward temple maintenance",
+    "cart": {
+      "title": "Your Sacred Cart",
+      "items_label": "items",
+      "empty_title": "Your cart is empty",
+      "empty_subtitle": "Add some sacred items to start your spiritual journey",
+      "start_exploring": "Start Exploring",
+      "subtotal": "Subtotal",
+      "platform_fee": "Platform Service Fee",
+      "calculating": "Calculating...",
+      "shipping": "Shipping",
+      "calculated_at_checkout": "Calculated at checkout",
+      "order_total": "Order Total",
+      "checkout_now": "Checkout Now",
+      "secure_payments": "Secure payments powered by DevBhakti SafePay",
+      "added": "Added to cart",
+      "removed": "Removed from favorites",
+      "failed": "Action failed"
+    }
+  },
+  "poojas": {
+    "title": "Divine Poojas & Sevas",
+    "subtitle": "Book sacred rituals and seek divine blessings from any corner of the world.",
+    "sacred_rituals": "Sacred Rituals",
+    "auspicious": "Auspicious",
+    "search_placeholder_long": "Search for pooja, aarti or seva...",
+    "explore_rituals": "Explore Rituals",
+    "book_now": "Book Now",
+    "view_details": "View Details",
+    "select_package": "Select Package",
+    "pooja_benefits": "Benefits of Pooja",
+    "pooja_process": "Pooja Process",
+    "what_you_receive": "What you will receive",
+    "venue": "Venue",
+    "date_time": "Date & Time",
+    "blessings_from": "Divine Blessings from",
+    "service_charge": "Service Charge",
+    "total_amount": "Total Amount",
+    "confirm_booking": "Confirm Booking",
+    "about": "About Pooja",
+    "ritual_details": "Ritual Details",
+    "benefits": "Benefits",
+    "participating_temples": "Participating Temples",
+    "faqs": "Frequently Asked Questions",
+    "starts_from": "Starts from",
+    "view_all_poojas": "View All Poojas",
+    "ritual_type": "Ritual Type",
+    "all_poojas": "All Poojas",
+    "search_ritual": "Search ritual...",
+    "no_ritual_found": "No ritual found."
+  },
+  "temples": {
+    "title": "Shaktipeeths & Sacred Temples",
+    "subtitle": "Discover the divine energy of India's most powerful and historical temples.",
+    "discover_title": "Discover Sacred Temples",
+    "discover_subtitle": "Explore thousands of temples across India and connect with divine experiences",
+    "search_placeholder_long": "Search for temples, deities or location...",
+    "filter_experience": "Filter Experience",
+    "refine_discovery": "Refine Discovery",
+    "reset_all": "Reset All",
+    "divine_category": "Divine Category",
+    "all_categories": "All Categories",
+    "search_category": "Search category...",
+    "no_category_found": "No category found.",
+    "sanctum_location": "Sanctum Location",
+    "all_locations": "All Locations",
+    "search_location": "Search location...",
+    "no_location_found": "No location found.",
+    "active": "Active:",
+    "showing": "Showing",
+    "temples_count_label": "temples"
+  },
+  "footer": {
+    "about": "DevBhakti - Your gateway to divine experiences and sacred rituals.",
+    "quick_links": "Quick Links",
+    "contact_us": "Contact Us",
+    "copyright": "Â© 2024 DevBhakti. All rights reserved."
+  },
+  "auth": {
+    "back_to_home": "Back to Home",
+    "welcome_back": "Welcome Back",
+    "begin_journey": "Begin Your Journey",
+    "sign_in_subtitle": "Sign in to continue your sacred spiritual experience",
+    "register_subtitle": "Create an account to join our global community of devotees",
+    "full_name": "Full Name",
+    "your_name": "Your name",
+    "email_optional": "Email Address (Optional)",
+    "phone_number": "Phone Number",
+    "processing": "Processing...",
+    "send_otp": "Send OTP",
+    "begin_my_journey": "Begin My Journey",
+    "dev_otp": "Dev OTP (Testing)",
+    "enter_otp": "Enter Verification Code",
+    "otp": "OTP",
+    "otp_sent_to": "sent to",
+    "verifying": "Verifying...",
+    "verify_sign_in": "Verify & Sign In",
+    "resend_otp_in": "Resend OTP in",
+    "resend_otp_in_suffix": "s",
+    "resend_otp": "Resend OTP",
+    "change_phone": "Change phone number",
+    "new_to_devbhakti": "New to DevBhakti?",
+    "already_on_journey": "Already on this journey?",
+    "sign_up_now": "Sign Up Now",
+    "sign_in": "Sign In",
+    "otp_sent_title": "OTP Sent",
+    "otp_sent_desc": "OTP has been sent to your phone number.",
+    "otp_failed_title": "OTP Failed",
+    "otp_resend_failed": "Failed to resend OTP. Please try again.",
+    "otp_send_failed": "Failed to send OTP. Please try again.",
+    "welcome_title": "Welcome to DevBhakti!",
+    "welcome_desc": "Since you are new here, let's begin your spiritual journey by creating your account.",
+    "login_success": "Login Successful",
+    "login_success_desc": "Welcome back to your sacred journey.",
+    "otp_error_title": "OTP Verification Failed",
+    "otp_invalid": "Invalid OTP. Please check and try again.",
+    "please_login_to_book": "Please login to book pooja"
+  },
+  "poojas_list": {
+    "available": "Available ",
+    "poojas_sevas": " Poojas & Sevas",
+    "showing": "Showing ",
+    "popular": "Popular",
+    "starts_from": "Starts from",
+    "book_now": "Book Now",
+    "more_details": "More Details",
+    "no_rituals_found": "No rituals found",
+    "no_results_for": "No results for",
+    "did_you_mean": " Did you mean ",
+    "adjust_filters": "Try adjusting your filters or search terms",
+    "reset_search": "Reset Search",
+    "experience_divine": "Experience the Divine",
+    "why_book_through": "Why book your rituals through ",
+    "why_book_suffix": "?",
+    "verified_temples_title": "Verified Temples",
+    "verified_temples_desc": "A curated network of legitimate temples across India, personally vetted for your peace of mind.",
+    "authentic_poojaris_title": "Authentic Poojaris",
+    "authentic_poojaris_desc": "Experienced priests with expertise in Hindu rituals and poojas.",
+    "proof_of_service_title": "Proof of Service",
+    "proof_of_service_desc": "Total transparency with personalized photo / video recordings of your poojas and sevas.",
+    "all": "All"
+  },
+  "temple_detail": {
+    "not_found": "Temple not found or not verified.",
+    "reviews": "reviews",
+    "description": "Description",
+    "history": "History",
+    "poojas_seva": "Poojas & Seva",
+    "filter_by_purpose": "Filter by Purpose",
+    "available_poojas": "Available Poojas & Rituals",
+    "book_now": "Book Now",
+    "pooja_schedule_soon": "Detailed pooja schedule will be available soon.",
+    "select_purpose": "Select a purpose:",
+    "showing_rituals_for": "Showing rituals for ",
+    "book_pooja": "Book Pooja",
+    "live_darshan": "Live Darshan",
+    "operating_hours": "Operating Hours",
+    "sacred_location": "Sacred Location",
+    "explore_on_maps": "Explore on Maps",
+    "upcoming_events": "Upcoming Events"
+  },
+  "pooja_detail": {
+    "loading": "Divine details loading...",
+    "not_found": "Pooja not found",
+    "return_home": "Return to Home",
+    "ritual": "Ritual",
+    "starting_from": "Starting From",
+    "tab_about": "About",
+    "tab_benefits": "Benefits",
+    "tab_temple": "Temple",
+    "tab_reviews": "Reviews",
+    "tab_faqs": "FAQs",
+    "divine_blessings_title": "Divine Blessings & Benefits",
+    "spiritual_advantages": "Spiritual advantages of performing this sacred ritual",
+    "benefit_experience": "Experience spiritual upliftment and divine grace through this sacred ritual.",
+    "read_more": "Read More",
+    "participating_temples": "Participating Temples",
+    "sacred_locations_performed": "Sacred locations where this ritual is performed",
+    "explore_temple": "Explore Temple",
+    "temple_data_soon": "Participating temple data will be shared soon.",
+    "devotee_experiences": "Devotee Experiences",
+    "questions_answers_title": "Questions? We have answers.",
+    "about_ritual": "About the Ritual",
+    "info_soon": "Detailed ritual information will be updated soon.",
+    "faq_1_q": "What does this pooja include?",
+    "faq_1_a": "Each pooja includes all required samagri (materials), a qualified pandit, and a proof-of-service photo/video after completion.",
+    "faq_2_q": "Will a priest (pandit) perform the pooja?",
+    "faq_2_a": "Yes, all our poojas are performed by experienced, verified pandits associated with the respective temples.",
+    "faq_3_q": "Do I need to be physically present for the pooja?",
+    "faq_3_a": "No, you do not need to be present. The pooja is performed on your behalf, and you receive photo/video proof.",
+    "faq_4_q": "Will I receive prasad or confirmation?",
+    "faq_4_a": "Yes, you will receive digital confirmation and optionally physical prasad depending on the package selected.",
+    "faq_5_q": "Can I choose a specific date or time?",
+    "faq_5_a": "Yes, you can specify your preferred date and time during the booking process, subject to availability."
+  },
+  "landing": {
+    "cta": {
+      "title1": "Begin Your Sacred ",
+      "title2": "Journey Today",
+      "description": "Join thousands of devotees and hundreds of temples already connected on DevBhakti. Start exploring, booking, and experiencing divine moments."
+    },
+    "hero": {
+      "alt_temple": "Sacred temple at sunrise",
+      "title1": "Stay Connected to Your Faith, ",
+      "title2": "Wherever You Are",
+      "subtitle": "Discover Trusted Temples, Book Poojas, View Live Darshan.",
+      "view_live_darshan": "View Live Darshan"
+    },
+    "temples": {
+      "subtitle": "Sacred Temples",
+      "title1": "Discover Divine ",
+      "title2": "Temples",
+      "description": "Browse temples you can trust â€” curated and verified by DevBhakti",
+      "verified": "Verified",
+      "live": "Live",
+      "explore": "Explore",
+      "view_all_temples": "View All Temples"
+    },
+    "landing_marketplace": {
+      "subtitle": "Sacred Marketplace",
+      "title1": "Divine ",
+      "title2": "Offerings",
+      "description": "Authentic spiritual products blessed and sourced from holy temples across India.",
+      "temple_sourced": "Temple Sourced",
+      "sacred_item": "Sacred Item",
+      "exclusive": "DevBhakti Exclusive",
+      "coming_soon": "Coming Soon to the Sacred Marketplace",
+      "view_all_items": "View All Items"
+    },
+    "landing_live_darshan": {
+      "click_to_watch": "Click to watch live darshan",
+      "live": "LIVE",
+      "watching": "watching",
+      "subtitle": "Live Darshan",
+      "title1": "Experience Divine ",
+      "title2": "Darshan",
+      "title3": "from Anywhere",
+      "description": "Connect with sacred temples through low-latency live streaming. Watch morning aarti, evening prayers, and special ceremonies in real-time from the comfort of your home.",
+      "features": {
+        "low_latency": "Low-latency HD streaming",
+        "coverage": "24/7 live coverage from major temples",
+        "join": "Join thousands of devotees watching"
+      },
+      "watch_now": "Watch Live Now"
+    },
+    "landing_search": {
+      "placeholder": "Discover Sacred Temples, Poojas, or Items...",
+      "results": "Sacred Results",
+      "suggestions": "Sacred Suggestions",
+      "category_temple": "Temple",
+      "category_pooja": "Pooja",
+      "category_product": "Product",
+      "no_match": "No Sacred Match Found",
+      "no_results_for": "No results for",
+      "did_you_mean": "Did you mean",
+      "try_another": "Try another search term.",
+      "omnipresent": "Omnipresent Search",
+      "start_typing": "Start typing to navigate through our sacred temples, divine poojas, and spiritual items.",
+      "select": "Select",
+      "navigate": "Navigate"
+    },
+    "trust": {
+      "tagline": "Our Commitment",
+      "title1": "Built on ",
+      "title2": "Trust & Transparency",
+      "description": "DevBhakti is built on the foundation of Trust, Transparency & Respect for Faith. We ensure that every pooja, seva or product purchase is handled with the utmost sanctity and transparency.",
+      "points": [
+        {
+          "title": "Verified Temples",
+          "description": "Every temple on our platform undergoes a rigorous 5-step verification process to ensure authenticity."
+        },
+        {
+          "title": "Secure Donations with Receipts",
+          "description": "All contributions are processed via secure gateways. Receive official 80G tax-exempt receipts instantly."
+        },
+        {
+          "title": "Clean Records of Poojas & Offerings",
+          "description": "Transparent tracking for every ritual. Get photo and video proof of your offerings directly from the temple."
+        },
+        {
+          "title": "Instant Notifications from Temple Trusts",
+          "description": "Stay connected with direct updates from the temple management about festivals, aartis, and events."
+        }
+      ]
+    },
+    "banner": {
+      "alt": "DevBhakti Sacred Banner"
+    },
+    "features": {
+      "tagline": "Features",
+      "title1": "Everything You Need for Your",
+      "title2": "Spiritual Journey",
+      "description": "A complete platform designed to enhance your connection with sacred places",
+      "items": {
+        "pooja_booking": {
+          "title": "Easy Pooja Booking",
+          "description": "Schedule special Abhishekams and Archana online. Receive SMS & WhatsApp confirmations instantly."
+        },
+        "live_darshan": {
+          "title": "Live Darshan",
+          "description": "Join the Aarti from home with crystal clear streaming. Never miss a festival celebration."
+        },
+        "devotional_products": {
+          "title": "Devotional Products",
+          "description": "Order authentic Puja kits, Rudraksha, and Brass idols. Vastu compliant items delivered to you."
+        },
+        "easy_donation": {
+          "title": "Easy Donation",
+          "description": "Offer Dakshina directly to the temple fund. Get 80G tax exemption certificates instantly via email."
+        },
+        "temple_discovery": {
+          "title": "Temple Discovery",
+          "description": "Find ancient temples, Pandits, and Dharamshalas near you using GPS and Pincode search."
+        },
+        "prasad_delivery": {
+          "title": "Prasad Delivery",
+          "description": "We deliver the 'Charnamrit' and 'Laddu' Prasad from the temple sanctum to your doorstep."
+        }
+      }
+    },
+    "landing_poojas": {
+      "tagline": "Sacred Services",
+      "title1": "Book ",
+      "title2": "Poojas & Sevas",
+      "description": "Experience divine rituals and ceremonies",
+      "starts_from": "Starts from",
+      "know_more": "know more",
+      "view_all": "View All Poojas"
+    },
+    "landing_footer": {
+      "about": "Connecting devotees with sacred temples through technology. Experience divine darshan, book poojas, and shop authentic spiritual products.",
+      "headings": {
+        "offerings": "Offerings",
+        "platform": "Platform",
+        "legal": "Legal",
+        "support": "Support"
+      },
+      "links": {
+        "marketplace": "Marketplace",
+        "live_darshan": "Live Darshan",
+        "temples": "Sacred Temples",
+        "trust": "Trust & Transparency",
+        "about": "About Us",
+        "contact": "Contact Us",
+        "temple_register": "Register Temple/Login",
+        "seller_login": "Seller Login",
+        "terms": "Terms of Service",
+        "privacy": "Privacy Policy",
+        "returns": "Returns & Refund Policy",
+        "shipping": "Shipping Policy",
+        "grievance": "Grievance Officer"
+      },
+      "copyright_suffix": " is owned and operated by Divinity Labs Private Limited. All rights reserved."
+    },
+    "floating_register": "Register Your Temple",
+    "reviews": {
+      "title": "What Devotees Share",
+      "subtitle": "Experiences shared by devotees from across India.",
+      "items": [
+        {
+          "content": "DevBhakti has made spiritual practices so accessible. Booking a specialty Puja was effortless, and the entire experience was deeply enriching and peaceful.",
+          "name": "Rajeshwari Pradhan",
+          "location": "Varanasi"
+        },
+        {
+          "content": "The live darshan feature is a blessing for my elderly parents. They can now witness their favorite deities from home, feeling a profound sense of connection every day.",
+          "name": "Vikram Karekar",
+          "location": "Mumbai"
+        },
+        {
+          "content": "I am amazed by the professionalism of the pundits here. The Rudrabhishek puja conducted for my family was performed with great devotion and traditional accuracy.",
+          "name": "Sneha Pathare",
+          "location": "Pune"
+        },
+        {
+          "content": "The platform is incredibly user-friendly. From temple information to donation services, everything is streamlined. It's a must-have for every devotee.",
+          "name": "Amit Deshmukh",
+          "location": "Nagpur"
+        },
+        {
+          "content": "I've used DevBhakti for multiple services now, and the consistency in quality is remarkable. It truly feels like a digital bridge to the divine.",
+          "name": "Priya Kulkarni",
+          "location": "Nashik"
+        }
+      ]
+    },
+    "video_testimonials": {
+      "title": "Does a Pooja Done on Your Behalf Carry the Same Meaning?",
+      "subtitle": "In our tradition, devotion and intent matter more than physical distance.",
+      "subtitle2": "Hear directly from the custodians of our faith.",
+      "items": [
+        {
+          "title": "Pandit Ji on 'Sankalpa'",
+          "subtitle": "Head Priest, Kashi Vishwanath",
+          "category": "SANKALPA"
+        },
+        {
+          "title": "Dr. Sharma on Ancient Texts",
+          "subtitle": "Sanskrit Scholar, Varanasi",
+          "category": "SCRIPTURES"
+        },
+        {
+          "title": "Power of Remote Offerings",
+          "subtitle": "Chief Archak, Tirupati",
+          "category": "DISTANCE"
+        },
+        {
+          "title": "Connecting from Abroad",
+          "subtitle": "Devotee Story, London",
+          "category": "GLOBAL"
+        }
+      ]
+    }
+  },
+  "about": {
+    "title": "About DevBhakti",
+    "subtitle": "Bridging the gap between ancient traditions and modern accessibility.",
+    "who_we_are": {
+      "title": "Who We Are",
+      "p1": "DevBhakti.in is a digital platform created to help temples manage pooja and seva bookings in a simple, organised, and transparent manner. At the same time, it enables devotees to stay connected with their temples regardless of where they are located.",
+      "p2": "Across India, many temples still rely on manual processes such as phone calls, registers, and in-person visits. This often leads to missed requests, lack of confirmation, and difficulty for devotees who live outside their hometowns.",
+      "p3": "DevBhakti.in addresses this gap through technology that respects tradition while improving accessibility."
+    },
+    "what_we_do": {
+      "title": "What We Do",
+      "subtitle": "We provide temples with digital tools and offer devotees a simple way to stay connected.",
+      "features": {
+        "list_poojas": {
+          "title": "List Poojas",
+          "text": "Create and showcase all poojas and sevas performed in the temple."
+        },
+        "manage_schedules": {
+          "title": "Manage Schedules",
+          "text": "Real-time management of availability, time slots, and priest schedules."
+        },
+        "accept_bookings": {
+          "title": "Accept Bookings",
+          "text": "Receive and manage online pooja booking requests effortlessly."
+        },
+        "receive_offerings": {
+          "title": "Receive Offerings",
+          "text": "Accept offerings through authorised and transparent digital channels."
+        }
+      },
+      "quote": "\"For devotees, DevBhakti.in offers a simple way to discover temples, book rituals, and receive confirmations without repeated follow-ups or uncertainty.\""
+    },
+    "our_role": {
+      "title": "Our Role",
+      "p1": "DevBhakti.in acts strictly as a facilitation platform. We do not perform rituals, influence temple customs, or alter religious practices in any form.",
+      "p2": "All poojas and sevas listed on the platform are performed by the respective temple priests as per established tradition. Offerings made through the platform are intended for the temple and are routed to authorised temple accounts."
+    },
+    "our_purpose": {
+      "title": "Our Purpose",
+      "tagline": "Our Vision",
+      "p1": "Our purpose is to support temples in their digital journey while preserving faith, trust, and transparency. DevBhakti.in is built with long-term sustainability in mindâ€”for temples, devotees, and the ecosystem around them."
+    }
+  },
+  "contact": {
+    "title": "Contact Us",
+    "subtitle": {
+      "p1": "DevBhakti is owned and operated by:",
+      "company": "Divinity Labs Private Limited",
+      "p2": "Registered under the Companies Act, 2013 | India",
+      "p3": "We aim to respond to all queries within 48 hours."
+    },
+    "cards": {
+      "support": {
+        "title": "Customer Support",
+        "description": "For any queries, support requests, or general communication."
+      },
+      "grievance": {
+        "title": "Grievance Officer",
+        "name": "Siddharth Pednekar",
+        "rules": "As per Consumer Protection (E-Commerce) Rules, 2020"
+      },
+      "partnerships": {
+        "title": "Partnerships",
+        "description": "For partnership or temple onboarding queries."
+      }
+    },
+    "form": {
+      "title": "Send us a Message",
+      "subtitle": "Fill out the form below and we'll get back to you shortly.",
+      "name": "Full Name",
+      "email": "Email Address",
+      "subject": "Subject",
+      "message": "Message",
+      "placeholder_name": "Your Name",
+      "placeholder_email": "email@example.com",
+      "placeholder_subject": "How can we help?",
+      "placeholder_message": "Your message...",
+      "submit": "Send Inquiry"
+    }
+  },
+  "seller_login": {
+    "title": "Seller Portal",
+    "subtitle": "Manage your DevBhakti store, products, and orders.",
+    "phone_label": "Mobile Number",
+    "phone_hint": "We will send an OTP to verify your account.",
+    "send_otp": "Send OTP",
+    "checking": "Checking...",
+    "dev_otp": "Development OTP",
+    "enter_otp_label": "Enter OTP",
+    "change_phone": "Change Number",
+    "otp_sent_to": "Sent to",
+    "login_button": "Login to Store",
+    "verifying": "Verifying...",
+    "resend_code": "Didn't receive code?",
+    "resend": "Resend",
+    "staff_login": "Seller Staff? Login Here",
+    "footer_assistance": "For assistance contact",
+    "secure_login": "Secure Login",
+    "not_registered": {
+      "title": "Account Not Registered",
+      "p1": "Your account is not registered with us as a Seller.",
+      "p2": "To become a seller on DevBhakti, submit your request at:",
+      "button": "Try Another Number"
+    }
+  },
+  "terms": {
+    "title": "Terms of Service",
+    "effective_date": "Effective Date: 7 February 2026",
+    "intro_p1": "These Terms of Service (â€œTermsâ€) govern your access to and use of the DevBhakti website, mobile applications, and related services (collectively, the â€œPlatformâ€).",
+    "intro_p2": "DevBhakti is owned and operated by Divinity Labs Private Limited, a company incorporated under the Companies Act, 2013, having its registered office in India (hereinafter referred to as â€œCompanyâ€, â€œDevBhaktiâ€, â€œweâ€, â€œourâ€, or â€œusâ€).",
+    "intro_p3": "By accessing or using the Platform, you agree to be bound by these Terms.",
+    "clauses": [
+      {
+        "title": "1. Nature of Platform",
+        "content": "DevBhakti is a technology-enabled marketplace platform that facilitates interaction between devotees and temples and enables:",
+        "points": [
+          "Online pooja and seva bookings",
+          "Live darshan access",
+          "Sale of devotional products (where applicable)",
+          "(Donation-related services â€” currently not activated on the platform)"
+        ],
+        "extra": "DevBhakti does not own, manage, operate, or control temples listed on the Platform. Temples and vendors are independent entities responsible for performing services and fulfilling obligations. DevBhakti does not guarantee religious, spiritual, or ritual outcomes."
+      },
+      {
+        "title": "2. Platform Content & Information Disclaimer",
+        "content": "The Platform aggregates and displays information provided by temples, vendors, and service providers. While the Company makes reasonable efforts to ensure accuracy, DevBhakti does not warrant or guarantee the completeness, reliability, or real-time accuracy of listings, pricing, schedules, ritual descriptions, or availability.",
+        "secondaryContent": "Certain information may:",
+        "points": [
+          "Be subject to change without prior notice",
+          "Be temporarily inaccurate due to updates",
+          "Require confirmation from the concerned temple"
+        ],
+        "extra": "Users should not rely solely on website content and should refer to booking confirmations or direct communication where necessary. Divinity Labs Private Limited shall not be liable for loss arising from reliance on provisional or updated information."
+      },
+      {
+        "title": "3. Eligibility",
+        "content": "Users must:",
+        "points": [
+          "Be at least 18 years of age",
+          "Provide accurate information",
+          "Use the Platform lawfully"
+        ],
+        "extra": "The Company reserves the right to suspend or terminate accounts for misuse or violations."
+      },
+      {
+        "title": "4. Bookings and Payments",
+        "content": "All bookings and purchases are subject to availability and confirmation. Payments are processed through third-party payment gateways. Divinity Labs Private Limited does not store full card details.",
+        "extra": "The Company is not responsible for failures caused by banking systems or gateway outages beyond reasonable control."
+      },
+      {
+        "title": "5. Cancellations and Refunds",
+        "content": "All transactions are governed by the Returns & Refund Policy available separately on the Platform.",
+        "extra": "By completing a transaction, you acknowledge that bookings are final and non-cancellable except as expressly provided in that policy."
+      },
+      {
+        "title": "6. Intellectual Property",
+        "content": "All content, branding, logos, design elements, and software are the property of Divinity Labs Private Limited. Unauthorized use is prohibited."
+      },
+      {
+        "title": "7. Limitation of Liability",
+        "content": "To the maximum extent permitted by law, the total liability of Divinity Labs Private Limited shall be limited to the transaction amount paid by the user. The Company shall not be liable for:",
+        "points": [
+          "Indirect or consequential damages",
+          "Emotional or religious dissatisfaction",
+          "Conduct of independent temples",
+          "Third-party service failures"
+        ]
+      },
+      {
+        "title": "8. Force Majeure",
+        "content": "The Company shall not be liable for delays or failures caused by events beyond reasonable control, including natural disasters, government restrictions, temple closures, or technical outages."
+      },
+      {
+        "title": "9. Governing Law & Jurisdiction",
+        "content": "These Terms are governed by the laws of India. All disputes shall be subject to the exclusive jurisdiction of courts in Mumbai, Maharashtra."
+      }
+    ]
+  },
+  "privacy": {
+    "title": "Privacy Policy",
+    "effective_date": "Effective Date: 7 February 2026",
+    "intro": "This Privacy Policy describes how personal information is collected, used, and protected on the DevBhakti Platform. DevBhakti is owned and operated by Divinity Labs Private Limited (\"Company\", \"we\", \"our\", or \"us\").",
+    "sections": [
+      {
+        "title": "1. Information Collected",
+        "content": "We may collect:",
+        "points": [
+          "Name",
+          "Email address",
+          "Phone number",
+          "Booking details",
+          "Transaction details",
+          "Communication records",
+          "Device and usage data",
+          "IP address"
+        ]
+      },
+      {
+        "title": "2. Use of Information",
+        "content": "Information is used to:",
+        "points": [
+          "Process bookings",
+          "Coordinate with temples/vendors",
+          "Provide customer support",
+          "Send confirmations and updates",
+          "Improve platform services",
+          "Comply with legal obligations"
+        ],
+        "extra": "The Company does not sell personal data."
+      },
+      {
+        "title": "3. Payment Processing",
+        "content": "Payments are processed by third-party gateways. Divinity Labs Private Limited does not store complete card details."
+      },
+      {
+        "title": "4. Data Sharing",
+        "content": "Information may be shared with:",
+        "points": [
+          "Relevant temples/vendors",
+          "Payment gateways",
+          "Logistics partners",
+          "Authorities when legally required"
+        ]
+      },
+      {
+        "title": "5. Data Security",
+        "content": "Reasonable security measures are implemented. However, no system is completely secure."
+      },
+      {
+        "title": "6. Data Retention",
+        "content": "Data is retained as long as necessary to:",
+        "points": [
+          "Provide services",
+          "Meet legal and regulatory requirements",
+          "Resolve disputes"
+        ]
+      },
+      {
+        "title": "7. User Rights",
+        "content": "Users may request correction or deletion of personal information (subject to legal retention requirements).",
+        "extra": "Requests may be sent to: support@devbhakti.in"
+      }
+    ],
+    "grievance": {
+      "title": "8. Grievance Officer",
+      "p1": "For privacy-related grievances, contact:",
+      "officer_name": "Siddharth Pednekar",
+      "designation": "Grievance Officer",
+      "company": "Divinity Labs Private Limited",
+      "email": "Email: grievance.officer@devbhakti.in"
+    },
+    "governing_law": {
+      "title": "9. Governing Law",
+      "p1": "This Privacy Policy is governed by Indian law.",
+      "jurisdiction": "Jurisdiction: Courts of Mumbai, Maharashtra."
+    }
+  },
+  "returns_policy": {
+    "title": "Returns & Refund Policy",
+    "effective_date": "Effective Date: 7 February 2026",
+    "intro": "This Returns & Refund Policy is issued in accordance with the Consumer Protection Act, 2019 and the Consumer Protection (E-Commerce) Rules, 2020, and applies to users of DevBhakti (operated by Divinity Labs Private Limited).",
+    "clauses": [
+      {
+        "title": "1. Nature of Platform Services",
+        "content": "DevBhakti is a technology platform that facilitates:",
+        "points": [
+          "Online pooja bookings",
+          "Coordination of devotional services",
+          "(Donation-related services â€” currently not activated on the platform)",
+          "Sale of devotional and related products (where applicable)"
+        ],
+        "extra": "DevBhakti does not directly perform temple services but enables bookings and transactions between users and temples/vendors."
+      },
+      {
+        "title": "2. Cancellation Policy",
+        "content": "All bookings and orders made on DevBhakti are final. Once a booking, order, or transaction is confirmed:",
+        "points": [
+          "No cancellations are permitted",
+          "This includes changes requested by users after payment"
+        ],
+        "extra": "Users are advised to carefully review all details before completing a transaction."
+      },
+      {
+        "title": "3. Refund Policy",
+        "content": "DevBhakti maintains a strict no refund policy. Under this policy:",
+        "points": [
+          "Payments completed for services and products are non-refundable"
+        ],
+        "secondary_content": "DevBhakti does not provide refunds for:",
+        "secondary_points": [
+          "Change of mind",
+          "Incorrect user details",
+          "Personal conflicts or schedule changes",
+          "Dissatisfaction with a service performed",
+          "Failure to attend a scheduled service"
+        ]
+      },
+      {
+        "title": "4. Limited Exception (Technical Failures Only)",
+        "content": "In exceptionally rare cases, DevBhakti may consider a refund solely for:",
+        "points": [
+          "Duplicate payments caused by technical errors",
+          "Technical failures where funds were not successfully settled"
+        ],
+        "extra": "Such refund consideration is discretionary, subject to verification, and may involve coordination with the relevant temple/vendor. Platform service fees and payment gateway charges may not be refundable."
+      },
+      {
+        "title": "5. Donation Transactions",
+        "content": "Donation-related services are currently not activated on the platform. When activated in the future, donations will generally be considered voluntary contributions directly to temples, and refunds will not be permitted except in cases of documented technical payment failures."
+      },
+      {
+        "title": "6. Shipping & Physical Goods (if applicable)",
+        "content": "For physical products sold on the platform, please also refer to the Shipping Policy linked separately on the site."
+      },
+      {
+        "title": "7. Legal Jurisdiction",
+        "content": "This policy is governed by the laws of India, and any disputes shall be subject to the exclusive jurisdiction of courts in Mumbai, Maharashtra."
+      },
+      {
+        "title": "8. Customer Support & Grievance Redressal",
+        "content": "For support or assistance, users may contact:",
+        "p1": "In accordance with the Consumer Protection (E-Commerce) Rules, 2020, the details of the Grievance Officer are as follows:",
+        "officer_name": "Siddharth Pednekar",
+        "designation": "Grievance Officer",
+        "email": "grievance.officer@devbhakti.in",
+        "extra": "All grievances shall be acknowledged within 48 hours and resolved within 30 days from receipt."
+      }
+    ]
+  },
+  "shipping_policy": {
+    "title": "Shipping Policy",
+    "effective_date": "Effective Date: 7 February 2026",
+    "intro": "This Shipping Policy is issued in accordance with the Consumer Protection (E-Commerce) Rules, 2020 and applies to orders for physical goods on DevBhakti (operated by Divinity Labs Private Limited).",
+    "clauses": [
+      {
+        "title": "1. Order Processing",
+        "content": "Orders for physical goods are processed once payment is confirmed. Processing time may vary based on:",
+        "points": [
+          "Product type",
+          "Vendor/temple dispatch timelines",
+          "Seasonal or festival demand surges"
+        ],
+        "extra": "All timelines provided at checkout are indicative and not guaranteed."
+      },
+      {
+        "title": "2. Delivery",
+        "content": "DevBhakti may facilitate shipping through third-party logistics partners, vendor dispatch, or temple dispatch. DevBhakti is not responsible for delays caused by:",
+        "points": [
+          "Courier disruptions",
+          "Incorrect address or contact details provided by the user",
+          "Weather, natural events, or force majeure",
+          "Regional logistical constraints"
+        ]
+      },
+      {
+        "title": "3. Shipping Charges",
+        "content": "Shipping charges, if applicable, will be displayed at checkout and are based on:",
+        "points": [
+          "Delivery location",
+          "Weight and size of products",
+          "Third-party logistics pricing"
+        ],
+        "extra": "Additional shipping charges may apply for re-delivery in the event of failed delivery due to user errors."
+      },
+      {
+        "title": "4. No Returns & No Exchanges",
+        "content": "Due to the religious, customized, and perishable nature of devotional products (including prasad and ritual items):",
+        "points": [
+          "All sales are final",
+          "Products cannot be returned or exchanged once ordered"
+        ]
+      },
+      {
+        "title": "5. Damaged or Incorrect Items",
+        "content": "If a product is damaged in transit or is incorrect:",
+        "points": [
+          "The user must notify us at support@devbhakti.in within 48 hours of delivery",
+          "Users should provide photographic evidence",
+          "DevBhakti will coordinate with the shipping partner/vendor for verification"
+        ],
+        "extra": "Replacement or resolution is at DevBhaktiâ€™s discretion following verification."
+      },
+      {
+        "title": "6. Limitation of Liability",
+        "content": "DevBhaktiâ€™s liability for delivery issues is limited to:",
+        "points": [
+          "The transaction value paid for the item"
+        ],
+        "secondary_content": "DevBhakti shall not be liable for:",
+        "secondary_points": [
+          "Indirect or consequential loss",
+          "Emotional or sentimental claims",
+          "Any incidental expenses arising from delivery issues"
+        ]
+      },
+      {
+        "title": "7. Force Majeure",
+        "content": "DevBhakti shall not be liable for delays or failures in delivery resulting from events or causes beyond reasonable control, including but not limited to:",
+        "points": [
+          "Natural disasters",
+          "Government restrictions or lockdowns",
+          "Courier company strikes",
+          "Pandemic or epidemic conditions",
+          "Acts of God"
+        ],
+        "extra": "In such cases, delivery timelines may be extended without liability."
+      },
+      {
+        "title": "8. Legal Jurisdiction",
+        "content": "This policy is governed by Indian law, and any disputes shall be subject to the exclusive jurisdiction of courts in Mumbai, Maharashtra."
+      }
+    ]
+  },
+  "grievance": {
+    "title": "Grievance Officer",
+    "effective_date": "Effective Date: 7 February 2026",
+    "intro": "In accordance with the Consumer Protection Act, 2019 and the Consumer Protection (E-Commerce) Rules, 2020.",
+    "officer": {
+      "title": "Designated Officer",
+      "name": "Siddharth Pednekar",
+      "designation": "Grievance Officer",
+      "company": "Divinity Labs Private Limited",
+      "platform": "DevBhakti",
+      "email": "grievance.officer@devbhakti.in"
+    },
+    "mechanism": {
+      "title": "Grievance Redressal Mechanism",
+      "subtitle": "Users may submit complaints regarding:",
+      "categories": [
+        "Platform services",
+        "Booking issues",
+        "Privacy concerns",
+        "Refund matters",
+        "Any other platform-related grievances"
+      ],
+      "stats": {
+        "ack": "Acknowledgment",
+        "ack_time": "Within 48 Hours",
+        "res": "Resolution Time",
+        "res_time": "Within 30 Days"
+      },
+      "footer": "All complaints shall be acknowledged within 48 hours and resolved within 30 days from receipt, as required under applicable law."
+    },
+    "jurisdiction": {
+      "title": "Jurisdiction",
+      "p1": "All grievances shall be governed by the laws of India and subject to the exclusive jurisdiction of courts in Mumbai, Maharashtra."
+    },
+    "cards": {
+      "compliance": {
+        "title": "Legal Compliance",
+        "text": "Ensuring all operations adhere to the latest regulatory frameworks."
+      },
+      "documentation": {
+        "title": "Documentation",
+        "text": "Maintained records of all grievances and their resolutions."
+      }
+    }
+  },
+  "temple_register": {
+    "hero": {
+      "title_part1": "Helping Temples Stay Connected",
+      "title_part2": "with Devotees Worldwide",
+      "description": "A temple-first digital platform for online poojas, donations, live darshan, and devotee communication.",
+      "register_button": "Register Your Temple"
+    },
+    "intro": {
+      "title": "Bridging Ancient Traditions With Modern Technology",
+      "description": "DevBhakti is a sacred digital platform that honors our ancient traditions while embracing modern technology. We empower temples to connect with devotees globally, allowing the divine blessings to reach every corner of the world.",
+      "bullet1": "Easy Setup in Minutes",
+      "bullet2": "Secure & Reliable Platform",
+      "bullet3": "Transparent Processing",
+      "bullet4": "Grow Your Temple's Reach",
+      "get_started": "Get Started Today"
+    },
+    "benefits_section": {
+      "title": "Divine Benefits For Your Temple",
+      "benefits": {
+        "b1": {
+          "title": "Digital Temple Presence",
+          "desc": "Create a divine digital space for your temple where devotees can connect from anywhere in the world."
+        },
+        "b2": {
+          "title": "Sacred Ritual Bookings",
+          "desc": "Allow devotees to book special poojas, abhisheks, and homams online with just a few clicks."
+        },
+        "b3": {
+          "title": "Divine Prasad & Donation",
+          "desc": "Accept donations and prasad offerings digitally, enabling devotees to contribute to your temple's growth."
+        },
+        "b4": {
+          "title": "Live Divine Darshan",
+          "desc": "Broadcast daily aartis, special ceremonies, and festivals for devotees who cannot be physically present."
+        },
+        "b5": {
+          "title": "Global Devotee Community",
+          "desc": "Connect with NRIs and devotees worldwide, expanding your temple's spiritual influence globally."
+        },
+        "b6": {
+          "title": "Sacred Mobile Apps",
+          "desc": "Dedicated Android and iOS apps for your temple, bringing divine blessings to your devotees' fingertips."
+        }
+      }
+    },
+    "testimonials_section": {
+      "title": "Temples Digitised By DevBhakti",
+      "t1": {
+        "name": "Shri Kashi Vishwanath Mandir",
+        "role": "Temple Management",
+        "content": "DevBhakti has revolutionized how we connect with our devotees globally. Our online rituals have seen a 400% increase in participation."
+      },
+      "t2": {
+        "name": "Tirupati Balaji Temple Trust",
+        "role": "Priest Council",
+        "content": "The live streaming feature has brought the divine presence of Lord Venkateswara to millions of homes worldwide."
+      },
+      "t3": {
+        "name": "Siddhivinayak Temple",
+        "role": "Administration",
+        "content": "Managing donations and bookings has never been easier. The dashboard is intuitive and saves us hours of work daily."
+      }
+    },
+    "features_section": {
+      "title": "Complete Digital Temple Solution",
+      "features": {
+        "f1": {
+          "title": "Temple Website",
+          "desc": "Beautiful, mobile-friendly website for your temple"
+        },
+        "f2": {
+          "title": "Donation Portal",
+          "desc": "Secure platform for receiving donations online"
+        },
+        "f3": {
+          "title": "Pooja Booking",
+          "desc": "Easy booking system for all rituals and ceremonies"
+        },
+        "f4": {
+          "title": "Live Streaming",
+          "desc": "HD quality streaming of daily aartis and events"
+        },
+        "f5": {
+          "title": "Devotee App",
+          "desc": "Custom mobile app for Android and iOS"
+        },
+        "f6": {
+          "title": "Analytics Dashboard",
+          "desc": "Insights to grow your temple's digital presence"
+        }
+      }
+    },
+    "cta": {
+      "title": "Join The Divine Digital Revolution",
+      "description": "Bring your temple's blessings to millions of devotees worldwide with our sacred digital platform.",
+      "register_now": "Register Your Temple Now",
+      "free_to_join": "Free to Join",
+      "easy_setup": "Easy Setup",
+      "dedicated_support": "Dedicated Support"
+    },
+    "stats": {
+      "temples": "Sacred Temples",
+      "devotees": "Devotees Connected",
+      "rituals": "Daily Rituals",
+      "live_darshan": "Live Darshan"
+    }
+  },
+  "registration_form": {
+    "header": {
+      "title": "Register Your Temple",
+      "description": "Join our community and reach thousands of devotees."
+    },
+    "sections": {
+      "admin": "Administrator Identity",
+      "profile": "Temple Profile",
+      "media": "Divine Media",
+      "poojas": "Performed Poojas",
+      "online": "Online & Contact",
+      "events": "Temple Events",
+      "available_poojas": "Available Poojas",
+      "available_poojas_subtitle": "Select poojas that are performed at this temple."
+    },
+    "labels": {
+      "admin_name": "Trustee / Management Name *",
+      "phone": "Contact Phone *",
+      "email": "Email Address",
+      "temple_name": "Temple Official Name *",
+      "location": "Location (City, State) *",
+      "category": "Main Deity / Category *",
+      "operating_hours": "Daily Operating Hours",
+      "visitor_count": "Visitor Count (Approx daily)",
+      "address": "Full Address *",
+      "description": "Description / Overview",
+      "main_image": "Main Profile Image",
+      "banners": "Banners (Max 5)",
+      "website": "Official Website",
+      "maps_link": "Google Maps Link",
+      "event_name": "Event Name",
+      "event_date": "Event Date",
+      "active": "Active",
+      "opening": "Opening",
+      "closing": "Closing",
+      "shift": "$VAL$ Operating Hours",
+      "morning": "Morning",
+      "evening": "Evening",
+      "aspect_ratio": "Aspect Ratio: {{ratio}} ({{px}})"
+    },
+    "placeholders": {
+      "admin_name": "Full Name of Trustee",
+      "phone": "XXXXX XXXXX",
+      "email": "admin@temple.org",
+      "temple_name": "e.g. Somnath Mahadev Temple",
+      "location": "Varanasi, UP",
+      "category": "e.g. Shiva, Ganesha",
+      "visitor_count": "e.g. 5,000+",
+      "address": "Street, Landmark, Pincode",
+      "description": "General amenities and visitor info...",
+      "website": "https://temple-name.org",
+      "maps_link": "Share location link",
+      "time": "07:00 AM",
+      "add_pooja": "Didn't find a pooja? Add a new one..."
+    },
+    "validation": {
+      "phone_registered": "This number is already registered. Please login.",
+      "phone_invalid": "Mobile number must be exactly 10 digits.",
+      "phone_unique": "Ensure unique phone number.",
+      "limit_reached": "Limit Reached",
+      "files_too_large": "Files Too Large",
+      "too_many_banners": "Too Many Banners",
+      "limit_banners": "You can only upload up to 5 banner images.",
+      "file_large": "File Too Large",
+      "main_image_limit": "Main profile image exceeds 2MB limit.",
+      "banner_image_limit": "Banner exceeds 5MB limit.",
+      "registration_blocked": "Registration Blocked",
+      "submit_error": "Failed to submit registration.",
+      "email_registered": "This email is already registered.",
+      "phone_exists": "This mobile number is already in use.",
+      "error_title": "Error",
+      "success_title": "Success",
+      "success_message": "Temple registration submitted successfully"
+    },
+    "tips": {
+      "operating_hours": "Tip: You can set separate timings for Morning and Evening shifts. Devotees will see both.",
+      "poojas_desc": "List of poojas and sevas you wish to offer. Please select from the available poojas. Once approved by the admin, you will be able to create additional poojas."
+    },
+    "success_screen": {
+      "title": "Registration Successful!",
+      "message": "Your temple registration has been submitted and is currently Pending Admin Approval. You will receive a notification once your account is activated.",
+      "back_to_home": "Back to Home"
+    },
+    "buttons": {
+      "submit": "Submit Registration",
+      "submitting": "Submitting Divine Details...",
+      "select_photo": "Select Main Photo",
+      "edit_image": "Edit Temple Image",
+      "adjust_profile": "Adjust Temple Profile Image",
+      "adjust_banner": "Adjust Temple Banner Image",
+      "add": "Add"
+    }
+  },
+  "temple_login_modal": {
+    "header": {
+      "title": "Temple Portal",
+      "subtitle": "Verify your registered number to enter"
+    },
+    "labels": {
+      "phone": "Temple Owner/Authority's Mobile Number",
+      "otp": "Verification Code"
+    },
+    "placeholders": {
+      "phone": "XXXXX XXXXX",
+      "otp": "Â· Â· Â· Â· Â· Â·"
+    },
+    "buttons": {
+      "continue": "Continue to Dashboard",
+      "requesting": "Requesting OTP...",
+      "change_number": "Change Number",
+      "verify": "Verify & Login",
+      "verifying": "Verifying..."
+    },
+    "footer": {
+      "staff_login": "Temple Staff? Login Here",
+      "new_admin": "New Temple Administrator?",
+      "register": "Register Temple"
+    },
+    "messages": {
+      "welcome_back": "Welcome Back",
+      "success": "Login successful to Temple Panel",
+      "send_failed": "Failed to send OTP. Please try again.",
+      "invalid_otp": "Invalid or expired OTP"
+    },
+    "dev_otp": "Development OTP"
+  },
+  "live_darshan_page": {
+    "hero_essence": "DIVINE ESSENCE",
+    "hero_title": "The Sacred Power of",
+    "hero_title_highlight": "Live Darshan",
+    "hero_subtitle": "Experience the divine through Live Darshan. Witness sacred rituals in real-time to welcome peace, energy, and spiritual growth into your home.",
+    "sanctum_silent": "The Sanctum is Silent",
+    "sanctum_subtitle": "Currently, no live darshans are in progress. The divine presence awaits your return during scheduled aarti times.",
+    "buttons_explore": "Explore Temples",
+    "buttons_book": "Book a Pooja",
+    "status_live": "LIVE",
+    "status_viewers": "Viewers",
+    "status_now_playing": "Now Playing",
+    "actions_donate": "Donate Now",
+    "actions_book_pooja": "Book Pooja",
+    "sections_other_temples": "Other Live Temples",
+    "search_placeholder": "Search for live temple...",
+    "channels_available": "Live Channels Available"
+  },
+  "donation": {
+    "hero": {
+      "tagline": "Sacred Offering",
+      "title": "The Divine Act of",
+      "title_highlight": "Giving",
+      "subtitle": "\"The act of giving is the path to spiritual abundance.\" Support ancient holy shrines, annadaan, and gau seva to preserve our sacred heritage."
+    },
+    "steps": {
+      "temple": "Temple",
+      "amount": "Amount",
+      "details": "Details",
+      "payment": "Payment",
+      "receipt": "Receipt"
+    },
+    "step1": {
+      "title": "Select a Sacred Temple",
+      "subtitle": "Choose the temple where you wish to offer your donation",
+      "search_placeholder": "Search a Temple To Donate To"
+    },
+    "step2": {
+      "title": "Enter Amount",
+      "other_placeholder": "Other Amount",
+      "total_label": "Total Contribution"
+    },
+    "step3": {
+      "title": "Devotee Details",
+      "subtitle": "Please provide your details for the receipt",
+      "labels": {
+        "donor_name": "Donor Name",
+        "donor_name_placeholder": "e.g. Rahul Sharma",
+        "phone_number": "Phone Number",
+        "phone_placeholder": "+91 98765 43210",
+        "email_address": "Email Address",
+        "email_placeholder": "name@example.com",
+        "address_optional": "Address (Optional)",
+        "message": "Prayer / Sankalp Message (Optional)"
+      },
+      "placeholders": {
+        "name": "e.g. Rahul Sharma",
+        "phone": "+91 98765 43210",
+        "email": "name@example.com",
+        "address": "Your postal address",
+        "message": "Write a prayer or message to be offered at the temple..."
+      }
+    },
+    "step4": {
+      "title": "Review & Donate",
+      "subtitle": "Review your contribution details",
+      "donating_to": "Donating To",
+      "amount": "Amount",
+      "donor": "Donor",
+      "email": "Email",
+      "razorpay_description": "Donation to {{temple}}",
+      "receipt_80g": "80G Receipt",
+      "requested_pan": "Requested (PAN: {{pan}})",
+      "complete_title": "Complete Your Divine Offering",
+      "complete_subtitle": "Proceed securely to finalize your contribution.",
+      "pay_button": "Pay",
+      "processing": "Processing...",
+      "secure_note": "100% Secure & Encrypted Payments"
+    },
+    "step5": {
+      "title": "Payment Successful!",
+      "thank_you": "Thank you",
+      "devotee": "Devotee",
+      "contribution_received": "Your contribution of",
+      "has_been_received": "has been received gracefully.",
+      "txn_id": "Transaction ID",
+      "date": "Date",
+      "download_receipt": "Download Receipt",
+      "explore_more": "Explore More Temples",
+      "back_home": "Back to Home"
+    },
+    "buttons": {
+      "back": "Back",
+      "continue": "Continue to"
+    },
+    "toasts": {
+      "login_title": "Har Har Mahadev!",
+      "login_desc": "Please login to proceed with your divine offering. Taking you to the login page...",
+      "select_temple": "Please select a temple",
+      "enter_amount": "Please enter donation amount",
+      "fill_required": "Please fill all required fields",
+      "pan_required": "PAN is required for 80G receipt",
+      "session_expired": "Session Expired",
+      "login_again": "Please login again.",
+      "initiate_failed": "Failed to initiate donation",
+      "success_title": "ðŸ™ Donation Successful!",
+      "success_desc": "May you be blessed. Receipt sent to your email.",
+      "verification_failed": "Payment verification failed",
+      "verification_error": "Verification error",
+      "donation_failed": "Donation failed",
+      "download_failed": "Download Failed",
+      "download_error": "Could not download receipt. Please try again."
+    }
+  },
+  "profile": {
+    "loading": "Loading your sacred space...",
+    "tagline": "User Sanctuary",
+    "edit_title": "Edit Profile",
+    "view_title": "My Profile",
+    "edit_button": "Edit Details",
+    "back_button": "Back to View",
+    "logout_button": "Sign Out",
+    "stats": {
+      "rituals": "Rituals",
+      "sacred_items": "Sacred Items"
+    },
+    "status": {
+      "title": "Blessed Devotee",
+      "joined_date": "You have been part of DevBhakti family since {{date}}.",
+      "verified": "Verified Soul"
+    },
+    "fields": {
+      "name": "Full Name",
+      "phone": "Phone Number",
+      "email": "Email Connection",
+      "no_email": "No email linked",
+      "address": "Current Address",
+      "no_address": "Address not provided",
+      "native_place": "Native Place",
+      "no_native_place": "Native place not provided",
+      "gothra": "Gothra",
+      "kuldevi": "Kuldevi",
+      "kuldevta": "Kuldevta",
+      "dob": "Date of Birth",
+      "anniversary": "Anniversary",
+      "delivery_address": "Delivery Address"
+    },
+    "sections": {
+      "poojas": "Your Booked Poojas",
+      "booked_on": "Booked on {{date}}",
+      "no_bookings": "No bookings found in your sanctuary yet.",
+      "explore_poojas": "Explore Poojas",
+      "view_all_bookings": "View All Bookings",
+      "orders": "Your Sacred Orders",
+      "no_orders": "No recent sacred orders",
+      "order_id_prefix": "Sacred Order #",
+      "ordered_on": "Ordered on {{date}}",
+      "view_all_activities": "View All Activities"
+    },
+    "edit": {
+      "title": "Update Profile",
+      "subtitle": "Synchronize your official details.",
+      "name_label": "Spirit Name",
+      "phone_label": "Sacred Phone (Constant)",
+      "email_label": "Email Address",
+      "gothra_placeholder": "e.g. Kashyap",
+      "kuldevi_placeholder": "Enter Kuldevi",
+      "kuldevta_placeholder": "Enter Kuldevta",
+      "address_placeholder": "Enter your complete address",
+      "native_place_placeholder": "Enter your native place / home town",
+      "save_button": "Save Changes",
+      "cancel_button": "Cancel",
+      "image_recommendation": "Recommended: 500x500 px"
+    },
+    "messages": {
+      "success_title": "Profile Updated",
+      "success_desc": "Your sacred profile has been updated successfully.",
+      "fail_title": "Profile Update Failed",
+      "fail_desc": "Something went wrong.",
+      "download_failed": "Download Failed",
+      "download_error": "Could not download receipt. Please try again."
+    },
+    "modal": {
+      "title": "Booking Details",
+      "subtitle": "Sacred Receipt",
+      "status_label": "Booking Status",
+      "ritual_label": "Poojary / Ritual",
+      "temple_label": "Holy Temple",
+      "date_label": "Schedule Date",
+      "name_label": "Devotee Name",
+      "phone_label": "Contact Phone",
+      "ref_label": "Booking Reference",
+      "package_label": "Selected Package",
+      "offering_label": "Total Offering",
+      "download_button": "Download Receipt",
+      "receipt_prefix": "Receipt-",
+      "receipt_download": "Pooja Booking Receipt",
+      "booking_id": "Booking ID",
+      "status": "Status",
+      "purchased_at": "Receipt Generated",
+      "devotee_name": "Devotee Name",
+      "phone": "Phone",
+      "receipt_footer": "This is a computer-generated receipt and does not require a physical signature.",
+      "thank_you": "Thank you for choosing Dev Bhakti for your spiritual journey.",
+      "all_rights": "All rights reserved."
+    }
+  },
+  "favorites": {
+    "page_badge": "Personal Sanctuary",
+    "page_title_prefix": "My ",
+    "page_title_highlight": "Favorites",
+    "page_subtitle": "Your curated list of divine temples and sacred rituals that resonate with your soul.",
+    "stat_temples": "Temples",
+    "stat_poojas": "Poojas",
+    "stat_products": "Products",
+    "tab_temples": "Favorite Temples",
+    "tab_poojas": "Saved Poojas",
+    "tab_products": "Saved Products",
+    "details": "Details",
+    "book": "Book",
+    "remove_title": "Remove from favorites",
+    "loading_text": "Loading your sacred favorites...",
+    "error_title": "Error",
+    "error_load": "Failed to load favorites",
+    "removed_title": "Removed from favorites",
+    "remove_error": "Failed to remove favorite",
+    "no_temples_title": "No favorite temples yet",
+    "no_temples_subtitle": "Start exploring and save temples you'd like to visit.",
+    "no_temples_cta": "Discover Temples",
+    "no_poojas_title": "No saved rituals",
+    "no_poojas_subtitle": "Save sacred poojas and sevas that you wish to perform.",
+    "no_poojas_cta": "Explore Poojas",
+    "no_products_title": "No saved products",
+    "no_products_subtitle": "Your favorite items from the sacred marketplace will appear here.",
+    "no_products_cta": "Shop Products"
+  },
+  "orders": {
+    "page_title": "Your Sacred Journey",
+    "page_subtitle": "Tracking your spiritual essentials & blessings",
+    "empty_title": "No orders placed yet",
+    "empty_subtitle": "Explore our marketplace for sacred idols, incense, and more.",
+    "empty_cta": "Go to Marketplace",
+    "label_order_id": "Order ID",
+    "label_status": "Status",
+    "label_products": "Products",
+    "and_more": "& more",
+    "items_count": "Items",
+    "label_shipping_to": "Shipping To",
+    "not_provided": "Not provided",
+    "label_order_value": "Order Value",
+    "inclusive_taxes": "Inclusive of Taxes",
+    "btn_invoice": "Invoice",
+    "btn_hide_details": "Hide Details",
+    "btn_view_details": "View Details",
+    "section_shipping": "Shipping Destination",
+    "recipient_name": "Recipient Name",
+    "address": "Address",
+    "section_items_info": "Items Information",
+    "total_items": "Total Items",
+    "units": "Units",
+    "packages": "Packages",
+    "parcel": "Parcel(s)",
+    "support_pin": "Support Pin",
+    "tracking_label": "Shiprocket Tracking",
+    "tracking_synced": "Your order is synced for shipping",
+    "track_pkg": "Track Pkg #",
+    "package_breakdown": "Package Breakdown",
+    "official_warehouse": "Official Warehouse",
+    "standard_edition": "Standard Edition",
+    "unit_s": "Unit(s)",
+    "each": "each",
+    "items_subtotal": "Items Subtotal",
+    "platform_fee": "Platform Service Fee",
+    "shipping_cost": "Shipping",
+    "final_payment": "Final Payment",
+    "status_delivered": "Successfully Delivered",
+    "status_processing": "Processing Your Order",
+    "invoice_error": "Could not load invoice. Please try again."
+  },
+  "bookings": {
+    "page_title": "My Pooja Bookings",
+    "page_subtitle": "View and track your sacred rituals and spiritual services",
+    "empty_title": "No bookings yet",
+    "empty_subtitle": "Experience divine connection through our wide range of Poojas and Sevas.",
+    "empty_cta": "Browse Poojas",
+    "label_booking_id": "Booking ID",
+    "label_status": "Status",
+    "label_pooja_seva": "Pooja / Seva",
+    "label_devotee_name": "Devotee Name",
+    "label_total_offering": "Total Offering",
+    "btn_receipt": "Receipt",
+    "btn_hide_details": "Hide Details",
+    "btn_view_details": "View Details",
+    "status_pending": "Pending",
+    "status_booked": "Booked",
+    "status_completed": "Completed",
+    "status_rejected": "Rejected",
+    "status_cancelled": "Cancelled",
+    "section_contact": "Contact Information",
+    "label_phone": "Phone Number",
+    "label_email": "Email Address",
+    "not_provided": "Not provided",
+    "section_spiritual": "Spiritual Details",
+    "label_gothra": "Gothra",
+    "label_kuldevi": "Kuldevi",
+    "label_kuldevta": "Kuldevta",
+    "label_dob": "Date of Birth",
+    "label_anniversary": "Anniversary",
+    "label_native_place": "Native Place",
+    "section_add_devotees": "Additional Devotees",
+    "devotee_prefix": "Devotee #",
+    "section_special_requests": "Special Requests / Gotra",
+    "section_proof": "Pooja Completion Proof",
+    "view_full_size": "View Full Size",
+    "label_ritual_by": "Ritual Conducted By",
+    "label_booking_date": "Booking Date",
+    "download_failed_title": "Download Failed",
+    "download_failed_desc": "Could not download receipt. Please try again.",
+    "download_error_title": "Error",
+    "download_error_desc": "An unexpected error occurred during download."
+  },
+  "booking_client": {
+    "loading": "Loading Sacred Services...",
+    "back_to_poojas": "Back to Poojas",
+    "back_to_temples": "Back to Temples",
+    "book_prefix": "Book ",
+    "book_default": "Book Pooja Service",
+    "complete_prefix": "Complete your booking for ",
+    "complete_default": "Complete your spiritual journey with easy online booking",
+    "package_basic_name": "Basic Package",
+    "package_basic_desc": "Standard ritual with digital certificate",
+    "package_standard_name": "Standard Package",
+    "package_standard_desc": "Detailed ritual with prasad delivery",
+    "package_premium_name": "Premium Package",
+    "package_premium_desc": "Grand ritual with live stream and special prasad",
+    "persons_single": "Person",
+    "persons_multiple": "People",
+    "razorpay_name": "DevBhakti",
+    "razorpay_description": "Pooja Booking Payment",
+    "step_select_service": "Select Service",
+    "step_choose_date": "Choose Date",
+    "step_your_details": "Your Details",
+    "step_payment": "Payment",
+    "step_confirmation": "Confirmation",
+    "select_temple": "Select Temple",
+    "choose_temple": "Choose a temple",
+    "select_pooja_service": "Select Pooja Service",
+    "no_poojas_available": "No pooja services available for the selected temple.",
+    "select_date": "Select Date",
+    "pick_a_date": "Pick a date",
+    "date_unavailable_title": "Date Unavailable",
+    "select_package": "Select Package",
+    "devotee_info_title": "Devotee Information",
+    "field_full_name": "Full Name *",
+    "field_phone": "Phone Number *",
+    "field_email": "Email Address *",
+    "field_gothra": "Gothra *",
+    "field_kuldevi": "Kuldevi *",
+    "field_kuldevta": "Kuldevta *",
+    "field_dob": "Date of Birth *",
+    "field_native_place": "Native Place *",
+    "field_anniversary": "Anniversary (Optional)",
+    "field_address": "Address",
+    "field_special_requests": "Special Requests",
+    "dont_know": "Don't Know?",
+    "placeholder_name": "Enter full name",
+    "placeholder_phone": "Enter phone",
+    "placeholder_email": "Enter email",
+    "placeholder_gothra": "e.g. Kashyap",
+    "placeholder_kuldevi": "Enter Kuldevi",
+    "placeholder_kuldevta": "Enter Kuldevta",
+    "placeholder_native_place": "E.g. Ayodhya",
+    "placeholder_address": "Enter your address (optional)",
+    "placeholder_special_requests": "Any special requests",
+    "placeholder_devotee_name": "Enter name",
+    "placeholder_devotee_gothra": "Enter Gothra",
+    "placeholder_devotee_kuldevi": "Enter Kuldevi",
+    "placeholder_devotee_kuldevta": "Enter Kuldevta",
+    "add_devotee_title": "Additional Devotee Information (Optional)",
+    "devotee_label": "Devotee ",
+    "field_devotee_name": "Full Name",
+    "field_devotee_gothra": "Gothra",
+    "field_devotee_kuldevi": "Kuldevi",
+    "field_devotee_kuldevta": "Kuldevta",
+    "booking_summary": "Booking Summary",
+    "summary_temple": "Temple",
+    "summary_service": "Service",
+    "summary_date": "Date",
+    "summary_package": "Package",
+    "summary_service_price": "Service Price",
+    "summary_package_price": "Package Price",
+    "summary_platform_fee": "Platform Fee",
+    "summary_total": "Total Amount",
+    "payment_method": "Payment Method",
+    "online_payment": "Online Payment",
+    "pay_via": "Pay via UPI, Cards, or Net Banking",
+    "confirmed_title": "Booking Confirmed!",
+    "confirmed_temple": "Temple",
+    "confirmed_service": "Service",
+    "confirmed_devotee": "Devotee",
+    "confirmed_phone": "Phone",
+    "confirmed_date": "Date",
+    "confirmed_package": "Package",
+    "confirmed_native_place": "Native Place",
+    "confirmed_platform_fee": "Platform Fee",
+    "confirmed_total": "Total Amount",
+    "btn_download_receipt": "Download Receipt",
+    "btn_view_bookings": "View My Bookings",
+    "btn_book_another": "Book Another Pooja",
+    "btn_previous": "Previous",
+    "btn_next_step": "Next Step",
+    "btn_confirm_pay": "Confirm & Pay",
+    "toast_select_pooja": "Please select a pooja service",
+    "toast_select_temple": "Please select a temple",
+    "toast_select_date_package": "Please select date and package",
+    "toast_date_unavailable": "Selected date is unavailable",
+    "toast_fill_fields": "Please fill all compulsory fields",
+    "toast_fill_fields_desc": "Name, Phone, Email, Gothra, Kuldevi, Kuldevta, DOB, and Native Place are required.",
+    "toast_login_required": "Please login as devotee to continue booking",
+    "toast_login_to_book": "Please login to book",
+    "toast_booking_confirmed": "Booking Confirmed!",
+    "toast_booking_confirmed_desc": "You will receive confirmation via email and SMS.",
+    "toast_verification_failed": "Verification Failed",
+    "toast_verification_failed_desc": "Please contact support if amount was deducted.",
+    "toast_booking_failed": "Booking Failed",
+    "toast_error": "Error",
+    "toast_error_desc": "Failed to confirm booking. Please try again.",
+    "toast_loading_error": "Error loading services",
+    "slot_available": "Slot available",
+    "slab_based": "Slab-based",
+    "default_temple": "DevBhakti Sacred Services"
+  },
+  "admin_login": {
+    "title": "DevBhakti Admin Portal",
+    "subtitle": "Please sign in to access the management dashboard",
+    "email_label": "Email Address",
+    "email_placeholder": "your@gmail.com",
+    "password_label": "Password",
+    "password_placeholder": "Enter Your Password",
+    "forgot_password": "Forgot password?",
+    "sign_in_btn": "Sign In",
+    "staff_login_prompt": "DevBhakti Admin Staff? Login Here",
+    "secure_access_notif": "Secure access for authorized personnel only.",
+    "back_to_site": "â† Back to main website",
+    "error_invalid_credentials": "Invalid email or password. Please try again."
+  },
+  "temple_preview": {
+    "default_category": "Temple",
+    "reviews_count": " reviews",
+    "about_title": "About",
+    "no_description": "No description provided.",
+    "history_title": "History",
+    "tabs": {
+      "poojas": "Poojas & Aartis",
+      "events": "Events"
+    },
+    "no_poojas": "No poojas listed yet.",
+    "no_events": "No upcoming events.",
+    "managed_by": "Managed By",
+    "map_location": "Map Location",
+    "view_google_maps": "View on Google Maps",
+    "gallery_preview": "Gallery Preview"
+  },
+  "image_cropper": {
+    "default_title": "Precise Image Selection",
+    "version_info": "Selection Tool v2.0",
+    "corners_active": "Corner Handles Active",
+    "aspect_ratio": "Aspect Ratio",
+    "ratios": {
+      "free": "Free / Manual",
+      "banner": "Banner"
+    },
+    "modes": {
+      "selection_mode": "Selection Mode",
+      "adjust_box": "Adjust Box",
+      "move_image": "Move Image"
+    },
+    "rotation": "Rotation",
+    "scaling": "Scaling",
+    "tips": {
+      "handles": "Corner Handles",
+      "dragging": "Dragging Image",
+      "click_draw": "Click to Draw"
+    },
+    "finalize_btn": "FINALIZE & SAVE IMAGE"
+  },
+  "admin_pooja_form": {
+    "sections": {
+      "identity": "Service Identity & Configuration",
+      "details": "Localized Details",
+      "shared": "Shared Global Settings",
+      "packages": "Pricing & Packages",
+      "ritual": "Ritual Process Steps",
+      "faqs": "Frequently Asked Questions"
+    },
+    "labels": {
+      "name": "Pooja/Service Name",
+      "category": "Categories/Purpose",
+      "about": "About this Service",
+      "benefits": "Key Benefits",
+      "benefit": "Benefit",
+      "highlights": "Service Highlights",
+      "paragraph": "Paragraph",
+      "master_identity": "Master Template Identity",
+      "is_master": "Set as Master Pooja Template",
+      "assigned_temple": "Assigned Temple",
+      "price": "Base/Starting Price",
+      "time": "Service Timings",
+      "banner": "Service Banner Image",
+      "banner_title": "Upload Professional Service Visuals",
+      "upload": "Upload",
+      "select_tier": "Select Service Packages/Tiers",
+      "tier_type": "Package Tier",
+      "tier_price": "Tier Price",
+      "tier_note": "Package Note/Subtitle",
+      "step_title": "Step Title",
+      "step_desc": "Step Description",
+      "faq_q": "Question",
+      "faq_a": "Answer"
+    },
+    "placeholders": {
+      "name": "Enter service name...",
+      "category": "Select categories...",
+      "search_category": "Search categories...",
+      "about": "Provide a brief overview of the pooja...",
+      "highlight": "Add point...",
+      "not_applicable": "Not Applicable (Master Template)",
+      "select_temple": "Select a temple...",
+      "time": "e.g. 6:00 AM - 12:00 PM",
+      "tier_note": "e.g. For family of 4...",
+      "step_title": "e.g. Sankap",
+      "step_desc": "Explain what happens...",
+      "faq_q": "Enter frequently asked question...",
+      "faq_a": "Enter detailed response..."
+    },
+    "help": {
+      "is_master": "Master templates act as blueprints for all temples.",
+      "banner": "High-quality 16:9 images work best for highlighting the ritual spiritual essence."
+    },
+    "actions": {
+      "create": "Create Pooja Service",
+      "update": "Update Service Details"
+    },
+    "crop_modal": {
+      "title": "Crop Service Image"
+    }
+  }
+  ,
+  "admin": {
+    "products": {
+      "basic_info": "Basic Information",
+      "product_name": "Product Name",
+      "description": "Description",
+      "highlights": "Product Highlights (Comma separated)",
+      "origin": "Origin / Source",
+      "shipping_label": "Shipping Label",
+      "fallback_hint": "(English used as fallback if left blank)",
+      "variants": "Product Variants",
+      "add_variant": "Add Variant",
+      "variant": "Variant",
+      "variant_name": "Variant Name",
+      "variant_image": "Variant Image",
+      "price": "Selling Price (₹)",
+      "stock": "Stock Quantity",
+      "settings": "Product Settings",
+      "category": "Category",
+      "status": "Status",
+      "vendor": "Product Owner / Vendor",
+      "rating": "Base Rating (1-5)",
+      "dimensions": "Shiprocket Dimensions (Required)",
+      "weight": "Weight (kg)",
+      "length": "Length (cm)",
+      "width": "Width (cm)",
+      "height": "Height (cm)",
+      "save_changes": "Save Changes",
+      "cancel": "Cancel",
+      "saving": "Saving...",
+      "create_product": "Create New Product",
+      "edit_product": "Edit Product",
+      "success_create": "Product created successfully",
+      "success_update": "Product updated successfully",
+      "summary": "Product Summary",
+      "total_variants": "Total Variants",
+      "price_range": "Price Range",
+      "total_stock": "Total Stock",
+      "no_en_name": "No English name",
+      "no_hi_name": "No Hindi name",
+      "no_mr_name": "No Marathi name",
+      "select_category": "Select category",
+      "pending": "Pending",
+      "approved": "Approved",
+      "rejected": "Rejected",
+      "select_vendor": "Select Owner/Vendor",
+      "search_vendor": "Search owner or vendor...",
+      "no_vendor_found": "No owner found.",
+      "image": "Image",
+      "aspect_ratio": "Aspect Ratio: 1:1 (800x800 px)",
+      "file_hint": "JPG, PNG up to 5MB",
+      "dim_note": "Note: Exact dimensions help in accurate shipping charges.",
+      "rec_size": "Recommended: 800x800 px",
+      "managed_from_en": "are managed from the English tab.",
+      "list": {
+        "title": "Product Management",
+        "desc": "Manage products, variants, and pricing.",
+        "add_new": "Add New Product",
+        "stat_total": "Total Products",
+        "stat_pending": "Pending Products",
+        "stat_approved": "Approved Products",
+        "search_placeholder": "Search by product name, category, or vendor...",
+        "filter_owner": "Filter by Owner",
+        "all_owners": "All Owners",
+        "filter_date": "Filter by date",
+        "clear_filters": "Clear all filters",
+        "table_product": "Product",
+        "table_category": "Category",
+        "table_owner": "Owner/Vendor",
+        "table_variants_pricing": "Variants & Pricing",
+        "table_status": "Status",
+        "table_actions": "Actions",
+        "loading_data": "Loading data...",
+        "no_products": "No products found.",
+        "more": "more",
+        "items_pagination": "Showing {start} to {end} of {total} products",
+        "previous": "Previous",
+        "next": "Next",
+        "details_title": "Product Details",
+        "product_id": "Product ID",
+        "stock": "Stock",
+        "delete_confirm": "Are you sure you want to delete this product?",
+        "success_delete": "Product deleted successfully",
+        "status_approved": "Approved",
+        "status_pending": "Pending",
+        "status_rejected": "Rejected",
+        "approve_product": "Approve Product",
+        "set_pending": "Set to Pending",
+        "edit_product": "Edit Product",
+        "view_details": "View Details",
+        "delete_product": "Delete Product"
+      },
+      "categories": {
+        "title": "Product Categories",
+        "desc": "Manage product categories and their properties",
+        "add_new": "Add Category",
+        "search_placeholder": "Search categories...",
+        "loading_data": "Loading categories...",
+        "no_categories": "No categories found",
+        "get_started": "Get started by creating your first product category",
+        "table_category": "Category",
+        "table_products": "Products",
+        "table_status": "Status",
+        "table_actions": "Actions",
+        "active": "Active",
+        "inactive": "Inactive",
+        "deactivate": "Deactivate Category",
+        "activate": "Activate Category",
+        "view_details": "View Details",
+        "edit_category": "Edit Category",
+        "delete_category": "Delete Category",
+        "delete_confirm": "Are you sure you want to delete this category?",
+        "details_title": "Category Details",
+        "category_id": "Category ID",
+        "sort_order": "Sort Order",
+        "products_count": "Products Count",
+        "created_at": "Created At",
+        "updated_at": "Updated At",
+        "create_title": "Create Category",
+        "create_desc": "Add a new product category",
+        "info": "Category Information",
+        "name": "Category Name",
+        "image": "Category Image",
+        "status_active": "Active Status",
+        "status_inactive_hint": "Inactive categories won't appear in product dropdowns",
+        "cancel": "Cancel",
+        "creating": "Creating...",
+        "saving": "Saving...",
+        "save_changes": "Save Changes",
+        "edit_title": "Edit Category",
+        "edit_desc": "Update product category properties",
+        "name_required": "Category name (English) is required",
+        "validation_error": "Validation Error",
+        "fill_required": "Please fill all required fields correctly",
+        "success_create": "Success",
+        "success_message": "Category created successfully",
+        "success_update": "Success",
+        "update_message": "Category updated successfully",
+        "error_create": "Error Creating Category",
+        "error_update": "Error Updating Category",
+        "error_loading": "Error Loading Category",
+        "back": "Back"
+      },
+      "orders": {
+        "title": "Product Orders",
+        "desc": "Manage and track all product orders across temples",
+        "search_placeholder": "Search by ID or Devotee...",
+        "filter_date": "Pick a date",
+        "filter_status": "Order Status",
+        "filter_payment": "Payment Status",
+        "all_status": "All Status",
+        "all_payment": "All Payment",
+        "selected_count": "{count} Selected",
+        "print_labels": "Print Labels",
+        "export_excel": "Export Excel",
+        "table_order_id": "Order ID",
+        "table_devotee": "Devotee",
+        "table_date_time": "Date & Time",
+        "table_amount": "Amount",
+        "table_status": "Status",
+        "table_payment": "Payment",
+        "table_actions": "Actions",
+        "fetching_orders": "Fetching orders...",
+        "no_matching_orders": "No matching orders found",
+        "no_orders_yet": "No orders yet",
+        "details_title": "Order Details",
+        "customer_info": "Customer Information",
+        "shipping_address": "Shipping Address",
+        "consignments": "Order Consignments ({count})",
+        "item_product": "Product",
+        "item_variant": "Variant",
+        "item_qty": "Qty",
+        "item_amount": "Amount",
+        "subtotal": "Consignment Subtotal",
+        "total_order_value": "Total Order Value",
+        "delivery_process_hint": "Sacred Delivery Processed by DevBhakti",
+        "confirm_status_update": "Confirm Status Update",
+        "status_change_warning": "Are you sure you want to change the order status to {status}? This will notify the customer and potentially trigger shipping processes.",
+        "update_success": "Status Updated",
+        "update_error": "Update Failed",
+        "prev": "Prev",
+        "next": "Next",
+        "page_of": "Page {current} of {total}",
+        "status_pending": "Pending",
+        "status_accepted": "Accepted",
+        "status_processing": "Processing",
+        "status_shipped": "Shipped",
+        "status_delivered": "Delivered",
+        "status_completed": "Completed",
+        "status_cancelled": "Cancelled",
+        "status_failed": "Failed",
+        "status_paid": "Paid",
+        "status_refunded": "Refunded",
+        "invoice": {
+          "title": "INVOICE",
+          "shipping_address": "SHIPPING ADDRESS",
+          "sold_by": "SOLD BY",
+          "invoice_details": "INVOICE DETAILS",
+          "invoice_no": "INVOICE NO",
+          "invoice_date": "INVOICE DATE",
+          "order_no": "ORDER NO",
+          "order_date": "ORDER DATE",
+          "channel": "CHANNEL",
+          "payment_method": "PAYMENT METHOD",
+          "remark": "REMARK",
+          "table_sno": "S.NO",
+          "table_product": "PRODUCT NAME",
+          "table_hsn": "HSN",
+          "table_qty": "QTY",
+          "table_price": "UNIT PRICE",
+          "table_discount": "DISCOUNT",
+          "table_taxable": "TAXABLE VALUE",
+          "table_cgst": "CGST",
+          "table_sgst": "SGST",
+          "table_total": "TOTAL",
+          "subtotal": "Subtotal (In Value)",
+          "platform_fee": "Platform fee",
+          "shipping_costs": "Shipping Costs",
+          "net_total": "NET TOTAL (In Value)",
+          "reverse_charge_note": "Whether tax is payable under reverse charge - No",
+          "authorized_sign": "Authorized Signature for",
+          "preparing": "Preparing invoices, please wait...",
+          "no_orders": "No orders found to print.",
+          "back_to_orders": "Back to Orders",
+          "print_invoices": "Print Invoices"
+        }
+        }
+      },
+      "poojas": {
+        "title": "Poojas & Sevas Management",
+        "desc": "Manage all poojas, rituals, and spiritual services.",
+        "add_new": "Add New Pooja",
+        "tab_all": "All Poojas",
+        "tab_master": "Non Temple Specific",
+        "tab_temple": "Temple Specific",
+        "search_placeholder": "Search by name or category...",
+        "table_image": "Image",
+        "table_name": "Pooja Name",
+        "table_temple": "Temple",
+        "table_category": "Category/Purpose",
+        "table_price": "Single Person Price",
+        "table_status": "Status",
+        "table_actions": "Actions",
+        "badge_master": "MASTER",
+        "status_active": "Active",
+        "status_paused": "Paused",
+        "loading": "Loading poojas...",
+        "no_poojas": "No poojas found.",
+        "view_details": "View Details",
+        "promote_master": "Promote to Master Template",
+        "edit_pooja": "Edit Pooja",
+        "pause_pooja": "Pause Pooja",
+        "resume_pooja": "Resume Pooja",
+        "delete_pooja": "Delete Pooja",
+        "delete_confirm": "Are you sure you want to delete this pooja?",
+        "promote_confirm": "Are you sure you want to promote this pooja to a Master Template?",
+        "success_delete": "Pooja deleted successfully",
+        "success_promote": "Pooja promoted to Master Template",
+        "success_status": "Pooja Status Updated",
+        "status_visible": "Pooja is now visible to devotees.",
+        "status_hidden": "Pooja is now hidden from devotees.",
+        "error_load": "Failed to load poojas",
+        "error_delete": "Failed to delete pooja",
+        "error_promote": "Failed to promote pooja to master",
+        "error_status": "Failed to update pooja status"
+      },
+      "events": {
+        "title": "Events Management",
+        "desc": "Manage upcoming events and festivals for temples",
+        "add_new": "Add New Event",
+        "edit_event": "Edit Event",
+        "search_placeholder": "Search by event name or temple...",
+        "table_event": "Event",
+        "table_temple": "Temple",
+        "table_datetime": "Date & Time",
+        "table_description": "Description",
+        "table_rituals": "Associated Rituals",
+        "table_status": "Status",
+        "table_actions": "Actions",
+        "form_identity": "Event Identity",
+        "form_details": "Event Details",
+        "form_language": "Language Content",
+        "name_label": "Event Name",
+        "description_label": "Description",
+        "date_label": "Event Date",
+        "time_label": "Event Time",
+        "temple_label": "Temple (Optional)",
+        "global_temple": "Global / No Temple Select",
+        "rituals_label": "Associated Poojas/Rituals",
+        "status_label": "Active Status",
+        "status_desc": "Show or hide this event on the platform",
+        "pick_date": "Pick a date",
+        "loading_poojas": "Loading poojas...",
+        "no_poojas": "No poojas available",
+        "select_poojas": "Select poojas...",
+        "search_poojas": "Search poojas...",
+        "no_pooja_found": "No pooja found.",
+        "recommended_poojas": "Recommended Poojas for this Temple (Optional)",
+        "select_temple_first": "Please select a temple first to see available poojas",
+        "success_create": "Event created successfully",
+        "success_update": "Event updated successfully",
+        "success_delete": "Event deleted successfully",
+        "error_load": "Failed to load events",
+        "error_save": "Failed to save event",
+        "error_delete": "Failed to delete event",
+        "status_activated": "Event activated successfully",
+        "status_deactivated": "Event deactivated successfully",
+        "confirm_delete": "Are you sure you want to delete this event?"
+      },
+      "cms": {
+        "features": {
+          "title": "Features Management",
+          "desc": "Manage your homepage features and highlights.",
+          "add_new": "Add New Feature",
+          "edit_feature": "Edit Feature",
+          "search_placeholder": "Search features...",
+          "table_icon": "Icon",
+          "table_bg": "Background",
+          "table_title": "Title",
+          "table_status": "Status",
+          "table_order": "Order",
+          "table_actions": "Actions",
+          "form_identity": "Feature Identity",
+          "form_details": "Feature Details",
+          "form_language": "Language Content",
+          "name_label": "Title",
+          "description_label": "Description",
+          "status_label": "Status",
+          "order_label": "Display Order",
+          "active": "Active",
+          "inactive": "Inactive",
+          "icon_label": "Icon Image (Small)",
+          "bg_label": "Background Image",
+          "aspect_icon": "Aspect Ratio: 1:1 (200x200 px)",
+          "aspect_bg": "Aspect Ratio: 4:3 (800x600 px)",
+          "create_btn": "Create Feature",
+          "update_btn": "Update Feature",
+          "success_create": "Feature created successfully",
+          "success_update": "Feature updated successfully",
+          "success_delete": "Feature deleted successfully",
+          "error_load": "Error loading features",
+          "error_save": "Error saving feature",
+          "error_delete": "Error deleting feature",
+          "confirm_delete": "Are you sure you want to delete this feature?",
+          "alert_images": "Please select both image and icon",
+          "fill_details": "Enter the details for the feature card."
+        }
+      }
+    }
+}

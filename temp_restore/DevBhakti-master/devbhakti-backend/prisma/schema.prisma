@@ -1,0 +1,659 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+model User {
+  id            String         @id @default(cuid())
+  name          String?
+  email         String?        @unique
+  password      String?
+  phone         String?
+  role          UserRole       @default(DEVOTEE)
+  isActive      Boolean        @default(true)
+  isVerified    Boolean        @default(false)
+  createdAt     DateTime       @default(now())
+  updatedAt     DateTime       @updatedAt
+  otp           String?
+  otpExpires    DateTime?
+  profileImage  String?
+  gothra        String?
+  kuldevi       String?
+  kuldevta      String?
+  anniversary   String?
+  dob           String?
+  address       String?
+  nativePlace   String?
+  cart          Cart?
+  donations     Donation[]
+  favorites     Favorite[]
+  orders        Order[]
+  bookings      PoojaBooking[]
+  sellerProfile SellerProfile?
+  temple        Temple?
+}
+
+model Cart {
+  id        String     @id @default(cuid())
+  userId    String     @unique
+  createdAt DateTime   @default(now())
+  updatedAt DateTime   @updatedAt
+  user      User       @relation(fields: [userId], references: [id])
+  items     CartItem[]
+}
+
+model CartItem {
+  id        String         @id @default(cuid())
+  cartId    String
+  productId String
+  variantId String
+  quantity  Int
+  createdAt DateTime       @default(now())
+  updatedAt DateTime       @updatedAt
+  cart      Cart           @relation(fields: [cartId], references: [id], onDelete: Cascade)
+  product   Product        @relation(fields: [productId], references: [id])
+  variant   ProductVariant @relation(fields: [variantId], references: [id])
+}
+
+model Temple {
+  id                    String                @id @default(cuid())
+  name                  String
+  location              String
+  fullAddress           String?
+  description           String
+  history               String?
+  image                 String?
+  liveUrl               String?
+  channelId             String?
+  heroImages            String[]
+  gallery               String[]
+  rating                Float                 @default(0)
+  reviewsCount          Int                   @default(0)
+  category              String
+  liveStatus            Boolean               @default(false)
+  openTime              String
+  phone                 String?
+  website               String?
+  mapUrl                String?
+  viewers               String?
+  isLive                Boolean               @default(false)
+  userId                String                @unique
+  createdAt             DateTime              @default(now())
+  updatedAt             DateTime              @updatedAt
+  poojaCommissionRate   Float                 @default(5.0)
+  productCommissionRate Float                 @default(10.0)
+  templeId              String?               @unique
+  slug                  String?               @unique
+  isActive              Boolean               @default(true)
+  accountHolderName     String?
+  accountNumber         String?
+  bankName              String?
+  ifscCode              String?
+  upiId                 String?
+  subdomain             String?               @unique
+  urlType               String                @default("slug")
+  pickupLocation        String?
+  isPrimaryLive         Boolean               @default(false)
+  operatingHours        Json?
+  availability          BookingAvailability[]
+  donations             Donation[]
+  events                Event[]
+  favorites             Favorite[]
+  poojas                Pooja[]
+  bookings              PoojaBooking[]
+  products              Product[]
+  subOrders             SubOrder[]
+  user                  User                  @relation(fields: [userId], references: [id])
+  ledgerEntries         TempleLedger[]
+  updateRequests        TempleUpdateRequest[]
+  withdrawals           WithdrawalRequest[]
+}
+
+model BookingAvailability {
+  id          String   @id @default(cuid())
+  templeId    String
+  poojaId     String?
+  date        String
+  maxBookings Int      @default(20)
+  isClosed    Boolean  @default(false)
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+  pooja       Pooja?   @relation(fields: [poojaId], references: [id], onDelete: Cascade)
+  temple      Temple   @relation(fields: [templeId], references: [id], onDelete: Cascade)
+
+  @@unique([templeId, poojaId, date])
+}
+
+model SellerProfile {
+  id                    String                @id @default(cuid())
+  name                  String
+  location              String?
+  fullAddress           String?
+  description           String?
+  image                 String?
+  heroImages            String[]
+  category              String?
+  openTime              String?
+  phone                 String?
+  website               String?
+  isActive              Boolean               @default(true)
+  isVerified            Boolean               @default(false)
+  userId                String                @unique
+  productCommissionRate Float                 @default(10.0)
+  createdAt             DateTime              @default(now())
+  updatedAt             DateTime              @updatedAt
+  accountHolderName     String?
+  accountNumber         String?
+  bankName              String?
+  ifscCode              String?
+  upiId                 String?
+  pickupLocation        String?
+  products              Product[]
+  user                  User                  @relation(fields: [userId], references: [id], onDelete: Cascade)
+  updateRequests        SellerUpdateRequest[]
+  subOrders             SubOrder[]
+  ledgerEntries         TempleLedger[]
+  withdrawals           WithdrawalRequest[]
+}
+
+model TempleUpdateRequest {
+  id            String   @id @default(cuid())
+  templeId      String
+  requestedData Json
+  oldData       Json
+  status        String   @default("PENDING")
+  createdAt     DateTime @default(now())
+  updatedAt     DateTime @updatedAt
+  temple        Temple   @relation(fields: [templeId], references: [id], onDelete: Cascade)
+}
+
+model SellerUpdateRequest {
+  id            String        @id @default(cuid())
+  sellerId      String
+  requestedData Json
+  oldData       Json
+  status        String        @default("PENDING")
+  createdAt     DateTime      @default(now())
+  updatedAt     DateTime      @updatedAt
+  seller        SellerProfile @relation(fields: [sellerId], references: [id], onDelete: Cascade)
+}
+
+model Pooja {
+  id            String                @id @default(cuid())
+  name          String
+  category      String
+  price         Float
+  duration      String
+  description   String[]
+  time          String
+  image         String?
+  about         String?
+  benefits      String[]
+  bullets       String[]
+  process       String?
+  processSteps  Json?
+  isMaster      Boolean               @default(false)
+  masterPoojaId String?
+  templeId      String?
+  templeDetails String?
+  packages      Json?
+  faqs          Json?
+  reviews       Json?
+  createdAt     DateTime              @default(now())
+  updatedAt     DateTime              @updatedAt
+  status        Boolean               @default(true)
+  availability  BookingAvailability[]
+  favorites     Favorite[]
+  masterPooja   Pooja?                @relation("MasterPoojaRelation", fields: [masterPoojaId], references: [id])
+  templeCopies  Pooja[]               @relation("MasterPoojaRelation")
+  temple        Temple?               @relation(fields: [templeId], references: [id])
+  bookings      PoojaBooking[]
+  Event         Event[]               @relation("EventToPooja")
+}
+
+model PoojaCategory {
+  id        String   @id @default(cuid())
+  name      String   @unique
+  status    String   @default("APPROVED")
+  createdAt DateTime @default(now())
+}
+
+model Event {
+  id          String   @id @default(cuid())
+  name        String
+  date        String
+  description String?
+  templeId    String?
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+  status      Boolean  @default(true)
+  time        String?
+  temple      Temple?  @relation(fields: [templeId], references: [id], onDelete: Cascade)
+  Pooja       Pooja[]  @relation("EventToPooja")
+}
+
+model Banner {
+  id        String   @id @default(cuid())
+  image     String
+  link      String?
+  active    Boolean  @default(true)
+  order     Int      @default(0)
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+}
+
+model Feature {
+  id          String   @id @default(cuid())
+  title       String
+  description String
+  image       String
+  icon        String
+  active      Boolean  @default(true)
+  order       Int      @default(0)
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+}
+
+model Testimonial {
+  id        String   @id @default(cuid())
+  title     String
+  subtitle  String
+  videoSrc  String
+  thumbnail String
+  category  String
+  active    Boolean  @default(true)
+  order     Int      @default(0)
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+}
+
+model ProductCategory {
+  id          String    @id @default(cuid())
+  name        String    @unique
+  description String?
+  image       String?
+  isActive    Boolean   @default(true)
+  sortOrder   Int       @default(0)
+  createdAt   DateTime  @default(now())
+  updatedAt   DateTime  @updatedAt
+  products    Product[]
+}
+
+model Product {
+  id              String           @id @default(cuid())
+  name            String
+  description     String
+  category        String
+  status          String           @default("pending")
+  image           String?
+  templeId        String?
+  createdAt       DateTime         @default(now())
+  updatedAt       DateTime         @updatedAt
+  categoryId      String?
+  highlights      String?
+  longDescription String?
+  shippingInfo    String?          @default("Ships in 24-48 Hours")
+  origin          String?          @default("India")
+  rating          Float?           @default(4.5)
+  weight          Float?           @default(0.5)
+  length          Float?           @default(10)
+  width           Float?           @default(10)
+  height          Float?           @default(10)
+  sellerId        String?
+  cartItems       CartItem[]
+  favorites       Favorite[]
+  orderItems      OrderItem[]
+  categoryObj     ProductCategory? @relation(fields: [categoryId], references: [id])
+  seller          SellerProfile?   @relation(fields: [sellerId], references: [id], onDelete: Cascade)
+  temple          Temple?          @relation(fields: [templeId], references: [id], onDelete: Cascade)
+  variants        ProductVariant[]
+}
+
+model ProductVariant {
+  id        String     @id @default(cuid())
+  name      String
+  price     Float
+  stock     Int        @default(0)
+  image     String?
+  productId String
+  createdAt DateTime   @default(now())
+  updatedAt DateTime   @updatedAt
+  cartItems CartItem[]
+  product   Product    @relation(fields: [productId], references: [id], onDelete: Cascade)
+}
+
+model Favorite {
+  id        String   @id @default(cuid())
+  userId    String
+  templeId  String?
+  poojaId   String?
+  createdAt DateTime @default(now())
+  productId String?
+  pooja     Pooja?   @relation(fields: [poojaId], references: [id], onDelete: Cascade)
+  product   Product? @relation(fields: [productId], references: [id], onDelete: Cascade)
+  temple    Temple?  @relation(fields: [templeId], references: [id], onDelete: Cascade)
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@unique([userId, templeId])
+  @@unique([userId, poojaId])
+  @@unique([userId, productId])
+}
+
+model CTACard {
+  id         String   @id @default(cuid())
+  title      String
+  points     String[]
+  icon       String
+  buttonText String
+  buttonLink String
+  cardType   String
+  active     Boolean  @default(true)
+  order      Int      @default(0)
+  createdAt  DateTime @default(now())
+  updatedAt  DateTime @updatedAt
+}
+
+model PoojaBooking {
+  id                 String        @id @default(cuid())
+  userId             String
+  poojaId            String
+  templeId           String?
+  packageName        String
+  packagePrice       Float
+  devoteeName        String
+  devoteePhone       String
+  devoteeEmail       String?
+  bookingDate        String?
+  address            String?
+  specialRequests    String?
+  gothra             String?
+  kuldevi            String?
+  kuldevta           String?
+  status             BookingStatus @default(BOOKED)
+  commissionAmount   Float         @default(0)
+  netEarning         Float         @default(0)
+  platformFee        Float         @default(0)
+  createdAt          DateTime      @default(now())
+  updatedAt          DateTime      @updatedAt
+  anniversary        String?
+  dob                String?
+  nativePlace        String?
+  additionalDevotees Json?
+  proofPhotos        String[]      @default([])
+  pooja              Pooja         @relation(fields: [poojaId], references: [id])
+  temple             Temple?       @relation(fields: [templeId], references: [id])
+  user               User          @relation(fields: [userId], references: [id])
+}
+
+model Order {
+  id              String     @id @default(cuid())
+  userId          String
+  totalAmount     Float
+  status          String     @default("PENDING")
+  paymentStatus   String     @default("PENDING")
+  paymentMethod   String?
+  shippingAddress Json?
+  platformFee     Float      @default(0)
+  shippingCost    Float      @default(0)
+  createdAt       DateTime   @default(now())
+  updatedAt       DateTime   @updatedAt
+  user            User       @relation(fields: [userId], references: [id])
+  subOrders       SubOrder[]
+}
+
+model SubOrder {
+  id                String         @id @default(cuid())
+  orderId           String
+  templeId          String?
+  totalAmount       Float
+  status            String         @default("PENDING")
+  commissionAmount  Float          @default(0)
+  netEarning        Float          @default(0)
+  shippingLabel     String?
+  shiprocketOrderId String?
+  awbCode           String?
+  trackingUrl       String?
+  courierName       String?
+  createdAt         DateTime       @default(now())
+  updatedAt         DateTime       @updatedAt
+  sellerId          String?
+  items             OrderItem[]
+  order             Order          @relation(fields: [orderId], references: [id], onDelete: Cascade)
+  seller            SellerProfile? @relation(fields: [sellerId], references: [id])
+  temple            Temple?        @relation(fields: [templeId], references: [id])
+}
+
+model OrderItem {
+  id          String   @id @default(cuid())
+  subOrderId  String
+  productId   String
+  variantId   String
+  variantName String
+  price       Float
+  quantity    Int
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+  product     Product  @relation(fields: [productId], references: [id])
+  subOrder    SubOrder @relation(fields: [subOrderId], references: [id], onDelete: Cascade)
+}
+
+model TempleLedger {
+  id          String         @id @default(cuid())
+  templeId    String?
+  amount      Float
+  grossAmount Float          @default(0)
+  commission  Float          @default(0)
+  type        LedgerType
+  sourceId    String?
+  description String?
+  status      LedgerStatus   @default(PENDING)
+  createdAt   DateTime       @default(now())
+  updatedAt   DateTime       @updatedAt
+  sellerId    String?
+  seller      SellerProfile? @relation(fields: [sellerId], references: [id])
+  temple      Temple?        @relation(fields: [templeId], references: [id])
+}
+
+model WithdrawalRequest {
+  id            String           @id @default(cuid())
+  templeId      String?
+  amount        Float
+  status        WithdrawalStatus @default(PENDING)
+  bankDetails   Json?
+  transactionId String?
+  receiptImage  String?
+  adminNotes    String?
+  createdAt     DateTime         @default(now())
+  updatedAt     DateTime         @updatedAt
+  sellerId      String?
+  seller        SellerProfile?   @relation(fields: [sellerId], references: [id])
+  temple        Temple?          @relation(fields: [templeId], references: [id])
+}
+
+model CommissionSlab {
+  id          String             @id @default(cuid())
+  minAmount   Float
+  maxAmount   Float?
+  platformFee Float              @default(0)
+  percentage  Float              @default(0)
+  slabType    SlabType           @default(GLOBAL)
+  category    CommissionCategory @default(MARKETPLACE)
+  targetId    String?
+  isActive    Boolean            @default(true)
+  createdAt   DateTime           @default(now())
+  updatedAt   DateTime           @updatedAt
+
+  @@index([slabType, targetId, category])
+}
+
+model StaffMember {
+  id         String      @id @default(cuid())
+  name       String
+  email      String      @unique
+  password   String
+  ownerType  OwnerType
+  ownerId    String
+  isActive   Boolean     @default(true)
+  createdAt  DateTime    @default(now())
+  updatedAt  DateTime    @updatedAt
+  staffRoles StaffRole[]
+}
+
+model Role {
+  id              String           @id @default(cuid())
+  name            String
+  description     String?
+  ownerType       OwnerType
+  ownerId         String
+  createdAt       DateTime         @default(now())
+  updatedAt       DateTime         @updatedAt
+  rolePermissions RolePermission[]
+  staffRoles      StaffRole[]
+
+  @@unique([name, ownerType, ownerId])
+}
+
+model Permission {
+  id              String           @id @default(cuid())
+  key             String           @unique
+  module          String
+  label           String
+  description     String?
+  applicableTo    OwnerType[]
+  createdAt       DateTime         @default(now())
+  rolePermissions RolePermission[]
+}
+
+model RolePermission {
+  id           String     @id @default(cuid())
+  roleId       String
+  permissionId String
+  createdAt    DateTime   @default(now())
+  permission   Permission @relation(fields: [permissionId], references: [id], onDelete: Cascade)
+  role         Role       @relation(fields: [roleId], references: [id], onDelete: Cascade)
+
+  @@unique([roleId, permissionId])
+}
+
+model StaffRole {
+  id        String      @id @default(cuid())
+  staffId   String
+  roleId    String
+  createdAt DateTime    @default(now())
+  role      Role        @relation(fields: [roleId], references: [id], onDelete: Cascade)
+  staff     StaffMember @relation(fields: [staffId], references: [id], onDelete: Cascade)
+
+  @@unique([staffId, roleId])
+}
+
+model FCMToken {
+  id        String   @id @default(cuid())
+  token     String   @unique
+  userId    String
+  userType  String
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+}
+
+model Notification {
+  id        String   @id @default(cuid())
+  userId    String
+  userType  String
+  title     String
+  body      String
+  data      Json?
+  isRead    Boolean  @default(false)
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@index([userId, userType])
+}
+
+model Donation {
+  id              String   @id @default(cuid())
+  userId          String?
+  templeId        String
+  donorName       String
+  donorPhone      String
+  donorEmail      String
+  amount          Float
+  status          String   @default("PENDING")
+  paymentMethod   String?
+  razorpayOrderId String?  @unique
+  isAnonymous     Boolean  @default(false)
+  is80GRequired   Boolean  @default(false)
+  panNumber       String?
+  address         String?
+  message         String?
+  displayId       String?  @unique
+
+  createdAt       DateTime @default(now())
+
+  updatedAt       DateTime @updatedAt
+  temple          Temple   @relation(fields: [templeId], references: [id])
+  user            User?    @relation(fields: [userId], references: [id])
+}
+
+enum SlabType {
+  GLOBAL
+  TEMPLE
+  SELLER
+}
+
+enum CommissionCategory {
+  MARKETPLACE
+  POOJA
+}
+
+enum UserRole {
+  ADMIN
+  DEVOTEE
+  INSTITUTION
+  SELLER
+}
+
+enum OwnerType {
+  ADMIN
+  TEMPLE
+  SELLER
+}
+
+enum BookingStatus {
+  BOOKED
+  REJECTED
+  COMPLETED
+  CANCELLED
+  PENDING
+}
+
+enum LedgerType {
+  MARKETPLACE_EARNING
+  POOJA_EARNING
+  DONATION_EARNING
+  WITHDRAWAL
+}
+
+enum LedgerStatus {
+  PENDING
+  COMPLETED
+  CANCELLED
+}
+
+enum WithdrawalStatus {
+  PENDING
+  APPROVED
+  REJECTED
+  PAID
+}
+
+model GlobalSetting {
+  id        String   @id @default(cuid())
+  key       String   @unique
+  value     Json
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+}
