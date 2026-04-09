@@ -36,7 +36,7 @@ const TemplesSection: React.FC = () => {
     }
     loadTemples();
     loadRatingsSettings();
-  }, []);
+  }, [language]);
 
   const loadRatingsSettings = async () => {
     try {

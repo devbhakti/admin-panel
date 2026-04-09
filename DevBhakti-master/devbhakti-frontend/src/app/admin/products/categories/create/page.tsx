@@ -191,7 +191,7 @@ export default function CreateCategoryPage() {
               <TabsContent value="en" className="space-y-6">
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                   <div className="space-y-2">
-                    <Label htmlFor="name_en">{t("admin.products.categories.name")} (EN) *</Label>
+                    <Label htmlFor="name_en">{t("admin.products.categories.name")} *</Label>
                     <Input
                       id="name_en"
                       value={formData.name_en}
@@ -203,7 +203,7 @@ export default function CreateCategoryPage() {
                   </div>
                 </div>
 
-                <div className="space-y-2">
+                {/* <div className="space-y-2">
                   <Label htmlFor="description_en">{t("admin.products.description")} (EN)</Label>
                   <Textarea
                     id="description_en"
@@ -212,13 +212,13 @@ export default function CreateCategoryPage() {
                     placeholder="Enter category description in English"
                     rows={4}
                   />
-                </div>
+                </div> */}
               </TabsContent>
 
               <TabsContent value="hi" className="space-y-6">
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                   <div className="space-y-2">
-                    <Label htmlFor="name_hi">{t("admin.products.categories.name")} (HI)</Label>
+                    <Label htmlFor="name_hi">श्रेणी का नाम</Label>
                     <Input
                       id="name_hi"
                       value={formData.name_hi}
@@ -228,7 +228,7 @@ export default function CreateCategoryPage() {
                   </div>
                 </div>
 
-                <div className="space-y-2">
+                {/* <div className="space-y-2">
                   <Label htmlFor="description_hi">{t("admin.products.description")} (HI)</Label>
                   <Textarea
                     id="description_hi"
@@ -237,13 +237,13 @@ export default function CreateCategoryPage() {
                     placeholder="श्रेणी का विवरण (हिन्दी)"
                     rows={4}
                   />
-                </div>
+                </div> */}
               </TabsContent>
 
               <TabsContent value="mr" className="space-y-6">
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                   <div className="space-y-2">
-                    <Label htmlFor="name_mr">{t("admin.products.categories.name")} (MR)</Label>
+                    <Label htmlFor="name_mr">श्रेणीचे नाव</Label>
                     <Input
                       id="name_mr"
                       value={formData.name_mr}
@@ -253,7 +253,7 @@ export default function CreateCategoryPage() {
                   </div>
                 </div>
 
-                <div className="space-y-2">
+                {/* <div className="space-y-2">
                   <Label htmlFor="description_mr">{t("admin.products.description")} (MR)</Label>
                   <Textarea
                     id="description_mr"
@@ -262,7 +262,7 @@ export default function CreateCategoryPage() {
                     placeholder="श्रेणीचे वर्णन (मराठी)"
                     rows={4}
                   />
-                </div>
+                </div> */}
               </TabsContent>
             </Tabs>
 

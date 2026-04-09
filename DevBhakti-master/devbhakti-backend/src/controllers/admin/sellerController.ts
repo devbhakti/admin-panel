@@ -3,6 +3,7 @@ import { prisma } from "../../lib/prisma";
 import { createShiprocketPickupLocation } from '../../services/shiprocketService';
 import { SlabType, CommissionCategory } from "@prisma/client";
 import { parseLocation, extractPincode } from '../../lib/shiprocketUtils';
+import { buildLangJson, getLang, localize } from "../../utils/localization";
 
 // Helper to normalize phone number to +91XXXXXXXXXX format
 const normalizePhone = (phone: string): string => {
@@ -26,9 +27,16 @@ const normalizePhone = (phone: string): string => {
 // Create Seller
 export const createSeller = async (req: Request, res: Response) => {
     try {
-        const { storeName, sellerName, email, phone, address, productCommissionRate } = req.body;
+        const { 
+            storeName_en, storeName_hi, storeName_mr,
+            sellerName, email, phone, 
+            address_en, address_hi, address_mr,
+            description_en, description_hi, description_mr,
+            category_en, category_hi, category_mr,
+            productCommissionRate 
+        } = req.body;
 
-        if (!storeName || !sellerName || !email || !phone) {
+        if (!(storeName_en || req.body.storeName) || !sellerName || !email || !phone) {
             return res.status(400).json({ message: 'Missing required fields' });
         }
 
@@ -69,11 +77,11 @@ export const createSeller = async (req: Request, res: Response) => {
             // 2. Create SellerProfile (Store entity)
             const sellerProfile = await tx.sellerProfile.create({
                 data: {
-                    name: storeName as string,
-                    location: (address as string) || '', // Using address as location
-                    fullAddress: (address as string) || '',
-                    description: `Official Store of ${sellerName}`,
-                    category: 'store', // Identifying as store
+                    name: buildLangJson(storeName_en || req.body.storeName, storeName_hi, storeName_mr),
+                    location: buildLangJson(address_en || req.body.address, address_hi, address_mr),
+                    fullAddress: buildLangJson(address_en || req.body.address, address_hi, address_mr),
+                    description: buildLangJson(description_en || `Official Store of ${sellerName}`, description_hi, description_mr),
+                    category: buildLangJson(category_en || 'store', category_hi, category_mr),
                     userId: user.id,
                     openTime: '9:00 AM - 9:00 PM', // Default
                     productCommissionRate: parseFloat(productCommissionRate as string) || 10.0,
@@ -103,15 +111,16 @@ export const createSeller = async (req: Request, res: Response) => {
 
         // 3. Register Pickup Location with Shiprocket
         try {
-            const { city, state } = parseLocation(address as string || "");
-            const pincode = extractPincode(address as string || "");
+            const shipAddr = (address_en || req.body.address || '');
+            const { city, state } = parseLocation(shipAddr);
+            const pincode = extractPincode(shipAddr);
 
             const pickupData = {
                 pickup_location: (result.sellerProfile as any).pickupLocation,
                 name: sellerName as string,
                 email: email as string,
                 phone: normalizedPhone,
-                address: (address as string) || '',
+                address: shipAddr,
                 city: city || "Delhi",
                 state: state || "Delhi",
                 country: "India",
@@ -182,9 +191,10 @@ export const getAllSellers = async (req: Request, res: Response) => {
             };
         });
 
+        const lang = getLang(req);
         res.json({
             status: 'success',
-            data: formattedSellers
+            data: localize(formattedSellers, lang)
         });
 
     } catch (error: any) {
@@ -250,9 +260,10 @@ export const getSellerById = async (req: Request, res: Response) => {
             commissionSlabs: slabs
         };
 
+        const lang = getLang(req);
         res.json({
             status: 'success',
-            data: formattedSeller
+            data: localize(formattedSeller, lang)
         });
 
     } catch (error: any) {
@@ -265,7 +276,14 @@ export const getSellerById = async (req: Request, res: Response) => {
 export const updateSeller = async (req: Request, res: Response) => {
     try {
         const { id } = req.params;
-        const { storeName, sellerName, email, phone, status, address, productCommissionRate } = req.body;
+        const { 
+            storeName_en, storeName_hi, storeName_mr,
+            sellerName, email, phone, status, 
+            address_en, address_hi, address_mr,
+            description_en, description_hi, description_mr,
+            category_en, category_hi, category_mr,
+            productCommissionRate 
+        } = req.body;
 
         const normalizedPhone = phone ? normalizePhone(phone as string) : undefined;
 
@@ -287,14 +305,19 @@ export const updateSeller = async (req: Request, res: Response) => {
 
             if (user && user.sellerProfile) {
                 const sellerProfileId = user.sellerProfile.id;
+                const updateData: any = {};
+                if (storeName_en || req.body.storeName) updateData.name = buildLangJson(storeName_en || req.body.storeName, storeName_hi, storeName_mr);
+                if (address_en || req.body.address) {
+                    updateData.fullAddress = buildLangJson(address_en || req.body.address, address_hi, address_mr);
+                    updateData.location = updateData.fullAddress;
+                }
+                if (description_en) updateData.description = buildLangJson(description_en, description_hi, description_mr);
+                if (category_en) updateData.category = buildLangJson(category_en, category_hi, category_mr);
+                if (productCommissionRate) updateData.productCommissionRate = parseFloat(productCommissionRate as string);
+
                 await tx.sellerProfile.update({
                     where: { id: sellerProfileId },
-                    data: {
-                        name: storeName as string,
-                        fullAddress: address as string,
-                        location: address as string, // Sync location
-                        productCommissionRate: parseFloat(productCommissionRate as string)
-                    }
+                    data: updateData
                 });
 
                 // Handle Commission Slabs Update

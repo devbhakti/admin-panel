@@ -14,6 +14,7 @@ import { fetchPublicPoojas } from "@/api/publicController";
 import { fetchUserFavorites, addFavorite, removeFavorite } from "@/api/userController";
 import { API_URL } from "@/config/apiConfig";
 import { useLanguage } from "@/context/LanguageContext";
+import { parseLocalizedValue } from "@/utils/textUtils";
 
 const PoojasSection: React.FC = () => {
   const scrollContainerRef = React.useRef<HTMLDivElement>(null);
@@ -23,7 +24,7 @@ const PoojasSection: React.FC = () => {
   const router = useRouter();
   const { toast } = useToast();
   const [user, setUser] = React.useState<any>(null);
-  const { t } = useLanguage();
+  const { t, language } = useLanguage();
 
   React.useEffect(() => {
     const savedUser = localStorage.getItem("user");
@@ -32,7 +33,7 @@ const PoojasSection: React.FC = () => {
       loadFavorites();
     }
     loadPoojas();
-  }, []);
+  }, [language]);
 
   const loadFavorites = async () => {
     try {
@@ -215,7 +216,7 @@ const PoojasSection: React.FC = () => {
                       <div className="absolute inset-0 z-0 rounded-[2rem] overflow-hidden">
                         <img
                           src={getFullImageUrl(pooja.image)}
-                          alt={pooja.name}
+                          alt={parseLocalizedValue(pooja.name, language)}
                           className="w-full h-full object-cover transition-transform duration-500 group-hover:scale-110"
                           onError={(e) => {
                             (e.target as any).src = "https://via.placeholder.com/400x500?text=Pooja"
@@ -230,7 +231,7 @@ const PoojasSection: React.FC = () => {
 
                         <div className="mt-auto space-y-3">
                           <h3 className="text-2xl font-serif font-semibold text-white leading-snug drop-shadow-[0_2px_8px_rgba(0,0,0,0.9)]">
-                            {pooja.name}
+                            {parseLocalizedValue(pooja.name, language)}
                           </h3>
                         </div>
 

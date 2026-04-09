@@ -48,7 +48,7 @@ export default function CreatePoojaPage() {
         setIsSubmitting(true);
         try {
             await createPoojaAdmin(formData);
-            toast({ title: "Success", description: "Pooja created successfully" });
+            toast({ title: "Success", description: "Pooja created successfully", variant: "success" });
             router.push('/admin/poojas');
         } catch (error: any) {
             toast({

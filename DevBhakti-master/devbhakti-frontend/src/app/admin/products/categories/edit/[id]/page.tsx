@@ -23,6 +23,7 @@ import {
 } from "@/api/adminController";
 import { useLanguage } from "@/context/LanguageContext";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { parseLocalizedValue } from "@/utils/textUtils";
 
 interface Category {
   id: string;
@@ -78,13 +79,14 @@ export default function EditCategoryPage() {
       const data = await fetchCategoryByIdAdmin(id);
 
       setCategory(data);
+
       setFormData({
-        name_en: data.name_en || data.name || "",
-        name_hi: data.name_hi || "",
-        name_mr: data.name_mr || "",
-        description_en: data.description_en || data.description || "",
-        description_hi: data.description_hi || "",
-        description_mr: data.description_mr || "",
+        name_en: data.name?.en || data.name_en || "",
+        name_hi: data.name?.hi || data.name_hi || "",
+        name_mr: data.name?.mr || data.name_mr || "",
+        description_en: data.description?.en || data.description_en || "",
+        description_hi: data.description?.hi || data.description_hi || "",
+        description_mr: data.description?.mr || data.description_mr || "",
         isActive: data.isActive,
         sortOrder: data.sortOrder || 0,
       });
@@ -278,7 +280,7 @@ export default function EditCategoryPage() {
               <TabsContent value="en" className="space-y-6">
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                   <div className="space-y-2">
-                    <Label htmlFor="name_en">{t("admin.products.categories.name")} (EN) *</Label>
+                    <Label htmlFor="name_en">{t("admin.products.categories.name")} *</Label>
                     <Input
                       id="name_en"
                       value={formData.name_en}
@@ -290,7 +292,7 @@ export default function EditCategoryPage() {
                   </div>
                 </div>
 
-                <div className="space-y-2">
+                {/* <div className="space-y-2">
                   <Label htmlFor="description_en">{t("admin.products.description")} (EN)</Label>
                   <Textarea
                     id="description_en"
@@ -299,13 +301,13 @@ export default function EditCategoryPage() {
                     placeholder="Enter category description in English"
                     rows={4}
                   />
-                </div>
+                </div> */}
               </TabsContent>
 
               <TabsContent value="hi" className="space-y-6">
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                   <div className="space-y-2">
-                    <Label htmlFor="name_hi">{t("admin.products.categories.name")} (HI)</Label>
+                    <Label htmlFor="name_hi">श्रेणी का नाम</Label>
                     <Input
                       id="name_hi"
                       value={formData.name_hi}
@@ -315,7 +317,7 @@ export default function EditCategoryPage() {
                   </div>
                 </div>
 
-                <div className="space-y-2">
+                {/* <div className="space-y-2">
                   <Label htmlFor="description_hi">{t("admin.products.description")} (HI)</Label>
                   <Textarea
                     id="description_hi"
@@ -324,13 +326,13 @@ export default function EditCategoryPage() {
                     placeholder="श्रेणी का विवरण (हिन्दी)"
                     rows={4}
                   />
-                </div>
+                </div> */}
               </TabsContent>
 
               <TabsContent value="mr" className="space-y-6">
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                   <div className="space-y-2">
-                    <Label htmlFor="name_mr">{t("admin.products.categories.name")} (MR)</Label>
+                    <Label htmlFor="name_mr">श्रेणीचे नाव</Label>
                     <Input
                       id="name_mr"
                       value={formData.name_mr}
@@ -340,7 +342,7 @@ export default function EditCategoryPage() {
                   </div>
                 </div>
 
-                <div className="space-y-2">
+                {/* <div className="space-y-2">
                   <Label htmlFor="description_mr">{t("admin.products.description")} (MR)</Label>
                   <Textarea
                     id="description_mr"
@@ -349,7 +351,7 @@ export default function EditCategoryPage() {
                     placeholder="श्रेणीचे वर्णन (मराठी)"
                     rows={4}
                   />
-                </div>
+                </div> */}
               </TabsContent>
             </Tabs>
 

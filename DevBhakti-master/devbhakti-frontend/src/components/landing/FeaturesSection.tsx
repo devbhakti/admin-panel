@@ -120,7 +120,7 @@ const FeaturesSection: React.FC = () => {
       }
     };
     fetchFeatures();
-  }, []);
+  }, [language]);
 
   const displayFeatures = dynamicFeatures.length > 0 ? dynamicFeatures : localizedFeatures;
 

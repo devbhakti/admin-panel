@@ -1,6 +1,7 @@
 import express from 'express';
 import {
     getAllEvents,
+    getEventById,
     getEventsByTemple,
     createEvent,
     updateEvent,
@@ -17,7 +18,9 @@ router.use(authenticate);
 
 // Event routes
 router.get('/', checkPermission('events.view'), getAllEvents);
+router.get('/:id', checkPermission('events.view'), getEventById);
 router.get('/temple/:templeId', checkPermission('events.view'), getEventsByTemple);
+
 router.post('/', checkPermission('events.create'), createEvent);
 router.put('/:id', checkPermission('events.edit'), updateEvent);
 router.patch('/:id/status', checkPermission('events.edit'), toggleEventStatus);

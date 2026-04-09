@@ -1,8 +1,8 @@
 import { Request, Response } from "express";
-import { PrismaClient } from "@prisma/client";
+import { prisma } from "../../lib/prisma";
 import { syncOrderAndLedgerStatus } from "../../utils/orderStatusSync";
-
-const prisma = new PrismaClient();
+import { getLang, localize, getEnglish } from "../../utils/localization";
+import ExcelJS from 'exceljs';
 
 // Get all orders for Admin
 export const getAllOrdersAdmin = async (req: Request, res: Response) => {
@@ -49,8 +49,8 @@ export const getAllOrdersAdmin = async (req: Request, res: Response) => {
           user: { select: { name: true, phone: true } },
           subOrders: {
             include: {
-              temple: { select: { name_en: true } },
-              items: { include: { product: { select: { name_en: true, image: true } } } }
+              temple: { select: { name: true } },
+              items: { include: { product: { select: { name: true, image: true } } } }
             }
           }
         },
@@ -61,9 +61,10 @@ export const getAllOrdersAdmin = async (req: Request, res: Response) => {
       prisma.order.count({ where })
     ]);
 
+    const lang = getLang(req);
     return res.status(200).json({
       success: true,
-      data: orders,
+      data: localize(orders, lang),
       pagination: {
         total: totalRecords,
         page,
@@ -76,8 +77,6 @@ export const getAllOrdersAdmin = async (req: Request, res: Response) => {
   }
 };
 
-import ExcelJS from 'exceljs';
-
 export const downloadOrdersExcelAdmin = async (req: Request, res: Response) => {
   try {
     const orders = await prisma.order.findMany({
@@ -85,8 +84,8 @@ export const downloadOrdersExcelAdmin = async (req: Request, res: Response) => {
         user: { select: { name: true, phone: true, email: true } },
         subOrders: {
           include: {
-            temple: { select: { name_en: true } },
-            items: { include: { product: { select: { name_en: true } } } }
+            temple: { select: { name: true } },
+            items: { include: { product: { select: { name: true } } } }
           }
         }
       },
@@ -104,7 +103,7 @@ export const downloadOrdersExcelAdmin = async (req: Request, res: Response) => {
       { header: 'Payment Status', key: 'paymentStatus', width: 15 },
       { header: 'Payment Method', key: 'paymentMethod', width: 15 },
       { header: 'Order Date', key: 'orderDate', width: 20 },
-      { header: 'SubOrders JSON', key: 'subOrdersPreview', width: 40 },
+      { header: 'SubOrders Summary', key: 'subOrdersPreview', width: 40 },
     ];
 
     const headerRow = worksheet.getRow(1);
@@ -114,9 +113,10 @@ export const downloadOrdersExcelAdmin = async (req: Request, res: Response) => {
 
     orders.forEach((o: any) => {
       // Create a quick summary of suborders
-      const subOrdersSummary = o.subOrders.map((sub: any) =>
-        `[${sub.status}] ${sub.temple?.name_en || 'Official'} - ₹${sub.totalAmount}`
-      ).join(' | ');
+      const subOrdersSummary = o.subOrders.map((sub: any) => {
+        const vendorName = sub.temple ? getEnglish(sub.temple.name) : 'Official';
+        return `[${sub.status}] ${vendorName} - ₹${sub.totalAmount}`;
+      }).join(' | ');
 
       worksheet.addRow({
         id: o.id,
@@ -168,7 +168,8 @@ export const updateSubOrderStatusAdmin = async (req: Request, res: Response) => 
     // Use shared utility for status sync (Ledger, Parent Order, etc.)
     const subOrder = await syncOrderAndLedgerStatus(subOrderId, status);
 
-    return res.status(200).json({ success: true, message: "Status updated", data: subOrder });
+    const lang = getLang(req);
+    return res.status(200).json({ success: true, message: "Status updated", data: localize(subOrder, lang) });
   } catch (error: any) {
     return res.status(500).json({ success: false, message: error.message });
   }

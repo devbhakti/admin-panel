@@ -48,7 +48,9 @@ export function TempleForm({
 
     // Form State
     const [formData, setFormData] = useState({
-        name: "",
+        adminName_en: "",
+        adminName_hi: "",
+        adminName_mr: "",
         email: "",
         phone: "",
         name_en: "",
@@ -67,6 +69,13 @@ export function TempleForm({
         description_en: "",
         description_hi: "",
         description_mr: "",
+        history_en: "",
+        history_hi: "",
+        history_mr: "",
+        pickupLocation_en: "",
+        pickupLocation_hi: "",
+        pickupLocation_mr: "",
+        openTime: "",
         viewers: "",
         templePhone: "",
         website: "",
@@ -121,26 +130,52 @@ export function TempleForm({
             };
 
             const tData = initialData.temple || {};
+            
+            // Helper to get lang value safely from both old (string) and new (json) formats
+            const getL = (field: any, lang: string, fallback: string = "") => {
+                if (!field) return fallback;
+                if (typeof field === "object") return field[lang] || fallback;
+                if (typeof field === "string") {
+                    try {
+                        const parsed = JSON.parse(field);
+                        if (typeof parsed === "object" && parsed !== null) {
+                            return parsed[lang] || fallback;
+                        }
+                    } catch (e) {
+                        // ignore JSON parse errors, treat as a normal string
+                    }
+                }
+                if (lang === "en") return field; // Old format fallback
+                return fallback;
+            };
+
             setFormData({
-                name: initialData.name || "",
+                adminName_en: getL(initialData.name, "en"),
+                adminName_hi: getL(initialData.name, "hi"),
+                adminName_mr: getL(initialData.name, "mr"),
                 email: initialData.email || "",
                 phone: stripPrefix(initialData.phone || ""),
-                name_en: tData.name_en || tData.name || "",
-                name_hi: tData.name_hi || "",
-                name_mr: tData.name_mr || "",
-                location_en: tData.location_en || tData.location || "",
-                location_hi: tData.location_hi || "",
-                location_mr: tData.location_mr || "",
-                fullAddress_en: tData.fullAddress_en || tData.fullAddress || "",
-                fullAddress_hi: tData.fullAddress_hi || "",
-                fullAddress_mr: tData.fullAddress_mr || "",
-                category_en: tData.category_en || tData.category || "",
-                category_hi: tData.category_hi || "",
-                category_mr: tData.category_mr || "",
-
-                description_en: tData.description_en || tData.description || "",
-                description_hi: tData.description_hi || "",
-                description_mr: tData.description_mr || "",
+                name_en: getL(tData.name, "en"),
+                name_hi: getL(tData.name, "hi"),
+                name_mr: getL(tData.name, "mr"),
+                location_en: getL(tData.location, "en"),
+                location_hi: getL(tData.location, "hi"),
+                location_mr: getL(tData.location, "mr"),
+                fullAddress_en: getL(tData.fullAddress, "en"),
+                fullAddress_hi: getL(tData.fullAddress, "hi"),
+                fullAddress_mr: getL(tData.fullAddress, "mr"),
+                category_en: getL(tData.category, "en"),
+                category_hi: getL(tData.category, "hi"),
+                category_mr: getL(tData.category, "mr"),
+                description_en: getL(tData.description, "en"),
+                description_hi: getL(tData.description, "hi"),
+                description_mr: getL(tData.description, "mr"),
+                history_en: getL(tData.history, "en"),
+                history_hi: getL(tData.history, "hi"),
+                history_mr: getL(tData.history, "mr"),
+                pickupLocation_en: getL(tData.pickupLocation, "en"),
+                pickupLocation_hi: getL(tData.pickupLocation, "hi"),
+                pickupLocation_mr: getL(tData.pickupLocation, "mr"),
                 viewers: tData.viewers || "",
                 templePhone: stripPrefix(tData.phone || ""),
                 website: tData.website || "",
@@ -154,6 +189,7 @@ export function TempleForm({
                 liveStatus: String(tData.liveStatus || false),
                 poojaCommissionRate: String(tData.poojaCommissionRate || "5.0"),
                 productCommissionRate: String(tData.productCommissionRate || "10.0"),
+                openTime: tData.openTime || "",
                 operatingHours: tData.operatingHours || [
                     { label: "Morning", start: "07:00 AM", end: "01:00 PM", active: true },
                     { label: "Evening", start: "05:00 PM", end: "10:00 PM", active: true }
@@ -393,12 +429,18 @@ export function TempleForm({
                                 </div>
                                 <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                                     <div className="space-y-2">
-                                        <label className="text-sm font-semibold text-slate-700">{t('registration_form.labels.admin_name')}</label>
+                                        <label className="text-sm font-semibold text-slate-700">
+                                            {t('registration_form.labels.admin_name')} {lang === 'en' ? '' : lang === 'hi' ? '(Hindi)' : '(Marathi)'}
+                                        </label>
                                         <Input
-                                            value={formData.name}
-                                            onChange={e => setFormData({ ...formData, name: e.target.value })}
-                                            placeholder={t('registration_form.placeholders.admin_name')}
-                                            required
+                                            value={lang === "en" ? formData.adminName_en : lang === "hi" ? formData.adminName_hi : formData.adminName_mr}
+                                            onChange={e => {
+                                                if (lang === "en") setFormData({ ...formData, adminName_en: e.target.value });
+                                                else if (lang === "hi") setFormData({ ...formData, adminName_hi: e.target.value });
+                                                else setFormData({ ...formData, adminName_mr: e.target.value });
+                                            }}
+                                            placeholder={`${t('registration_form.placeholders.admin_name')} (${lang.toUpperCase()})`}
+                                            required={lang === "en"}
                                         />
                                     </div>
                                     <div className="space-y-2">

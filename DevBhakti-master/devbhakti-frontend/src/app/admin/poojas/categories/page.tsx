@@ -30,6 +30,7 @@ import {
 } from "@/components/ui/dialog";
 import { Badge } from "@/components/ui/badge";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { useLanguage, Language } from "@/context/LanguageContext";
 
 type LangKey = "en" | "hi" | "mr";
 
@@ -42,6 +43,7 @@ const LANGUAGES: { key: LangKey; label: string; flag: string }[] = [
 const emptyNames = (): Record<LangKey, string> => ({ en: "", hi: "", mr: "" });
 
 export default function AdminPoojaCategoriesPage() {
+    const { t, language, setLanguage } = useLanguage();
     const { toast } = useToast();
     const [categories, setCategories] = useState<any[]>([]);
     const [isLoading, setIsLoading] = useState(true);
@@ -61,6 +63,24 @@ export default function AdminPoojaCategoriesPage() {
     useEffect(() => {
         loadCategories();
     }, [filterStatus]);
+
+    // Helper to get lang value safely from both old (string) and new (json) formats
+    const getL = (field: any, lang: string, fallback: string = "") => {
+        if (!field) return fallback;
+        if (typeof field === "object") return field[lang] || "";
+        if (typeof field === "string") {
+            try {
+                const parsed = JSON.parse(field);
+                if (typeof parsed === "object" && parsed !== null) {
+                    return parsed[lang] || "";
+                }
+            } catch (e) {
+                // ignore JSON parse errors, treat as a normal string
+            }
+        }
+        if (lang === "en") return field; // Old format fallback
+        return "";
+    };
 
     const loadCategories = async () => {
         setIsLoading(true);
@@ -91,7 +111,7 @@ export default function AdminPoojaCategoriesPage() {
                 status: "APPROVED"
             });
             if (res.success) {
-                toast({ title: "Success", description: "Category added successfully" });
+                toast({ title: "Success", description: "Category added successfully", variant: "success" });
                 setNewNames(emptyNames());
                 setIsAdding(false);
                 loadCategories();
@@ -110,9 +130,9 @@ export default function AdminPoojaCategoriesPage() {
     const openEdit = (cat: any) => {
         setEditCat(cat);
         setEditNames({
-            en: cat.name_en || "",
-            hi: cat.name_hi || "",
-            mr: cat.name_mr || ""
+            en: getL(cat.name_en || cat.name, "en"),
+            hi: getL(cat.name_hi || cat.name, "hi"),
+            mr: getL(cat.name_mr || cat.name, "mr")
         });
     };
 
@@ -129,7 +149,7 @@ export default function AdminPoojaCategoriesPage() {
                 name_mr: editNames.mr.trim() || undefined,
             });
             if (res.success) {
-                toast({ title: "Updated", description: "Category updated successfully" });
+                toast({ title: "Updated", description: "Category updated successfully", variant: "success" });
                 setEditCat(null);
                 loadCategories();
             }
@@ -148,7 +168,7 @@ export default function AdminPoojaCategoriesPage() {
         try {
             const res = await updatePoojaCategoryStatusAdmin(id, status);
             if (res.success) {
-                toast({ title: "Success", description: `Category ${status.toLowerCase()} successfully` });
+                toast({ title: "Success", description: `Category ${status.toLowerCase()} successfully`, variant: "success" });
                 loadCategories();
             }
         } catch {
@@ -161,7 +181,7 @@ export default function AdminPoojaCategoriesPage() {
         try {
             const res = await deletePoojaCategoryAdmin(id);
             if (res.success) {
-                toast({ title: "Deleted", description: "Category removed successfully" });
+                toast({ title: "Deleted", description: "Category removed successfully", variant: "success" });
                 loadCategories();
             }
         } catch {
@@ -192,7 +212,7 @@ export default function AdminPoojaCategoriesPage() {
                                 Enter the category name in all three languages. English is required.
                             </DialogDescription>
                         </DialogHeader>
-                        <Tabs defaultValue="en" className="w-full">
+                        <Tabs value={language} onValueChange={(v) => setLanguage(v as Language)} className="w-full">
                             <TabsList className="w-full grid grid-cols-3 mb-4">
                                 {LANGUAGES.map(l => (
                                     <TabsTrigger key={l.key} value={l.key}>
@@ -284,9 +304,9 @@ export default function AdminPoojaCategoriesPage() {
                         ) : (
                             categories.map((cat) => (
                                 <tr key={cat.id} className="hover:bg-slate-50/50 transition-colors">
-                                    <td className="px-6 py-4 font-medium">{cat.name_en || cat.name || "—"}</td>
-                                    <td className="px-6 py-4 text-slate-600">{cat.name_hi || <span className="text-slate-300 italic text-xs">not set</span>}</td>
-                                    <td className="px-6 py-4 text-slate-600">{cat.name_mr || <span className="text-slate-300 italic text-xs">not set</span>}</td>
+                                    <td className="px-6 py-4 font-medium">{getL(cat.name_en || cat.name, "en") || "—"}</td>
+                                    <td className="px-6 py-4 text-slate-600">{getL(cat.name_hi || cat.name, "hi") || <span className="text-slate-300 italic text-xs">not set</span>}</td>
+                                    <td className="px-6 py-4 text-slate-600">{getL(cat.name_mr || cat.name, "mr") || <span className="text-slate-300 italic text-xs">not set</span>}</td>
                                     <td className="px-6 py-4">
                                         <Badge
                                             variant={cat.status === "APPROVED" ? "default" : cat.status === "REJECTED" ? "destructive" : "outline"}
@@ -350,7 +370,7 @@ export default function AdminPoojaCategoriesPage() {
                             Update the category name in all three languages.
                         </DialogDescription>
                     </DialogHeader>
-                    <Tabs defaultValue="en" className="w-full">
+                    <Tabs value={language} onValueChange={(v) => setLanguage(v as Language)} className="w-full">
                         <TabsList className="w-full grid grid-cols-3 mb-4">
                             {LANGUAGES.map(l => (
                                 <TabsTrigger key={l.key} value={l.key}>

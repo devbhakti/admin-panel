@@ -7,6 +7,7 @@ export const fetchPublicTemples = async (params?: {
     location?: string;
     pooja?: string;
     poojaId?: string;
+    lang?: string;
 }) => {
     try {
         const response = await axios.get(`${API_URL}/temples`, { params });
@@ -32,6 +33,7 @@ export const fetchPublicPoojas = async (params?: {
     category?: string;
     location?: string;
     templeId?: string;
+    lang?: string;
 }) => {
     try {
         const response = await axios.get(`${API_URL}/temples/poojas`, { params });
@@ -42,9 +44,11 @@ export const fetchPublicPoojas = async (params?: {
     }
 };
 
-export const fetchPublicTempleById = async (id: string) => {
+export const fetchPublicTempleById = async (id: string, lang?: string) => {
     try {
-        const response = await axios.get(`${API_URL}/temples/${id}`);
+        const response = await axios.get(`${API_URL}/temples/${id}`, { 
+            params: { lang } 
+        });
         return response.data.data;
     } catch (error) {
         console.error("Error fetching public temple by id:", error);
@@ -52,9 +56,11 @@ export const fetchPublicTempleById = async (id: string) => {
     }
 };
 
-export const fetchPublicPoojaById = async (id: string) => {
+export const fetchPublicPoojaById = async (id: string, lang?: string) => {
     try {
-        const response = await axios.get(`${API_URL}/temples/poojas/${id}`);
+        const response = await axios.get(`${API_URL}/temples/poojas/${id}`, {
+            params: { lang }
+        });
         return response.data.data;
     } catch (error) {
         console.error("Error fetching public pooja by id:", error);
@@ -124,4 +130,21 @@ export const fetchSeoSettings = async () => {
     }
 };
 
-
+export const submitContactForm = async (data: {
+    name: string;
+    email: string;
+    mobile: string;
+    subject: string;
+    message: string;
+}) => {
+    try {
+        const response = await axios.post(`${API_URL}/contact`, data);
+        return response.data;
+    } catch (error: any) {
+        console.error("Error submitting contact form:", error);
+        return {
+            success: false,
+            error: error.response?.data?.error || "Failed to submit inquiry. Please try again later."
+        };
+    }
+};

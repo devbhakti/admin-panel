@@ -10,6 +10,7 @@ import PDFDocument from 'pdfkit';
 import path from 'path';
 import fs from 'fs';
 import { sendOrderInvoiceEmail } from "../../services/orderMailService";
+import { localize, getLang, getEnglish } from "../../utils/localization";
 
 export const calculateFees = async (req: Request, res: Response) => {
   try {
@@ -133,12 +134,12 @@ export const createVerifiedOrder = async (orderData: any, userId: string) => {
         id: true,
         templeId: true,
         sellerId: true,
-        name_en: true,
+        name: true,
         weight: true,
         length: true,
         width: true,
         height: true,
-        temple: { select: { name_en: true, pickupLocation_en: true, userId: true } },
+        temple: { select: { name: true, pickupLocation: true, userId: true } },
         seller: { select: { name: true, pickupLocation: true, userId: true } }
       },
     });
@@ -243,7 +244,7 @@ export const createVerifiedOrder = async (orderData: any, userId: string) => {
         const shippingAddr = shippingAddress as any;
 
         // Use the first product's vendor pickup location
-        const pickupLocation = (templeId ? (firstProd as any)?.temple?.pickupLocation_en : (firstProd as any)?.seller?.pickupLocation) || "Primary";
+        const pickupLocation = (templeId ? getEnglish((firstProd as any)?.temple?.pickupLocation) : getEnglish((firstProd as any)?.seller?.pickupLocation)) || "Primary";
 
         // Prepare Shiprocket Order Payload
         const shiprocketOrderData = {
@@ -263,7 +264,7 @@ export const createVerifiedOrder = async (orderData: any, userId: string) => {
           order_items: groupItems.map(item => {
             const p = productMap.get(item.productId);
             return {
-              name: (p as any)?.name_en || "Product",
+              name: getEnglish((p as any)?.name) || "Product",
               sku: item.variantId,
               units: item.quantity,
               selling_price: item.price,
@@ -341,7 +342,7 @@ export const createVerifiedOrder = async (orderData: any, userId: string) => {
           paymentMethod: order.paymentMethod,
           shippingAddress: order.shippingAddress,
           items: items.map((item: any) => ({
-            productName: (productMap.get(item.productId) as any)?.name_en || "Sacred Item",
+            productName: getEnglish((productMap.get(item.productId) as any)?.name) || "Sacred Item",
             price: item.price,
             quantity: item.quantity
           })),
@@ -358,14 +359,14 @@ export const createVerifiedOrder = async (orderData: any, userId: string) => {
   const userDisplayName = order.user?.name || "A Devotee";
   const productNames = items.map((item: any) => {
     const p = productMap.get(item.productId);
-    return `${(p as any)?.name_en} (x${item.quantity})`;
+    return `${getEnglish((p as any)?.name)} (x${item.quantity})`;
   }).join(', ');
 
   const vendorSummary = Object.keys(groups).map(key => {
     if (key === 'admin') return 'DevBhakti Admin';
     const firstItem = groups[key][0];
     const info = productMap.get(firstItem.productId);
-    return (info as any)?.temple?.name_en || (info as any)?.seller?.name || 'Vendor';
+    return getEnglish((info as any)?.temple?.name) || getEnglish((info as any)?.seller?.name) || 'Vendor';
   }).join(', ');
 
   // Notify Admin (Comprehensive Order Alert)
@@ -405,12 +406,12 @@ export const getMyOrders = async (req: any, res: Response) => {
             items: {
               include: {
                 product: {
-                  select: { name_en: true, image: true }
+                  select: { name: true, image: true }
                 }
               }
             },
             temple: {
-              select: { name_en: true }
+              select: { name: true }
             },
             seller: {
               select: { name: true }
@@ -421,7 +422,8 @@ export const getMyOrders = async (req: any, res: Response) => {
       orderBy: { createdAt: "desc" },
     });
 
-    return res.status(200).json({ success: true, data: orders });
+    const lang = getLang(req);
+    return res.status(200).json({ success: true, data: localize(orders, lang) });
   } catch (error: any) {
     return res.status(500).json({ success: false, message: error.message });
   }
@@ -454,7 +456,8 @@ export const getOrderById = async (req: Request, res: Response) => {
       return res.status(404).json({ success: false, message: "Order not found" });
     }
 
-    return res.status(200).json({ success: true, data: order });
+    const lang = getLang(req);
+    return res.status(200).json({ success: true, data: localize(order, lang) });
   } catch (error: any) {
     return res.status(500).json({ success: false, message: error.message });
   }
@@ -468,12 +471,12 @@ export const getOrderInvoice = async (req: Request, res: Response) => {
       include: {
         subOrders: {
           include: {
-            temple: { select: { name_en: true, fullAddress_en: true } },
+            temple: { select: { name: true, fullAddress: true } },
             seller: { select: { name: true, location: true } },
             items: {
               include: {
                 product: {
-                  select: { name_en: true }
+                  select: { name: true }
                 }
               }
             }
@@ -489,6 +492,8 @@ export const getOrderInvoice = async (req: Request, res: Response) => {
       return res.status(404).send("Order not found");
     }
 
+    const lang = getLang(req);
+    const locOrder = localize(order, lang);
     const shippingAddress = order.shippingAddress as any;
 
     const formatDate = (date: Date) => {
@@ -496,14 +501,14 @@ export const getOrderInvoice = async (req: Request, res: Response) => {
     };
 
     // Calculate total items
-    const totalItems = order.subOrders.reduce((acc, so) => acc + so.items.length, 0);
+    const totalItems = locOrder.subOrders.reduce((acc: any, so: any) => acc + so.items.length, 0);
 
     const invoiceContent = `
         <!DOCTYPE html>
         <html lang="en">
         <head>
             <meta charset="UTF-8">
-            <title>Invoice #${order.id.slice(-8).toUpperCase()}</title>
+            <title>Invoice #${locOrder.id.slice(-8).toUpperCase()}</title>
             <link href="https://fonts.googleapis.com/css2?family=Roboto:wght@400;500;700&display=swap" rel="stylesheet">
             <style>
                 body { 
@@ -719,9 +724,9 @@ export const getOrderInvoice = async (req: Request, res: Response) => {
                     <div class="column col-border">
                         <h4>SOLD BY:</h4>
                         <div class="column-content" style="text-align: left;">
-                            ${order.subOrders.map((so: any) => {
-      const vName = so.temple?.name_en || so.seller?.name || 'DevBhakti Marketplace';
-      const vAddr = so.temple?.fullAddress_en || so.seller?.location || 'Indore, MP';
+                            ${locOrder.subOrders.map((so: any) => {
+      const vName = so.temple?.name || so.seller?.name || 'DevBhakti Marketplace';
+      const vAddr = so.temple?.fullAddress || so.seller?.location || 'Indore, MP';
       return `<strong>${vName}</strong><br>${vAddr}<br>`;
     }).join('<br>')}
                             <br>
@@ -739,15 +744,15 @@ export const getOrderInvoice = async (req: Request, res: Response) => {
                             </div>
                             <div class="detail-row">
                                 <span class="detail-label">INVOICE DATE</span>
-                                <span class="detail-value">: ${formatDate(order.createdAt)}</span>
+                                <span class="detail-value">: ${formatDate(locOrder.createdAt)}</span>
                             </div>
                             <div class="detail-row">
                                 <span class="detail-label">ORDER NO</span>
-                                <span class="detail-value">: ${order.id.slice(-8).toUpperCase()}</span>
+                                <span class="detail-value">: ${locOrder.id.slice(-8).toUpperCase()}</span>
                             </div>
                             <div class="detail-row">
                                 <span class="detail-label">ORDER DATE</span>
-                                <span class="detail-value">: ${formatDate(order.createdAt)}</span>
+                                <span class="detail-value">: ${formatDate(locOrder.createdAt)}</span>
                             </div>
                             <div class="detail-row">
                                 <span class="detail-label">CHANNEL</span>
@@ -781,11 +786,11 @@ export const getOrderInvoice = async (req: Request, res: Response) => {
                         </tr>
                     </thead>
                     <tbody>
-                        ${order.subOrders.flatMap((so: any) => so.items).map((item: any, idx: number) => `
+                        ${locOrder.subOrders.flatMap((so: any) => so.items).map((item: any, idx: number) => `
                             <tr>
                                 <td class="text-left">${idx + 1}</td>
                                 <td class="text-left">
-                                    <strong>${(item as any).product?.name_en || 'Item'}</strong> (${item.variantName || 'Standard'})<br>
+                                    <strong>${(item as any).product?.name || 'Item'}</strong> (${item.variantName || 'Standard'})<br>
                                     <span style="color: #666; font-size: 10px;">SKU: ${item.variantId}</span>
                                 </td>
                                 <td>0</td>
@@ -806,7 +811,7 @@ export const getOrderInvoice = async (req: Request, res: Response) => {
                         <div class="footer-box"></div>
                         <div class="footer-sign">
                             Authorized Signature for<br>
-                            ${order.subOrders[0]?.temple?.name_en || order.subOrders[0]?.seller?.name || 'DevBhakti'}
+                            ${getEnglish(locOrder.subOrders[0]?.temple?.name) || locOrder.subOrders[0]?.seller?.name || 'DevBhakti'}
                         </div>
                     </div>
                     
@@ -934,7 +939,7 @@ export const generateOrderReceiptBuffer = async (orderId: string): Promise<{ buf
       let currentY = tableTop + 35;
       order.subOrders.forEach(subOrder => {
         subOrder.items.forEach(item => {
-          doc.fillColor(textColor).font('Helvetica').fontSize(10).text((item.product as any)?.name_en || 'Product', 60, currentY, { width: 280 });
+          doc.fillColor(textColor).font('Helvetica').fontSize(10).text(getEnglish((item.product as any)?.name) || 'Product', 60, currentY, { width: 280 });
           doc.fontSize(9).fillColor('#666').text(`Variant: ${item.variantName || 'Default'}`, 60, doc.y + 2);
 
           doc.fillColor(textColor).fontSize(10).text(item.quantity.toString(), 350, currentY, { width: 50, align: 'center' });
@@ -999,7 +1004,7 @@ export const checkShippingAvailability = async (req: Request, res: Response) => 
     const product = await prisma.product.findUnique({
       where: { id: productId },
       include: {
-        temple: { select: { fullAddress_en: true, location_en: true } },
+        temple: { select: { fullAddress: true, location: true } },
         seller: { select: { fullAddress: true, location: true } }
       }
     });
@@ -1009,8 +1014,8 @@ export const checkShippingAvailability = async (req: Request, res: Response) => 
     }
 
     // Get Pickup Pincode
-    const vendorAddress = (product as any).temple?.fullAddress_en || (product as any).temple?.location_en ||
-      (product as any).seller?.fullAddress || (product as any).seller?.location;
+    const vendorAddress = getEnglish((product as any).temple?.fullAddress) || getEnglish((product as any).temple?.location) ||
+      getEnglish((product as any).seller?.fullAddress) || getEnglish((product as any).seller?.location);
 
     if (!vendorAddress) {
       return res.status(400).json({ success: false, message: "Vendor address not configured for this product" });

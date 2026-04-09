@@ -37,6 +37,7 @@ import logo from "@/assets/logo2.png";
 import AccessDeniedPage from "./access-denied/page";
 import { clearAllTokens } from "@/lib/auth-utils";
 import { NotificationBell } from "@/components/notifications/NotificationBell";
+import { AdminLanguageSwitcher } from "@/components/admin/AdminLanguageSwitcher";
 
 const sidebarItems = [
   {
@@ -268,6 +269,11 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
         }
       }
     });
+
+    // Close sidebar on mobile after navigation
+    if (typeof window !== 'undefined' && window.innerWidth < 1024) {
+      setSidebarOpen(false);
+    }
   }, [pathname]);
 
   // Permission check helper
@@ -531,8 +537,15 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
         )}
       >
         {/* Header */}
-        <header className="sticky top-0 z-40 h-16 bg-background/95 backdrop-blur-md border-b border-border flex items-center justify-between px-6 w-full overflow-hidden">
+        <header className="sticky top-0 z-40 h-16 bg-background/95 backdrop-blur-md border-b border-border flex items-center justify-between px-4 lg:px-6 w-full overflow-hidden">
           <div className="flex items-center gap-2 text-sm text-muted-foreground capitalize overflow-x-auto whitespace-nowrap premium-scrollbar pb-1">
+            <button
+              title="Open sidebar"
+              onClick={() => setSidebarOpen(true)}
+              className="p-1 -ml-1 mr-1 rounded-md lg:hidden hover:bg-muted text-foreground shrink-0"
+            >
+              <Menu className="w-5 h-5" />
+            </button>
             <Link href="/admin" className="hover:text-foreground transition-colors">
               Admin
             </Link>
@@ -568,6 +581,7 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
           </div>
 
           <div className="flex items-center gap-3">
+            <AdminLanguageSwitcher />
             <NotificationBell userId={user?.id || ''} userType="admin" />
             <Button variant="outline" size="sm" asChild>
               <Link href="/">View Site</Link>

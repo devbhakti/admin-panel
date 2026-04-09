@@ -3,6 +3,8 @@
  * with a standardized English fallback logic.
  */
 
+import { parseLocalizedValue } from "./textUtils";
+
 export type Language = 'en' | 'hi' | 'mr';
 
 /**
@@ -39,8 +41,10 @@ export function getLocalized(
   }
 
   // 3. Last resort fallback to legacy field 'name' or 'description' if they exist (for backward compatibility)
-  if (obj[field] && typeof obj[field] === 'string') {
-    return obj[field];
+  if (obj[field]) {
+    // If it's a string, it might be a JSON object string or a plain string
+    // Use parseLocalizedValue for robust handling
+    return parseLocalizedValue(obj[field], lang);
   }
 
   return "";

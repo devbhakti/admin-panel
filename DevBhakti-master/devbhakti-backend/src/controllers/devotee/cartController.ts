@@ -1,5 +1,6 @@
 import { Request, Response } from 'express';
 import { prisma } from '../../lib/prisma';
+import { getLang, localize } from '../../utils/localization';
 
 // Get User's Cart
 export const getCart = async (req: Request, res: Response) => {
@@ -14,7 +15,7 @@ export const getCart = async (req: Request, res: Response) => {
                         product: {
                             select: {
                                 id: true,
-                                name_en: true,
+                                name: true,
                                 image: true,
                                 templeId: true,
                                 sellerId: true
@@ -23,7 +24,7 @@ export const getCart = async (req: Request, res: Response) => {
                         variant: {
                             select: {
                                 id: true,
-                                name_en: true,
+                                name: true,
                                 price: true,
                                 stock: true
                             }
@@ -43,7 +44,7 @@ export const getCart = async (req: Request, res: Response) => {
                             product: {
                                 select: {
                                     id: true,
-                                    name_en: true,
+                                    name: true,
                                     image: true,
                                     templeId: true,
                                     sellerId: true
@@ -52,7 +53,7 @@ export const getCart = async (req: Request, res: Response) => {
                             variant: {
                                 select: {
                                     id: true,
-                                    name_en: true,
+                                    name: true,
                                     price: true,
                                     stock: true
                                 }
@@ -63,20 +64,26 @@ export const getCart = async (req: Request, res: Response) => {
             }) as any);
         }
 
-        // Transform data to match frontend structure
-        const formattedItems = (cart as any).items?.map((item: any) => ({
-            id: item.id,
-            productId: item.productId,
-            variantId: item.variantId,
-            name: item.product.name_en,
-            variantName: item.variant.name_en,
-            price: item.variant.price,
-            image: item.product.image,
-            quantity: item.quantity,
-            templeId: item.product.templeId,
-            sellerId: item.product.sellerId,
-            stock: item.variant.stock
-        })) || [];
+        const lang = getLang(req);
+        // Transform data to match frontend structure and localize
+        const formattedItems = (cart as any).items?.map((item: any) => {
+            const localizedProduct = localize(item.product, lang);
+            const localizedVariant = localize(item.variant, lang);
+            
+            return {
+                id: item.id,
+                productId: item.productId,
+                variantId: item.variantId,
+                name: localizedProduct.name,
+                variantName: localizedVariant.name,
+                price: item.variant.price,
+                image: item.product.image,
+                quantity: item.quantity,
+                templeId: item.product.templeId,
+                sellerId: item.product.sellerId,
+                stock: item.variant.stock
+            };
+        }) || [];
 
         res.json({
             success: true,

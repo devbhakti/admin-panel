@@ -41,7 +41,7 @@ export default function Home() {
       <FeaturesSection />
       <VideoTestimonialsSection />
       <TrustSection />
-      <ReviewsSection />
+      {/* <ReviewsSection /> */}
       <CTASection />
       <Footer />
     </main>

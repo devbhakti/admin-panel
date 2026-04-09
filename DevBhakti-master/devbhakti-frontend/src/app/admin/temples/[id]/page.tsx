@@ -83,13 +83,27 @@ export default function ViewTemplePage() {
 
     const temple = inst.temple;
     
+    // Safe multilingual extractor
+    const parseL = (field: any, lang: string = "en"): string => {
+        if (!field) return "";
+        if (typeof field === "object") return field[lang] || field.en || field.hi || field.mr || "";
+        try {
+            const parsed = JSON.parse(field);
+            if (typeof parsed === "object" && parsed !== null) {
+                return parsed[lang] || parsed.en || parsed.hi || parsed.mr || "";
+            }
+        } catch (e) { /* plain string */ }
+        return field;
+    };
+    
     // Extract primary English versions for Admin display
-    const name = temple?.name_en || temple?.name;
-    const category = temple?.category_en || temple?.category;
-    const location = temple?.location_en || temple?.location;
-    const description = temple?.description_en || temple?.description;
-    const history = temple?.history_en || temple?.history;
-    const fullAddress = temple?.fullAddress_en || temple?.fullAddress;
+    const name = parseL(temple?.name);
+    const category = parseL(temple?.category);
+    const location = parseL(temple?.location);
+    const description = parseL(temple?.description);
+    const history = parseL(temple?.history);
+    const fullAddress = parseL(temple?.fullAddress);
+    const adminName = parseL(inst.name);
 
     const heroImages = temple?.heroImages && temple.heroImages.length > 0 ? temple.heroImages : [temple?.image];
 
@@ -452,7 +466,7 @@ export default function ViewTemplePage() {
                                 Admin Account
                             </h3>
                             <div className="space-y-2">
-                                <p className="text-sm font-bold">{inst.name}</p>
+                                <p className="text-sm font-bold">{adminName}</p>
                                 <p className="text-xs text-muted-foreground">{inst.email}</p>
                                 <p className="text-xs text-muted-foreground">{inst.phone}</p>
                             </div>

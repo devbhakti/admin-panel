@@ -1,6 +1,7 @@
 "use client";
 
 import React, { createContext, useContext, useState, useEffect } from 'react';
+import axios from 'axios';
 
 import en from '../locales/en.json';
 import hi from '../locales/hi.json';
@@ -20,17 +21,23 @@ interface LanguageContextType {
 const LanguageContext = createContext<LanguageContextType | undefined>(undefined);
 
 export const LanguageProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
-  const [language, setLanguageState] = useState<Language>('en');
-
-  // Load language from localStorage on mount
-  useEffect(() => {
+  // Load initial language from localStorage for instant switch on refresh
+  const [language, setLanguageState] = useState<Language>(() => {
     if (typeof window !== 'undefined') {
       const savedLang = localStorage.getItem('devbhakti_lang') as Language;
       if (savedLang && ['en', 'hi', 'mr'].includes(savedLang)) {
-        setLanguageState(savedLang);
+        // Set axios header immediately
+        axios.defaults.headers.common['lang'] = savedLang;
+        return savedLang;
       }
     }
-  }, []);
+    return 'en';
+  });
+
+  // Keep axios header in sync when language changed
+  useEffect(() => {
+    axios.defaults.headers.common['lang'] = language;
+  }, [language]);
 
   const setLanguage = (lang: Language) => {
     setLanguageState(lang);

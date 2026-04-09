@@ -4,7 +4,7 @@ import React, { useState, useEffect } from "react";
 import { useRouter, useParams } from "next/navigation";
 import { ArrowLeft } from "lucide-react";
 import { Button } from "@/components/ui/button";
-import { fetchAllPoojasAdmin, updatePoojaAdmin, fetchAllTemplesAdmin, fetchPoojaCategoriesAdmin } from "@/api/adminController";
+import { updatePoojaAdmin, fetchAllTemplesAdmin, fetchPoojaCategoriesAdmin, fetchPoojaByIdAdmin } from "@/api/adminController";
 import { useToast } from "@/hooks/use-toast";
 import { PoojaForm } from "@/components/admin/poojas/PoojaForm";
 
@@ -27,10 +27,10 @@ export default function EditPoojaPage() {
     const loadInitialData = async () => {
         setIsLoading(true);
         try {
-            const [poojasRes, templesRes, categoriesRes] = await Promise.all([
-                fetchAllPoojasAdmin(),
+            const [templesRes, categoriesRes, poojaRes] = await Promise.all([
                 fetchAllTemplesAdmin(),
-                fetchPoojaCategoriesAdmin({ status: "APPROVED" })
+                fetchPoojaCategoriesAdmin({ status: "APPROVED" }),
+                fetchPoojaByIdAdmin(poojaId)
             ]);
 
             const actualTemples = templesRes
@@ -42,14 +42,14 @@ export default function EditPoojaPage() {
                 setAvailableCategories(categoriesRes.data);
             }
 
-            const pooja = poojasRes.find((p: any) => p.id === poojaId);
-            if (pooja) {
-                setPoojaData(pooja);
+            if (poojaRes.success && poojaRes.data) {
+                setPoojaData(poojaRes.data);
             } else {
                 toast({ title: "Error", description: "Pooja not found", variant: "destructive" });
                 router.push('/admin/poojas');
             }
         } catch (error) {
+            console.error('Load initial data error:', error);
             toast({ title: "Error", description: "Failed to load pooja data", variant: "destructive" });
         } finally {
             setIsLoading(false);
@@ -60,7 +60,7 @@ export default function EditPoojaPage() {
         setIsSubmitting(true);
         try {
             await updatePoojaAdmin(poojaId, formData);
-            toast({ title: "Success", description: "Pooja updated successfully" });
+            toast({ title: "Success", description: "Pooja updated successfully", variant: "success" });
             router.push('/admin/poojas');
         } catch (error) {
             toast({ title: "Error", description: "Failed to update pooja", variant: "destructive" });

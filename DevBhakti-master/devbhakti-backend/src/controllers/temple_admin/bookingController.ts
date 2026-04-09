@@ -1,6 +1,7 @@
 import { Request, Response } from 'express';
 import { prisma } from '../../lib/prisma';
 import { notifyUser } from '../../services/firebaseService';
+import { getLang, localize, getEnglish } from '../../utils/localization';
 
 export const getTempleBookings = async (req: Request, res: Response) => {
     try {
@@ -54,9 +55,10 @@ export const getTempleBookings = async (req: Request, res: Response) => {
             }
         });
 
+        const lang = getLang(req);
         res.json({
             success: true,
-            data: bookings
+            data: localize(bookings, lang)
         });
     } catch (error) {
         console.error('Error fetching temple bookings:', error);
@@ -120,7 +122,7 @@ export const updateBookingStatus = async (req: Request, res: Response) => {
         // Notify Devotee
         await notifyUser(booking.userId, 'devotee', {
             title: `Pooja Booking ${status === 'COMPLETED' ? 'Completed 🎊' : status === 'CANCELLED' ? 'Cancelled ❌' : status === 'REJECTED' ? 'Rejected ❌' : 'Updated'}`,
-            body: `Your booking for ${updatedBooking.pooja.name_en} has been marked as ${status.toLowerCase()}.`,
+            body: `Your booking for ${getEnglish(updatedBooking.pooja.name)} has been marked as ${status.toLowerCase()}.`,
             data: { link: '/profile/bookings', bookingId: booking.id }
         });
 

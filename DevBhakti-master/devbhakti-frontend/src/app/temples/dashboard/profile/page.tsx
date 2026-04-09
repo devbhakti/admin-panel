@@ -606,11 +606,11 @@ export default function TempleProfilePage() {
                                 </div>
                                 {formData.isLive && (
                                     <div className="space-y-2">
-                                        <Label className="text-[10px] uppercase font-black tracking-widest text-slate-400 ml-1">Live URL / Channel ID</Label>
+                                        <Label className="text-[10px] uppercase font-black tracking-widest text-slate-400 ml-1">Live Watch URL</Label>
                                         <Input
                                             value={formData.liveUrl}
                                             onChange={e => setFormData({ ...formData, liveUrl: e.target.value })}
-                                            placeholder="Enter Channel ID"
+                                            placeholder="Enter Watch URL"
                                             className="h-12 border-white/40 bg-white/40 focus:bg-white rounded-xl focus:ring-[#7b4623]/10"
                                         />
                                     </div>

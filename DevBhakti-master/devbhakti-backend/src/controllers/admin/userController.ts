@@ -1,6 +1,7 @@
 import { Request, Response } from 'express';
 import { PrismaClient, UserRole } from '@prisma/client';
 import ExcelJS from 'exceljs';
+import { getLang, localize } from '../../utils/localization';
 
 const prisma = new PrismaClient();
 
@@ -59,8 +60,6 @@ export const getAllUsers = async (req: Request, res: Response) => {
                 ]
             });
         }
-
-
 
         if (dobStart || dobEnd) {
             const cond = getRecurringDateConditions(String(dobStart || '1900-01-01'), String(dobEnd || '2100-12-31'), 'dob');
@@ -250,10 +249,10 @@ export const getUserDetail = async (req: Request, res: Response) => {
                     },
                     include: {
                         pooja: {
-                            select: { name_en: true }
+                            select: { name: true }
                         },
                         temple: {
-                            select: { name_en: true }
+                            select: { name: true }
                         }
                     },
                     orderBy: {
@@ -273,7 +272,7 @@ export const getUserDetail = async (req: Request, res: Response) => {
                                 items: {
                                     include: {
                                         product: {
-                                            select: { name_en: true }
+                                            select: { name: true }
                                         }
                                     }
                                 }
@@ -290,7 +289,7 @@ export const getUserDetail = async (req: Request, res: Response) => {
                     },
                     include: {
                         temple: {
-                            select: { name_en: true }
+                            select: { name: true }
                         }
                     },
                     orderBy: {
@@ -318,9 +317,10 @@ export const getUserDetail = async (req: Request, res: Response) => {
             return res.status(404).json({ success: false, message: 'User not found' });
         }
 
+        const lang = getLang(req);
         res.json({
             success: true,
-            data: user
+            data: localize(user, lang)
         });
     } catch (error) {
         console.error('Error fetching user detail:', error);

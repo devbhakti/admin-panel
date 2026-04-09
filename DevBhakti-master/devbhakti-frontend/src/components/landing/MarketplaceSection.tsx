@@ -74,7 +74,7 @@ const MarketplaceSection: React.FC = () => {
       }
     };
     loadData();
-  }, []);
+  }, [language]);
 
   const toggleFavorite = async (e: React.MouseEvent, id: string) => {
     e.preventDefault(); // Prevent navigation to product page

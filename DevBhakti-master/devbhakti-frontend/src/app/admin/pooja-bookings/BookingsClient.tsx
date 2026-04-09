@@ -33,6 +33,7 @@ import { useAdminAuth } from "@/hooks/use-admin-auth";
 import { cn } from "@/lib/utils";
 import axios from "axios";
 import { API_URL } from "@/config/apiConfig";
+import { parseLocalizedValue } from "@/utils/textUtils";
 
 const statusConfig = {
     BOOKED: { label: "Booked", color: "bg-blue-100 text-blue-700 border-blue-200", icon: CheckCircle },
@@ -42,11 +43,16 @@ const statusConfig = {
     PENDING: { label: "Pending", color: "bg-amber-100 text-amber-700 border-amber-200", icon: Clock },
 };
 
-const formatDateDDMMYYYY = (dateString: string | null | undefined, includeTime = false) => {
+const formatDateDDMMYYYY = (dateString: any, includeTime = false) => {
     if (!dateString) return "N/A";
     try {
-        const date = new Date(dateString);
-        if (isNaN(date.getTime())) return dateString;
+        // If it's a localized object, try to extract a string
+        const actualDateStr = (typeof dateString === 'object') 
+            ? (dateString.en || dateString.hi || dateString.mr || String(dateString))
+            : String(dateString);
+
+        const date = new Date(actualDateStr);
+        if (isNaN(date.getTime())) return String(actualDateStr);
 
         const dd = String(date.getDate()).padStart(2, '0');
         const mm = String(date.getMonth() + 1).padStart(2, '0');
@@ -61,13 +67,13 @@ const formatDateDDMMYYYY = (dateString: string | null | undefined, includeTime =
             const minutes = String(date.getMinutes()).padStart(2, '0');
             const ampm = hours >= 12 ? 'PM' : 'AM';
             hours = hours % 12;
-            hours = hours ? hours : 12; // the hour '0' should be '12'
+            hours = hours ? hours : 12; 
             const strTime = String(hours).padStart(2, '0') + ':' + minutes + ' ' + ampm;
             result += ` ${strTime}`;
         }
         return result;
     } catch {
-        return dateString;
+        return typeof dateString === 'string' ? dateString : "Invalid Date";
     }
 };
 
@@ -277,7 +283,7 @@ function BookingsContent() {
                 ].map((stat) => (
                     <Card key={stat.label} className="border-none shadow-sm bg-white/50 backdrop-blur-sm">
                         <CardContent className="p-4">
-                            <p className={`text-2xl font-extrabold ${stat.color}`}>{stat.value}</p>
+                            <p className={`text-2xl font-extrabold ${stat.color}`}>{String(stat.value)}</p>
                             <p className="text-[10px] font-bold text-slate-400 uppercase tracking-widest">{stat.label}</p>
                         </CardContent>
                     </Card>
@@ -418,16 +424,16 @@ function BookingsContent() {
                                 const status = statusConfig[booking.status as keyof typeof statusConfig] || statusConfig.BOOKED;
                                 return (
                                     <tr key={booking.id} className="border-b border-slate-50 hover:bg-slate-50 transition-colors">
-                                        <td className="p-4 font-mono text-[11px] font-bold text-[#794A05]">#{booking.id.slice(-8).toUpperCase()}</td>
+                                        <td className="p-4 font-mono text-[11px] font-bold text-[#794A05]">#{String(booking.id).slice(-8).toUpperCase()}</td>
                                         <td className="p-4">
-                                            <p className="text-sm font-bold text-slate-900">{booking.pooja?.name}</p>
-                                            {booking.packageName && <p className="text-xs text-slate-500 mt-0.5">{booking.packageName}</p>}
+                                            <p className="text-sm font-bold text-slate-900">{parseLocalizedValue(booking.pooja?.name)}</p>
+                                            {booking.packageName && <p className="text-xs text-slate-500 mt-0.5">{parseLocalizedValue(booking.packageName)}</p>}
                                         </td>
                                         <td className="p-4">
                                             {booking.temple ? (
                                                 <div className="flex items-center gap-2">
                                                     <Building2 className="w-4 h-4 text-slate-400" />
-                                                    <p className="text-sm font-bold text-slate-900">{booking.temple.name}</p>
+                                                    <p className="text-sm font-bold text-slate-900">{parseLocalizedValue(booking.temple.name)}</p>
                                                 </div>
                                             ) : (
                                                 <p className="text-sm font-bold text-slate-400">N/A</p>
@@ -436,7 +442,7 @@ function BookingsContent() {
                                         <td className="p-4">
                                             <div className="flex items-center gap-2">
                                                 <User className="w-4 h-4 text-slate-400" />
-                                                <p className="text-sm font-bold text-slate-900">{booking.devoteeName}</p>
+                                                <p className="text-sm font-bold text-slate-900">{parseLocalizedValue(booking.devoteeName)}</p>
                                             </div>
                                         </td>
                                         <td className="p-4">
@@ -446,11 +452,11 @@ function BookingsContent() {
                                         </td>
                                         <td className="p-4">
                                             <p className="text-sm font-medium text-slate-900" title="Date is in DDMMYYYY format">
-                                                {formatDateDDMMYYYY(booking.bookingDate, false)}
+                                                {formatDateDDMMYYYY(typeof booking.bookingDate === 'string' ? booking.bookingDate : (booking.bookingDate?.en || booking.bookingDate?.hi || booking.bookingDate?.mr || "N/A"), false)}
                                             </p>
                                         </td>
                                         <td className="p-4">
-                                            <p className="text-sm font-bold text-slate-900">₹{booking.packagePrice}</p>
+                                            <p className="text-sm font-bold text-slate-900">₹{String(booking.packagePrice)}</p>
                                         </td>
                                         <td className="p-4">
                                             <Badge variant="outline" className={`rounded-full px-3 py-1 font-extrabold text-[10px] ${status.color}`}>
@@ -492,20 +498,20 @@ function BookingsContent() {
                         <div className="space-y-4">
                             <div className="p-4 bg-slate-50 rounded-2xl">
                                 <p className="text-[10px] font-bold text-slate-400 uppercase mb-1">Devotee Information</p>
-                                <p className="font-bold text-slate-800 text-lg">{selectedBooking.devoteeName}</p>
-                                <p className="text-sm text-slate-500">{selectedBooking.devoteePhone}</p>
-                                <p className="text-sm text-slate-500">{selectedBooking.devoteeEmail}</p>
+                                <p className="font-bold text-slate-800 text-lg">{parseLocalizedValue(selectedBooking.devoteeName)}</p>
+                                <p className="text-sm text-slate-500">{String(selectedBooking.devoteePhone || "")}</p>
+                                <p className="text-sm text-slate-500">{String(selectedBooking.devoteeEmail || "")}</p>
                             </div>
                             <div className="p-4 bg-orange-50 rounded-2xl">
                                 <p className="text-[10px] font-bold text-orange-400 uppercase mb-1">Pooja Service</p>
-                                <p className="font-bold text-[#794A05] text-lg">{selectedBooking.pooja?.name}</p>
-                                <p className="text-sm text-[#794A05]">{selectedBooking.packageName}</p>
-                                <p className="text-2xl font-black text-[#794A05] mt-2">₹{selectedBooking.packagePrice}</p>
+                                <p className="font-bold text-[#794A05] text-lg">{parseLocalizedValue(selectedBooking.pooja?.name)}</p>
+                                <p className="text-sm text-[#794A05]">{parseLocalizedValue(selectedBooking.packageName)}</p>
+                                <p className="text-2xl font-black text-[#794A05] mt-2">₹{String(selectedBooking.packagePrice)}</p>
                             </div>
                             {selectedBooking.bookingDate && (
                                 <div className="p-4 bg-slate-50 rounded-2xl">
                                     <p className="text-[10px] font-bold text-slate-400 uppercase mb-1">Scheduled Date</p>
-                                    <p className="font-bold text-slate-800">{selectedBooking.bookingDate}</p>
+                                    <p className="font-bold text-slate-800">{formatDateDDMMYYYY(typeof selectedBooking.bookingDate === 'string' ? selectedBooking.bookingDate : (selectedBooking.bookingDate?.en || selectedBooking.bookingDate?.hi || selectedBooking.bookingDate?.mr || "N/A"), false)}</p>
                                 </div>
                             )}
 

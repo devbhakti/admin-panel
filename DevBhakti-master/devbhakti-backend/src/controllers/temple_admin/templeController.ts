@@ -4,6 +4,7 @@ import { createShiprocketPickupLocation } from '../../services/shiprocketService
 import { parseLocation, extractPincode } from '../../lib/shiprocketUtils';
 import bcrypt from 'bcrypt';
 import { notifyAdmins } from '../../services/firebaseService';
+import { buildLangJson, getEnglish, localize, getLang } from '../../utils/localization';
 
 const getFilePath = (files: any, fieldName: string) => {
   if (files && files[fieldName] && files[fieldName][0]) {
@@ -106,26 +107,14 @@ export const registerTemple = async (req: Request, res: Response) => {
       const temple = await tx.temple.create({
         data: {
           templeId: templeId,
-          name_en: data.name_en || data.templeName || 'New Temple',
-          name_hi: data.name_hi || null,
-          name_mr: data.name_mr || null,
-          category_en: data.category_en || data.category || 'Sacred',
-          category_hi: data.category_hi || null,
-          category_mr: data.category_mr || null,
+          name: buildLangJson(data.name_en || data.templeName || 'New Temple', data.name_hi, data.name_mr),
+          category: buildLangJson(data.category_en || data.category || 'Sacred', data.category_hi, data.category_mr),
           openTime: data.openTime || '',
           operatingHours: operatingHours,
-          description_en: data.description_en || data.description || '',
-          description_hi: data.description_hi || null,
-          description_mr: data.description_mr || null,
-          history_en: data.history_en || data.history || '',
-          history_hi: data.history_hi || null,
-          history_mr: data.history_mr || null,
-          location_en: data.location_en || data.location || '',
-          location_hi: data.location_hi || null,
-          location_mr: data.location_mr || null,
-          fullAddress_en: data.fullAddress_en || data.fullAddress || '',
-          fullAddress_hi: data.fullAddress_hi || null,
-          fullAddress_mr: data.fullAddress_mr || null,
+          description: buildLangJson(data.description_en || data.description || '', data.description_hi, data.description_mr),
+          history: buildLangJson(data.history_en || data.history || '', data.history_hi, data.history_mr),
+          location: buildLangJson(data.location_en || data.location || '', data.location_hi, data.location_mr),
+          fullAddress: buildLangJson(data.fullAddress_en || data.fullAddress || '', data.fullAddress_hi, data.fullAddress_mr),
           phone: data.phone || '',
           website: data.website,
           mapUrl: data.mapUrl,
@@ -133,26 +122,20 @@ export const registerTemple = async (req: Request, res: Response) => {
           rating: parseFloat(data.rating || '0'),
           reviewsCount: parseInt(data.reviewsCount || '0'),
           userId: user.id,
-          liveStatus: false, // Pending admin approval
+          liveStatus: false,
           image: getFilePath(files, 'image'),
           heroImages: getFilePaths(files, 'heroImages'),
-          // Link Poojas
           poojas: {
             connect: poojaIds.map((id: string) => ({ id }))
           },
-          // Create Inline Events
           events: {
             create: inlineEvents.map((ev: any) => ({
-              name_en: ev.name_en || ev.name,
-              name_hi: ev.name_hi || null,
-              name_mr: ev.name_mr || null,
+              name: buildLangJson(ev.name_en || ev.name, ev.name_hi, ev.name_mr),
+              description: buildLangJson(ev.description_en || ev.description || '', ev.description_hi, ev.description_mr),
               date: ev.date,
-              description_en: ev.description_en || ev.description || '',
-              description_hi: ev.description_hi || null,
-              description_mr: ev.description_mr || null,
             }))
           },
-          pickupLocation_en: `TEMPLE_${Math.random().toString(36).substring(2, 7).toUpperCase()}`
+          pickupLocation: buildLangJson(`TEMPLE_${Math.random().toString(36).substring(2, 7).toUpperCase()}`, null, null)
         }
       });
 
@@ -161,23 +144,25 @@ export const registerTemple = async (req: Request, res: Response) => {
 
     // 3. Register Pickup Location with Shiprocket
     try {
-      const { city, state } = parseLocation(data.location_en || data.location || "");
-      const pincode = extractPincode(data.fullAddress_en || data.fullAddress || "");
+      const locEn = getEnglish((result.temple as any).location) || data.location || '';
+      const addrEn = getEnglish((result.temple as any).fullAddress) || data.fullAddress || '';
+      const { city, state } = parseLocation(locEn);
+      const pincode = extractPincode(addrEn);
 
       const pickupData = {
-        pickup_location: (result.temple as any).pickupLocation_en,
+        pickup_location: getEnglish((result.temple as any).pickupLocation),
         name: data.name,
         email: data.email,
         phone: data.phone,
-        address: data.fullAddress_en || data.fullAddress || '',
-        city: city || "Delhi",
-        state: state || "Delhi",
-        country: "India",
-        pin_code: pincode || "110001"
+        address: addrEn,
+        city: city || 'Delhi',
+        state: state || 'Delhi',
+        country: 'India',
+        pin_code: pincode || '110001'
       };
       await createShiprocketPickupLocation(pickupData);
     } catch (srError) {
-      console.error("Shiprocket Pickup sync error:", srError);
+      console.error('Shiprocket Pickup sync error:', srError);
     }
 
     res.status(201).json({
@@ -228,7 +213,8 @@ export const getMyTempleProfile = async (req: Request, res: Response) => {
     }
 
     console.log("Temple profile fetched successfully");
-    res.json({ success: true, data: temple });
+    const lang = getLang(req);
+    res.json({ success: true, data: localize(temple, lang) });
   } catch (error: any) {
     console.error('Fetch Temple Profile Error:', error);
     res.status(500).json({ success: false, message: `Server error: ${error.message}` });
@@ -383,15 +369,34 @@ export const updateMyTempleProfile = async (req: Request, res: Response) => {
     // Check textual fields
     for (const key in fieldMapping) {
       const newValue = fieldMapping[key];
-      const oldValue = (temple as any)[key];
+      if (newValue === undefined) continue;
 
-      if (newValue !== undefined && newValue !== oldValue) {
+      let oldValue: any;
+      
+      // Handle localized fields comparison
+      if (key.endsWith('_en') || key.endsWith('_hi') || key.endsWith('_mr')) {
+        const baseKey = key.slice(0, -3); // e.g., 'name'
+        const langCode = key.slice(-2);   // e.g., 'en'
+        oldValue = (temple as any)[baseKey]?.[langCode];
+      } else {
+        oldValue = (temple as any)[key];
+      }
+
+      if (newValue !== oldValue) {
         if (sensitiveFields.includes(key)) {
           sensitiveChanges[key] = newValue;
           oldSensitiveData[key] = oldValue;
           hasSensitiveChanges = true;
         } else {
-          updateData[key] = newValue;
+          // If it's a localized field not in sensitive list (unlikely based on the list above)
+          if (key.endsWith('_en') || key.endsWith('_hi') || key.endsWith('_mr')) {
+             const baseKey = key.slice(0, -3);
+             const langCode = key.slice(-2);
+             if (!updateData[baseKey]) updateData[baseKey] = { ...(temple as any)[baseKey] };
+             updateData[baseKey][langCode] = newValue;
+          } else {
+            updateData[key] = newValue;
+          }
         }
       }
     }
@@ -410,7 +415,7 @@ export const updateMyTempleProfile = async (req: Request, res: Response) => {
       // Notify Admins
       await notifyAdmins({
         title: "Temple Profile Update",
-        body: `${temple.name_en || 'A Temple'} has updated sensitive profile details requiring verification.`,
+        body: `${getEnglish(temple.name) || 'A Temple'} has updated sensitive profile details requiring verification.`,
         data: {
           link: '/admin/temples/update-requests',
           type: 'TEMPLE_UPDATE'
@@ -440,25 +445,27 @@ export const updateMyTempleProfile = async (req: Request, res: Response) => {
       });
 
       // Sync with Shiprocket if address or location changed
-      if (updateData.fullAddress_en || updateData.location_en || updateData.phone) {
+      if (updateData.fullAddress || updateData.location || updateData.phone) {
         try {
-          const { city, state } = parseLocation(updateData.location_en || temple.location_en || "");
-          const pincode = extractPincode(updateData.fullAddress_en || temple.fullAddress_en || "");
+          const locEn = getEnglish(updateData.location) || getEnglish(temple.location) || '';
+          const addrEn = getEnglish(updateData.fullAddress) || getEnglish(temple.fullAddress) || '';
+          const { city, state } = parseLocation(locEn);
+          const pincode = extractPincode(addrEn);
 
           const pickupData = {
-            pickup_location: (temple as any).pickupLocation_en,
-            name: temple.name_en,
-            email: (temple as any).user?.email || "",
+            pickup_location: getEnglish(temple.pickupLocation),
+            name: getEnglish(temple.name),
+            email: (temple as any).user?.email || '',
             phone: updateData.phone || temple.phone,
-            address: updateData.fullAddress_en || temple.fullAddress_en || '',
-            city: city || "Delhi",
-            state: state || "Delhi",
-            country: "India",
-            pin_code: pincode || "110001"
+            address: addrEn,
+            city: city || 'Delhi',
+            state: state || 'Delhi',
+            country: 'India',
+            pin_code: pincode || '110001'
           };
           await createShiprocketPickupLocation(pickupData);
         } catch (srError) {
-          console.error("Shiprocket update sync error:", srError);
+          console.error('Shiprocket update sync error:', srError);
         }
       }
 
@@ -774,8 +781,8 @@ export const getDevoteeDetail = async (req: Request, res: Response) => {
             status: { not: 'PENDING' }
           },
           include: {
-            pooja: { select: { name_en: true, name_hi: true, name_mr: true } },
-            temple: { select: { name_en: true, name_hi: true, name_mr: true } }
+            pooja: { select: { name: true } },
+            temple: { select: { name: true } }
           },
           orderBy: { createdAt: 'desc' }
         },
@@ -795,7 +802,7 @@ export const getDevoteeDetail = async (req: Request, res: Response) => {
               include: {
                 items: {
                   include: {
-                    product: { select: { name_en: true, name_hi: true, name_mr: true } }
+                    product: { select: { name: true } }
                   }
                 }
               }
@@ -809,7 +816,7 @@ export const getDevoteeDetail = async (req: Request, res: Response) => {
             status: 'SUCCESS'
           },
           include: {
-            temple: { select: { name_en: true, name_hi: true, name_mr: true } }
+            temple: { select: { name: true } }
           },
           orderBy: { createdAt: 'desc' }
         }
@@ -820,9 +827,10 @@ export const getDevoteeDetail = async (req: Request, res: Response) => {
       return res.status(404).json({ success: false, message: 'Devotee not found' });
     }
 
+    const lang = getLang(req);
     res.json({
       success: true,
-      data: user
+      data: localize(user, lang)
     });
   } catch (error: any) {
     console.error('Error fetching devotee detail:', error);

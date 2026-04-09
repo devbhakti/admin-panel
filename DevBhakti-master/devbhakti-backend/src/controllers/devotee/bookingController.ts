@@ -1,6 +1,6 @@
 import { Request, Response } from 'express';
 import { prisma } from '../../lib/prisma';
-import { localize } from '../../utils/localization';
+import { localize, getLang, getEnglish } from '../../utils/localization';
 import PDFDocument from 'pdfkit';
 
 import path from 'path';
@@ -268,7 +268,7 @@ export const createBooking = async (req: Request, res: Response) => {
                     commission: commissionAmount,
                     type: "POOJA_EARNING",
                     sourceId: newBooking.id,
-                    description: `Pooja Booking: ${(pooja as any).name_en} (${packageName})`,
+                    description: `Pooja Booking: ${getEnglish((pooja as any).name)} (${packageName})`,
                     status: "PENDING"
                 }
             });
@@ -344,7 +344,7 @@ export const getMyBookings = async (req: Request, res: Response) => {
 
 
 
-        const lang = (req.headers['x-lang'] as string) || (req.query.lang as string) || 'en';
+        const lang = getLang(req);
         res.json({
 
             success: true,
@@ -722,10 +722,9 @@ export const getBookingReceipt = async (req: Request, res: Response) => {
 
 
         // Table Content
+        doc.fillColor(textColor).font('Helvetica-Bold').fontSize(11).text(`${getEnglish((booking as any).pooja?.name) || 'Pooja Service'}`, 60, tableY);
 
-        doc.fillColor(textColor).font('Helvetica-Bold').fontSize(11).text(`${(booking as any).pooja?.name_en || 'Pooja Service'}`, 60, tableY);
-
-        doc.font('Helvetica').fontSize(9).text(`Temple: ${(booking as any).temple?.name_en || 'N/A'}`, 60, doc.y + 2);
+        doc.font('Helvetica').fontSize(9).text(`Temple: ${getEnglish((booking as any).temple?.name) || 'N/A'}`, 60, doc.y + 2);
 
         doc.text(`Package: ${booking.packageName}`, 60, doc.y + 2);
 

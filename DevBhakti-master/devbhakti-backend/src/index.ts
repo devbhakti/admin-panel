@@ -50,6 +50,7 @@ import adminStaffManagementRoutes from './routes/admin/staffManagementRoutes';
 import templeAdminStaffManagementRoutes from './routes/temple_admin/staffManagementRoutes';
 import sellerStaffManagementRoutes from './routes/seller/staffManagementRoutes';
 import notificationRoutes from './routes/notificationRoutes';
+import contactRoutes from './routes/contactRoutes';
 import './services/firebaseService'; // Initialize Firebase Admin on startup
 
 import adminSettingsRoutes from './routes/admin/globalSettingsRoutes';
@@ -130,6 +131,9 @@ app.use('/api/search', publicSearchRoutes);
 
 // Notification Routes (FCM Token Register/Remove)
 app.use('/api/notifications', notificationRoutes);
+
+// Contact Inquiry Route
+app.use('/api/contact', contactRoutes);
 
 
 // Basic Error Handler

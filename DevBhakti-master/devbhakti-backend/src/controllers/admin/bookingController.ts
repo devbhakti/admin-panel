@@ -3,7 +3,7 @@ import { prisma } from '../../lib/prisma';
 import { notifyUser } from '../../services/firebaseService';
 import ExcelJS from 'exceljs';
 import { sendWhatsAppMessage } from '../../services/whatsappService';
-
+import { getLang, localize, getEnglish } from '../../utils/localization';
 
 export const getAllBookings = async (req: Request, res: Response) => {
     try {
@@ -78,9 +78,10 @@ export const getAllBookings = async (req: Request, res: Response) => {
             prisma.poojaBooking.count({ where: { ...where, status: 'REJECTED' } }),
         ]);
 
+        const lang = getLang(req);
         res.json({
             success: true,
-            data: bookings,
+            data: localize(bookings, lang),
             pagination: {
                 total,
                 page,
@@ -164,10 +165,12 @@ export const updateBookingStatus = async (req: Request, res: Response) => {
             });
         }
 
+        const poojaName = getEnglish((updatedBooking.pooja as any).name);
+
         // Notify Devotee via Firebase
         await notifyUser(booking.userId, 'devotee', {
             title: `Pooja Booking ${status === 'COMPLETED' ? 'Completed 🎊' : status === 'CANCELLED' ? 'Cancelled ❌' : status === 'REJECTED' ? 'Rejected ❌' : 'Updated'}`,
-            body: `Your booking for ${(updatedBooking.pooja as any).name_en} has been marked as ${status.toLowerCase()}.`,
+            body: `Your booking for ${poojaName} has been marked as ${status.toLowerCase()}.`,
             data: { link: '/profile/bookings', bookingId: booking.id }
         });
 
@@ -182,14 +185,14 @@ export const updateBookingStatus = async (req: Request, res: Response) => {
                         phone,
                         user.name || 'Bhakt',
                         "pooja_completed",
-                        [user.name || 'Bhakt', (updatedBooking.pooja as any).name_en]
+                        [user.name || 'Bhakt', poojaName]
                     );
                 } else if (status === 'CANCELLED' || status === 'REJECTED') {
                     await sendWhatsAppMessage(
                         phone,
                         user.name || 'Bhakt',
                         "booking_cancelled",
-                        [user.name || 'Bhakt', (updatedBooking.pooja as any).name_en]
+                        [user.name || 'Bhakt', poojaName]
                     );
                 }
             }
@@ -208,19 +211,15 @@ export const updateBookingStatus = async (req: Request, res: Response) => {
     }
 };
 
-
-
-
 export const downloadBookingsExcel = async (req: Request, res: Response) => {
     try {
         console.log("Generating Bookings Excel...");
 
-        // 1. Data Fetch (Table name 'poojaBooking' use kiya hai aapke code ke hisaab se)
         const bookings = await prisma.poojaBooking.findMany({
             orderBy: { createdAt: 'desc' },
             include: {
                 pooja: {
-                    select: { name_en: true }
+                    select: { name: true }
                 }
             }
         });
@@ -265,7 +264,7 @@ export const downloadBookingsExcel = async (req: Request, res: Response) => {
         bookings.forEach((b: any) => {
             worksheet.addRow({
                 id: b.id,
-                poojaName: b.pooja?.name_en || "N/A",
+                poojaName: getEnglish(b.pooja?.name) || "N/A",
                 packageName: b.packageName || "",
                 devoteeName: b.devoteeName || "",
                 devoteePhone: b.devoteePhone || "",
@@ -309,5 +308,3 @@ export const downloadBookingsExcel = async (req: Request, res: Response) => {
         return res.status(500).json({ success: false, message: error.message });
     }
 };
-
-

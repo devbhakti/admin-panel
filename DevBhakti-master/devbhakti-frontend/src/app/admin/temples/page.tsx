@@ -86,6 +86,7 @@ import { useToast } from "@/hooks/use-toast";
 import { Suspense } from "react";
 import { useSearchParams } from "next/navigation";
 import { useAdminAuth } from "@/hooks/use-admin-auth";
+import { parseLocalizedValue } from "@/utils/textUtils";
 
 function TemplesContent() {
     const searchParams = useSearchParams();
@@ -209,21 +210,23 @@ function TemplesContent() {
 
             const data = Array.isArray(res) ? res : res.data;
 
+
+
             // Extract temple objects but keep the user data properly
             const actualTemples = data
                 .filter((user: any) => user.temple) // Only include users that have temples
                 .map((user: any) => ({
                     // User data
                     userId: user.id,
-                    userName: user.name,
+                    userName: parseLocalizedValue(user.name),
                     userEmail: user.email,
                     userPhone: user.phone,
                     isVerified: user.isVerified,
                     // Temple data
                     temple: user.temple, // Explicitly include temple object
                     templeId: user.temple.id,
-                    templeName: user.temple.name_en || user.temple.name,
-                    templeLocation: user.temple.location_en || user.temple.location,
+                    templeName: typeof user.temple.name === 'string' ? user.temple.name : (user.temple.name?.en || user.temple.name?.hi || "No Temple"),
+                    templeLocation: typeof user.temple.location === 'string' ? user.temple.location : (user.temple.location?.en || user.temple.location?.hi || ""),
                     ...user.temple // Keep spread for compatibility with other fields if needed
                 }));
 

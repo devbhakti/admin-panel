@@ -1,6 +1,7 @@
 import { Request, Response } from "express";
 import { prisma } from "../../lib/prisma";
 import { syncOrderAndLedgerStatus } from "../../utils/orderStatusSync";
+import { getLang, localize } from "../../utils/localization";
 
 // Get orders specifically for a Temple
 export const getTempleOrders = async (req: Request, res: Response) => {
@@ -17,14 +18,17 @@ export const getTempleOrders = async (req: Request, res: Response) => {
         },
         items: {
           include: {
-            product: { select: { name_en: true, image: true } }
+            product: { select: { name: true, image: true } }
           }
         }
       },
       orderBy: { createdAt: "desc" }
     });
 
-    const formattedSubOrders = subOrders.map(sub => {
+    const lang = getLang(req);
+    const localizedSubOrders = localize(subOrders, lang);
+
+    const formattedSubOrders = localizedSubOrders.map((sub: any) => {
       return {
         ...sub,
         totalAmount: sub.totalAmount ? Number(sub.totalAmount).toFixed(2) : "0.00",
@@ -67,7 +71,8 @@ export const updateTempleOrderStatus = async (req: Request, res: Response) => {
     // Use shared utility for status sync (Ledger, Parent Order, etc.)
     const updated = await syncOrderAndLedgerStatus(subOrderId, status);
 
-    return res.status(200).json({ success: true, message: "Order status updated", data: updated });
+    const lang = getLang(req);
+    return res.status(200).json({ success: true, message: "Order status updated", data: localize(updated, lang) });
   } catch (error: any) {
     return res.status(500).json({ success: false, message: error.message });
   }

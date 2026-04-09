@@ -1,12 +1,12 @@
 import { Request, Response } from "express";
 import { prisma } from "../../lib/prisma";
-import { localize } from "../../utils/localization";
+import { buildLangJson, getLang, localize } from "../../utils/localization";
+import slugify from "slugify";
 
 // Get All Categories
 export const getAllCategories = async (req: Request, res: Response) => {
   try {
     const { page = 1, limit = 10, search, isActive } = req.query;
-
     const skip = (Number(page) - 1) * Number(limit);
 
     // Build where clause
@@ -14,8 +14,8 @@ export const getAllCategories = async (req: Request, res: Response) => {
 
     if (search && typeof search === 'string') {
       where.OR = [
-        { name_en: { contains: search, mode: "insensitive" } },
-        { description_en: { contains: search, mode: "insensitive" } }
+        { name: { path: ['en'], string_contains: search as string } },
+        { description: { path: ['en'], string_contains: search as string } }
       ] as any;
     }
 
@@ -23,7 +23,7 @@ export const getAllCategories = async (req: Request, res: Response) => {
       where.isActive = isActive === "true";
     }
 
-    const lang = (req.headers['x-lang'] as string) || (req.query.lang as string) || 'en';
+    const lang = getLang(req);
 
     const [categories, total] = await Promise.all([
       prisma.productCategory.findMany({
@@ -57,12 +57,10 @@ export const getAllCategories = async (req: Request, res: Response) => {
     });
   } catch (error) {
     console.error("Get All Categories Error:", error);
-
     res.status(500).json({
       success: false,
       message: "Failed to retrieve categories",
-      details: error instanceof Error ? error.message : "Unknown error occurred",
-      error: process.env.NODE_ENV === 'development' ? error : undefined
+      details: error instanceof Error ? error.message : "Unknown error occurred"
     });
   }
 };
@@ -70,20 +68,16 @@ export const getAllCategories = async (req: Request, res: Response) => {
 // Get Active Categories (for dropdown)
 export const getActiveCategories = async (req: Request, res: Response) => {
   try {
-    const lang = (req.headers['x-lang'] as string) || (req.query.lang as string) || 'en';
+    const lang = getLang(req);
 
     const categories = await prisma.productCategory.findMany({
       where: { isActive: true },
       orderBy: { sortOrder: "asc" },
       select: {
         id: true,
-        name_en: true,
-        name_hi: true,
-        name_mr: true,
-        description_en: true,
-        description_hi: true,
-        description_mr: true
-      } as any
+        name: true,
+        description: true
+      }
     });
 
     const localizedCategories = localize(categories as any[], lang);
@@ -95,12 +89,9 @@ export const getActiveCategories = async (req: Request, res: Response) => {
     });
   } catch (error) {
     console.error("Get Active Categories Error:", error);
-
     res.status(500).json({
       success: false,
-      message: "Failed to retrieve active categories",
-      details: error instanceof Error ? error.message : "Unknown error occurred",
-      error: process.env.NODE_ENV === 'development' ? error : undefined
+      message: "Failed to retrieve active categories"
     });
   }
 };
@@ -122,26 +113,21 @@ export const getCategoryById = async (req: Request, res: Response) => {
     if (!category) {
       return res.status(404).json({
         success: false,
-        message: "Category not found",
-        details: `Category with ID ${id} does not exist`
+        message: "Category not found"
       });
     }
 
-    const lang = (req.headers['x-lang'] as string) || (req.query.lang as string) || 'en';
-
+    // Return RAW JSON for Admin Edit support
     res.status(200).json({
       success: true,
       message: "Category retrieved successfully",
-      data: localize(category, lang)
+      data: category
     });
   } catch (error) {
     console.error("Get Category Error:", error);
-
     res.status(500).json({
       success: false,
-      message: "Failed to retrieve category",
-      details: error instanceof Error ? error.message : "Unknown error occurred",
-      error: process.env.NODE_ENV === 'development' ? error : undefined
+      message: "Failed to retrieve category"
     });
   }
 };
@@ -161,28 +147,21 @@ export const createCategory = async (req: Request, res: Response) => {
     if (!final_name_en) {
       return res.status(400).json({
         success: false,
-        message: "Category name is required",
-        details: {
-          name: !final_name_en ? "Category name is required" : null
-        }
+        message: "Category name is required"
       });
     }
 
+    const nameSlug = slugify(final_name_en, { lower: true });
+
     // Check if category already exists
-    const existingCategory = await prisma.productCategory.findFirst({
-      where: {
-        name_en: {
-          equals: final_name_en,
-          mode: "insensitive"
-        }
-      } as any
+    const existingCategory = await prisma.productCategory.findUnique({
+      where: { nameSlug }
     });
 
     if (existingCategory) {
       return res.status(409).json({
         success: false,
-        message: "Category already exists",
-        details: `Category with name "${final_name_en}" already exists`
+        message: "Category already exists with this name"
       });
     }
 
@@ -194,16 +173,13 @@ export const createCategory = async (req: Request, res: Response) => {
 
     const category = await prisma.productCategory.create({
       data: {
-        name_en: final_name_en,
-        name_hi: name_hi || null,
-        name_mr: name_mr || null,
-        description_en: (description_en || req.body.description || "").trim() || null,
-        description_hi: (description_hi || "").trim() || null,
-        description_mr: (description_mr || "").trim() || null,
+        name: buildLangJson(final_name_en, name_hi, name_mr),
+        nameSlug,
+        description: buildLangJson(description_en || req.body.description || "", description_hi, description_mr),
         image: imagePath,
         isActive: isActive === true || isActive === "true",
         sortOrder: parseInt(sortOrder) || 0
-      } as any
+      }
     });
 
     res.status(201).json({
@@ -213,12 +189,9 @@ export const createCategory = async (req: Request, res: Response) => {
     });
   } catch (error) {
     console.error("Create Category Error:", error);
-
     res.status(500).json({
       success: false,
-      message: "Failed to create category",
-      details: error instanceof Error ? error.message : "Unknown error occurred",
-      error: process.env.NODE_ENV === 'development' ? error : undefined
+      message: "Failed to create category"
     });
   }
 };
@@ -241,54 +214,42 @@ export const updateCategory = async (req: Request, res: Response) => {
     if (!existingCategory) {
       return res.status(404).json({
         success: false,
-        message: "Category not found",
-        details: `Category with ID ${id} does not exist`
+        message: "Category not found"
       });
-    }
-
-    const final_name_en = name_en || req.body.name;
-
-    // Check if name is being changed and if it conflicts with existing category
-    if (final_name_en && final_name_en.trim() !== (existingCategory as any).name_en) {
-      const duplicateCategory = await prisma.productCategory.findFirst({
-        where: {
-          name_en: {
-            equals: final_name_en.trim(),
-            mode: "insensitive"
-          },
-          id: { not: id as string }
-        } as any
-      });
-
-      if (duplicateCategory) {
-        return res.status(409).json({
-          success: false,
-          message: "Category name already exists",
-          details: `Category with name "${final_name_en}" already exists`
-        });
-      }
-    }
-
-    // Handle image upload
-    let imagePath: string | null = existingCategory.image;
-    if (req.file) {
-      imagePath = `/uploads/categories/${req.file.filename}`;
     }
 
     const updateData: any = {};
-    if (final_name_en) updateData.name_en = final_name_en.trim();
-    if (name_hi !== undefined) updateData.name_hi = name_hi ? name_hi.trim() : null;
-    if (name_mr !== undefined) updateData.name_mr = name_mr ? name_mr.trim() : null;
     
-    if (description_en !== undefined || req.body.description !== undefined) {
-      updateData.description_en = (description_en || req.body.description || "").trim() || null;
+    if (name_en || name_hi || name_mr) {
+      const currentName = existingCategory.name as any || {};
+      const new_name_en = name_en || currentName.en;
+      updateData.name = buildLangJson(new_name_en, name_hi || currentName.hi, name_mr || currentName.mr);
+      
+      if (name_en) {
+        updateData.nameSlug = slugify(name_en, { lower: true });
+        // Check for slug conflict
+        const conflict = await prisma.productCategory.findFirst({
+          where: { nameSlug: updateData.nameSlug, id: { not: String(id) } }
+        });
+        if (conflict) return res.status(409).json({ success: false, message: "Another category with this name already exists" });
+      }
     }
-    if (description_hi !== undefined) updateData.description_hi = description_hi ? description_hi.trim() : null;
-    if (description_mr !== undefined) updateData.description_mr = description_mr ? description_mr.trim() : null;
+
+    if (description_en !== undefined || description_hi !== undefined || description_mr !== undefined) {
+      const currentDesc = existingCategory.description as any || {};
+      updateData.description = buildLangJson(
+        description_en !== undefined ? description_en : currentDesc.en,
+        description_hi !== undefined ? description_hi : currentDesc.hi,
+        description_mr !== undefined ? description_mr : currentDesc.mr
+      );
+    }
 
     if (isActive !== undefined) updateData.isActive = isActive === true || isActive === "true";
     if (sortOrder !== undefined) updateData.sortOrder = parseInt(sortOrder) || 0;
-    if (req.file) updateData.image = imagePath;
+    
+    if (req.file) {
+      updateData.image = `/uploads/categories/${req.file.filename}`;
+    }
 
     const category = await prisma.productCategory.update({
       where: { id: id as string },
@@ -302,12 +263,9 @@ export const updateCategory = async (req: Request, res: Response) => {
     });
   } catch (error) {
     console.error("Update Category Error:", error);
-
     res.status(500).json({
       success: false,
-      message: "Failed to update category",
-      details: error instanceof Error ? error.message : "Unknown error occurred",
-      error: process.env.NODE_ENV === 'development' ? error : undefined
+      message: "Failed to update category"
     });
   }
 };
@@ -330,8 +288,7 @@ export const deleteCategory = async (req: Request, res: Response) => {
     if (!category) {
       return res.status(404).json({
         success: false,
-        message: "Category not found",
-        details: `Category with ID ${id} does not exist`
+        message: "Category not found"
       });
     }
 
@@ -354,12 +311,9 @@ export const deleteCategory = async (req: Request, res: Response) => {
     });
   } catch (error) {
     console.error("Delete Category Error:", error);
-
     res.status(500).json({
       success: false,
-      message: "Failed to delete category",
-      details: error instanceof Error ? error.message : "Unknown error occurred",
-      error: process.env.NODE_ENV === 'development' ? error : undefined
+      message: "Failed to delete category"
     });
   }
 };
@@ -376,8 +330,7 @@ export const toggleCategoryStatus = async (req: Request, res: Response) => {
     if (!category) {
       return res.status(404).json({
         success: false,
-        message: "Category not found",
-        details: `Category with ID ${id} does not exist`
+        message: "Category not found"
       });
     }
 
@@ -395,12 +348,9 @@ export const toggleCategoryStatus = async (req: Request, res: Response) => {
     });
   } catch (error) {
     console.error("Toggle Category Status Error:", error);
-
     res.status(500).json({
       success: false,
-      message: "Failed to toggle category status",
-      details: error instanceof Error ? error.message : "Unknown error occurred",
-      error: process.env.NODE_ENV === 'development' ? error : undefined
+      message: "Failed to toggle category status"
     });
   }
 };

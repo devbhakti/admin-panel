@@ -78,7 +78,7 @@ export default function FeaturesPage() {
     const loadFeatures = async () => {
         try {
             setLoading(true);
-            const data = await fetchAllFeaturesAdmin();
+            const data = await fetchAllFeaturesAdmin({ lang: 'raw' });
             setFeatures(data);
         } catch (error) {
             console.error("Error loading features:", error);
@@ -91,12 +91,12 @@ export default function FeaturesPage() {
         if (feature) {
             setEditingFeature(feature);
             setFormData({
-                title_en: feature.title_en || feature.title || "",
-                title_hi: feature.title_hi || "",
-                title_mr: feature.title_mr || "",
-                description_en: feature.description_en || feature.description || "",
-                description_hi: feature.description_hi || "",
-                description_mr: feature.description_mr || "",
+                title_en: feature.title?.en || "",
+                title_hi: feature.title?.hi || "",
+                title_mr: feature.title?.mr || "",
+                description_en: feature.description?.en || "",
+                description_hi: feature.description?.hi || "",
+                description_mr: feature.description?.mr || "",
                 active: feature.active ? "true" : "false",
                 order: feature.order,
             });
@@ -237,11 +237,24 @@ export default function FeaturesPage() {
         }
     };
 
-    const filteredFeatures = features.filter(feature =>
-        (feature.title_en || feature.title || '').toLowerCase().includes(searchTerm.toLowerCase()) ||
-        (feature.title_hi || '').toLowerCase().includes(searchTerm.toLowerCase()) ||
-        (feature.title_mr || '').toLowerCase().includes(searchTerm.toLowerCase())
-    );
+    const filteredFeatures = features.filter(feature => {
+        const s = searchTerm.toLowerCase();
+        
+        // Helper to check if any language version of a field matches
+        const matchesField = (field: any) => {
+            if (!field) return false;
+            if (typeof field === 'string') return field.toLowerCase().includes(s);
+            if (typeof field === 'object') {
+                return (field.en?.toLowerCase().includes(s) || 
+                        field.hi?.toLowerCase().includes(s) || 
+                        field.mr?.toLowerCase().includes(s));
+            }
+            return false;
+        };
+
+        return matchesField(feature.title) || matchesField(feature.description) || 
+               (feature.title_en || '').toLowerCase().includes(s); // Backward compatibility
+    });
 
     return (
         <div className="space-y-6">

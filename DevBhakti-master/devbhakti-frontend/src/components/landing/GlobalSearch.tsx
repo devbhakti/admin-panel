@@ -67,7 +67,7 @@ export const GlobalSearch = ({ isOpen, onClose }: { isOpen: boolean; onClose: ()
 
         const timer = setTimeout(fetchResults, query.trim() ? 300 : 0);
         return () => clearTimeout(timer);
-    }, [query, isOpen]);
+    }, [query, isOpen, language]);
 
     // Levenshtein Distance Helper for Fuzzy Search
     const getLevenshteinDistance = (a: string, b: string): number => {

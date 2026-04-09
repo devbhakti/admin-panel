@@ -117,7 +117,7 @@ const PoojaDetailClient = ({ id }: PoojaDetailClientProps) => {
         const loadPoojaAndSettings = async () => {
             try {
                 const [poojaData, settingsData] = await Promise.all([
-                    fetchPublicPoojaById(id),
+                    fetchPublicPoojaById(id, language),
                     fetchRatingsSettings()
                 ]);
                 setPooja(poojaData);
@@ -131,7 +131,7 @@ const PoojaDetailClient = ({ id }: PoojaDetailClientProps) => {
             }
         };
         loadPoojaAndSettings();
-    }, [id]);
+    }, [id, language]);
 
 
 
@@ -197,33 +197,6 @@ const PoojaDetailClient = ({ id }: PoojaDetailClientProps) => {
                                     {pooja.about?.split('.')[0]}. {pooja.about?.split('.')[1] || ""}
                                 </p>
 
-                                {/* Benefits Brief Cards */}
-                                <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-10">
-                                    {/* <div className="bg-white/60 backdrop-blur-sm p-6 rounded-[1.5rem] border border-primary/10 hover:border-primary/20 transition-colors">
-                                        <ul className="space-y-3">
-                                            {(pooja.bullets || ["Peaceful spiritual atmosphere", "Performed by experienced priests", "Includes mantras and rituals"]).slice(0, 4).map((bullet: string, i: number) => (
-                                                <li key={i} className="flex items-start gap-3 text-sm text-[#444]">
-                                                    <div className="w-4 h-4 rounded bg-primary/10 flex items-center justify-center shrink-0 mt-0.5">
-                                                        <div className="w-1.5 h-1.5 bg-primary rounded-sm rotate-45" />
-                                                    </div>
-                                                    <span>{bullet}</span>
-                                                </li>
-                                            ))}
-                                        </ul>
-                                    </div> */}
-                                    <div className="bg-white/60 backdrop-blur-sm p-6 rounded-[1.5rem] border border-primary/10 hover:border-primary/20 transition-colors">
-                                        <ul className="space-y-3">
-                                            {(getLocalizedArray(pooja, 'benefits', language).length > 0 ? getLocalizedArray(pooja, 'benefits', language) : ["Brings peace and mental clarity", "Spiritual alignment", "Attracts positive energy"]).slice(0, 4).map((benefit: string, i: number) => (
-                                                <li key={i} className="flex items-start gap-3 text-sm text-[#444]">
-                                                    <div className="w-4 h-4 rounded bg-primary/10 flex items-center justify-center shrink-0 mt-0.5">
-                                                        <div className="w-1.5 h-1.5 bg-primary rounded-sm rotate-45" />
-                                                    </div>
-                                                    <span>{benefit}</span>
-                                                </li>
-                                            ))}
-                                        </ul>
-                                    </div>
-                                </div>
 
                                 {/* Booking Bar */}
                                 <div className="bg-[#FFEAD1] p-5 rounded-[2rem] border border-primary/10 flex flex-col md:flex-row items-center justify-between gap-6 shadow-lg shadow-primary/5">
@@ -280,7 +253,6 @@ const PoojaDetailClient = ({ id }: PoojaDetailClientProps) => {
                                 <TabsList className="h-auto bg-white/70 backdrop-blur-md p-1.5 rounded-full border border-primary/10 shadow-lg flex flex-wrap justify-center sm:flex-nowrap">
                                     {[
                                         { id: "about", label: t('pooja_detail.tab_about'), icon: Info },
-                                        { id: "benefits", label: t('pooja_detail.tab_benefits'), icon: CheckCircle2 },
                                         { id: "temple", label: t('pooja_detail.tab_temple'), icon: MapPin },
                                         ...(showRatings ? [{ id: "reviews", label: t('pooja_detail.tab_reviews'), icon: Star }] : []),
                                         { id: "faqs", label: t('pooja_detail.tab_faqs'), icon: HelpCircle },
@@ -327,64 +299,6 @@ const PoojaDetailClient = ({ id }: PoojaDetailClientProps) => {
                                             </div>
                                         </div>
                                     </TabsContent>
-
-                                    {/* Benefits Tab Content */}
-                                    <TabsContent value="benefits" className="mt-0 outline-none">
-                                        <div className="max-w-6xl mx-auto text-center">
-                                            <h2 className="text-4xl font-serif font-bold mb-2 relative inline-block">
-                                                {t('pooja_detail.divine_blessings_title')}
-                                                <div className="absolute -bottom-2 left-0 right-0 h-1 bg-primary/20 rounded-full" />
-                                            </h2>
-                                            <p className="text-[#888] mt-6 mb-12 italic font-serif">{t('pooja_detail.spiritual_advantages')}</p>
-
-                                            <div className="grid grid-cols-1 md:grid-cols-3 gap-8 text-left">
-                                                {(getLocalizedArray(pooja, 'benefits', language).length > 0 ? getLocalizedArray(pooja, 'benefits', language) : ["Brings peace and mental clarity", "Corrects morning routine", "Attracts positive energy"]).map((benefit: string, i: number) => (
-                                                    <motion.div
-                                                        whileHover={{ y: -5 }}
-                                                        key={i}
-                                                        className="bg-[#FFF8F0]/50 p-8 rounded-[2rem] border border-primary/5 shadow-sm group cursor-default"
-                                                    >
-                                                        <div className="w-12 h-12 bg-white rounded-full flex items-center justify-center mb-6 shadow-md shadow-primary/5">
-                                                            <Sparkle className="w-6 h-6 text-[#f59e0b]" />
-                                                        </div>
-                                                        <h4 className="text-xl font-serif font-bold mb-4 group-hover:text-primary transition-colors underline decoration-primary/10 decoration-2 underline-offset-4">{benefit}</h4>
-                                                        <p className="text-[#777] text-sm leading-relaxed mb-6">{t('pooja_detail.benefit_experience')}</p>
-                                                        <Link href="#" className="text-primary text-[10px] font-bold uppercase tracking-widest flex items-center gap-2 group/link">
-                                                            {t('pooja_detail.read_more')} <ArrowUpRight className="w-3 h-3 group-hover/link:translate-x-0.5 group-hover/link:-translate-y-0.5 transition-transform" />
-                                                        </Link>
-                                                    </motion.div>
-                                                ))}
-                                            </div>
-                                        </div>
-                                    </TabsContent>
-
-                                    {/* Process Tab Content
-                                    <TabsContent value="process" className="mt-0 outline-none">
-                                        <div className="max-w-6xl mx-auto text-center">
-                                            <h2 className="text-4xl font-serif font-bold mb-2 relative inline-block text-primary">
-                                                Puja Process
-                                                <div className="absolute -bottom-2 left-0 right-0 h-1 bg-primary/10 rounded-full" />
-                                            </h2>
-                                            <p className="text-[#888] mt-6 mb-16 italic font-serif">Simple steps from selection to completion</p>
-
-                                            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8 text-left">
-                                                {(pooja.processSteps || [
-                                                    { title: "Select Puja Package", description: "Choose Basic or Family participation package" },
-                                                    { title: "Arrival at Temple", description: "Arrive 15 minutes before the scheduled timing" },
-                                                    { title: "Participation in Aarti", description: "Join the morning ritual with priests and devotees" },
-                                                    { title: "Receive Prasad", description: "Get sacred prasad after the completion of ceremony" }
-                                                ]).map((step: any, i: number) => (
-                                                    <div key={i} className="bg-white p-8 rounded-[2rem] border border-[#f5e1c8] hover:border-primary/20 transition-all duration-500 shadow-sm relative group">
-                                                        <div className="absolute -top-4 -left-4 w-12 h-12 bg-[#5d4037] text-white rounded-full flex items-center justify-center font-bold font-serif text-lg shadow-lg">
-                                                            {i + 1}
-                                                        </div>
-                                                        <h4 className="text-xl font-serif font-bold mb-4 mt-2 group-hover:text-primary transition-colors">{step.title}</h4>
-                                                        <p className="text-[#666] text-sm leading-relaxed">{step.description}. Guided instructions provided by Vedic experts.</p>
-                                                    </div>
-                                                ))}
-                                            </div>
-                                        </div>
-                                    </TabsContent> */}
 
                                     {/* Temple Tab Content */}
                                     <TabsContent value="temple" className="mt-0 outline-none">

@@ -124,7 +124,7 @@ export default function MarketplaceClient() {
     loadProducts(1);
     loadFavorites();
     loadRatingsSettings();
-  }, [searchQuery, selectedCategory, showAllProducts]);
+  }, [searchQuery, selectedCategory, showAllProducts, language]);
 
   const loadRatingsSettings = async () => {
     try {

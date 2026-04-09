@@ -74,7 +74,7 @@ export default function TestimonialsPage() {
     const loadTestimonials = async () => {
         try {
             setLoading(true);
-            const data = await fetchAllTestimonialsAdmin();
+            const data = await fetchAllTestimonialsAdmin({ lang: 'raw' });
             setTestimonials(data);
         } catch (error) {
             console.error("Error loading testimonials:", error);
@@ -87,15 +87,15 @@ export default function TestimonialsPage() {
         if (testimonial) {
             setEditingTestimonial(testimonial);
             setFormData({
-                title_en: testimonial.title_en || testimonial.title || "",
-                title_hi: testimonial.title_hi || "",
-                title_mr: testimonial.title_mr || "",
-                subtitle_en: testimonial.subtitle_en || testimonial.subtitle || "",
-                subtitle_hi: testimonial.subtitle_hi || "",
-                subtitle_mr: testimonial.subtitle_mr || "",
-                category_en: testimonial.category_en || testimonial.category || "",
-                category_hi: testimonial.category_hi || "",
-                category_mr: testimonial.category_mr || "",
+                title_en: testimonial.title?.en || "",
+                title_hi: testimonial.title?.hi || "",
+                title_mr: testimonial.title?.mr || "",
+                subtitle_en: testimonial.subtitle?.en || "",
+                subtitle_hi: testimonial.subtitle?.hi || "",
+                subtitle_mr: testimonial.subtitle?.mr || "",
+                category_en: testimonial.category?.en || "",
+                category_hi: testimonial.category?.hi || "",
+                category_mr: testimonial.category?.mr || "",
                 active: testimonial.active ? "true" : "false",
                 order: testimonial.order,
             });
@@ -204,12 +204,22 @@ export default function TestimonialsPage() {
         }
     };
 
-    const filteredTestimonials = testimonials.filter(t =>
-        (t.title_en || t.title || "").toLowerCase().includes(searchTerm.toLowerCase()) ||
-        (t.title_hi || "").toLowerCase().includes(searchTerm.toLowerCase()) ||
-        (t.title_mr || "").toLowerCase().includes(searchTerm.toLowerCase()) ||
-        (t.subtitle_en || t.subtitle || "").toLowerCase().includes(searchTerm.toLowerCase())
-    );
+    const filteredTestimonials = testimonials.filter(t => {
+        const s = searchTerm.toLowerCase();
+        const matchesField = (field: any) => {
+            if (!field) return false;
+            if (typeof field === 'string') return field.toLowerCase().includes(s);
+            if (typeof field === 'object') {
+                return (field.en?.toLowerCase().includes(s) || 
+                        field.hi?.toLowerCase().includes(s) || 
+                        field.mr?.toLowerCase().includes(s));
+            }
+            return false;
+        };
+
+        return matchesField(t.title) || matchesField(t.subtitle) || matchesField(t.category) ||
+               (t.title_en || '').toLowerCase().includes(s);
+    });
 
     return (
         <div className="space-y-6">

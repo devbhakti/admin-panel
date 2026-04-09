@@ -16,6 +16,7 @@ import {
     Power,
     PowerOff
 } from "lucide-react";
+import { format } from "date-fns";
 import { hi } from "date-fns/locale";
 
 import { cn } from "@/lib/utils";
@@ -56,7 +57,7 @@ import {
     CommandItem,
 } from "@/components/ui/command";
 import { Switch } from "@/components/ui/switch";
-import { fetchAllEventsAdmin, fetchAllTemplesAdmin, createEventAdmin, updateEventAdmin, deleteEventAdmin, fetchAllPoojasAdmin, toggleEventStatusAdmin } from "@/api/adminController";
+import { fetchAllEventsAdmin, fetchAllTemplesAdmin, createEventAdmin, updateEventAdmin, deleteEventAdmin, fetchAllPoojasAdmin, toggleEventStatusAdmin, fetchEventByIdAdmin } from "@/api/adminController";
 import { useToast } from "@/hooks/use-toast";
 import {
     Pagination,
@@ -219,29 +220,51 @@ export default function AdminEventsPage() {
         }
     };
 
-    const handleOpenDialog = (event: any = null) => {
+    const handleOpenDialog = async (event: any = null) => {
         if (event) {
-            setEditingEvent(event);
-            setFormData({
-                name: event.name || "",
-                name_en: event.name_en || event.name || "",
-                name_hi: event.name_hi || "",
-                name_mr: event.name_mr || "",
-                date: event.date,
-                time: event.time || "",
-                description: event.description || "",
-                description_en: event.description_en || event.description || "",
-                description_hi: event.description_hi || "",
-                description_mr: event.description_mr || "",
-                templeId: event.templeId,
-                status: event.status,
-            });
-            setTimeData(parseStoredTime(event.time));
-            // Pre-populate selected poojas in edit mode
-            if (event.Pooja && Array.isArray(event.Pooja)) {
-                setSelectedPoojaIds(event.Pooja.map((p: any) => p.id));
-            } else {
-                setSelectedPoojaIds([]);
+            try {
+                // Fetch full raw data for editing to get all language fields
+                const response = await fetchEventByIdAdmin(event.id);
+                if (response.success && response.data) {
+                    const fullEvent = response.data;
+                    
+                    setEditingEvent(fullEvent);
+                    
+                    // Safely extract translations from JSON objects
+                    const name = fullEvent.name || {};
+                    const desc = fullEvent.description || {};
+                    
+                    setFormData({
+                        name: name.en || "",
+                        name_en: name.en || "",
+                        name_hi: name.hi || "",
+                        name_mr: name.mr || "",
+                        date: fullEvent.date,
+                        time: fullEvent.time || "",
+                        description: desc.en || "",
+                        description_en: desc.en || "",
+                        description_hi: desc.hi || "",
+                        description_mr: desc.mr || "",
+                        templeId: fullEvent.templeId || "",
+                        status: fullEvent.status ?? true,
+                    });
+                    
+                    setTimeData(parseStoredTime(fullEvent.time));
+                    
+                    // Pre-populate selected poojas
+                    if (fullEvent.Pooja && Array.isArray(fullEvent.Pooja)) {
+                        setSelectedPoojaIds(fullEvent.Pooja.map((p: any) => p.id));
+                    } else {
+                        setSelectedPoojaIds([]);
+                    }
+                }
+            } catch (error) {
+                console.error("Error fetching event details:", error);
+                toast({
+                    title: t('common.error') || "Error",
+                    description: "Failed to fetch event details for editing",
+                    variant: "destructive",
+                });
             }
         } else {
             setEditingEvent(null);

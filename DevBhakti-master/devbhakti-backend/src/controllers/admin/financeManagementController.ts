@@ -1,5 +1,6 @@
 import { Request, Response } from "express";
 import { prisma } from "../../lib/prisma";
+import { getLang, localize, getEnglish } from "../../utils/localization";
 import ExcelJS from 'exceljs';
 
 // Get all withdrawal requests for admin
@@ -10,12 +11,8 @@ export const getAllWithdrawalRequests = async (req: Request, res: Response) => {
       include: {
         temple: {
           select: {
-            name_en: true,
-            name_hi: true,
-            name_mr: true,
-            location_en: true,
-            location_hi: true,
-            location_mr: true,
+            name: true,
+            location: true,
             user: { select: { name: true, phone: true } }
           }
         },
@@ -30,7 +27,8 @@ export const getAllWithdrawalRequests = async (req: Request, res: Response) => {
       orderBy: { createdAt: "desc" }
     });
 
-    return res.status(200).json({ success: true, data: requests });
+    const lang = getLang(req);
+    return res.status(200).json({ success: true, data: localize(requests, lang) });
   } catch (error: any) {
     console.error("Error in getAllWithdrawalRequests:", error);
     return res.status(500).json({ success: false, message: error.message });
@@ -84,7 +82,8 @@ export const updateWithdrawalStatus = async (req: Request, res: Response) => {
       }
     }
 
-    return res.status(200).json({ success: true, message: `Withdrawal request ${status}`, data: updated });
+    const lang = getLang(req);
+    return res.status(200).json({ success: true, message: `Withdrawal request ${status}`, data: localize(updated, lang) });
   } catch (error: any) {
     return res.status(500).json({ success: false, message: error.message });
   }
@@ -161,9 +160,7 @@ export const getAllPlatformTransactions = async (req: Request, res: Response) =>
         include: {
           temple: {
             select: {
-              name_en: true,
-              name_hi: true,
-              name_mr: true,
+              name: true,
             }
           },
           seller: {
@@ -179,9 +176,10 @@ export const getAllPlatformTransactions = async (req: Request, res: Response) =>
       prisma.templeLedger.count({ where })
     ]);
 
+    const lang = getLang(req);
     return res.status(200).json({
       success: true,
-      data: transactions,
+      data: localize(transactions, lang),
       pagination: {
         total,
         page: Number(page),
@@ -205,7 +203,7 @@ export const downloadTransactionsExcel = async (req: Request, res: Response) => 
     const transactions = await prisma.templeLedger.findMany({
       where,
       include: {
-        temple: { select: { name_en: true, name_hi: true, name_mr: true } },
+        temple: { select: { name: true } },
         seller: { select: { name: true } }
       },
       orderBy: { createdAt: "desc" }
@@ -242,7 +240,7 @@ export const downloadTransactionsExcel = async (req: Request, res: Response) => 
       worksheet.addRow({
         id: tx.id,
         date: tx.createdAt.toISOString().replace('T', ' ').slice(0, 19),
-        merchant: tx.temple?.name_en || tx.seller?.name || 'Platform',
+        merchant: tx.temple ? getEnglish(tx.temple.name) : (tx.seller?.name || 'Platform'),
         description: tx.description,
         type: tx.type,
         status: tx.status,

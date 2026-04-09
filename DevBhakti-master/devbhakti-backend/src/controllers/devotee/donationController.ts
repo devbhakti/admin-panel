@@ -2,6 +2,7 @@ import { Request, Response } from "express";
 import { prisma } from "../../lib/prisma";
 import razorpay from "../../lib/razorpay";
 import { generateDonationDisplayId } from "../../utils/idGenerator";
+import { getLang, localize, getEnglish } from "../../utils/localization";
 import PDFDocument from 'pdfkit';
 
 import path from 'path';
@@ -138,8 +139,8 @@ export const generateDonationReceiptBuffer = async (donationId: string): Promise
             // Temple Column (Right)
             doc.fillColor(primaryColor).fontSize(11).font('Helvetica-Bold').text('DONATED TO', 350, topOfDetails);
             doc.moveDown(0.5);
-            doc.fillColor(textColor).font('Helvetica-Bold').fontSize(12).text((donation.temple as any).name_en);
-            doc.font('Helvetica').fontSize(10).text((donation.temple as any).location_en);
+            doc.fillColor(textColor).font('Helvetica-Bold').fontSize(12).text(getEnglish((donation.temple as any).name));
+            doc.font('Helvetica').fontSize(10).text(getEnglish((donation.temple as any).location));
             doc.fillColor('#059669').fontSize(10).font('Helvetica-Bold').text('STATUS: SUCCESSFUL', 350, doc.y + 10);
 
             doc.moveDown(4);
@@ -219,9 +220,10 @@ export const getMyDonations = async (req: Request, res: Response) => {
             }
         });
 
+        const lang = getLang(req);
         res.json({
             success: true,
-            data: donations
+            data: localize(donations, lang)
         });
     } catch (error) {
         console.error('Error fetching my donations:', error);

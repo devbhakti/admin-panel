@@ -80,7 +80,7 @@ const VideoTestimonialsSection = () => {
             }
         };
         fetchTestimonials();
-    }, []);
+    }, [language]);
 
     const storiesToDisplay = dynamicStories.length > 0 ? dynamicStories : stories;
 

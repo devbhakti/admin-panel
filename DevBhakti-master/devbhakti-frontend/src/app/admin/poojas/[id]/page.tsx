@@ -8,12 +8,17 @@ import { Badge } from "@/components/ui/badge";
 import { fetchAllPoojasAdmin } from "@/api/adminController";
 import { useToast } from "@/hooks/use-toast";
 import { API_URL } from "@/config/apiConfig";
+import { useLanguage, Language } from "@/context/LanguageContext";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { parseLocalizedValue } from "@/utils/textUtils";
+import { Languages } from "lucide-react";
 
 export default function ViewPoojaPage() {
     const router = useRouter();
     const params = useParams();
     const poojaId = params.id as string;
     const { toast } = useToast();
+    const { language, setLanguage } = useLanguage();
     const [pooja, setPooja] = useState<any>(null);
     const [isLoading, setIsLoading] = useState(true);
 
@@ -24,7 +29,7 @@ export default function ViewPoojaPage() {
     const loadPooja = async () => {
         setIsLoading(true);
         try {
-            const poojasData = await fetchAllPoojasAdmin();
+            const poojasData = await fetchAllPoojasAdmin({ lang: 'raw' });
             const foundPooja = poojasData.find((p: any) => p.id === poojaId);
 
             if (foundPooja) {
@@ -94,10 +99,10 @@ export default function ViewPoojaPage() {
                 {/* Left Column - Image & Basic Info */}
                 <div className="lg:col-span-1 space-y-6">
                     {/* Image */}
-                    <div className="aspect-square rounded-xl overflow-hidden border bg-muted">
+                    <div className="aspect-square rounded-xl overflow-hidden border bg-muted shadow-sm">
                         <img
                             src={getImageUrl(pooja.image)}
-                            alt={pooja.name}
+                            alt={parseLocalizedValue(pooja.name, language)}
                             className="w-full h-full object-cover"
                         />
                     </div>
@@ -142,72 +147,72 @@ export default function ViewPoojaPage() {
 
                         <div className="pt-3 border-t">
                             <p className="text-xs text-muted-foreground mb-2">Category</p>
-                            <Badge variant="outline">{pooja.category}</Badge>
+                            <Badge variant="outline" className="bg-slate-50">
+                                {parseLocalizedValue(pooja.category, language)}
+                            </Badge>
                         </div>
                     </div>
                 </div>
 
-                {/* Right Column - Detailed Info */}
+                {/* Right Column - Detailed Info with Tabs */}
                 <div className="lg:col-span-2 space-y-6">
-                    {/* About */}
-                    {pooja.about && (
-                        <div className="bg-card border rounded-lg p-6">
-                            <h3 className="font-semibold text-lg mb-3">About</h3>
-                            <p className="text-muted-foreground leading-relaxed">{pooja.about}</p>
-                        </div>
-                    )}
-
-                    {/* Description Points */}
-                    {pooja.description && pooja.description.length > 0 && (
-                        <div className="bg-card border rounded-lg p-6">
-                            <h3 className="font-semibold text-lg mb-3">Description</h3>
-                            <ul className="space-y-2">
-                                {pooja.description.map((desc: string, index: number) => (
-                                    <li key={index} className="flex items-start gap-2">
-                                        <span className="text-primary mt-1">•</span>
-                                        <span className="text-muted-foreground">{desc}</span>
-                                    </li>
-                                ))}
-                            </ul>
-                        </div>
-                    )}
-
-                    {/* Benefits */}
-                    {pooja.benefits && pooja.benefits.length > 0 && (
-                        <div className="bg-card border rounded-lg p-6">
-                            <h3 className="font-semibold text-lg mb-3">Benefits</h3>
-                            <ul className="space-y-2">
-                                {pooja.benefits.map((benefit: string, index: number) => (
-                                    <li key={index} className="flex items-start gap-2">
-                                        <span className="text-primary mt-1">✓</span>
-                                        <span className="text-muted-foreground">{benefit}</span>
-                                    </li>
-                                ))}
-                            </ul>
-                        </div>
-                    )}
-
-                    {/* Highlights/Bullets */}
-                    {pooja.bullets && pooja.bullets.length > 0 && (
-                        <div className="bg-card border rounded-lg p-6">
-                            <h3 className="font-semibold text-lg mb-3">Highlights</h3>
-                            <div className="flex flex-wrap gap-2">
-                                {pooja.bullets.map((bullet: string, index: number) => (
-                                    <Badge key={index} variant="secondary">
-                                        {bullet}
-                                    </Badge>
-                                ))}
+                    <Tabs value={language} onValueChange={(v) => setLanguage(v as Language)} className="w-full">
+                        <div className="flex items-center justify-between mb-4 bg-slate-50 p-2 rounded-xl border border-slate-100">
+                            <div className="flex items-center gap-2 px-2 text-slate-500 font-bold text-sm">
+                                <Languages className="w-4 h-4" /> Localized Content View
                             </div>
+                            <TabsList className="bg-white border">
+                                <TabsTrigger value="en">English</TabsTrigger>
+                                <TabsTrigger value="hi">हिंदी</TabsTrigger>
+                                <TabsTrigger value="mr">मराठी</TabsTrigger>
+                            </TabsList>
                         </div>
-                    )}
 
-                    {/* Packages */}
-                    {pooja.packages && pooja.packages.length > 0 && (
-                        <div className="bg-card border rounded-lg p-6">
-                            <h3 className="font-semibold text-lg mb-4">Packages</h3>
+                        {(['en', 'hi', 'mr'] as Language[]).map((l) => (
+                            <TabsContent key={l} value={l} className="space-y-6 mt-0">
+                                {/* Pooja Name Override in Content Area */}
+                                <div className="bg-card border rounded-lg p-6 bg-gradient-to-r from-blue-50/30 to-transparent">
+                                    <h3 className="text-sm font-bold text-slate-400 uppercase tracking-widest mb-1">Display Name ({l.toUpperCase()})</h3>
+                                    <h2 className="text-2xl font-bold text-slate-800">{parseLocalizedValue(pooja.name, l)}</h2>
+                                </div>
+
+                                {/* About */}
+                                {parseLocalizedValue(pooja.about, l) !== "N/A" && (
+                                    <div className="bg-card border rounded-lg p-6 shadow-sm">
+                                        <h3 className="font-semibold text-lg mb-3">About</h3>
+                                        <p className="text-muted-foreground leading-relaxed">
+                                            {parseLocalizedValue(pooja.about, l)}
+                                        </p>
+                                    </div>
+                                )}
+
+                                {/* FAQs in this language */}
+                                <div className="bg-card border rounded-lg p-6 shadow-sm">
+                                    <h3 className="font-semibold text-lg mb-4">Frequently Asked Questions</h3>
+                                    {pooja.faqs && pooja.faqs[l] && pooja.faqs[l].length > 0 ? (
+                                        <div className="space-y-4">
+                                            {pooja.faqs[l].map((faq: any, index: number) => (
+                                                <div key={index} className="border-b last:border-0 pb-4 last:pb-0">
+                                                    <h4 className="font-semibold text-sm mb-2">{faq.q}</h4>
+                                                    <p className="text-sm text-muted-foreground">{faq.a}</p>
+                                                </div>
+                                            ))}
+                                        </div>
+                                    ) : (
+                                        <p className="text-sm text-slate-400 italic">No FAQs provided for this language.</p>
+                                    )}
+                                </div>
+                            </TabsContent>
+                        ))}
+                    </Tabs>
+
+                    {/* Common Content (Not translated) */}
+                    <div className="bg-card border rounded-lg p-6 shadow-sm">
+                        <h3 className="font-semibold text-lg mb-4">Packages (Common)</h3>
+                        {pooja.packages && pooja.packages.en && pooja.packages.en.length > 0 ? (
                             <div className="grid gap-4">
-                                {pooja.packages.map((pkg: any, index: number) => (
-                                    <div key={index} className="border rounded-lg p-4 bg-slate-50">
+                                {pooja.packages.en.map((pkg: any, index: number) => (
+                                    <div key={index} className="border rounded-lg p-4 bg-slate-50/50 hover:bg-slate-50 transition-colors">
                                         <div className="flex items-start justify-between">
                                             <div className="flex-1">
                                                 <h4 className="font-semibold">{pkg.name}</h4>
@@ -216,51 +221,16 @@ export default function ViewPoojaPage() {
                                                 </p>
                                             </div>
                                             <div className="text-right">
-                                                <p className="font-bold text-primary">₹{pkg.price}</p>
+                                                <p className="font-bold text-primary text-lg">₹{pkg.price}</p>
                                             </div>
                                         </div>
                                     </div>
                                 ))}
                             </div>
-                        </div>
-                    )}
-
-                    {/* Process Steps */}
-                    {pooja.processSteps && pooja.processSteps.length > 0 && (
-                        <div className="bg-card border rounded-lg p-6">
-                            <h3 className="font-semibold text-lg mb-4">Ritual Process</h3>
-                            <div className="space-y-4">
-                                {pooja.processSteps.map((step: any, index: number) => (
-                                    <div key={index} className="flex gap-4">
-                                        <div className="flex-shrink-0 w-8 h-8 rounded-full bg-primary/10 text-primary flex items-center justify-center font-bold text-sm">
-                                            {index + 1}
-                                        </div>
-                                        <div className="flex-1">
-                                            <h4 className="font-semibold">{step.title}</h4>
-                                            <p className="text-sm text-muted-foreground mt-1">
-                                                {step.description}
-                                            </p>
-                                        </div>
-                                    </div>
-                                ))}
-                            </div>
-                        </div>
-                    )}
-
-                    {/* FAQs */}
-                    {pooja.faqs && pooja.faqs.length > 0 && (
-                        <div className="bg-card border rounded-lg p-6">
-                            <h3 className="font-semibold text-lg mb-4">Frequently Asked Questions</h3>
-                            <div className="space-y-4">
-                                {pooja.faqs.map((faq: any, index: number) => (
-                                    <div key={index} className="border-b last:border-0 pb-4 last:pb-0">
-                                        <h4 className="font-semibold text-sm mb-2">{faq.q}</h4>
-                                        <p className="text-sm text-muted-foreground">{faq.a}</p>
-                                    </div>
-                                ))}
-                            </div>
-                        </div>
-                    )}
+                        ) : (
+                            <p className="text-sm text-slate-400 italic">No packages defined.</p>
+                        )}
+                    </div>
                 </div>
             </div>
         </div>

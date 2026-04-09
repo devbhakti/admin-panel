@@ -95,7 +95,7 @@ export default function CTACardsPage() {
     const loadCTACards = async () => {
         try {
             setLoading(true);
-            let data = await fetchAllCTACardsAdmin();
+            let data = await fetchAllCTACardsAdmin({ lang: 'raw' });
 
             // Auto-seed if empty
             if (!data || data.length === 0) {
@@ -144,16 +144,16 @@ export default function CTACardsPage() {
         if (card.id) {
             setEditingCard(card);
             setFormData({
-                title_en: card.title_en || card.title || "",
-                title_hi: card.title_hi || "",
-                title_mr: card.title_mr || "",
-                points_en: preparePoints(card.points_en || card.points),
-                points_hi: preparePoints(card.points_hi),
-                points_mr: preparePoints(card.points_mr),
+                title_en: card.title?.en || "",
+                title_hi: card.title?.hi || "",
+                title_mr: card.title?.mr || "",
+                points_en: preparePoints(card.points?.en),
+                points_hi: preparePoints(card.points?.hi),
+                points_mr: preparePoints(card.points?.mr),
                 active: card.active ?? true,
-                buttonText_en: card.buttonText_en || card.buttonText || "",
-                buttonText_hi: card.buttonText_hi || "",
-                buttonText_mr: card.buttonText_mr || "",
+                buttonText_en: card.buttonText?.en || "",
+                buttonText_hi: card.buttonText?.hi || "",
+                buttonText_mr: card.buttonText?.mr || "",
             });
             setIconPreview(card.icon ? (card.icon.startsWith('http') ? card.icon : `${BASE_URL}${card.icon}`) : "");
             setIconFile(null);
@@ -161,14 +161,14 @@ export default function CTACardsPage() {
         } else {
             setEditingCard({ ...card, isNew: true });
             setFormData({
-                title_en: card.title || "",
+                title_en: card.title?.en || card.title || "",
                 title_hi: "",
                 title_mr: "",
-                points_en: preparePoints(card.points),
+                points_en: preparePoints(card.points?.en || card.points),
                 points_hi: ["", "", "", "", ""],
                 points_mr: ["", "", "", "", ""],
                 active: card.active ?? true,
-                buttonText_en: card.buttonText || "",
+                buttonText_en: card.buttonText?.en || card.buttonText || "",
                 buttonText_hi: "",
                 buttonText_mr: "",
             });
@@ -186,18 +186,20 @@ export default function CTACardsPage() {
         }
     };
 
-    const handlePointChange = (index: number, value: string) => {
-        const newPoints = [...formData.points];
-        newPoints[index] = value;
-        setFormData({ ...formData, points: newPoints });
-    };
-
     const handleToggleStatus = async (card: any) => {
         try {
             const data = new FormData();
-            data.append('title', card.title);
-            data.append('points', JSON.stringify(card.points));
-            data.append('buttonText', card.buttonText);
+            // We use the language objects directly from the card if they exist
+            data.append('title_en', card.title?.en || card.title || "");
+            data.append('title_hi', card.title?.hi || "");
+            data.append('title_mr', card.title?.mr || "");
+            data.append('points_en', JSON.stringify(card.points?.en || card.points || []));
+            data.append('points_hi', JSON.stringify(card.points?.hi || []));
+            data.append('points_mr', JSON.stringify(card.points?.mr || []));
+            data.append('buttonText_en', card.buttonText?.en || card.buttonText || "");
+            data.append('buttonText_hi', card.buttonText?.hi || "");
+            data.append('buttonText_mr', card.buttonText?.mr || "");
+            
             data.append('buttonLink', card.buttonLink);
             data.append('cardType', card.cardType);
             data.append('active', (!card.active).toString());
@@ -207,7 +209,7 @@ export default function CTACardsPage() {
             loadCTACards();
         } catch (error) {
             console.error("Error toggling status:", error);
-            alert("Error toggling status");
+            toast({ title: "Error", description: "Error toggling status", variant: "destructive" });
         }
     };
 
@@ -231,7 +233,7 @@ export default function CTACardsPage() {
             data.append('buttonLink', fixedData.buttonLink);
             data.append('cardType', fixedData.cardType);
             data.append('active', formData.active.toString());
-            data.append('order', fixedData.order.toString());
+            data.append('order', (fixedData.order || 1).toString());
 
             if (editingCard.id) {
                 await updateCTACardAdmin(editingCard.id, data);

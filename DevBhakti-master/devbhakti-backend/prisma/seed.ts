@@ -41,25 +41,8 @@ async function main() {
     },
   });
 
-  const templeUser1 = await prisma.user.create({
-    data: {
-      name: 'Kashi Vishwanath Institution',
-      email: 'kashi@temple.com',
-      password: hashedPassword,
-      role: UserRole.INSTITUTION,
-      isVerified: true,
-    },
-  });
 
-  const templeUser2 = await prisma.user.create({
-    data: {
-      name: 'Kedarnath Trust',
-      email: 'kedarnath@temple.com',
-      password: hashedPassword,
-      role: UserRole.INSTITUTION,
-      isVerified: true,
-    },
-  });
+  
 
   const sellerUser = await prisma.user.create({
     data: {
@@ -82,7 +65,43 @@ async function main() {
     },
   });
 
+  const templeUser1 = await prisma.user.create({
+    data: {
+      name: 'Kashi Temple Admin',
+      email: 'kashi@temple.com',
+      password: hashedPassword,
+      role: UserRole.INSTITUTION,
+      isVerified: true,
+    },
+  });
+
+  const templeUser2 = await prisma.user.create({
+    data: {
+      name: 'Kedarnath Temple Admin',
+      email: 'kedarnath@temple.com',
+      password: hashedPassword,
+      role: UserRole.INSTITUTION,
+      isVerified: true,
+    },
+  });
+
   console.log('👤 Users created');
+
+  // 2.2 Create SellerProfile
+  const sellerProfile = await prisma.sellerProfile.create({
+    data: {
+      name: { en: 'Devotional Store', hi: 'भक्ति स्टोर' },
+      location: { en: 'Haridwar, Uttarakhand', hi: 'हरिद्वार, उत्तराखंड' },
+      fullAddress: { en: 'Ghat Road, Haridwar, Uttarakhand 249401', hi: 'घाट रोड, हरिद्वार, उत्तराखंड 249401' },
+      description: { en: 'Authentic spiritual items and pooja essentials.', hi: 'प्रामाणिक आध्यात्मिक वस्तुएं और पूजा सामग्री।' },
+      category: { en: 'Spirituality', hi: 'आध्यात्मिकता' },
+      userId: sellerUser.id,
+      productCommissionRate: 10.0,
+      pickupLocation: 'HARIDWAR_MAIN'
+    }
+  });
+
+  console.log('🏪 Seller Profile created');
 
   // 2.1 Create Banners
   await prisma.banner.createMany({
@@ -92,18 +111,24 @@ async function main() {
         link: '/pooja/rudrabhishek',
         active: true,
         order: 1,
+        title: { en: 'Experience Divine Blessings', hi: 'दैवीय आशीर्वाद का अनुभव करें', mr: 'दैवी आशीर्वादाचा अनुभव घ्या' },
+        subtitle: { en: 'Book your online pooja today', hi: 'आज ही अपनी ऑनलाइन पूजा बुक करें', mr: 'आजच तुमची ऑनलाइन पूजा बुक करा' }
       },
       {
         image: 'https://images.unsplash.com/photo-1590050752117-23a9d7fc2140?w=1200&q=80',
         link: '/temple/kashi-vishwanath',
         active: true,
         order: 2,
+        title: { en: 'Visit Kashi Vishwanath', hi: 'काशी विश्वनाथ के दर्शन करें', mr: 'काशी विश्वनाथचे दर्शन घ्या' },
+        subtitle: { en: 'Virtual tour and online offerings', hi: 'वर्चुअल टूर और ऑनलाइन प्रसाद', mr: 'व्हर्च्युअल टूर आणि ऑनलाइन प्रसाद' }
       },
       {
         image: 'https://images.unsplash.com/photo-1626621341517-bbf3d9990a23?w=1200&q=80',
         link: '/products',
         active: true,
         order: 3,
+        title: { en: 'Spiritual Marketplace', hi: 'आध्यात्मिक बाजार', mr: 'आध्यात्मिक बाजार' },
+        subtitle: { en: 'Authentic items from holy cities', hi: 'पवित्र शहरों से प्रामाणिक वस्तुएं', mr: 'पवित्र शहरांमधून अस्सल वस्तू' }
       }
     ]
   });
@@ -113,12 +138,12 @@ async function main() {
   // 3. Create Temples
   const temple1 = await prisma.temple.create({
     data: {
-      name_en: 'Kashi Vishwanath Temple',
-      location_en: 'Varanasi, Uttar Pradesh',
-      fullAddress_en: 'Lahori Tola, Varanasi, Uttar Pradesh 221001',
-      description_en: 'The Kashi Vishwanath Temple is one of the most famous Hindu temples dedicated to Lord Shiva.',
-      history_en: 'The temple has been destroyed and reconstructed several times in history. The current structure was built by Ahilyabai Holkar of Indore in 1780.',
-      category_en: 'Jyotirlinga',
+      name: { en: 'Kashi Vishwanath Temple', hi: 'काशी विश्वनाथ मंदिर' },
+      location: { en: 'Varanasi, Uttar Pradesh', hi: 'वाराणसी, उत्तर प्रदेश' },
+      fullAddress: { en: 'Lahori Tola, Varanasi, Uttar Pradesh 221001', hi: 'लाहौरी टोला, वाराणसी, उत्तर प्रदेश 221001' },
+      description: { en: 'The Kashi Vishwanath Temple is one of the most famous Hindu temples dedicated to Lord Shiva.', hi: 'काशी विश्वनाथ मंदिर भगवान शिव को समर्पित सबसे प्रसिद्ध हिंदू मंदिरों में से एक है।' },
+      history: { en: 'The temple has been destroyed and reconstructed several times in history. The current structure was built by Ahilyabai Holkar of Indore in 1780.', hi: 'मंदिर को इतिहास में कई बार नष्ट और पुनर्निर्मित किया गया है। वर्तमान संरचना 1780 में इंदौर की अहिल्याबाई होल्कर द्वारा बनाई गई थी।' },
+      category: { en: 'Jyotirlinga', hi: 'ज्योतिर्लिंग' },
       openTime: '4:00 AM - 11:00 PM',
       rating: 4.9,
       reviewsCount: 1500,
@@ -135,12 +160,12 @@ async function main() {
 
   const temple2 = await prisma.temple.create({
     data: {
-      name_en: 'Kedarnath Temple',
-      location_en: 'Rudraprayag, Uttarakhand',
-      fullAddress_en: 'Kedarnath, Uttarakhand 246445',
-      description_en: 'Kedarnath Temple is a Hindu temple dedicated to Lord Shiva, located on the Garhwal Himalayan range near the Mandakini river.',
-      history_en: 'According to Hindu legends, the temple was initially built by Pandavas, and is one of the twelve Jyotirlingas.',
-      category_en: 'Jyotirlinga',
+      name: { en: 'Kedarnath Temple' },
+      location: { en: 'Rudraprayag, Uttarakhand' },
+      fullAddress: { en: 'Kedarnath, Uttarakhand 246445' },
+      description: { en: 'Kedarnath Temple is a Hindu temple dedicated to Lord Shiva, located on the Garhwal Himalayan range near the Mandakini river.' },
+      history: { en: 'According to Hindu legends, the temple was initially built by Pandavas, and is one of the twelve Jyotirlingas.' },
+      category: { en: 'Jyotirlinga' },
       openTime: '6:00 AM - 9:00 PM',
       rating: 4.9,
       reviewsCount: 1200,
@@ -160,21 +185,21 @@ async function main() {
   await prisma.event.createMany({
     data: [
       {
-        name: 'Maha Shivratri Celebration',
+        name: { en: 'Maha Shivratri Celebration' },
         date: '2026-02-26',
-        description: 'Grand celebration of Maha Shivratri with overnight prayers and rituals.',
+        description: { en: 'Grand celebration of Maha Shivratri with overnight prayers and rituals.' },
         templeId: temple1.id,
       },
       {
-        name: 'Ganga Aarti',
+        name: { en: 'Ganga Aarti' },
         date: 'Daily',
-        description: 'Special evening ritual performed on the banks of the Ganges.',
+        description: { en: 'Special evening ritual performed on the banks of the Ganges.' },
         templeId: temple1.id,
       },
       {
-        name: 'Kedarnath Opening Ceremony',
+        name: { en: 'Kedarnath Opening Ceremony' },
         date: '2026-05-10',
-        description: 'Traditional ceremony marking the opening of the temple doors for devotees.',
+        description: { en: 'Traditional ceremony marking the opening of the temple doors for devotees.' },
         templeId: temple2.id,
       },
     ],
@@ -185,28 +210,47 @@ async function main() {
   // 5. Create Poojas
   const poojas = [
     {
-      name_en: 'Rudrabhishek Pooja',
-      category_en: 'Special Pooja',
+      name: { en: 'Rudrabhishek Pooja' },
+      category: { en: 'Special Pooja' },
       price: 2100,
-      duration_en: '45-60 mins',
-      description_en: ['A powerful ritual of bathing the Shiva Lingam with various offerings.'],
+      duration: { en: '45-60 mins' },
+      description: { en: ['A powerful ritual of bathing the Shiva Lingam with various offerings.'] },
       time: '6:00 AM',
       image: 'https://images.unsplash.com/photo-1541093126081-3069154b0366?w=800',
-      about_en: 'Rudrabhishek is a ritual where a Panchamrut is offered to Lord Shiva along with many other precious items.',
-      benefits_en: ['Spiritual growth', 'Removal of obstacles', 'Peace and prosperity'],
-      bullets_en: ['Live streaming available', 'Prasad will be sent via couriers', 'Personalized Sankalpa'],
+      about: { en: 'Rudrabhishek is a ritual where a Panchamrut is offered to Lord Shiva along with many other precious items.' },
+      benefits: { en: ['Spiritual growth', 'Removal of obstacles', 'Peace and prosperity'] },
+      bullets: { en: ['Live streaming available', 'Prasad will be sent via couriers', 'Personalized Sankalpa'] },
       templeId: temple1.id,
       packages: [
-        { name: 'Standard', price: 2100, description: 'Single devotee Rudrabhishek' },
-        { name: 'Family', price: 5100, description: 'Rudrabhishek for the whole family' }
+        { 
+          name: { en: 'Standard', hi: 'मानक', mr: 'मानक' }, 
+          price: 2100, 
+          description: { en: 'Single devotee Rudrabhishek', hi: 'एकल भक्त रुद्राभिषेक', mr: 'एकल भक्त रुद्राभिषेक' } 
+        },
+        { 
+          name: { en: 'Family', hi: 'परिवार', mr: 'कुटुंब' }, 
+          price: 5100, 
+          description: { en: 'Rudrabhishek for the whole family', hi: 'पूरे परिवार के लिए रुद्राभिषेक', mr: 'संपूर्ण कुटुंबासाठी रुद्राभिषेक' } 
+        }
       ],
+      faqs: [
+        {
+          question: { en: 'Is prasad included?', hi: 'क्या प्रसाद शामिल है?', mr: 'प्रसाद समाविष्ट आहे का?' },
+          answer: { en: 'Yes, prasad will be sent to your address.', hi: 'हाँ, प्रसाद आपके पते पर भेजा जाएगा।', mr: 'हो, प्रसाद तुमच्या पत्त्यावर पाठवला जाईल.' }
+        }
+      ],
+      processSteps: {
+        en: ['Sankalpa', 'Abhishek', 'Aarti'],
+        hi: ['संकल्प', 'अभिषेक', 'आरती'],
+        mr: ['संकल्प', 'अभिषेक', 'आरती']
+      }
     },
     {
-      name_en: 'Maha Mrityunjaya Jaap',
-      category_en: 'Healing Pooja',
+      name: { en: 'Maha Mrityunjaya Jaap' },
+      category: { en: 'Healing Pooja' },
       price: 5000,
-      duration_en: '3 hours',
-      description_en: ['A sacred chant for longevity and overcoming fear of death.'],
+      duration: { en: '3 hours' },
+      description: { en: ['A sacred chant for longevity and overcoming fear of death.'] },
       time: '5:00 AM',
       image: 'https://images.unsplash.com/photo-1561007011-2834fa39556d?w=800',
       templeId: temple1.id,
@@ -215,11 +259,11 @@ async function main() {
       ],
     },
     {
-      name_en: 'Special Ganga Aarti',
-      category_en: 'Aarti',
+      name: { en: 'Special Ganga Aarti' },
+      category: { en: 'Aarti' },
       price: 1100,
-      duration_en: '30 mins',
-      description_en: ['A personalized participation in the grand evening aarti at Dashashwamedh Ghat.'],
+      duration: { en: '30 mins' },
+      description: { en: ['A personalized participation in the grand evening aarti at Dashashwamedh Ghat.'] },
       time: '6:30 PM',
       image: 'https://images.unsplash.com/photo-1590050752117-23a9d7fc2140?w=800',
       templeId: temple1.id,
@@ -229,16 +273,16 @@ async function main() {
       ],
     },
     {
-      name_en: 'Kedarnath Shringar Pooja',
-      category_en: 'Special Pooja',
+      name: { en: 'Kedarnath Shringar Pooja' },
+      category: { en: 'Special Pooja' },
       price: 3500,
-      duration_en: '60 mins',
-      description_en: ['A special ritual focused on the decoration of the deity with flowers and sandalwood.'],
+      duration: { en: '60 mins' },
+      description: { en: ['A special ritual focused on the decoration of the deity with flowers and sandalwood.'] },
       time: '7:00 AM',
       image: 'https://images.unsplash.com/photo-1626621341517-bbf3d9990a23?w=800',
-      about_en: 'The Shringar pooja at Kedarnath is one of the most aesthetic and spiritually uplifting rituals.',
-      benefits_en: ['Aesthetic satisfaction', 'Spiritual peace', 'Closeness to the divine'],
-      bullets_en: ['Fresh flowers used', 'Priest-led ritual', 'Digital certificate included'],
+      about: { en: 'The Shringar pooja at Kedarnath is one of the most aesthetic and spiritually uplifting rituals.' },
+      benefits: { en: ['Aesthetic satisfaction', 'Spiritual peace', 'Closeness to the divine'] },
+      bullets: { en: ['Fresh flowers used', 'Priest-led ritual', 'Digital certificate included'] },
       templeId: temple2.id,
       packages: [
         { name: 'Standard', price: 3500, description: 'Basic decoration pooja' },
@@ -246,11 +290,11 @@ async function main() {
       ],
     },
     {
-      name_en: 'Akhand Jyoti Deepam',
-      category_en: 'Daily Ritual',
+      name: { en: 'Akhand Jyoti Deepam' },
+      category: { en: 'Daily Ritual' },
       price: 501,
-      duration_en: 'Continuous',
-      description_en: ['Lighting an eternal lamp in your name for 24 hours.'],
+      duration: { en: 'Continuous' },
+      description: { en: ['Lighting an eternal lamp in your name for 24 hours.'] },
       time: 'Anytime',
       image: 'https://images.unsplash.com/photo-1594142142270-496359f5187e?w=800',
       templeId: temple2.id,
@@ -260,11 +304,11 @@ async function main() {
       ],
     },
     {
-      name_en: 'Shiva Sahasranama Archana',
-      category_en: 'Archana',
+      name: { en: 'Shiva Sahasranama Archana' },
+      category: { en: 'Archana' },
       price: 501,
-      duration_en: '30 mins',
-      description_en: ['Recitation of 1000 names of Lord Shiva.'],
+      duration: { en: '30 mins' },
+      description: { en: ['Recitation of 1000 names of Lord Shiva.'] },
       time: '8:00 AM',
       image: 'https://images.unsplash.com/photo-1541093126081-3069154b0366?w=800',
       templeId: temple2.id,
@@ -285,24 +329,24 @@ async function main() {
   // 6. Create Product Categories
   const cat1 = await prisma.productCategory.create({
     data: {
-      name_en: 'Statues & Idols',
-      description_en: 'Beautifully crafted divine idols for your home temple.',
+      name: { en: 'Statues & Idols' },
+      description: { en: 'Beautifully crafted divine idols for your home temple.' },
       image: 'https://images.unsplash.com/photo-1582234052309-8f0a0e5b0e5b?w=400',
     },
   });
 
   const cat2 = await prisma.productCategory.create({
     data: {
-      name_en: 'Incense & Fragrances',
-      description_en: 'Organic and traditional incense sticks and dhoop.',
+      name: { en: 'Incense & Fragrances' },
+      description: { en: 'Organic and traditional incense sticks and dhoop.' },
       image: 'https://images.unsplash.com/photo-1596464716127-f2a82984de30?w=400',
     },
   });
 
   const cat3 = await prisma.productCategory.create({
     data: {
-      name_en: 'Puja Essentials',
-      description_en: 'Everything you need for your daily rituals.',
+      name: { en: 'Puja Essentials' },
+      description: { en: 'Everything you need for your daily rituals.' },
       image: 'https://images.unsplash.com/photo-1620352123547-5e60824b0254?w=400',
     },
   });
@@ -312,19 +356,19 @@ async function main() {
   // 7. Create Products
   const product1 = await prisma.product.create({
     data: {
-      name_en: 'Brass Ganesha Idol',
-      description_en: 'Handcrafted pure brass Ganesha idol for prosperity and success.',
-      category_en: 'Statues & Idols',
+      name: { en: 'Brass Ganesha Idol' },
+      description: { en: 'Handcrafted pure brass Ganesha idol for prosperity and success.' },
+      category: { en: 'Statues & Idols' },
       categoryId: cat1.id,
       templeId: temple1.id,
       status: 'approved',
       image: 'https://images.unsplash.com/photo-1544161515-4af6b1d8d159?w=800',
-      highlights_en: 'Pure brass, Hand-carved, 6 inches height',
-      longDescription_en: 'This beautiful Ganesha idol is handcrafted by traditional artisans from Kashi. It represents wisdom and prosperity.',
+      highlights: { en: 'Pure brass, Hand-carved, 6 inches height' },
+      longDescription: { en: 'This beautiful Ganesha idol is handcrafted by traditional artisans from Kashi. It represents wisdom and prosperity.' },
       variants: {
         create: [
-          { name_en: 'Small (4 inch)', price: 1200, stock: 50 },
-          { name_en: 'Large (8 inch)', price: 2500, stock: 20 }
+          { name: { en: 'Small (4 inch)' }, price: 1200, stock: 50 },
+          { name: { en: 'Large (8 inch)' }, price: 2500, stock: 20 }
         ]
       }
     },
@@ -332,15 +376,15 @@ async function main() {
 
   await prisma.product.create({
     data: {
-      name_en: 'Organic Sandalwood Incense',
-      description_en: 'Natural sandalwood incense sticks made from flower waste.',
-      category_en: 'Incense & Fragrances',
+      name: { en: 'Organic Sandalwood Incense' },
+      description: { en: 'Natural sandalwood incense sticks made from flower waste.' },
+      category: { en: 'Incense & Fragrances' },
       categoryId: cat2.id,
       status: 'approved',
       image: 'https://images.unsplash.com/photo-1596464716127-f2a82984de30?w=800',
       variants: {
         create: [
-          { name_en: 'Pack of 50', price: 250, stock: 100 }
+          { name: { en: 'Pack of 50' }, price: 250, stock: 100 }
         ]
       }
     },
@@ -367,6 +411,24 @@ async function main() {
   });
 
   console.log('📅 Pooja Bookings created');
+
+  // 9. Create Standard FAQs
+  await prisma.standardFAQ.createMany({
+    data: [
+      {
+        question: { en: 'How do I book a pooja?' },
+        answer: { en: 'You can browse available poojas by temple or category and click the Book Now button.' },
+        order: 1
+      },
+      {
+        question: { en: 'When will I receive the prasad?' },
+        answer: { en: 'Prasad is usually dispatched within 48 hours of pooja completion and takes 3-5 days for delivery.' },
+        order: 2
+      }
+    ]
+  });
+
+  console.log('❓ Standard FAQs created');
 
   console.log('✅ Seeding completed successfully!');
 }

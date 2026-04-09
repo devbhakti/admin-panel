@@ -1,6 +1,7 @@
 import { Router } from 'express';
 import {
     getAllPoojas,
+    getPoojaById,
     createPooja,
     updatePooja,
     deletePooja,
@@ -18,6 +19,7 @@ router.use(authenticate);
 
 // Applying granular permissions
 router.get('/', checkPermission('poojas.view'), getAllPoojas);
+router.get('/:id', checkPermission('poojas.view'), getPoojaById);
 router.post('/', checkPermission('poojas.create'), uploadPoojaImage.single('image'), createPooja);
 router.put('/:id', checkPermission('poojas.edit'), uploadPoojaImage.single('image'), updatePooja);
 router.post('/:id/promote', checkPermission('poojas.promote'), promoteToMaster);

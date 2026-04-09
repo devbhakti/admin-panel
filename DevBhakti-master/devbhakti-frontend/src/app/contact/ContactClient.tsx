@@ -1,20 +1,117 @@
 "use client";
 
-import React from "react";
+import React, { useState } from "react";
 import { motion } from "framer-motion";
 import Navbar from "@/components/landing/Navbar";
 import Footer from "@/components/landing/Footer";
-import { Mail, Phone, MapPin, MessageSquare, Clock, Send } from "lucide-react";
+import { Mail, Phone, MapPin, MessageSquare, Clock, Send, Loader2 } from "lucide-react";
 import { useLanguage } from "@/context/LanguageContext";
+import { submitContactForm } from "@/api/publicController";
+import toast from "react-hot-toast";
 
 export default function ContactClient() {
     const { t } = useLanguage();
+    const [isSubmitting, setIsSubmitting] = useState(false);
+    const [formData, setFormData] = useState({
+        name: "",
+        email: "",
+        mobile: "",
+        subject: "",
+        message: ""
+    });
+    const [errors, setErrors] = useState<Record<string, string>>({});
 
     const fadeIn = {
         initial: { opacity: 0, y: 20 },
         whileInView: { opacity: 1, y: 0 },
         viewport: { once: true },
         transition: { duration: 0.6 }
+    };
+
+    const validate = () => {
+        const newErrors: Record<string, string> = {};
+        const missingFields: string[] = [];
+
+        if (!formData.name.trim()) {
+            newErrors.name = "Name is required";
+            missingFields.push(t('contact.form.name'));
+        }
+        if (!formData.email.trim()) {
+            newErrors.email = "Email is required";
+            missingFields.push(t('contact.form.email'));
+        } else if (!/\S+@\S+\.\S+/.test(formData.email)) {
+            newErrors.email = "Invalid email format";
+            missingFields.push(t('contact.form.email') + " (Invalid)");
+        }
+        if (!formData.mobile.trim()) {
+            newErrors.mobile = "Mobile number is required";
+            missingFields.push("Mobile Number");
+        } else if (formData.mobile.length !== 10) {
+            newErrors.mobile = "Mobile number must be exactly 10 digits";
+            missingFields.push("Mobile Number (10 digits)");
+        }
+        if (!formData.subject.trim()) {
+            newErrors.subject = "Subject is required";
+            missingFields.push(t('contact.form.subject'));
+        }
+        if (!formData.message.trim()) {
+            newErrors.message = "Message is required";
+            missingFields.push(t('contact.form.message'));
+        }
+
+        setErrors(newErrors);
+        return { valid: Object.keys(newErrors).length === 0, missingFields };
+    };
+
+    const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) => {
+        const { name, value } = e.target;
+        
+        // Specific logic for mobile number: only digits and max 10 characters
+        if (name === "mobile") {
+            const digitsOnly = value.replace(/\D/g, "").slice(0, 10);
+            setFormData(prev => ({ ...prev, [name]: digitsOnly }));
+            return;
+        }
+
+        setFormData(prev => ({ ...prev, [name]: value }));
+        // Clear error when user types
+        if (errors[name]) {
+            setErrors(prev => {
+                const updated = { ...prev };
+                delete updated[name];
+                return updated;
+            });
+        }
+    };
+
+    const handleSubmit = async (e: React.FormEvent) => {
+        e.preventDefault();
+        const { valid, missingFields } = validate();
+        if (!valid) {
+            toast.error(`Please fill required fields: ${missingFields.join(", ")}`);
+            return;
+        }
+
+        setIsSubmitting(true);
+        try {
+            const result = await submitContactForm(formData);
+            if (result.success) {
+                toast.success(result.message || "Thank you! Your message has been sent.");
+                setFormData({
+                    name: "",
+                    email: "",
+                    mobile: "",
+                    subject: "",
+                    message: ""
+                });
+            } else {
+                toast.error(result.error || "Failed to send message. Please try again.");
+            }
+        } catch (error) {
+            toast.error("An unexpected error occurred. Please try again.");
+        } finally {
+            setIsSubmitting(false);
+        }
     };
 
     return (
@@ -120,28 +217,78 @@ export default function ContactClient() {
                         <p className="text-lg text-muted-foreground">{t('contact.form.subtitle')}</p>
                     </div>
 
-                    <form className="space-y-6">
+                    <form onSubmit={handleSubmit} className="space-y-6">
                         <div className="grid md:grid-cols-2 gap-6">
                             <div className="space-y-2">
                                 <label className="text-sm font-semibold text-foreground/70 ml-1">{t('contact.form.name')}</label>
-                                <input type="text" placeholder={t('contact.form.placeholder_name')} className="w-full px-6 py-4 rounded-2xl bg-secondary/5 border border-border focus:outline-none focus:ring-2 focus:ring-primary/20 transition-all" />
+                                <input 
+                                    type="text" 
+                                    name="name"
+                                    value={formData.name}
+                                    onChange={handleChange}
+                                    placeholder={t('contact.form.placeholder_name')} 
+                                    className={`w-full px-6 py-4 rounded-2xl bg-secondary/5 border ${errors.name ? 'border-red-500' : 'border-border'} focus:outline-none focus:ring-2 focus:ring-primary/20 transition-all`} 
+                                />
+                                {errors.name && <p className="text-xs text-red-500 ml-1">{errors.name}</p>}
                             </div>
                             <div className="space-y-2">
                                 <label className="text-sm font-semibold text-foreground/70 ml-1">{t('contact.form.email')}</label>
-                                <input type="email" placeholder={t('contact.form.placeholder_email')} className="w-full px-6 py-4 rounded-2xl bg-secondary/5 border border-border focus:outline-none focus:ring-2 focus:ring-primary/20 transition-all" />
+                                <input 
+                                    type="email" 
+                                    name="email"
+                                    value={formData.email}
+                                    onChange={handleChange}
+                                    placeholder={t('contact.form.placeholder_email')} 
+                                    className={`w-full px-6 py-4 rounded-2xl bg-secondary/5 border ${errors.email ? 'border-red-500' : 'border-border'} focus:outline-none focus:ring-2 focus:ring-primary/20 transition-all`} 
+                                />
+                                {errors.email && <p className="text-xs text-red-500 ml-1">{errors.email}</p>}
+                            </div>
+                        </div>
+                        <div className="grid md:grid-cols-2 gap-6">
+                            <div className="space-y-2">
+                                <label className="text-sm font-semibold text-foreground/70 ml-1">Mobile Number</label>
+                                <input 
+                                    type="tel" 
+                                    name="mobile"
+                                    value={formData.mobile}
+                                    onChange={handleChange}
+                                    maxLength={10}
+                                    placeholder="Enter 10 digit mobile number" 
+                                    className={`w-full px-6 py-4 rounded-2xl bg-secondary/5 border ${errors.mobile ? 'border-red-500' : 'border-border'} focus:outline-none focus:ring-2 focus:ring-primary/20 transition-all`} 
+                                />
+                                {errors.mobile && <p className="text-xs text-red-500 ml-1">{errors.mobile}</p>}
+                            </div>
+                            <div className="space-y-2">
+                                <label className="text-sm font-semibold text-foreground/70 ml-1">{t('contact.form.subject')}</label>
+                                <input 
+                                    type="text" 
+                                    name="subject"
+                                    value={formData.subject}
+                                    onChange={handleChange}
+                                    placeholder={t('contact.form.placeholder_subject')} 
+                                    className={`w-full px-6 py-4 rounded-2xl bg-secondary/5 border ${errors.subject ? 'border-red-500' : 'border-border'} focus:outline-none focus:ring-2 focus:ring-primary/20 transition-all`} 
+                                />
+                                {errors.subject && <p className="text-xs text-red-500 ml-1">{errors.subject}</p>}
                             </div>
                         </div>
                         <div className="space-y-2">
-                            <label className="text-sm font-semibold text-foreground/70 ml-1">{t('contact.form.subject')}</label>
-                            <input type="text" placeholder={t('contact.form.placeholder_subject')} className="w-full px-6 py-4 rounded-2xl bg-secondary/5 border border-border focus:outline-none focus:ring-2 focus:ring-primary/20 transition-all" />
-                        </div>
-                        <div className="space-y-2">
                             <label className="text-sm font-semibold text-foreground/70 ml-1">{t('contact.form.message')}</label>
-                            <textarea rows={5} placeholder={t('contact.form.placeholder_message')} className="w-full px-6 py-4 rounded-2xl bg-secondary/5 border border-border focus:outline-none focus:ring-2 focus:ring-primary/20 transition-all resize-none"></textarea>
+                            <textarea 
+                                name="message"
+                                value={formData.message}
+                                onChange={handleChange}
+                                rows={5} 
+                                placeholder={t('contact.form.placeholder_message')} 
+                                className={`w-full px-6 py-4 rounded-2xl bg-secondary/5 border ${errors.message ? 'border-red-500' : 'border-border'} focus:outline-none focus:ring-2 focus:ring-primary/20 transition-all resize-none`}
+                            ></textarea>
+                            {errors.message && <p className="text-xs text-red-500 ml-1">{errors.message}</p>}
                         </div>
-                        <button className="w-full bg-primary text-white py-4 rounded-2xl font-bold text-lg hover:shadow-glow transition-all flex items-center justify-center gap-3">
-                            <Send className="w-5 h-5" />
-                            {t('contact.form.submit')}
+                        <button 
+                            disabled={isSubmitting}
+                            className="w-full bg-primary text-white py-4 rounded-2xl font-bold text-lg hover:shadow-glow transition-all flex items-center justify-center gap-3 disabled:opacity-70"
+                        >
+                            {isSubmitting ? <Loader2 className="w-5 h-5 animate-spin" /> : <Send className="w-5 h-5" />}
+                            {isSubmitting ? "Sending..." : t('contact.form.submit')}
                         </button>
                     </form>
                 </motion.div>

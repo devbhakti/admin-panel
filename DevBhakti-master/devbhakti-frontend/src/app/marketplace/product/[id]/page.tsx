@@ -117,7 +117,7 @@ export default function ProductDetailsPage() {
       checkFavoriteStatus(params.id as string);
       loadRatingsSettings();
     }
-  }, [params.id]);
+  }, [params.id, language]);
 
   const loadRatingsSettings = async () => {
     try {

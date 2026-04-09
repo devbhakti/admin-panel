@@ -1,6 +1,6 @@
 import { Request, Response } from "express";
 import { prisma } from "../../lib/prisma";
-import { localize } from "../../utils/localization";
+import { localize, buildLangJson, buildLangArray, getLang, getEnglish } from "../../utils/localization";
 
 // Create Product
 export const createProduct = async (req: Request, res: Response) => {
@@ -121,21 +121,19 @@ export const createProduct = async (req: Request, res: Response) => {
     }
 
     const createData: any = {
-      name_en, name_hi, name_mr,
-      description_en, description_hi, description_mr,
-      category_en, category_hi, category_mr,
-      highlights_en, highlights_hi, highlights_mr,
-      longDescription_en, longDescription_hi, longDescription_mr,
-      shippingInfo_en, shippingInfo_hi, shippingInfo_mr,
-      origin_en, origin_hi, origin_mr,
+      name: buildLangJson(name_en || req.body.name, name_hi, name_mr),
+      description: buildLangJson(description_en || req.body.description, description_hi, description_mr),
+      category: buildLangJson(category_en || req.body.category, category_hi, category_mr),
+      highlights: buildLangJson(highlights_en || req.body.highlights, highlights_hi, highlights_mr),
+      longDescription: buildLangJson(longDescription_en || req.body.longDescription, longDescription_hi, longDescription_mr),
+      shippingInfo: buildLangJson(shippingInfo_en || req.body.shippingInfo, shippingInfo_hi, shippingInfo_mr),
+      origin: buildLangJson(origin_en || req.body.origin, origin_hi, origin_mr),
       status,
       rating,
       image: image || null,
       variants: {
         create: variants.map((variant: any) => ({
-          name_en: variant.name_en || variant.name,
-          name_hi: variant.name_hi,
-          name_mr: variant.name_mr,
+          name: buildLangJson(variant.name_en || variant.name, variant.name_hi, variant.name_mr),
           price: parseFloat(variant.price),
           stock: parseInt(variant.stock) || 0,
           image: variant.image || null
@@ -148,7 +146,6 @@ export const createProduct = async (req: Request, res: Response) => {
       const categoryRecord = await prisma.productCategory.findUnique({ where: { id: categoryId as string } });
       if (categoryRecord) {
         createData.categoryId = categoryId;
-        createData.category_en = (categoryRecord as any).name_en;
       }
     }
 
@@ -222,8 +219,9 @@ export const getAllProducts = async (req: Request, res: Response) => {
     if (search) {
       where.AND.push({
         OR: [
-          { name_en: { contains: search as string, mode: "insensitive" } },
-          { description_en: { contains: search as string, mode: "insensitive" } }
+          { name: { path: ['en'], string_contains: String(search) } },
+          { name: { path: ['hi'], string_contains: String(search) } },
+          { description: { path: ['en'], string_contains: String(search) } }
         ]
       });
     }
@@ -274,15 +272,15 @@ export const getAllProducts = async (req: Request, res: Response) => {
           categoryObj: {
             select: {
               id: true,
-              name_en: true, name_hi: true, name_mr: true,
-              description_en: true, description_hi: true, description_mr: true
+              name: true,
+              description: true
             }
           },
           temple: {
             select: {
               id: true,
-              name_en: true, name_hi: true, name_mr: true,
-              location_en: true, location_hi: true, location_mr: true,
+              name: true,
+              location: true,
               user: {
                 select: {
                   role: true
@@ -319,8 +317,8 @@ export const getAllProducts = async (req: Request, res: Response) => {
     if (search) {
       const lowQuery = String(search).toLowerCase();
       finalProducts.sort((a, b) => {
-        const nameA = ((a as any).name_en || '').toLowerCase();
-        const nameB = ((b as any).name_en || '').toLowerCase();
+        const nameA = getEnglish(a.name).toLowerCase();
+        const nameB = getEnglish(b.name).toLowerCase();
 
         // Exact match priority
         if (nameA === lowQuery && nameB !== lowQuery) return -1;
@@ -338,11 +336,12 @@ export const getAllProducts = async (req: Request, res: Response) => {
       finalProducts = finalProducts.slice(start, start + Number(limit));
     }
 
+    const lang = getLang(req);
     res.status(200).json({
       success: true,
       message: "Products retrieved successfully",
       data: {
-        products: finalProducts,
+        products: localize(finalProducts, lang),
         stats: {
           total: totalCount,
           pending: pendingCount,
@@ -382,16 +381,16 @@ export const getProductById = async (req: Request, res: Response) => {
         categoryObj: {
           select: {
             id: true,
-            name_en: true, name_hi: true, name_mr: true,
-            description_en: true, description_hi: true, description_mr: true
+            name: true,
+            description: true
           }
         },
         temple: {
           select: {
             id: true,
-            name_en: true, name_hi: true, name_mr: true,
-            location_en: true, location_hi: true, location_mr: true,
-            description_en: true, description_hi: true, description_mr: true
+            name: true,
+            location: true,
+            description: true
           }
         },
         seller: {
@@ -412,6 +411,7 @@ export const getProductById = async (req: Request, res: Response) => {
       });
     }
 
+    // DO NOT localize data here, admin needs the RAW json to edit all languages!
     res.status(200).json({
       success: true,
       data: product
@@ -466,15 +466,15 @@ export const getPublicProductById = async (req: Request, res: Response) => {
         categoryObj: {
           select: {
             id: true,
-            name_en: true, name_hi: true, name_mr: true,
-            description_en: true, description_hi: true, description_mr: true
+            name: true,
+            description: true
           }
         },
         temple: {
           select: {
             id: true,
-            name_en: true,
-            location_en: true
+            name: true,
+            location: true
           }
         },
         seller: {
@@ -494,9 +494,10 @@ export const getPublicProductById = async (req: Request, res: Response) => {
       });
     }
 
+    const lang = getLang(req);
     res.status(200).json({
       success: true,
-      data: product
+      data: localize(product, lang)
     });
   } catch (error) {
     console.error("Get Public Product Error:", error);
@@ -644,7 +645,6 @@ export const updateProduct = async (req: Request, res: Response) => {
       });
       if (categoryRecord) {
         updateData.categoryId = categoryId;
-        updateData.category_en = (categoryRecord as any).name_en;
       }
     }
 
@@ -666,33 +666,13 @@ export const updateProduct = async (req: Request, res: Response) => {
       updateData.sellerId = null;
     }
 
-    if (name_en) updateData.name_en = name_en;
-    if (name_hi !== undefined) updateData.name_hi = name_hi;
-    if (name_mr !== undefined) updateData.name_mr = name_mr;
-
-    if (description_en) updateData.description_en = description_en;
-    if (description_hi !== undefined) updateData.description_hi = description_hi;
-    if (description_mr !== undefined) updateData.description_mr = description_mr;
-
-    if (category_en) updateData.category_en = category_en;
-    if (category_hi !== undefined) updateData.category_hi = category_hi;
-    if (category_mr !== undefined) updateData.category_mr = category_mr;
-
-    if (highlights_en !== undefined) updateData.highlights_en = highlights_en;
-    if (highlights_hi !== undefined) updateData.highlights_hi = highlights_hi;
-    if (highlights_mr !== undefined) updateData.highlights_mr = highlights_mr;
-
-    if (longDescription_en !== undefined) updateData.longDescription_en = longDescription_en;
-    if (longDescription_hi !== undefined) updateData.longDescription_hi = longDescription_hi;
-    if (longDescription_mr !== undefined) updateData.longDescription_mr = longDescription_mr;
-
-    if (shippingInfo_en !== undefined) updateData.shippingInfo_en = shippingInfo_en;
-    if (shippingInfo_hi !== undefined) updateData.shippingInfo_hi = shippingInfo_hi;
-    if (shippingInfo_mr !== undefined) updateData.shippingInfo_mr = shippingInfo_mr;
-
-    if (origin_en !== undefined) updateData.origin_en = origin_en;
-    if (origin_hi !== undefined) updateData.origin_hi = origin_hi;
-    if (origin_mr !== undefined) updateData.origin_mr = origin_mr;
+    if (name_en) updateData.name = buildLangJson(name_en, name_hi, name_mr);
+    if (description_en) updateData.description = buildLangJson(description_en, description_hi, description_mr);
+    if (category_en) updateData.category = buildLangJson(category_en, category_hi, category_mr);
+    if (highlights_en !== undefined) updateData.highlights = buildLangJson(highlights_en, highlights_hi, highlights_mr);
+    if (longDescription_en !== undefined) updateData.longDescription = buildLangJson(longDescription_en, longDescription_hi, longDescription_mr);
+    if (shippingInfo_en !== undefined) updateData.shippingInfo = buildLangJson(shippingInfo_en, shippingInfo_hi, shippingInfo_mr);
+    if (origin_en !== undefined) updateData.origin = buildLangJson(origin_en, origin_hi, origin_mr);
 
     if (status) updateData.status = status;
     if (rating !== undefined) updateData.rating = typeof rating === 'string' ? parseFloat(rating) : rating;
@@ -712,9 +692,7 @@ export const updateProduct = async (req: Request, res: Response) => {
 
         updateData.variants = {
           create: variants.map((variant: any) => ({
-            name_en: variant.name_en || variant.name,
-            name_hi: variant.name_hi,
-            name_mr: variant.name_mr,
+            name: buildLangJson(variant.name_en || variant.name, variant.name_hi, variant.name_mr),
             price: parseFloat(variant.price),
             stock: parseInt(variant.stock) || 0,
             image: variant.image || null
@@ -827,8 +805,8 @@ export const toggleProductStatus = async (req: Request, res: Response) => {
         temple: {
           select: {
             id: true,
-            name_en: true,
-            location_en: true,
+            name: true,
+            location: true,
             user: {
               select: {
                 role: true
@@ -867,8 +845,8 @@ export const getProductsByTemple = async (req: Request, res: Response) => {
     }
     if (search) {
       where.OR = [
-        { name_en: { contains: String(search), mode: 'insensitive' } },
-        { description_en: { contains: String(search), mode: 'insensitive' } }
+        { name: { path: ['en'], string_contains: String(search) } },
+        { description: { path: ['en'], string_contains: String(search) } }
       ];
     }
 
@@ -880,15 +858,15 @@ export const getProductsByTemple = async (req: Request, res: Response) => {
           categoryObj: {
             select: {
               id: true,
-              name_en: true, name_hi: true, name_mr: true,
-              description_en: true, description_hi: true, description_mr: true
+              name: true,
+              description: true
             }
           },
           temple: {
             select: {
               id: true,
-              name_en: true,
-              location_en: true
+              name: true,
+              location: true
             }
           }
         },
@@ -905,8 +883,8 @@ export const getProductsByTemple = async (req: Request, res: Response) => {
     if (search) {
       const lowQuery = String(search).toLowerCase();
       finalProducts.sort((a, b) => {
-        const nameA = ((a as any).name_en || '').toLowerCase();
-        const nameB = ((b as any).name_en || '').toLowerCase();
+        const nameA = getEnglish(a.name).toLowerCase();
+        const nameB = getEnglish(b.name).toLowerCase();
 
         // Exact match priority
         if (nameA === lowQuery && nameB !== lowQuery) return -1;
@@ -927,7 +905,7 @@ export const getProductsByTemple = async (req: Request, res: Response) => {
     res.status(200).json({
       success: true,
       data: {
-        products: finalProducts,
+        products: localize(finalProducts, getLang(req)),
         pagination: {
           page: Number(page),
           limit: Number(limit),
@@ -980,18 +958,17 @@ export const getPublicProducts = async (req: Request, res: Response) => {
       ]
     };
 
-    const lang = (req.headers['x-lang'] as string) || (req.query.lang as string) || 'en';
 
     if (search) {
       where.OR = [
-        { name_en: { contains: search as string, mode: "insensitive" } },
-        { description_en: { contains: search as string, mode: "insensitive" } }
+        { name: { path: ['en'], string_contains: search as string } },
+        { description: { path: ['en'], string_contains: search as string } }
       ];
     }
 
     if (category) {
       where.categoryObj = {
-        name_en: { contains: category as string, mode: "insensitive" }
+        name: { path: ['en'], string_contains: category as string }
       };
     }
 
@@ -1009,23 +986,15 @@ export const getPublicProducts = async (req: Request, res: Response) => {
           categoryObj: {
             select: {
               id: true,
-              name_en: true,
-              name_hi: true,
-              name_mr: true,
-              description_en: true,
-              description_hi: true,
-              description_mr: true,
+              name: true,
+              description: true,
             }
           },
           temple: {
             select: {
               id: true,
-              name_en: true,
-              name_hi: true,
-              name_mr: true,
-              location_en: true,
-              location_hi: true,
-              location_mr: true,
+              name: true,
+              location: true
             }
           },
           seller: {
@@ -1043,6 +1012,7 @@ export const getPublicProducts = async (req: Request, res: Response) => {
       prisma.product.count({ where })
     ]);
 
+    const lang = getLang(req);
     let finalProducts = products.map(p => localize(p, lang));
 
     // Rank results if searching
@@ -1096,7 +1066,7 @@ export const getProductOwners = async (req: Request, res: Response) => {
       prisma.temple.findMany({
         select: {
           id: true,
-          name_en: true,
+          name: true,
           userId: true,
           user: { select: { role: true } }
         }
@@ -1114,13 +1084,13 @@ export const getProductOwners = async (req: Request, res: Response) => {
     const owners = [
       ...temples.map(t => ({
         id: t.id,
-        name: (t as any).name_en,
+        name: getEnglish(t.name),
         type: 'Temple',
         userId: t.userId
       })),
       ...sellers.map(s => ({
         id: s.id,
-        name: s.name,
+        name: getEnglish(s.name),
         type: 'Seller',
         userId: s.userId
       }))

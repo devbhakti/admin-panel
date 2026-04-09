@@ -1,11 +1,12 @@
 import { Request, Response } from "express";
 import { prisma } from "../../lib/prisma";
+import { getLang, localize, getEnglish } from "../../utils/localization";
 
 export const getTempleDonations = async (req: Request, res: Response) => {
     try {
         const { templeId } = req.params; // Or from auth middleware if applicable
         const { search, status, page = 1, limit = 10 } = req.query;
-        const skip = (Number(page) - 1) * Number(limit);
+        const skip = (parseInt(String(page), 10) - 1) * parseInt(String(limit), 10);
 
         const where: any = { templeId };
 
@@ -28,19 +29,20 @@ export const getTempleDonations = async (req: Request, res: Response) => {
                 where,
                 orderBy: { createdAt: 'desc' },
                 skip,
-                take: Number(limit)
+                take: parseInt(String(limit), 10)
             }),
             prisma.donation.count({ where })
         ]);
 
+        const lang = getLang(req);
         res.status(200).json({
             success: true,
-            data: donations,
+            data: localize(donations, lang),
             pagination: {
                 total,
-                page: Number(page),
-                limit: Number(limit),
-                totalPages: Math.ceil(total / Number(limit))
+                page: parseInt(String(page), 10),
+                limit: parseInt(String(limit), 10),
+                totalPages: Math.ceil(total / parseInt(String(limit), 10))
             }
         });
     } catch (error: any) {
@@ -124,7 +126,7 @@ export const downloadDonationsPdf = async (req: Request, res: Response) => {
         // Header
         doc.fontSize(20).text('Temple Donations Report', { align: 'center' });
         doc.moveDown();
-        doc.fontSize(12).text(`Temple: ${donations[0]?.temple?.name_en || 'N/A'}`, { align: 'left' });
+        doc.fontSize(12).text(`Temple: ${getEnglish(donations[0]?.temple?.name) || 'N/A'}`, { align: 'left' });
         doc.text(`Date: ${new Date().toLocaleString()}`, { align: 'left' });
         doc.moveDown();
 

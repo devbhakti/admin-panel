@@ -1,5 +1,6 @@
 import { Request, Response } from 'express';
 import { prisma } from '../../lib/prisma';
+import { getEnglish } from '../../utils/localization';
 
 export const getPendingApprovals = async (req: Request, res: Response) => {
     try {
@@ -8,7 +9,7 @@ export const getPendingApprovals = async (req: Request, res: Response) => {
             where: { status: 'PENDING' },
             include: {
                 temple: {
-                    select: { name_en: true, templeId: true, userId: true }
+                    select: { name: true, templeId: true, userId: true }
                 }
             },
             orderBy: { createdAt: 'desc' }
@@ -40,7 +41,7 @@ export const getPendingApprovals = async (req: Request, res: Response) => {
         const normalizedTempleRequests = templeRequests.map((req: any) => ({
             id: req.id,
             type: 'TEMPLE',
-            entityName: req.temple.name_en,
+            entityName: getEnglish(req.temple.name),
             entityId: req.temple.userId,
             requestedData: req.requestedData,
             oldData: req.oldData,
@@ -51,7 +52,7 @@ export const getPendingApprovals = async (req: Request, res: Response) => {
         const normalizedSellerRequests = sellerRequests.map((req: any) => ({
             id: req.id,
             type: 'SELLER',
-            entityName: req.seller.name,
+            entityName: getEnglish(req.seller.name),
             entityId: req.seller.userId,
             requestedData: req.requestedData,
             oldData: req.oldData,

@@ -18,7 +18,7 @@ There are multiple definitions of "Temple" data across the codebase, with varyin
 | `id` | `string` | `poojas.ts` | e.g., `"t1"`, `"t2"` |
 | `id` | `number` | `TemplesSection.tsx`, `TempleDetailClient.tsx` | e.g., `1`, `2` |
 | `name` | `string` | All | Name of the temple |
-| `location` | `string` | All | City, State (e.g., "Varanasi, Uttar Pradesh") |
+| `location` | `string` | All | City, State (e.g., "Goa, India") |
 | `fullAddress` | `string` | `TempleDetailClient.tsx` | Complete postal address |
 | `description` | `string` | All | Brief description |
 | `history` | `string` | `TempleDetailClient.tsx` | Historical background (separate from description) |

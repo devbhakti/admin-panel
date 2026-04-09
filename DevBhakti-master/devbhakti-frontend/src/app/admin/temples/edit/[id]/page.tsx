@@ -10,7 +10,8 @@ import {
     fetchAllTemplesAdmin, 
     fetchAllPoojasAdmin, 
     createPoojaAdmin,
-    fetchCommissionSlabsAdmin
+    fetchCommissionSlabsAdmin,
+    fetchTempleByIdAdmin
 } from "@/api/adminController";
 import { TempleForm } from "@/components/admin/temples/TempleForm";
 
@@ -32,16 +33,15 @@ export default function EditTemplePage() {
     const loadData = async () => {
         setIsFetching(true);
         try {
-            // Load master poojas for selection
-            const poojasResponse = await fetchAllPoojasAdmin({ isMaster: true });
+            const [poojasResponse, templeRes] = await Promise.all([
+                fetchAllPoojasAdmin({ isMaster: true }),
+                fetchTempleByIdAdmin(instId)
+            ]);
             setAllPoojas(poojasResponse);
 
-            // Load temple account data
-            const allInst = await fetchAllTemplesAdmin();
-            const inst = allInst.find((i: any) => i.id === instId);
-
-            if (inst) {
-                setTempleData(inst);
+            if (templeRes.success && templeRes.data) {
+                console.log('[EditTemple] Raw temple data loaded:', templeRes.data.temple?.name);
+                setTempleData(templeRes.data);
             } else {
                 toast({ title: "Error", description: "Temple not found", variant: "destructive" });
                 router.push('/admin/temples');

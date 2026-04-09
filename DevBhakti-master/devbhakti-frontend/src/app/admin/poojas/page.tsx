@@ -28,6 +28,7 @@ import { API_URL } from "@/config/apiConfig";
 import { Suspense } from "react";
 import { useSearchParams } from "next/navigation";
 import { useAdminAuth } from "@/hooks/use-admin-auth";
+import { parseLocalizedValue } from "@/utils/textUtils";
 
 function PoojasContent() {
     const searchParams = useSearchParams();
@@ -57,7 +58,8 @@ function PoojasContent() {
         try {
             const params: any = {
                 search: searchTerm,
-                poojaId: idParam || undefined
+                poojaId: idParam || undefined,
+                lang: 'raw'
             };
             if (activeTab === 'master') params.isMaster = true;
             if (activeTab === 'temple') params.isMaster = false;
@@ -83,6 +85,7 @@ function PoojasContent() {
             toast({
                 title: "Success",
                 description: "Pooja promoted to Master Template",
+                variant: "success",
             });
             loadPoojas();
         } catch (error) {
@@ -98,12 +101,12 @@ function PoojasContent() {
         if (window.confirm("Are you sure you want to delete this pooja?")) {
             try {
                 await deletePoojaAdmin(id);
-                toast({ title: "Success", description: "Pooja deleted successfully" });
+                toast({ title: "Success", description: "Pooja deleted successfully", variant: "success" });
                 loadPoojas();
-            } catch (error) {
+            } catch (error: any) {
                 toast({
-                    title: "Error",
-                    description: "Failed to delete pooja",
+                    title: "Action Failed",
+                    description: error.response?.data?.error || error.response?.data?.message || "Failed to delete pooja",
                     variant: "destructive"
                 });
             }
@@ -116,6 +119,7 @@ function PoojasContent() {
             toast({
                 title: !pooja.status ? "Pooja Resumed" : "Pooja Paused",
                 description: `Pooja is now ${!pooja.status ? 'visible to' : 'hidden from'} devotees.`,
+                variant: "success",
             });
             loadPoojas();
         } catch (error) {
@@ -128,18 +132,36 @@ function PoojasContent() {
     };
 
     const filteredPoojas = poojas.filter(pooja => {
-        const name = pooja.name || "";
-        const category = pooja.category || "";
-        const search = searchTerm.toLowerCase();
+        const s = searchTerm.toLowerCase();
         
-        return name.toLowerCase().includes(search) ||
-               category.toLowerCase().includes(search);
+        const matchesField = (field: any) => {
+            if (!field) return false;
+            if (typeof field === 'string') return field.toLowerCase().includes(s);
+            if (typeof field === 'object') {
+                return (field.en?.toLowerCase().includes(s) || 
+                        field.hi?.toLowerCase().includes(s) || 
+                        field.mr?.toLowerCase().includes(s));
+            }
+            return false;
+        };
+
+        return matchesField(pooja.name) || matchesField(pooja.category);
     });
 
     const getImageUrl = (path: string) => {
         if (!path) return "https://via.placeholder.com/150";
         if (path.startsWith('http')) return path;
         return `${API_URL.replace('/api', '')}${path}`;
+    };
+
+    const getRawLangValue = (val: any, lang: 'en'|'hi'|'mr') => {
+        if (!val) return "";
+        if (typeof val === 'object') return val[lang] || "";
+        try {
+            const p = JSON.parse(val);
+            if (typeof p === 'object' && p !== null) return p[lang] || "";
+        } catch { }
+        return lang === 'en' ? val : "";
     };
 
     return (
@@ -214,7 +236,9 @@ function PoojasContent() {
                     <TableHeader>
                         <TableRow>
                             <TableHead className="w-[80px]">Image</TableHead>
-                            <TableHead>Pooja Name</TableHead>
+                            <TableHead>English Name</TableHead>
+                            <TableHead>हिंदी</TableHead>
+                            <TableHead>मराठी</TableHead>
                             <TableHead>Temple</TableHead>
                             <TableHead>Category/Purpose</TableHead>
                             <TableHead> Single Person Price</TableHead>
@@ -239,30 +263,37 @@ function PoojasContent() {
                                         <div className="w-12 h-12 rounded-lg overflow-hidden bg-muted border">
                                             <img
                                                 src={getImageUrl(pooja.image)}
-                                                alt={pooja.name}
+                                                alt={parseLocalizedValue(pooja.name)}
                                                 className="w-full h-full object-cover"
                                             />
                                         </div>
                                     </TableCell>
                                     <TableCell>
                                         <div className="font-medium text-slate-900 flex items-center gap-2">
-                                            {pooja.name}
+                                            {getRawLangValue(pooja.name, 'en') || parseLocalizedValue(pooja.name)}
                                             {pooja.isMaster && (
                                                 <Badge variant="secondary" className="bg-blue-50 text-blue-700 border-blue-200 text-[10px] scale-90">
                                                     MASTER
                                                 </Badge>
                                             )}
                                         </div>
-                                        <div className="text-[14px] text-slate-900 line-clamp-1 max-w-[200px]">
-                                            {pooja.about || (pooja.description && pooja.description[0])}
+                                    </TableCell>
+                                    <TableCell>
+                                        <div className="text-[14px] text-slate-600">
+                                            {getRawLangValue(pooja.name, 'hi') || <span className="text-slate-300 italic text-xs">not set</span>}
                                         </div>
                                     </TableCell>
                                     <TableCell>
-                                        <div className="text-[14px] font-medium text-slate-600">{pooja.temple?.name}</div>
+                                        <div className="text-[14px] text-slate-600">
+                                            {getRawLangValue(pooja.name, 'mr') || <span className="text-slate-300 italic text-xs">not set</span>}
+                                        </div>
+                                    </TableCell>
+                                    <TableCell>
+                                        <div className="text-[14px] font-medium text-slate-600">{parseLocalizedValue(pooja.temple?.name)}</div>
                                     </TableCell>
                                     <TableCell>
                                         <Badge variant="outline" className="bg-slate-50">
-                                            {pooja.category}
+                                            {parseLocalizedValue(pooja.category)}
                                         </Badge>
                                     </TableCell>
                                     <TableCell>

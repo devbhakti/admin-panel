@@ -4,7 +4,7 @@ import { prisma } from '../../lib/prisma';
 import bcrypt from 'bcrypt';
 import { createShiprocketPickupLocation } from '../../services/shiprocketService';
 import { parseLocation, extractPincode } from '../../lib/shiprocketUtils';
-
+import { buildLangJson, getEnglish, getLang, localize } from '../../utils/localization';
 
 
 // Helper to get file paths
@@ -25,10 +25,60 @@ const normalizePhone = (phone: string): string => {
   return '+' + cleaned;
 };
 
+// Get Temple by User ID (Raw data for admin)
+export const getTempleById = async (req: Request, res: Response) => {
+  try {
+    const { id } = req.params;
+    const templeAccount = await prisma.user.findUnique({
+      where: { id: String(id) },
+      include: {
+        temple: {
+          include: {
+            poojas: {
+              select: { id: true, name: true, category: true, price: true }
+            },
+            events: true,
+          }
+        }
+      }
+    });
+
+    if (!templeAccount) {
+      return res.status(404).json({ error: 'Temple account not found' });
+    }
+
+    // Since commissionSlabs don't have a formal relation in Prisma but use targetId
+    let commissionSlabs: any[] = [];
+    if (templeAccount.temple) {
+        commissionSlabs = await prisma.commissionSlab.findMany({
+            where: {
+                targetId: templeAccount.temple.id,
+                slabType: 'TEMPLE'
+            }
+        });
+    }
+
+    res.json({
+      success: true,
+      data: {
+          ...templeAccount,
+          temple: templeAccount.temple ? {
+              ...templeAccount.temple,
+              commissionSlabs
+          } : null
+      }
+    });
+  } catch (error) {
+    console.error('Fetch temple error:', error);
+    res.status(500).json({ error: 'Failed to fetch temple' });
+  }
+};
+
 // Get all Temples (via User accounts)
 export const getAllTemples = async (req: Request, res: Response) => {
   try {
     const { page, limit, search, isVerified, templeId, date, deity, state, district, transactionRange } = req.query;
+    const lang = (req.query.lang as string) || getLang(req);
 
     const where: any = {
       role: 'INSTITUTION'
@@ -43,15 +93,15 @@ export const getAllTemples = async (req: Request, res: Response) => {
     }
 
     if (deity && deity !== 'all') {
-      where.temple = { ...where.temple, category_en: { contains: String(deity), mode: 'insensitive' } };
+      where.temple = { ...where.temple, category: { path: ['en'], string_contains: String(deity) } };
     }
 
     if (state) {
-      where.temple = { ...where.temple, location_en: { contains: String(state), mode: 'insensitive' } };
+      where.temple = { ...where.temple, location: { path: ['en'], string_contains: String(state) } };
     }
 
     if (district) {
-      where.temple = { ...where.temple, location_en: { contains: String(district), mode: 'insensitive' } };
+      where.temple = { ...where.temple, location: { path: ['en'], string_contains: String(district) } };
     }
 
     if (transactionRange && transactionRange !== 'all') {
@@ -113,14 +163,14 @@ export const getAllTemples = async (req: Request, res: Response) => {
 
     if (search) {
       where.OR = [
-        { name_en: { contains: String(search), mode: 'insensitive' } },
+        { name: { contains: String(search), mode: 'insensitive' } },
         { email: { contains: String(search), mode: 'insensitive' } },
         { phone: { contains: String(search), mode: 'insensitive' } },
         {
           temple: {
             OR: [
-              { name_en: { contains: String(search), mode: 'insensitive' } },
-              { location_en: { contains: String(search), mode: 'insensitive' } },
+              { name: { path: ['en'], string_contains: String(search) } },
+              { location: { path: ['en'], string_contains: String(search) } },
               { templeId: { contains: String(search), mode: 'insensitive' } }
             ]
           }
@@ -139,7 +189,7 @@ export const getAllTemples = async (req: Request, res: Response) => {
                 select: { poojas: true, events: true },
               },
               poojas: {
-                select: { id: true, name_en: true, category_en: true, price: true }
+                select: { id: true, name: true, category: true, price: true }
               },
               events: true
             }
@@ -147,7 +197,8 @@ export const getAllTemples = async (req: Request, res: Response) => {
         },
         orderBy: { createdAt: 'desc' }
       });
-      return res.json(temples);
+      if (lang === 'raw') return res.json(temples);
+      return res.json(localize(temples, lang));
     }
 
     // Paginated response
@@ -165,7 +216,7 @@ export const getAllTemples = async (req: Request, res: Response) => {
                 select: { poojas: true, events: true },
               },
               poojas: {
-                select: { id: true, name_en: true, category_en: true, price: true }
+                select: { id: true, name: true, category: true, price: true }
               },
               events: true
             }
@@ -180,7 +231,7 @@ export const getAllTemples = async (req: Request, res: Response) => {
 
     res.json({
       success: true,
-      data: temples,
+      data: lang === 'raw' ? temples : localize(temples, lang),
       pagination: {
         total,
         page: p,
@@ -233,7 +284,7 @@ export const createTemple = async (req: Request, res: Response) => {
       // 1. Create User & Temple
       const user = await tx.user.create({
         data: {
-          name: data.name_en || data.name,
+          name: JSON.stringify(buildLangJson(data.adminName_en || data.name, data.adminName_hi, data.adminName_mr)),
           email: data.email,
           phone: data.phone,
           password: hashedPassword,
@@ -242,27 +293,13 @@ export const createTemple = async (req: Request, res: Response) => {
           temple: {
             create: {
               templeId: `TMP-${Math.random().toString(36).substring(2, 8).toUpperCase()}`,
-              name_en: data.name_en || data.templeName,
-              name_hi: data.name_hi,
-              name_mr: data.name_mr,
-              location_en: data.location_en || data.location,
-              location_hi: data.location_hi,
-              location_mr: data.location_mr,
-              fullAddress_en: data.fullAddress_en || data.fullAddress,
-              fullAddress_hi: data.fullAddress_hi,
-              fullAddress_mr: data.fullAddress_mr,
-              description_en: data.description_en || data.description,
-              description_hi: data.description_hi,
-              description_mr: data.description_mr,
-              history_en: data.history_en || data.history,
-              history_hi: data.history_hi,
-              history_mr: data.history_mr,
-              category_en: data.category_en || data.category,
-              category_hi: data.category_hi,
-              category_mr: data.category_mr,
-              pickupLocation_en: data.pickupLocation_en || data.pickupLocation,
-              pickupLocation_hi: data.pickupLocation_hi,
-              pickupLocation_mr: data.pickupLocation_mr,
+              name: buildLangJson(data.name_en || data.templeName || data.name, data.name_hi, data.name_mr),
+              location: buildLangJson(data.location_en || data.location, data.location_hi, data.location_mr),
+              fullAddress: buildLangJson(data.fullAddress_en || data.fullAddress, data.fullAddress_hi, data.fullAddress_mr),
+              description: buildLangJson(data.description_en || data.description, data.description_hi, data.description_mr),
+              history: buildLangJson(data.history_en || data.history, data.history_hi, data.history_mr),
+              category: buildLangJson(data.category_en || data.category, data.category_hi, data.category_mr),
+              pickupLocation: buildLangJson(data.pickupLocation_en || data.pickupLocation, data.pickupLocation_hi, data.pickupLocation_mr),
               openTime: data.openTime,
               operatingHours: data.operatingHours ? (typeof data.operatingHours === 'string' ? JSON.parse(data.operatingHours) : data.operatingHours) : undefined,
               phone: data.templePhone,
@@ -331,25 +368,27 @@ export const createTemple = async (req: Request, res: Response) => {
     // Register Pickup Location with Shiprocket
     try {
       if ((result as any).temple) {
-        const { city, state } = parseLocation(data.location || "");
-        const pincode = extractPincode(data.fullAddress || "");
+        const locEn = getEnglish((result as any).temple?.location) || data.location || '';
+        const addrEn = getEnglish((result as any).temple?.fullAddress) || data.fullAddress || '';
+        const { city, state } = parseLocation(locEn);
+        const pincode = extractPincode(addrEn);
 
         const pickupData = {
-          pickup_location: (result as any).temple.pickupLocation,
-          name: data.name,
+          pickup_location: getEnglish((result as any).temple.pickupLocation) || `TEMPLE_${Math.random().toString(36).substring(2, 7).toUpperCase()}`,
+          name: data.name_en || data.name,
           email: data.email,
           phone: (result as any).phone,
           address: data.fullAddress || '',
-          city: city || "Delhi",
-          state: state || "Delhi",
-          country: "India",
-          pin_code: pincode || "110001"
+          city: city || 'Delhi',
+          state: state || 'Delhi',
+          country: 'India',
+          pin_code: pincode || '110001'
         };
         await createShiprocketPickupLocation(pickupData);
-        console.log("Shiprocket Pickup Location Created Successfully for Temple from Admin");
+        console.log('Shiprocket Pickup Location Created Successfully for Temple from Admin');
       }
     } catch (srError) {
-      console.error("Failed to create Shiprocket Pickup Location for Temple from Admin:", srError);
+      console.error('Failed to create Shiprocket Pickup Location for Temple from Admin:', srError);
     }
 
     res.status(201).json(result);
@@ -368,6 +407,10 @@ export const updateTemple = async (req: Request, res: Response) => {
 
     console.log('Update Temple Called for ID:', id);
     console.log('Body Keys:', Object.keys(data));
+    console.log('Hindi/Marathi data:', {
+      location_hi: data.location_hi, description_hi: data.description_hi,
+      name_hi: data.name_hi, category_hi: data.category_hi,
+    });
 
     // Robust JSON parsing
     const safeParse = (str: string, fallback: any) => {
@@ -436,32 +479,18 @@ export const updateTemple = async (req: Request, res: Response) => {
       const user = await tx.user.update({
         where: { id: String(id) },
         data: {
-          name: data.name_en || data.name,
+          name: JSON.stringify(buildLangJson(data.adminName_en || data.name, data.adminName_hi, data.adminName_mr)),
           email: data.email,
           phone: data.phone,
           temple: {
             update: {
-              name_en: data.name_en || data.templeName,
-              name_hi: data.name_hi,
-              name_mr: data.name_mr,
-              location_en: data.location_en || data.location,
-              location_hi: data.location_hi,
-              location_mr: data.location_mr,
-              fullAddress_en: data.fullAddress_en || data.fullAddress,
-              fullAddress_hi: data.fullAddress_hi,
-              fullAddress_mr: data.fullAddress_mr,
-              description_en: data.description_en || data.description,
-              description_hi: data.description_hi,
-              description_mr: data.description_mr,
-              history_en: data.history_en || data.history,
-              history_hi: data.history_hi,
-              history_mr: data.history_mr,
-              category_en: data.category_en || data.category,
-              category_hi: data.category_hi,
-              category_mr: data.category_mr,
-              pickupLocation_en: data.pickupLocation_en || data.pickupLocation,
-              pickupLocation_hi: data.pickupLocation_hi,
-              pickupLocation_mr: data.pickupLocation_mr,
+              name: buildLangJson(data.name_en || data.templeName || data.name, data.name_hi, data.name_mr),
+              location: buildLangJson(data.location_en || data.location, data.location_hi, data.location_mr),
+              fullAddress: buildLangJson(data.fullAddress_en || data.fullAddress, data.fullAddress_hi, data.fullAddress_mr),
+              description: buildLangJson(data.description_en || data.description, data.description_hi, data.description_mr),
+              history: buildLangJson(data.history_en || data.history, data.history_hi, data.history_mr),
+              category: buildLangJson(data.category_en || data.category, data.category_hi, data.category_mr),
+              pickupLocation: buildLangJson(data.pickupLocation_en || data.pickupLocation, data.pickupLocation_hi, data.pickupLocation_mr),
               openTime: data.openTime,
               operatingHours: data.operatingHours ? (typeof data.operatingHours === 'string' ? JSON.parse(data.operatingHours) : data.operatingHours) : undefined,
               phone: data.templePhone,
@@ -519,33 +548,17 @@ export const updateTemple = async (req: Request, res: Response) => {
             } else {
               await tx.pooja.create({
                 data: {
-                  name_en: (poojaRecord as any).name_en || (poojaRecord as any).name,
-                  name_hi: (poojaRecord as any).name_hi,
-                  name_mr: (poojaRecord as any).name_mr,
-                  category_en: (poojaRecord as any).category_en || (poojaRecord as any).category,
-                  category_hi: (poojaRecord as any).category_hi,
-                  category_mr: (poojaRecord as any).category_mr,
+                  name: (poojaRecord as any).name,
+                  category: (poojaRecord as any).category,
                   price: poojaRecord.price,
-                  duration_en: (poojaRecord as any).duration_en || (poojaRecord as any).duration,
-                  duration_hi: (poojaRecord as any).duration_hi,
-                  duration_mr: (poojaRecord as any).duration_mr,
-                  description_en: ((poojaRecord as any).description_en || (poojaRecord as any).description) as string[],
-                  description_hi: (poojaRecord as any).description_hi as string[],
-                  description_mr: (poojaRecord as any).description_mr as string[],
+                  duration: (poojaRecord as any).duration,
+                  description: (poojaRecord as any).description,
                   time: poojaRecord.time,
                   image: poojaRecord.image,
-                  about_en: (poojaRecord as any).about_en || (poojaRecord as any).about,
-                  about_hi: (poojaRecord as any).about_hi,
-                  about_mr: (poojaRecord as any).about_mr,
-                  benefits_en: ((poojaRecord as any).benefits_en || (poojaRecord as any).benefits) as string[],
-                  benefits_hi: (poojaRecord as any).benefits_hi as string[],
-                  benefits_mr: (poojaRecord as any).benefits_mr as string[],
-                  bullets_en: ((poojaRecord as any).bullets_en || (poojaRecord as any).bullets) as string[],
-                  bullets_hi: (poojaRecord as any).bullets_hi as string[],
-                  bullets_mr: (poojaRecord as any).bullets_mr as string[],
-                  process_en: (poojaRecord as any).process_en || (poojaRecord as any).process,
-                  process_hi: (poojaRecord as any).process_hi,
-                  process_mr: (poojaRecord as any).process_mr,
+                  about: (poojaRecord as any).about,
+                  benefits: (poojaRecord as any).benefits,
+                  bullets: (poojaRecord as any).bullets,
+                  process: (poojaRecord as any).process,
                   processSteps: poojaRecord.processSteps || undefined,
                   templeId: templeId,
                   isMaster: false,
@@ -615,30 +628,32 @@ export const updateTemple = async (req: Request, res: Response) => {
     if (data.fullAddress || data.location || data.phone || data.templePhone) {
       try {
         if ((result as any).temple) {
-          const { city, state } = parseLocation(data.location || (result as any).temple.location_en || "");
-          const pincode = extractPincode(data.fullAddress || (result as any).temple.fullAddress_en || "");
+          const locEn = getEnglish((result as any).temple.location) || data.location || '';
+          const addrEn = getEnglish((result as any).temple.fullAddress) || data.fullAddress || '';
+          const { city, state } = parseLocation(locEn);
+          const pincode = extractPincode(addrEn);
 
-          let pickupLoc = (result as any).temple.pickupLocation_en;
+          let pickupLoc = getEnglish((result as any).temple.pickupLocation);
           if (!pickupLoc) {
             pickupLoc = `TEMPLE_${Math.random().toString(36).substring(2, 7).toUpperCase()}`;
-            await prisma.temple.update({ where: { id: (result as any).temple.id }, data: { pickupLocation_en: pickupLoc } });
+            await prisma.temple.update({ where: { id: (result as any).temple.id }, data: { pickupLocation: { en: pickupLoc, hi: null, mr: null } } });
           }
 
           const pickupData = {
             pickup_location: pickupLoc,
-            name: (result as any).temple.name_en,
-            email: (result as any).email || "",
+            name: getEnglish((result as any).temple.name),
+            email: (result as any).email || '',
             phone: data.phone || (result as any).phone,
-            address: data.fullAddress_en || data.fullAddress || (result as any).temple.fullAddress_en || '',
-            city: city || "Delhi",
-            state: state || "Delhi",
-            country: "India",
-            pin_code: pincode || "110001"
+            address: data.fullAddress_en || data.fullAddress || addrEn,
+            city: city || 'Delhi',
+            state: state || 'Delhi',
+            country: 'India',
+            pin_code: pincode || '110001'
           };
           await createShiprocketPickupLocation(pickupData);
         }
       } catch (srError) {
-        console.error("Shiprocket update sync error:", srError);
+        console.error('Shiprocket update sync error:', srError);
       }
     }
 
@@ -920,16 +935,17 @@ export const getPendingUpdateRequests = async (req: Request, res: Response) => {
       include: {
         temple: {
           select: {
-            name_en: true,
-            location_en: true,
+            name: true,
+            location: true,
             id: true
           } as any
         }
       },
       orderBy: { createdAt: 'desc' }
     });
-    console.log(`Found ${requests.length} pending requests.`);
-    res.json(requests);
+    const lang = getLang(req);
+    if (lang === 'raw') return res.json(requests);
+    res.json(localize(requests, lang));
   } catch (error: any) {
     console.error('Fetch update requests CRITICAL ERROR:', {
       message: error.message,
@@ -1001,16 +1017,17 @@ export const getTempleCategories = async (req: Request, res: Response) => {
         isActive: true
       },
       select: {
-        category_en: true
-      } as any,
-      distinct: ['category_en'] as any
+        category: true
+      } as any
     });
 
-    const activeCategories = categories
-      .map(t => (t as any).category_en)
-      .filter((c): c is string => !!c && c.trim() !== "");
+    const lang = getLang(req);
+    const locCategories = localize(categories, lang);
+    const activeCategories = locCategories
+      .map((t: any) => t.category)
+      .filter((c: any): c is string => !!c && c.trim() !== "");
 
-    res.json({ success: true, data: activeCategories });
+    res.json({ success: true, data: Array.from(new Set(activeCategories)).sort() });
   } catch (error: any) {
     console.error('Fetch categories error:', error);
     res.status(500).json({ error: 'Failed to fetch temple categories' });

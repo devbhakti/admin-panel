@@ -84,7 +84,7 @@ export function TemplesList() {
     }
     fetchInitialOptions();
     loadRatingsSettings();
-  }, []);
+  }, [language]);
 
   const [allOptions, setAllOptions] = useState({ categories: ["All"], locations: ["All"], poojas: ["All"] });
 
@@ -120,7 +120,7 @@ export function TemplesList() {
 
   React.useEffect(() => {
     loadTemples();
-  }, [searchQuery, selectedCategory, selectedLocation, selectedPooja]);
+  }, [searchQuery, selectedCategory, selectedLocation, selectedPooja, language]);
 
   const loadFavorites = async () => {
     try {
@@ -140,6 +140,7 @@ export function TemplesList() {
     if (selectedCategory !== "All") params.category = selectedCategory;
     if (selectedLocation !== "All") params.location = selectedLocation;
     if (selectedPooja !== "All") params.pooja = selectedPooja;
+    params.lang = language;
 
     const data = await fetchPublicTemples(params);
     setTemples(data || []);

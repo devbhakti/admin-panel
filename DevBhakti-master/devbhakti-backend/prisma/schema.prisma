@@ -92,27 +92,13 @@ model Temple {
   urlType               String                @default("slug")
   isPrimaryLive         Boolean               @default(false)
   operatingHours        Json?
-  category_en           String                @default("")
-  category_hi           String?
-  category_mr           String?
-  description_en        String                @default("")
-  description_hi        String?
-  description_mr        String?
-  fullAddress_en        String?
-  fullAddress_hi        String?
-  fullAddress_mr        String?
-  history_en            String?
-  history_hi            String?
-  history_mr            String?
-  location_en           String                @default("")
-  location_hi           String?
-  location_mr           String?
-  name_en               String                @default("")
-  name_hi               String?
-  name_mr               String?
-  pickupLocation_en     String?
-  pickupLocation_hi     String?
-  pickupLocation_mr     String?
+  category              Json?   // {"en":"...","hi":"...","mr":"..."}
+  description           Json?
+  fullAddress           Json?
+  history               Json?
+  location              Json?
+  name                  Json?
+  pickupLocation        Json?
   availability          BookingAvailability[]
   donations             Donation[]
   events                Event[]
@@ -144,13 +130,13 @@ model BookingAvailability {
 
 model SellerProfile {
   id                    String                @id @default(cuid())
-  name                  String
-  location              String?
-  fullAddress           String?
-  description           String?
+  name                  Json
+  location              Json?
+  fullAddress           Json?
+  description           Json?
   image                 String?
   heroImages            String[]
-  category              String?
+  category              Json?
   openTime              String?
   phone                 String?
   website               String?
@@ -211,33 +197,15 @@ model Pooja {
   createdAt     DateTime              @default(now())
   updatedAt     DateTime              @updatedAt
   status        Boolean               @default(true)
-  about_en            String?
-  about_hi            String?
-  about_mr            String?
-  benefits_en         String[]
-  benefits_hi         String[]
-  benefits_mr         String[]
-  bullets_en          String[]
-  bullets_hi          String[]
-  bullets_mr          String[]
-  category_en         String                @default("")
-  category_hi         String?
-  category_mr         String?
-  description_en      String[]
-  description_hi      String[]
-  description_mr      String[]
-  duration_en         String                @default("")
-  duration_hi         String?
-  duration_mr         String?
-  name_en             String                @default("")
-  name_hi             String?
-  name_mr             String?
-  process_en          String?
-  process_hi          String?
-  process_mr          String?
-  templeDetails_en    String?
-  templeDetails_hi    String?
-  templeDetails_mr    String?
+  about         Json?   // {"en":"...","hi":"...","mr":"..."}
+  benefits      Json?   // {"en":[...],"hi":[...],"mr":[...]}
+  bullets       Json?   // {"en":[...],"hi":[...],"mr":[...]}
+  category      Json?
+  description   Json?   // {"en":[...],"hi":[...],"mr":[...]}
+  duration      Json?
+  name          Json?
+  process       Json?
+  templeDetails Json?
   availability  BookingAvailability[]
   favorites     Favorite[]
   masterPooja   Pooja?                @relation("MasterPoojaRelation", fields: [masterPoojaId], references: [id])
@@ -249,31 +217,24 @@ model Pooja {
 
 model PoojaCategory {
   id        String   @id @default(cuid())
-  name_en      String   @unique
-  name_mr      String?   @unique
-  name_hi      String?   @unique
+  name      Json     // {"en":"...","hi":"...","mr":"..."}
+  nameSlug  String   @unique  // English slug for uniqueness e.g. "ram-navami-pooja"
   status    String   @default("APPROVED")
   createdAt DateTime @default(now())
 }
 
 model Event {
-  id                String   @id @default(cuid())
-  name              String   @default("")
-  name_en           String   @default("")
-  name_hi           String?
-  name_mr           String?
-  date              String
-  description       String?
-  description_en    String?
-  description_hi    String?
-  description_mr    String?
-  templeId          String?
-  createdAt         DateTime @default(now())
-  updatedAt         DateTime @updatedAt
-  status            Boolean  @default(true)
-  time              String?
-  temple            Temple?  @relation(fields: [templeId], references: [id], onDelete: Cascade)
-  Pooja             Pooja[]  @relation("EventToPooja")
+  id          String   @id @default(cuid())
+  name        Json     // {"en":"...","hi":"...","mr":"..."}
+  date        String
+  description Json?    // {"en":"...","hi":"...","mr":"..."}
+  templeId    String?
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+  status      Boolean  @default(true)
+  time        String?
+  temple      Temple?  @relation(fields: [templeId], references: [id], onDelete: Cascade)
+  Pooja       Pooja[]  @relation("EventToPooja")
 }
 
 model Banner {
@@ -284,46 +245,33 @@ model Banner {
   order     Int      @default(0)
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
+  title     Json?            // {"en":"...","hi":"...","mr":"..."}
+  subtitle  Json?            // {"en":"...","hi":"...","mr":"..."}
 }
 
 model Feature {
-  id              String   @id @default(cuid())
-  image           String
-  icon            String
-  active          Boolean  @default(true)
-  order           Int      @default(0)
-  createdAt       DateTime @default(now())
-  updatedAt       DateTime @updatedAt
-  title           String?
-  description     String?
-  title_en        String?
-  title_hi        String?
-  title_mr        String?
-  description_en  String?
-  description_hi  String?
-  description_mr  String?
+  id          String   @id @default(cuid())
+  image       String
+  icon        String
+  active      Boolean  @default(true)
+  order       Int      @default(0)
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+  description Json?    // {"en":"...","hi":"...","mr":"..."}
+  title       Json?    // {"en":"...","hi":"...","mr":"..."}
 }
 
 model Testimonial {
-  id           String   @id @default(cuid())
-  videoSrc     String
-  thumbnail    String
-  active       Boolean  @default(true)
-  order        Int      @default(0)
-  createdAt    DateTime @default(now())
-  updatedAt    DateTime @updatedAt
-  category     String?
-  subtitle     String?
-  title        String?
-  title_en     String?
-  title_hi     String?
-  title_mr     String?
-  subtitle_en  String?
-  subtitle_hi  String?
-  subtitle_mr  String?
-  category_en  String?
-  category_hi  String?
-  category_mr  String?
+  id        String   @id @default(cuid())
+  videoSrc  String
+  thumbnail String
+  active    Boolean  @default(true)
+  order     Int      @default(0)
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+  category  Json?    // {"en":"...","hi":"...","mr":"..."}
+  subtitle  Json?    // {"en":"...","hi":"...","mr":"..."}
+  title     Json?    // {"en":"...","hi":"...","mr":"..."}
 }
 
 model ProductCategory {
@@ -333,12 +281,9 @@ model ProductCategory {
   sortOrder   Int       @default(0)
   createdAt   DateTime  @default(now())
   updatedAt   DateTime  @updatedAt
-  description_en   String?
-  description_hi String?
-  description_mr String?
-  name_en String?
-  name_hi String?
-  name_mr String?
+  description Json?    // {"en":"...","hi":"...","mr":"..."}
+  name        Json?    // {"en":"...","hi":"...","mr":"..."}
+  nameSlug    String?  @unique  // uniqueness ke liye
   products    Product[]
 }
 
@@ -356,29 +301,13 @@ model Product {
   width           Float?           @default(10)
   height          Float?           @default(10)
   sellerId        String?
-  
-  name_en           String                @default("")
-  name_hi           String?
-  name_mr           String?
-  description_en    String                @default("")
-  description_hi    String?
-  description_mr    String?
-  category_en       String                @default("")
-  category_hi       String?
-  category_mr       String?
-  highlights_en     String?
-  highlights_hi     String?
-  highlights_mr     String?
-  longDescription_en String?
-  longDescription_hi String?
-  longDescription_mr String?
-  shippingInfo_en   String?               @default("Ships in 24-48 Hours")
-  shippingInfo_hi   String?
-  shippingInfo_mr   String?
-  origin_en         String?               @default("India")
-  origin_hi         String?
-  origin_mr         String?
-
+  category        Json?    // {"en":"...","hi":"...","mr":"..."}
+  description     Json?
+  highlights      Json?
+  longDescription Json?
+  name            Json?
+  origin          Json?    // {"en":"India","hi":"भारत","mr":"भारत"}
+  shippingInfo    Json?    // {"en":"Ships in 24-48 Hours","hi":"...","mr":"..."}
   cartItems       CartItem[]
   favorites       Favorite[]
   orderItems      OrderItem[]
@@ -396,11 +325,7 @@ model ProductVariant {
   productId String
   createdAt DateTime   @default(now())
   updatedAt DateTime   @updatedAt
-  
-  name_en   String     @default("")
-  name_hi   String?
-  name_mr   String?
-
+  name      Json?    // {"en":"...","hi":"...","mr":"..."}
   cartItems CartItem[]
   product   Product    @relation(fields: [productId], references: [id], onDelete: Cascade)
 }
@@ -423,26 +348,17 @@ model Favorite {
 }
 
 model CTACard {
-  id            String   @id @default(cuid())
-  title         String?
-  points        String[]
-  icon          String
-  buttonText    String?
-  buttonLink    String
-  cardType      String
-  active        Boolean  @default(true)
-  order         Int      @default(0)
-  createdAt     DateTime @default(now())
-  updatedAt     DateTime @updatedAt
-  title_en      String?
-  title_hi      String?
-  title_mr      String?
-  points_en     String[] @default([])
-  points_hi     String[] @default([])
-  points_mr     String[] @default([])
-  buttonText_en String?
-  buttonText_hi String?
-  buttonText_mr String?
+  id         String   @id @default(cuid())
+  title      Json?            // {"en":"...","hi":"...","mr":"..."}
+  points     Json?            // {"en":[...],"hi":[...],"mr":[...]}
+  icon       String
+  buttonText Json?            // {"en":"...","hi":"...","mr":"..."}
+  buttonLink String
+  cardType   String
+  active     Boolean  @default(true)
+  order      Int      @default(0)
+  createdAt  DateTime @default(now())
+  updatedAt  DateTime @updatedAt
 }
 
 model PoojaBooking {
@@ -684,22 +600,22 @@ model Donation {
   user            User?    @relation(fields: [userId], references: [id])
 }
 
+model StandardFAQ {
+  id        String   @id @default(cuid())
+  question  Json
+  answer    Json
+  order     Int      @default(0)
+  isActive  Boolean  @default(true)
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+}
+
 model GlobalSetting {
   id        String   @id @default(cuid())
   key       String   @unique
   value     Json
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
-}
-
-model StandardFAQ {
-  id        String   @id
-  question  String
-  answer    String
-  order     Int      @default(0)
-  isActive  Boolean  @default(true)
-  createdAt DateTime @default(now())
-  updatedAt DateTime
 }
 
 enum SlabType {

@@ -1,32 +1,32 @@
 import { Request, Response } from "express";
 import { prisma } from "../../lib/prisma";
-import { localize } from "../../utils/localization";
+import { buildLangJson, getLang, localize } from "../../utils/localization";
 
 // Get All Pooja Categories (Admin)
 export const getAllPoojaCategoriesAdmin = async (req: Request, res: Response) => {
     try {
         const { status, search } = req.query;
-        const lang = (req.query.lang || req.headers['x-lang'] || 'en') as string;
 
         const where: any = {};
         if (status) {
             where.status = status;
         }
         if (search) {
-            where.name_en = { contains: search as string, mode: "insensitive" };
+            where.name = { path: ['en'], string_contains: search as string };
         }
 
         const categories = await prisma.poojaCategory.findMany({
-            where: where as any,
+            where: where,
             orderBy: { createdAt: "desc" }
         });
 
-        // Return raw data for admin so all language fields (name_en, name_hi, name_mr) are available for editing
+        // Return raw data for admin so all language fields are available for editing
         res.status(200).json({
             success: true,
             data: categories
         });
     } catch (error: any) {
+        console.error("Get All Pooja Categories Admin Error:", error);
         res.status(500).json({ success: false, message: error.message });
     }
 };
@@ -42,8 +42,11 @@ export const createPoojaCategory = async (req: Request, res: Response) => {
             return res.status(400).json({ success: false, message: "Category name is required" });
         }
 
+        // We use the English name as a slug for uniqueness checks
+        const nameSlug = final_name_en.toLowerCase().replace(/ /g, '-').replace(/[^\w-]+/g, '');
+
         const existing = await prisma.poojaCategory.findUnique({
-            where: { name_en: final_name_en }
+            where: { nameSlug }
         });
 
         if (existing) {
@@ -52,9 +55,8 @@ export const createPoojaCategory = async (req: Request, res: Response) => {
 
         const category = await prisma.poojaCategory.create({
             data: {
-                name_en: final_name_en,
-                name_hi: name_hi || null,
-                name_mr: name_mr || null,
+                name: buildLangJson(final_name_en, name_hi, name_mr),
+                nameSlug,
                 status
             }
         });
@@ -65,6 +67,7 @@ export const createPoojaCategory = async (req: Request, res: Response) => {
             data: category
         });
     } catch (error: any) {
+        console.error("Create Pooja Category Error:", error);
         res.status(500).json({ success: false, message: error.message });
     }
 };
@@ -74,14 +77,16 @@ export const updatePoojaCategory = async (req: Request, res: Response) => {
     try {
         const { id } = req.params;
         const { name_en, name_hi, name_mr } = req.body;
+        
+        const final_name_en = name_en || req.body.name;
+        const nameSlug = final_name_en ? final_name_en.toLowerCase().replace(/ /g, '-').replace(/[^\w-]+/g, '') : undefined;
 
         const category = await prisma.poojaCategory.update({
             where: { id: id as string },
             data: {
-                name_en: name_en || req.body.name,
-                name_hi,
-                name_mr
-            } as any
+                name: buildLangJson(final_name_en, name_hi, name_mr),
+                ...(nameSlug ? { nameSlug } : {})
+            }
         });
 
         res.status(200).json({
@@ -90,6 +95,7 @@ export const updatePoojaCategory = async (req: Request, res: Response) => {
             data: category
         });
     } catch (error: any) {
+        console.error("Update Pooja Category Error:", error);
         res.status(500).json({ success: false, message: error.message });
     }
 };
@@ -133,14 +139,14 @@ export const deletePoojaCategory = async (req: Request, res: Response) => {
 // Public/Temple: Get Approved Categories
 export const getApprovedPoojaCategories = async (req: Request, res: Response) => {
     try {
-        const lang = (req.query.lang || req.headers['x-lang'] || 'en') as string;
+        const lang = getLang(req);
 
         const categories = await prisma.poojaCategory.findMany({
-            where: { status: "APPROVED" } as any,
-            orderBy: { name_en: "asc" } as any
+            where: { status: "APPROVED" },
+            orderBy: { createdAt: "asc" }
         });
 
-        const localizedCategories = localize(categories as any[], lang);
+        const localizedCategories = localize(categories, lang);
 
         res.status(200).json({
             success: true,

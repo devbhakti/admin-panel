@@ -53,6 +53,7 @@ import {
 import { useToast } from "@/hooks/use-toast";
 import { useLanguage, Language } from "@/context/LanguageContext";
 import { createProductAdmin, fetchAllTemplesAdmin, fetchActiveCategoriesAdmin, fetchAllSellersAdmin } from "@/api/adminController";
+import { parseLocalizedValue } from "@/utils/textUtils";
 
 interface Variant {
   id: string;
@@ -420,7 +421,8 @@ export default function CreateProductPage() {
                 </Card>
               </div>
 
-              {lang === "en" && (
+              {/* Settings now available in all tabs per user request */}
+              
                 <>
                   <Card>
                     <CardHeader>
@@ -439,7 +441,7 @@ export default function CreateProductPage() {
                             </SelectTrigger>
                             <SelectContent>
                               {categories.map((category) => (
-                                <SelectItem key={category.id} value={category.id}>{category.name}</SelectItem>
+                                <SelectItem key={category.id} value={category.id}>{parseLocalizedValue(category.name, lang)}</SelectItem>
                               ))}
                             </SelectContent>
                           </Select>
@@ -482,7 +484,7 @@ export default function CreateProductPage() {
                                       <CommandItem key={vendor.id} value={vendor.searchText || vendor.name} onSelect={() => { setFormData({ ...formData, templeId: vendor.id }); setOpen(false); }}>
                                         <div className="flex items-center gap-2 w-full">
                                           {vendor.icon}
-                                          <span className="flex-1">{vendor.name}</span>
+                                          <span className="flex-1">{parseLocalizedValue(vendor.name, language)}</span>
                                           <span className="text-[10px] font-bold uppercase py-0.5 px-1 bg-slate-100 rounded text-slate-500">{vendor.role}</span>
                                           <Check className={cn("ml-2 h-4 w-4", formData.templeId === vendor.id ? "opacity-100" : "opacity-0")} />
                                         </div>
@@ -552,7 +554,6 @@ export default function CreateProductPage() {
                     </CardContent>
                   </Card>
                 </>
-              )}
 
               <Card>
                 <CardHeader>

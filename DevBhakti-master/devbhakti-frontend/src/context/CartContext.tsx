@@ -2,6 +2,7 @@
 
 import React, { createContext, useContext, useState, useEffect } from "react";
 import { getMyCart, addItemToCart, updateCartItemQuantity, removeCartItem, clearMyCart } from "@/api/cartController";
+import { useLanguage } from "./LanguageContext";
 
 export interface CartItem {
     productId: string;
@@ -29,6 +30,7 @@ const CartContext = createContext<CartContextType | undefined>(undefined);
 export const CartProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
     const [cartItems, setCartItems] = useState<CartItem[]>([]);
     const [isInitialized, setIsInitialized] = useState(false);
+    const { language } = useLanguage();
 
     const isLoggedIn = typeof window !== 'undefined' && !!localStorage.getItem("token");
 
@@ -58,7 +60,7 @@ export const CartProvider: React.FC<{ children: React.ReactNode }> = ({ children
 
     useEffect(() => {
         fetchCart();
-    }, []);
+    }, [language, isLoggedIn]);
 
     // Sync to LocalStorage for Guest Users ONLY
     useEffect(() => {

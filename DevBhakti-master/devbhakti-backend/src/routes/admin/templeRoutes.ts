@@ -2,6 +2,7 @@ import express from 'express';
 import multer from 'multer';
 import {
     getAllTemples,
+    getTempleById,
     createTemple,
     updateTemple,
     deleteTemple,
@@ -45,6 +46,7 @@ router.post('/update-requests/:id/reject', checkPermission('temples.verify'), re
 
 router.get('/categories', checkPermission('temples.view'), getTempleCategories);
 router.get('/', checkPermission('temples.view'), getAllTemples);
+router.get('/:id', checkPermission('temples.view'), getTempleById);
 router.post('/', checkPermission('temples.create'), templeUpload, createTemple);
 router.put('/:id', checkPermission('temples.edit'), templeUpload, updateTemple);
 router.patch('/:id/status', checkPermission('temples.edit'), toggleTempleStatus);

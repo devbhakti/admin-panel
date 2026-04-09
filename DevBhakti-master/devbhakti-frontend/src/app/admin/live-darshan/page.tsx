@@ -1,7 +1,7 @@
 "use client";
 
 import React, { useEffect, useState } from "react";
-import { Eye, Loader2, Radio, Video, Power, PowerOff, Star, Info } from "lucide-react";
+import { Eye, Loader2, Radio, Video, Power, PowerOff, Star, Info, Pencil } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Switch } from "@/components/ui/switch";
@@ -29,6 +29,8 @@ import {
   TooltipTrigger,
 } from "@/components/ui/tooltip";
 import { fetchAllTemplesAdmin, toggleTempleStatusAdmin, updateTempleLiveConfigAdmin, setPrimaryLiveAdmin } from "@/api/adminController";
+import { useLanguage } from "@/context/LanguageContext";
+import { getLocalized } from "@/utils/localization";
 
 const getEmbedUrl = (value: string) => {
   if (!value) return "";
@@ -51,16 +53,18 @@ const getEmbedUrl = (value: string) => {
 
 export default function AdminLiveDarshanPage() {
   const { toast } = useToast();
+  const { language } = useLanguage();
 
   const [loading, setLoading] = useState(true);
   const [temples, setTemples] = useState<any[]>([]);
   const [allTemples, setAllTemples] = useState<any[]>([]);
 
   const [selectedTemple, setSelectedTemple] = useState<any | null>(null);
-  const [editChannelId, setEditChannelId] = useState("");
   const [editLiveUrl, setEditLiveUrl] = useState("");
   const [savingConfig, setSavingConfig] = useState(false);
   const [isAddMode, setIsAddMode] = useState(false);
+  const [isEditMode, setIsEditMode] = useState(false);
+  const [isViewOnly, setIsViewOnly] = useState(false);
 
   useEffect(() => {
     const load = async () => {
@@ -102,7 +106,7 @@ export default function AdminLiveDarshanPage() {
     };
 
     load();
-  }, [toast]);
+  }, [toast, language]);
 
   const handleToggleAdminLive = async (entry: any) => {
     try {
@@ -182,8 +186,17 @@ export default function AdminLiveDarshanPage() {
 
   const openEditModal = (entry: any) => {
     setIsAddMode(false);
+    setIsEditMode(true);
+    setIsViewOnly(false);
     setSelectedTemple(entry);
-    setEditChannelId(entry.temple?.channelId || "");
+    setEditLiveUrl(entry.temple?.liveUrl || "");
+  };
+
+  const openViewModal = (entry: any) => {
+    setIsAddMode(false);
+    setIsEditMode(false);
+    setIsViewOnly(true);
+    setSelectedTemple(entry);
     setEditLiveUrl(entry.temple?.liveUrl || "");
   };
 
@@ -198,8 +211,9 @@ export default function AdminLiveDarshanPage() {
     }
     const entry = allTemples[0];
     setIsAddMode(true);
+    setIsEditMode(true);
+    setIsViewOnly(false);
     setSelectedTemple(entry);
-    setEditChannelId(entry.temple?.channelId || "");
     setEditLiveUrl(entry.temple?.liveUrl || "");
   };
 
@@ -207,13 +221,11 @@ export default function AdminLiveDarshanPage() {
     if (!selectedTemple) return;
     setSavingConfig(true);
     try {
-      const trimmedChannel = editChannelId.trim();
       const trimmedUrl = editLiveUrl.trim();
 
       // Admin add mode: mark temple live + visible by default
       if (isAddMode) {
         await updateTempleLiveConfigAdmin(selectedTemple.userId, {
-          channelId: trimmedChannel,
           liveUrl: trimmedUrl,
           isLive: true,
         });
@@ -225,7 +237,6 @@ export default function AdminLiveDarshanPage() {
         );
       } else {
         await updateTempleLiveConfigAdmin(selectedTemple.userId, {
-          channelId: trimmedChannel,
           liveUrl: trimmedUrl,
         });
       }
@@ -268,7 +279,7 @@ export default function AdminLiveDarshanPage() {
     }
   };
 
-  const previewEmbed = getEmbedUrl(editLiveUrl || editChannelId);
+  const previewEmbed = getEmbedUrl(editLiveUrl);
 
   return (
     <TooltipProvider>
@@ -297,7 +308,7 @@ export default function AdminLiveDarshanPage() {
               Live Temples ({temples.length})
             </CardTitle>
             <CardDescription className="text-xs">
-              The list only contains temples that have enabled Live toggle from their profile and provided a live URL / channel ID.
+              The list only contains temples that have enabled Live toggle from their profile and provided a live watch URL.
             </CardDescription>
           </CardHeader>
           <CardContent className="p-0">
@@ -326,24 +337,21 @@ export default function AdminLiveDarshanPage() {
                     <TableRow key={entry.userId}>
                       <TableCell>
                         <div className="flex flex-col gap-0.5">
-                          <span className="font-medium text-slate-900">{entry.temple?.name || "N/A"}</span>
-                          <span className="text-xs text-slate-600">{entry.temple?.location || "N/A"}</span>
+                          <span className="font-medium text-slate-900">{getLocalized(entry.temple, 'name', language) || "N/A"}</span>
+                          <span className="text-xs text-slate-600">{getLocalized(entry.temple, 'location', language) || "N/A"}</span>
                         </div>
                       </TableCell>
                       <TableCell>
                         <div className="flex flex-col gap-0.5 text-xs text-slate-700">
-                          <span>{entry.userName}</span>
+                          <span>{getLocalized(entry, 'userName', language)}</span>
                           <span className="text-slate-500">{entry.userEmail || entry.userPhone}</span>
                         </div>
                       </TableCell>
                       <TableCell>
                         <div className="flex flex-col gap-1 text-xs max-w-xs">
-                          <span className="text-slate-600 truncate">
-                            Channel: {entry.temple?.channelId || "—"}
-                          </span>
-                          <span className="text-slate-600 truncate">
-                            URL: {entry.temple?.liveUrl || "—"}
-                          </span>
+                           <span className="text-slate-600 truncate">
+                             URL: {entry.temple?.liveUrl || "—"}
+                           </span>
                         </div>
                       </TableCell>
                       <TableCell>
@@ -356,7 +364,7 @@ export default function AdminLiveDarshanPage() {
                           >
                             {entry.temple?.liveStatus ? (
                               <>
-                                <Power className="w-3 h-3" /> On Homepage
+                                <Power className="w-3 h-3" /> On Website
                               </>
                             ) : (
                               <>
@@ -414,10 +422,20 @@ export default function AdminLiveDarshanPage() {
                             variant="ghost"
                             size="icon"
                             className="h-8 w-8 text-slate-700"
-                            onClick={() => openEditModal(entry)}
-                            title="View & Edit Live Config"
+                            onClick={() => openViewModal(entry)}
+                            title="View Live Stream"
                           >
                             <Eye className="w-4 h-4" />
+                          </Button>
+
+                          <Button
+                            variant="ghost"
+                            size="icon"
+                            className="h-8 w-8 text-blue-600 hover:text-blue-700 hover:bg-blue-50"
+                            onClick={() => openEditModal(entry)}
+                            title="Edit Live Config"
+                          >
+                            <Pencil className="w-4 h-4" />
                           </Button>
                         </div>
                       </TableCell>
@@ -430,79 +448,72 @@ export default function AdminLiveDarshanPage() {
         </Card>
 
         <Dialog open={!!selectedTemple} onOpenChange={(open) => !open && setSelectedTemple(null)}>
-          <DialogContent className="max-w-3xl">
+          <DialogContent className={isViewOnly ? "max-w-2xl" : "max-w-4xl"}>
             <DialogHeader>
               <DialogTitle className="flex flex-col gap-1">
-                Live Config – {selectedTemple?.temple?.name}
+                {isViewOnly ? "View Live Stream" : isAddMode ? "Add Live Darshan" : "Edit Live Config"} – {getLocalized(selectedTemple?.temple, 'name', language)}
                 <span className="text-xs font-normal text-slate-500">
-                  {selectedTemple?.temple?.location}
+                  {getLocalized(selectedTemple?.temple, 'location', language)}
                 </span>
               </DialogTitle>
             </DialogHeader>
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-6 pt-2">
-              <div className="space-y-4">
-                {isAddMode && (
-                  <div className="space-y-2">
-                    <Label className="text-slate-700 text-xs">Temple</Label>
-                    <select
-                      value={selectedTemple?.userId || ""}
-                      onChange={(e) => {
-                        const entry = allTemples.find((t) => t.userId === e.target.value);
-                        if (!entry) return;
-                        setSelectedTemple(entry);
-                        setEditChannelId(entry.temple?.channelId || "");
-                        setEditLiveUrl(entry.temple?.liveUrl || "");
-                      }}
-                      className="w-full h-9 rounded-md border border-slate-200 bg-white px-2 text-sm"
-                    >
-                      {allTemples.map((entry) => (
-                        <option key={entry.userId} value={entry.userId}>
-                          {entry.temple?.name || "Untitled Temple"}
-                        </option>
-                      ))}
-                    </select>
-                  </div>
-                )}
+            <div className={`grid grid-cols-1 ${isViewOnly ? "" : "md:grid-cols-2"} gap-6 pt-2`}>
+              {!isViewOnly && (
+                <div className="space-y-4">
+                  {isAddMode && (
+                    <div className="space-y-2">
+                      <Label className="text-slate-700 text-xs">Temple</Label>
+                      <select
+                        value={selectedTemple?.userId || ""}
+                        onChange={(e) => {
+                          const entry = allTemples.find((t) => t.userId === e.target.value);
+                          if (!entry) return;
+                          setSelectedTemple(entry);
+                          setEditLiveUrl(entry.temple?.liveUrl || "");
+                        }}
+                        className="w-full h-9 rounded-md border border-slate-200 bg-white px-2 text-sm"
+                      >
+                        {allTemples.map((entry) => (
+                          <option key={entry.userId} value={entry.userId}>
+                            {getLocalized(entry.temple, 'name', language) || "Untitled Temple"}
+                          </option>
+                        ))}
+                      </select>
+                    </div>
+                  )}
 
-                <div className="space-y-2">
-                  <Label className="text-slate-700 text-xs">YouTube Channel ID</Label>
-                  <Input
-                    value={editChannelId}
-                    onChange={(e) => setEditChannelId(e.target.value)}
-                    placeholder="UC..."
-                    className="h-9 text-sm"
-                  />
+                  <div className="space-y-2">
+                    <Label className="text-slate-700 text-xs">Watch URL</Label>
+                    <Input
+                      value={editLiveUrl}
+                      onChange={(e) => setEditLiveUrl(e.target.value)}
+                      placeholder="https://www.youtube.com/watch?v=..."
+                      className="h-9 text-sm"
+                    />
+                  </div>
+                  <p className="text-[11px] text-slate-500">
+                    The temple can also change these values from their panel. You can correct them here in case of emergency.
+                  </p>
+                  <div className="flex justify-end gap-2 pt-2">
+                    <Button
+                      variant="outline"
+                      size="sm"
+                      onClick={() => setSelectedTemple(null)}
+                    >
+                      Cancel
+                    </Button>
+                    <Button
+                      size="sm"
+                      onClick={handleSaveConfig}
+                      disabled={savingConfig}
+                    >
+                      {savingConfig && <Loader2 className="w-3 h-3 mr-2 animate-spin" />}
+                      Save
+                    </Button>
+                  </div>
                 </div>
-                <div className="space-y-2">
-                  <Label className="text-slate-700 text-xs">Watch URL</Label>
-                  <Input
-                    value={editLiveUrl}
-                    onChange={(e) => setEditLiveUrl(e.target.value)}
-                    placeholder="https://www.youtube.com/watch?v=..."
-                    className="h-9 text-sm"
-                  />
-                </div>
-                <p className="text-[11px] text-slate-500">
-                  The temple can also change these values from their panel. You can correct them here in case of emergency.
-                </p>
-                <div className="flex justify-end gap-2 pt-2">
-                  <Button
-                    variant="outline"
-                    size="sm"
-                    onClick={() => setSelectedTemple(null)}
-                  >
-                    Cancel
-                  </Button>
-                  <Button
-                    size="sm"
-                    onClick={handleSaveConfig}
-                    disabled={savingConfig}
-                  >
-                    {savingConfig && <Loader2 className="w-3 h-3 mr-2 animate-spin" />}
-                    Save
-                  </Button>
-                </div>
-              </div>
+              )}
+
               <div className="space-y-3">
                 <Label className="text-slate-700 text-xs">Preview</Label>
                 {previewEmbed ? (
@@ -518,7 +529,7 @@ export default function AdminLiveDarshanPage() {
                   </div>
                 ) : (
                   <div className="aspect-video w-full rounded-lg border border-dashed border-slate-200 bg-slate-50 flex items-center justify-center text-xs text-slate-400 text-center px-4">
-                    Enter Channel ID or URL for preview.
+                    Enter Watch URL for preview.
                   </div>
                 )}
                 <p className="text-[11px] text-slate-500">

@@ -1,48 +1,146 @@
 /**
- * Utility to localize Prisma models with _en, _hi, _mr columns.
+ * JSON-based Multi-language Localization Utility
+ * 
+ * DB Storage format:
+ *   name = {"en": "Shri Ram Mandir", "hi": "श्री राम मंदिर", "mr": "श्री राम मंदिर"}
+ * 
+ * Usage:
+ *   localize(temple, 'hi') → { name: "श्री राम मंदिर", ... }
+ * 
+ * Supported langs: 'en' | 'hi' | 'mr'
+ * Fallback: English if requested lang is missing
  */
 
+export type SupportedLang = 'en' | 'hi' | 'mr' | 'raw';
+
+export const getLang = (req: any): SupportedLang => {
+  let lang = (req.query.lang as string) ||
+    (req.headers['lang'] as string) ||
+    (req.headers['x-lang'] as string) ||
+    (req.headers['accept-language'] as string) ||
+    'en';
+
+  // Extract primary lang (e.g., 'hi-IN' -> 'hi' or 'hi, en-US' -> 'hi')
+  if (lang.includes(',')) lang = lang.split(',')[0];
+  if (lang.includes('-')) lang = lang.split('-')[0];
+  lang = lang.trim().toLowerCase();
+
+  return (['en', 'hi', 'mr', 'raw'].includes(lang) ? lang : 'en') as SupportedLang;
+};
+
+/**
+ * Check if a value is a multilingual JSON object
+ * e.g. { en: "...", hi: "...", mr: "..." }
+ */
+const isLangObject = (value: any): boolean => {
+  if (!value || typeof value !== 'object' || Array.isArray(value)) return false;
+  return 'en' in value || 'hi' in value || 'mr' in value;
+};
+
+/**
+ * Localize a single object or array of objects.
+ * Extracts the selected language from all JSON lang fields.
+ * Falls back to English if selected lang is not available.
+ */
 export const localize = <T extends Record<string, any>>(
   data: T | T[],
   lang: string = 'en'
 ): any => {
   if (!data) return data;
+  
+  if (lang === 'raw') return data;
+
+  // Normalize lang — only allow en, hi, mr
+  const safeLang: SupportedLang = (['en', 'hi', 'mr'].includes(lang) ? lang : 'en') as SupportedLang;
 
   if (Array.isArray(data)) {
-    return data.map((item) => localize(item, lang));
+    return data.map((item) => localize(item, safeLang));
   }
 
-  const localized: any = { ...data };
-  const keys = Object.keys(data);
-  const suffix = `_${lang}`;
+  const result: any = {};
 
-  // Find all base field names (e.g., if "name_en" exists, base is "name")
-  const baseFields = new Set<string>();
-  keys.forEach((key) => {
-    if (key.endsWith('_en')) {
-      baseFields.add(key.replace('_en', ''));
+  for (const [key, value] of Object.entries(data)) {
+    if (isLangObject(value)) {
+      // This is a multilingual field → pick selected lang, fallback to 'en'
+      const langVal = (value as any)[safeLang];
+      const enVal = (value as any)['en'];
+      result[key] = (langVal !== undefined && langVal !== null && langVal !== '')
+        ? langVal
+        : enVal ?? null;
+    } else if (Array.isArray(value)) {
+      // Array of values
+      result[key] = value.map(item => {
+        if (item instanceof Date) return item;
+        if (item && typeof item === 'object' && !Array.isArray(item)) {
+          // Array of objects (e.g., packages, faqs) → recurse
+          return localize(item, safeLang);
+        }
+        return item; // Array of primitives → keep as-is
+      });
+    } else if (value instanceof Date) {
+      // Date object → keep as-is
+      result[key] = value;
+    } else if (value && typeof value === 'object' && !Array.isArray(value)) {
+      // Nested object (e.g., temple.poojas[0].temple) → recurse
+      result[key] = localize(value, safeLang);
+    } else {
+      // Primitive value (string/number/boolean) → keep as-is
+      result[key] = value;
     }
-  });
+  }
 
-  baseFields.forEach((field) => {
-    const valEn = data[`${field}_en`];
-    const valHi = data[`${field}_hi`];
-    const valMr = data[`${field}_mr`];
+  return result;
+};
 
-    // Pick requested language, fallback to English
-    let selectedValue = data[`${field}${suffix}`];
-    
-    if (!selectedValue || (Array.isArray(selectedValue) && selectedValue.length === 0)) {
-      selectedValue = valEn;
-    }
+/**
+ * Helper: Build a multilingual JSON object from separate language inputs.
+ * Used in controllers when saving data.
+ * 
+ * Example:
+ *   buildLangJson("Shri Ram Mandir", "श्री राम मंदिर", "श्री राम मंदिर")
+ *   → { en: "Shri Ram Mandir", hi: "श्री राम मंदिर", mr: "श्री राम मंदिर" }
+ */
+export const buildLangJson = (
+  en: any,
+  hi?: any,
+  mr?: any
+): any => {
+  return {
+    en: en ?? null,
+    hi: hi ?? null,
+    mr: mr ?? null,
+  };
+};
 
-    localized[field] = selectedValue;
+/**
+ * Helper: Build a multilingual JSON for array fields (benefits, bullets, description).
+ * 
+ * Example:
+ *   buildLangArray(["benefit1"], ["लाभ1"], ["फायदा1"])
+ *   → { en: ["benefit1"], hi: ["लाभ1"], mr: ["फायदा1"] }
+ */
+export const buildLangArray = (
+  en: any[],
+  hi?: any[],
+  mr?: any[]
+): { en: any[]; hi: any[]; mr: any[] } => {
+  return {
+    en: en ?? [],
+    hi: hi ?? [],
+    mr: mr ?? [],
+  };
+};
 
-    // Optional: Remove the individual language fields to keep response clean
-    delete localized[`${field}_en`];
-    delete localized[`${field}_hi`];
-    delete localized[`${field}_mr`];
-  });
-
-  return localized;
+/**
+ * Helper: Get English text from a lang JSON field.
+ * Used in places where English is always needed (Shiprocket, email, notifications).
+ * 
+ * Example:
+ *   getEnglish(temple.name) → "Shri Ram Mandir"
+ */
+export const getEnglish = (field: any): string => {
+  if (!field) return '';
+  if (typeof field === 'string') return field;
+  if (isLangObject(field)) return (field as any).en ?? '';
+  return '';
 };

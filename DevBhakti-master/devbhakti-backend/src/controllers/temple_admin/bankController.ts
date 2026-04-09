@@ -1,6 +1,7 @@
 import { Request, Response } from 'express';
 import { prisma } from '../../lib/prisma';
 import { notifyAdmins } from '../../services/firebaseService';
+import { getEnglish } from '../../utils/localization';
 
 export const getBankDetails = async (req: Request, res: Response) => {
     try {
@@ -97,7 +98,7 @@ export const updateBankDetails = async (req: Request, res: Response) => {
 
         await notifyAdmins({
             title: "Temple Bank Detail Update",
-            body: `${temple.name_en || 'A Temple'} has submitted bank details for verification.`,
+            body: `${getEnglish(temple.name) || 'A Temple'} has submitted bank details for verification.`,
             data: {
                 link: '/admin/temples/update-requests',
                 type: 'TEMPLE_UPDATE'

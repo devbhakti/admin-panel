@@ -60,6 +60,7 @@ import {
   fetchActiveCategoriesAdmin,
   fetchAllSellersAdmin,
 } from "@/api/adminController";
+import { parseLocalizedValue } from "@/utils/textUtils";
 
 interface Variant {
   id: string;
@@ -183,21 +184,21 @@ export default function EditProductPage() {
     try {
       const data = await fetchProductByIdAdmin(id);
       setFormData({
-        name_en: data.name_en || data.name || "",
-        name_hi: data.name_hi || "",
-        name_mr: data.name_mr || "",
-        description_en: data.description_en || data.description || "",
-        description_hi: data.description_hi || "",
-        description_mr: data.description_mr || "",
-        highlights_en: data.highlights_en || data.highlights || "",
-        highlights_hi: data.highlights_hi || "",
-        highlights_mr: data.highlights_mr || "",
-        shippingInfo_en: data.shippingInfo_en || data.shippingInfo || "Ships in 24-48 Hours",
-        shippingInfo_hi: data.shippingInfo_hi || "",
-        shippingInfo_mr: data.shippingInfo_mr || "",
-        origin_en: data.origin_en || data.origin || "India",
-        origin_hi: data.origin_hi || "",
-        origin_mr: data.origin_mr || "",
+        name_en: data.name?.en || data.name_en || "",
+        name_hi: data.name?.hi || data.name_hi || "",
+        name_mr: data.name?.mr || data.name_mr || "",
+        description_en: data.description?.en || data.description_en || "",
+        description_hi: data.description?.hi || data.description_hi || "",
+        description_mr: data.description?.mr || data.description_mr || "",
+        highlights_en: data.highlights?.en || data.highlights_en || "",
+        highlights_hi: data.highlights?.hi || data.highlights_hi || "",
+        highlights_mr: data.highlights?.mr || data.highlights_mr || "",
+        shippingInfo_en: data.shippingInfo?.en || data.shippingInfo_en || "Ships in 24-48 Hours",
+        shippingInfo_hi: data.shippingInfo?.hi || data.shippingInfo_hi || "",
+        shippingInfo_mr: data.shippingInfo?.mr || data.shippingInfo_mr || "",
+        origin_en: data.origin?.en || data.origin_en || "India",
+        origin_hi: data.origin?.hi || data.origin_hi || "",
+        origin_mr: data.origin?.mr || data.origin_mr || "",
         category: data.categoryId || "",
         templeId: data.templeId || data.sellerId || "general",
         status: data.status,
@@ -210,9 +211,9 @@ export default function EditProductPage() {
       setVariants(
         (data.variants || []).map((v: any) => ({
           id: v.id,
-          name_en: v.name_en || v.name || "",
-          name_hi: v.name_hi || "",
-          name_mr: v.name_mr || "",
+          name_en: v.name?.en || v.name_en || "",
+          name_hi: v.name?.hi || v.name_hi || "",
+          name_mr: v.name?.mr || v.name_mr || "",
           price: v.price,
           stock: v.stock,
           image: v.image,
@@ -466,8 +467,8 @@ export default function EditProductPage() {
                 </Card>
               </div>
 
-              {/* Global Settings — English tab only */}
-              {lang === "en" && (
+              {/* Settings now available in all tabs per user request */}
+              
                 <>
                   <Card>
                     <CardHeader>
@@ -487,7 +488,7 @@ export default function EditProductPage() {
                             </SelectTrigger>
                             <SelectContent>
                               {categories.map((c) => (
-                                <SelectItem key={c.id} value={c.id}>{c.name}</SelectItem>
+                                <SelectItem key={c.id} value={c.id}>{parseLocalizedValue(c.name, lang)}</SelectItem>
                               ))}
                             </SelectContent>
                           </Select>
@@ -627,15 +628,11 @@ export default function EditProductPage() {
                             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                               <div className="space-y-2">
                                 <Label>{t("admin.products.variant_name")} {lang === "en" && <span className="text-red-500">*</span>}</Label>
-                                <Input value={variant.name_en} onChange={(e) => updateVariant(variant.id, "name_en", e.target.value)} placeholder="e.g., Small, Red, 100ml" />
-                              </div>
-                              <div className="space-y-2">
-                                <Label>{t("admin.products.variant_name_hi")}</Label>
-                                <Input value={variant.name_hi} onChange={(e) => updateVariant(variant.id, "name_hi", e.target.value)} placeholder="हिंदी में नाम" />
-                              </div>
-                              <div className="space-y-2">
-                                <Label>{t("admin.products.variant_name_mr")}</Label>
-                                <Input value={variant.name_mr} onChange={(e) => updateVariant(variant.id, "name_mr", e.target.value)} placeholder="मराठी मध्ये नाव" />
+                                <Input 
+                                  value={variant[f("name", lang) as keyof Variant] as string} 
+                                  onChange={(e) => updateVariant(variant.id, f("name", lang) as "name_en" | "name_hi" | "name_mr", e.target.value)} 
+                                  placeholder={lang === "en" ? "e.g., Small, Red, 100ml" : `${t("admin.products.variant_name")}...`} 
+                                />
                               </div>
                               <div className="space-y-2">
                                 <Label>{t("admin.products.variant_image")}</Label>
@@ -675,13 +672,7 @@ export default function EditProductPage() {
                     </CardContent>
                   </Card>
                 </>
-              )}
-
-              {lang !== "en" && (
-                <div className="text-center py-4 text-sm text-muted-foreground bg-slate-50 rounded-xl border border-dashed">
-                  💡 {t("admin.products.category")}, {t("admin.products.image")}, and {t("admin.products.dimensions")} {t("admin.products.managed_from_en")}
-                </div>
-              )}
+              
             </TabsContent>
           ))}
 

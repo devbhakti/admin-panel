@@ -77,6 +77,7 @@ import { BASE_URL, API_URL } from "@/config/apiConfig";
 import { useDebounce } from "@/hooks/use-debounce";
 import axios from "axios";
 import { useLanguage } from "@/context/LanguageContext";
+import { parseLocalizedValue } from "@/utils/textUtils";
 
 function AdminOrdersContent() {
     const searchParams = useSearchParams();
@@ -102,7 +103,7 @@ function AdminOrdersContent() {
 
     const getLocalizedName = (item: any) => {
         if (!item) return "";
-        return item[`name_${language}`] || item.name_en || item.name || "";
+        return parseLocalizedValue(item.name || item, language);
     };
 
     const getStatusText = (status: string) => {
@@ -467,7 +468,7 @@ function AdminOrdersContent() {
                                 </TableCell>
                                 <TableCell>
                                     <div className="flex flex-col">
-                                        <span className="font-bold text-slate-900">{order.user?.name || "Devotee"}</span>
+                                        <span className="font-bold text-slate-900">{parseLocalizedValue(order.user?.name, language) || "Devotee"}</span>
                                         <span className="text-xs font-bold text-slate-600">{order.user?.phone}</span>
                                     </div>
                                 </TableCell>
@@ -546,7 +547,7 @@ function AdminOrdersContent() {
                                         <div className="space-y-3">
                                             <div className="flex justify-between">
                                                 <span className="text-slate-600 font-bold">{t("admin.products.orders.table_devotee")}</span>
-                                                <span className="text-slate-900 font-extrabold">{selectedOrder.user?.name}</span>
+                                                <span className="text-slate-900 font-extrabold">{parseLocalizedValue(selectedOrder.user?.name, language)}</span>
                                             </div>
                                             <div className="flex justify-between">
                                                 <span className="text-slate-600 font-bold">Phone</span>

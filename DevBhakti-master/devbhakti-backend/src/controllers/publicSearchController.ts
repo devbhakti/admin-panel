@@ -1,23 +1,22 @@
 import { Request, Response } from "express";
 import { prisma } from "../lib/prisma";
-import { localize } from "../utils/localization";
+import { localize, getLang } from "../utils/localization";
 
 export const searchGlobal = async (req: Request, res: Response) => {
     try {
         const { query } = req.query;
-        const lang = (req.headers['x-lang'] as string) || (req.query.lang as string) || 'en';
+        const lang = getLang(req);
         const searchQuery = typeof query === "string" ? query.trim() : "";
 
-        // If no query, prioritize showing Temples by default
         const [temples, poojas, products] = await Promise.all([
-            // Search Temples
+            // Search Temples — JSON path query
             prisma.temple.findMany({
                 where: (searchQuery ? {
                     OR: [
-                        { name_en: { contains: searchQuery, mode: "insensitive" } },
-                        { location_en: { contains: searchQuery, mode: "insensitive" } },
-                        { category_en: { contains: searchQuery, mode: "insensitive" } },
-                        { description_en: { contains: searchQuery, mode: "insensitive" } }
+                        { name: { path: ['en'], string_contains: searchQuery } },
+                        { name: { path: ['hi'], string_contains: searchQuery } },
+                        { location: { path: ['en'], string_contains: searchQuery } },
+                        { category: { path: ['en'], string_contains: searchQuery } },
                     ],
                     isActive: true,
                     user: { isVerified: true }
@@ -27,65 +26,64 @@ export const searchGlobal = async (req: Request, res: Response) => {
                 }) as any,
                 select: {
                     id: true,
-                    name_en: true, name_hi: true, name_mr: true,
-                    location_en: true, location_hi: true, location_mr: true,
+                    name: true,
+                    location: true,
                     image: true,
-                    category_en: true, category_hi: true, category_mr: true
-                } as any,
-                take: searchQuery ? 20 : 6, // Fetch more for ranking
+                    category: true
+                },
+                take: searchQuery ? 20 : 6,
                 orderBy: { createdAt: "desc" }
             }),
 
-            // Search Poojas (only if searching)
+            // Search Poojas
             searchQuery ? prisma.pooja.findMany({
                 where: {
                     OR: [
-                        { name_en: { contains: searchQuery, mode: "insensitive" } },
-                        { category_en: { contains: searchQuery, mode: "insensitive" } },
-                        { about_en: { contains: searchQuery, mode: "insensitive" } }
+                        { name: { path: ['en'], string_contains: searchQuery } },
+                        { name: { path: ['hi'], string_contains: searchQuery } },
+                        { category: { path: ['en'], string_contains: searchQuery } },
+                        { about: { path: ['en'], string_contains: searchQuery } }
                     ],
                     status: true
                 } as any,
                 select: {
                     id: true,
-                    name_en: true, name_hi: true, name_mr: true,
+                    name: true,
                     image: true,
-                    category_en: true, category_hi: true, category_mr: true,
+                    category: true,
                     temple: {
-                        select: {
-                            name_en: true, name_hi: true, name_mr: true
-                        }
+                        select: { name: true }
                     }
-                } as any,
+                },
                 take: 20
             }) : Promise.resolve([]),
 
-            // Search Products (only if searching)
+            // Search Products
             searchQuery ? prisma.product.findMany({
                 where: {
                     OR: [
-                        { name_en: { contains: searchQuery, mode: "insensitive" } },
-                        { category_en: { contains: searchQuery, mode: "insensitive" } },
-                        { description_en: { contains: searchQuery, mode: "insensitive" } }
+                        { name: { path: ['en'], string_contains: searchQuery } },
+                        { name: { path: ['hi'], string_contains: searchQuery } },
+                        { category: { path: ['en'], string_contains: searchQuery } },
+                        { description: { path: ['en'], string_contains: searchQuery } }
                     ],
                     status: "approved"
                 } as any,
                 select: {
                     id: true,
-                    name_en: true, name_hi: true, name_mr: true,
+                    name: true,
                     image: true,
-                    category_en: true, category_hi: true, category_mr: true
-                } as any,
+                    category: true
+                },
                 take: 20
             }) : Promise.resolve([])
         ]);
 
-        // Localize results
+        // Localize results — JSON fields → selected lang
         const locTemples = localize(temples, lang);
         const locPoojas = localize(poojas, lang);
         const locProducts = localize(products, lang);
 
-        // Unify results
         let unifiedResults = [
             ...(locTemples as any[]).map((t: any) => ({
                 id: t.id,
@@ -116,27 +114,16 @@ export const searchGlobal = async (req: Request, res: Response) => {
         if (searchQuery) {
             const lowQuery = searchQuery.toLowerCase();
             unifiedResults.sort((a, b) => {
-                const titleA = a.title.toLowerCase();
-                const titleB = b.title.toLowerCase();
-
-                // Exact match priority (case-insensitive)
+                const titleA = (a.title || '').toLowerCase();
+                const titleB = (b.title || '').toLowerCase();
                 if (titleA === lowQuery && titleB !== lowQuery) return -1;
                 if (titleB === lowQuery && titleA !== lowQuery) return 1;
-
-                // Starts with match priority
                 if (titleA.startsWith(lowQuery) && !titleB.startsWith(lowQuery)) return -1;
                 if (titleB.startsWith(lowQuery) && !titleA.startsWith(lowQuery)) return 1;
-
-                // Title containment priority
-                const aInTitle = titleA.includes(lowQuery);
-                const bInTitle = titleB.includes(lowQuery);
-                if (aInTitle && !bInTitle) return -1;
-                if (bInTitle && !aInTitle) return 1;
-
-                return 0; // Keep original order (usually createdAt) for other matches
+                if (titleA.includes(lowQuery) && !titleB.includes(lowQuery)) return -1;
+                if (titleB.includes(lowQuery) && !titleA.includes(lowQuery)) return 1;
+                return 0;
             });
-
-            // After ranking, take the top 12 or 15
             unifiedResults = unifiedResults.slice(0, 15);
         }
 

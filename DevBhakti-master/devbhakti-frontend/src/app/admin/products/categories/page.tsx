@@ -35,6 +35,7 @@ import { useToast } from "@/hooks/use-toast";
 import { BASE_URL } from "@/config/apiConfig";
 import { useAdminAuth } from "@/hooks/use-admin-auth";
 import { useLanguage } from "@/context/LanguageContext";
+import { parseLocalizedValue } from "@/utils/textUtils";
 
 
 import {
@@ -65,7 +66,7 @@ export default function CategoriesManagementPage() {
 
   const getLocalizedName = (item: any) => {
     if (!item) return "";
-    return item[`name_${language}`] || item.name_en || item.name || "";
+    return parseLocalizedValue(item.name, language);
   };
 
 
@@ -161,11 +162,21 @@ export default function CategoriesManagementPage() {
     );
   };
 
-  const filteredCategories = categories.filter(
-    (category) =>
-      category.name?.toLowerCase().includes(searchTerm.toLowerCase()) ||
-      category.description?.toLowerCase().includes(searchTerm.toLowerCase())
-  );
+  const filteredCategories = categories.filter(category => {
+    const s = searchTerm.toLowerCase();
+    const matchesField = (field: any) => {
+      if (!field) return false;
+      if (typeof field === 'string') return field.toLowerCase().includes(s);
+      if (typeof field === 'object') {
+        return (field.en?.toLowerCase().includes(s) || 
+                field.hi?.toLowerCase().includes(s) || 
+                field.mr?.toLowerCase().includes(s));
+      }
+      return false;
+    };
+
+    return matchesField(category.name) || matchesField(category.description);
+  });
 
   return (
     <div className="space-y-6">
@@ -253,7 +264,7 @@ export default function CategoriesManagementPage() {
                     </TableCell>
                     <TableCell>
                       <Badge variant="outline" className="bg-blue-50 text-blue-700 border-blue-200">
-                        {category._count.products} {t("admin.products.list.table_products") || "products"}
+                        {category._count.products} {t("admin.products.categories.table_products") === "admin.products.categories.table_products" ? "products" : t("admin.products.categories.table_products")}
                       </Badge>
                     </TableCell>
                     <TableCell>

@@ -2,6 +2,7 @@ import { Request, Response } from "express";
 import { prisma } from "../../lib/prisma";
 import { createShiprocketPickupLocation } from "../../services/shiprocketService";
 import { notifyAdmins } from "../../services/firebaseService";
+import { getLang, localize, buildLangJson } from "../../utils/localization";
 
 const getFilePath = (files: any, fieldName: string) => {
     if (files && files[fieldName] && files[fieldName][0]) {
@@ -60,11 +61,12 @@ export const getSellerProfile = async (req: Request, res: Response) => {
             orderBy: { createdAt: 'desc' }
         });
 
+        const lang = getLang(req);
         console.log(`Seller profile found: ${store.id}`);
         return res.status(200).json({
             success: true,
             data: {
-                ...store,
+                ...localize(store, lang),
                 verificationPending: !!pendingRequest,
                 pendingData: pendingRequest ? pendingRequest.requestedData : null
             }
@@ -143,15 +145,20 @@ export const updateSellerProfile = async (req: Request, res: Response) => {
         // Check textual fields
         fieldsToCheck.forEach(key => {
             const newValue = data[key];
-            const oldValue = (store as any)[key];
+            if (newValue !== undefined) {
+                const isJsonField = ['name', 'location', 'fullAddress', 'description', 'category'].includes(key);
+                const oldValueStr = isJsonField ? String((store as any)[key]?.en || '') : String((store as any)[key] || '');
+                const newValueStr = String(newValue || '');
 
-            if (newValue !== undefined && newValue !== oldValue) {
-                if (sensitiveFields.includes(key)) {
-                    sensitiveChanges[key] = newValue;
-                    oldSensitiveData[key] = oldValue;
-                    hasSensitiveChanges = true;
-                } else {
-                    updateData[key] = newValue;
+                if (newValueStr !== oldValueStr) {
+                    const finalValue = isJsonField ? buildLangJson(newValueStr, data[`${key}_hi`], data[`${key}_mr`]) : newValue;
+                    if (sensitiveFields.includes(key)) {
+                        sensitiveChanges[key] = finalValue;
+                        oldSensitiveData[key] = (store as any)[key];
+                        hasSensitiveChanges = true;
+                    } else {
+                        updateData[key] = finalValue;
+                    }
                 }
             }
         });
@@ -185,7 +192,7 @@ export const updateSellerProfile = async (req: Request, res: Response) => {
             // Notify Admins
             await notifyAdmins({
                 title: "Seller Bank/Profile Update",
-                body: `${store.name || 'A Seller'} has updated sensitive details (Bank/Profile) requiring verification.`,
+                body: `${localize(store, 'en').name || 'A Seller'} has updated sensitive details (Bank/Profile) requiring verification.`,
                 data: {
                     link: '/admin/sellers',
                     type: 'SELLER_UPDATE'

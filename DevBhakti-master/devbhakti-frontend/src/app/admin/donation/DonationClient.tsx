@@ -45,6 +45,7 @@ import {
 import { useDebounce } from "@/hooks/use-debounce";
 
 import { API_URL } from "@/config/apiConfig";
+import { parseLocalizedValue } from "@/utils/textUtils";
 import { generateReceiptHTML } from "@/utils/donationReceipt";
 import { Download } from "lucide-react";
 import axios from "axios";
@@ -425,7 +426,7 @@ export default function DonationClient() {
                                                         {donation.isAnonymous ? "?" : donation.donorName.split(' ')[0][0]}
                                                     </div>
                                                     <div>
-                                                        <p className="font-bold text-foreground group-hover:text-primary transition-colors">{donation.donorName}</p>
+                                                        <p className="font-bold text-foreground group-hover:text-primary transition-colors">{parseLocalizedValue(donation.donorName)}</p>
                                                         {donation.isAnonymous && <span className="text-[10px] bg-slate-100 px-1.5 py-0.5 rounded uppercase font-black text-slate-400 tracking-tighter">Anonymous</span>}
                                                     </div>
                                                 </div>
@@ -611,7 +612,7 @@ export default function DonationClient() {
                                             <div className="space-y-2">
                                                 <p className="text-slate-800 font-bold flex items-center gap-2">
                                                     <User className="w-4 h-4 text-[#7c4624]" />
-                                                    {selectedDonation.donorName}
+                                                    {parseLocalizedValue(selectedDonation.donorName)}
                                                 </p>
                                                 {!selectedDonation.isAnonymous && (
                                                     <>

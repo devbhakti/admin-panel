@@ -32,6 +32,7 @@ import {
 } from "@/components/ui/dropdown-menu";
 import { fetchAllUsersAdmin, downloadUsersExcelAdmin, downloadUsersAiSensyCSVAdmin, toggleUserStatusAdmin, bulkToggleUserStatusAdmin, sendBulkWhatsAppAdmin } from "@/api/adminController";
 import { toast } from "sonner"; // Assuming sonner is used for notifications
+import { parseLocalizedValue } from "@/utils/textUtils";
 
 import {
     Pagination,
@@ -638,16 +639,16 @@ export default function AdminUsersPage() {
                                                     {user.profileImage ? (
                                                         <img
                                                             src={user.profileImage}
-                                                            alt={user.name}
+                                                            alt={parseLocalizedValue(user.name)}
                                                             className="w-10 h-10 rounded-full object-cover shadow-sm border border-slate-100"
                                                         />
                                                     ) : (
                                                         <div className="w-10 h-10 rounded-full bg-primary/10 flex items-center justify-center text-primary font-bold text-xs border border-primary/20">
-                                                            {formatAvatar(user.name || "User")}
+                                                            {formatAvatar(parseLocalizedValue(user.name))}
                                                         </div>
                                                     )}
                                                     <div>
-                                                        <p className="font-bold text-slate-900 leading-none">{user.name || "N/A"}</p>
+                                                        <p className="font-bold text-slate-900 leading-none">{parseLocalizedValue(user.name)}</p>
                                                         <p className="text-[10px] text-muted-foreground mt-1 uppercase tracking-tighter font-bold">UID: {user.id.substring(user.id.length - 6)}</p>
                                                     </div>
                                                 </div>

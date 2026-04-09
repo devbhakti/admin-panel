@@ -1,16 +1,25 @@
 import { Request, Response } from 'express';
 import { prisma } from '../../lib/prisma';
+import { buildLangJson, buildLangArray, getLang, localize } from '../../utils/localization';
+
+const safeParse = (val: any, fallback: any = []) => {
+    if (!val) return fallback;
+    if (typeof val === 'object') return val;
+    try { return JSON.parse(val); } catch { return fallback; }
+};
 
 // Banner Controllers
 export const getBanners = async (req: Request, res: Response) => {
     try {
+        const lang = getLang(req);
         const banners = await prisma.banner.findMany({
             where: {
-                NOT: { id: "GLOBAL_SECTION_toggle" }
+                NOT: { id: "GLOBAL_SECTION_toggle" },
+                ...(lang !== 'raw' ? { active: true } : {})
             },
             orderBy: { createdAt: 'asc' }
         });
-        res.json({ success: true, data: banners });
+        res.json({ success: true, data: localize(banners, lang) });
     } catch (error) {
         console.error('Error fetching banners:', error);
         res.status(500).json({ success: false, message: 'Error fetching banners' });
@@ -20,21 +29,19 @@ export const getBanners = async (req: Request, res: Response) => {
 
 export const createBanner = async (req: Request, res: Response) => {
     try {
-        const { link, active, order } = req.body;
+        const { active, order } = req.body;
         const image = req.file ? `/uploads/cms/banners/${req.file.filename}` : null;
-
 
         if (!image) {
             return res.status(400).json({ success: false, message: 'Image is required' });
         }
 
-
         const banner = await prisma.banner.create({
             data: {
                 image,
-                link,
                 active: active === 'true' || active === true,
-                order: parseInt(order as string) || 0
+                order: parseInt(order as string) || 0,
+                // Removed title, subtitle, and link
             }
         });
 
@@ -43,33 +50,28 @@ export const createBanner = async (req: Request, res: Response) => {
         console.error('Error creating banner:', error);
         res.status(500).json({ success: false, message: 'Error creating banner' });
     }
-
 };
 
 export const updateBanner = async (req: Request, res: Response) => {
     try {
         const { id } = req.params;
-        const { link, active, order } = req.body;
+        const { active, order } = req.body;
 
         const existingBanner = await prisma.banner.findUnique({ where: { id: id as string } });
-
         if (!existingBanner) return res.status(404).json({ success: false, message: 'Banner not found' });
-
 
         let image = existingBanner.image;
         if (req.file) {
             image = `/uploads/cms/banners/${req.file.filename}`;
         }
 
-
         const banner = await prisma.banner.update({
             where: { id: id as string },
             data: {
-
                 image,
-                link,
                 active: active === 'true' || active === true,
-                order: parseInt(order as string) || 0
+                order: parseInt(order as string) || 0,
+                // Removed title, subtitle, and link
             }
         });
 
@@ -78,7 +80,6 @@ export const updateBanner = async (req: Request, res: Response) => {
         console.error('Error updating banner:', error);
         res.status(500).json({ success: false, message: 'Error updating banner' });
     }
-
 };
 
 export const getBannerGlobalStatus = async (req: Request, res: Response) => {
@@ -138,10 +139,12 @@ export const deleteBanner = async (req: Request, res: Response) => {
 // Feature Controllers
 export const getFeatures = async (req: Request, res: Response) => {
     try {
+        const lang = getLang(req);
         const features = await prisma.feature.findMany({
+            where: (lang !== 'raw' ? { active: true } : {}),
             orderBy: { order: 'asc' }
         });
-        res.json({ success: true, data: features });
+        res.json({ success: true, data: localize(features, lang) });
     } catch (error) {
         res.status(500).json({ success: false, message: 'Error fetching features' });
     }
@@ -169,12 +172,8 @@ export const createFeature = async (req: Request, res: Response) => {
 
         const feature = await prisma.feature.create({
             data: {
-                title_en: final_title_en,
-                title_hi: title_hi || null,
-                title_mr: title_mr || null,
-                description_en: description_en || req.body.description || null,
-                description_hi: description_hi || null,
-                description_mr: description_mr || null,
+                title: buildLangJson(final_title_en, title_hi, title_mr),
+                description: buildLangJson(description_en || req.body.description, description_hi, description_mr),
                 image,
                 icon,
                 active: active === 'true' || active === true,
@@ -220,12 +219,8 @@ export const updateFeature = async (req: Request, res: Response) => {
         const feature = await prisma.feature.update({
             where: { id: id as string },
             data: {
-                title_en: title_en || req.body.title,
-                title_hi,
-                title_mr,
-                description_en: description_en || req.body.description,
-                description_hi,
-                description_mr,
+                title: buildLangJson(title_en || req.body.title, title_hi, title_mr),
+                description: buildLangJson(description_en || req.body.description, description_hi, description_mr),
                 image,
                 icon,
                 active: active === 'true' || active === true,
@@ -256,10 +251,12 @@ export const deleteFeature = async (req: Request, res: Response) => {
 // Testimonial Controllers
 export const getTestimonials = async (req: Request, res: Response) => {
     try {
+        const lang = getLang(req);
         const testimonials = await prisma.testimonial.findMany({
+            where: (lang !== 'raw' ? { active: true } : {}),
             orderBy: { order: 'asc' }
         });
-        res.json({ success: true, data: testimonials });
+        res.json({ success: true, data: localize(testimonials, lang) });
     } catch (error) {
         console.error('Error fetching testimonials:', error);
         res.status(500).json({ success: false, message: 'Error fetching testimonials' });
@@ -289,15 +286,9 @@ export const createTestimonial = async (req: Request, res: Response) => {
 
         const testimonial = await prisma.testimonial.create({
             data: {
-                title_en: final_title_en,
-                title_hi: title_hi || null,
-                title_mr: title_mr || null,
-                subtitle_en: subtitle_en || req.body.subtitle || null,
-                subtitle_hi: subtitle_hi || null,
-                subtitle_mr: subtitle_mr || null,
-                category_en: category_en || req.body.category || null,
-                category_hi: category_hi || null,
-                category_mr: category_mr || null,
+                title: buildLangJson(final_title_en, title_hi, title_mr),
+                subtitle: buildLangJson(subtitle_en || req.body.subtitle, subtitle_hi, subtitle_mr),
+                category: buildLangJson(category_en || req.body.category, category_hi, category_mr),
                 thumbnail,
                 videoSrc,
                 active: active === 'true' || active === true,
@@ -342,15 +333,9 @@ export const updateTestimonial = async (req: Request, res: Response) => {
         const testimonial = await prisma.testimonial.update({
             where: { id: id as string },
             data: {
-                title_en: title_en || req.body.title,
-                title_hi,
-                title_mr,
-                subtitle_en: subtitle_en || req.body.subtitle,
-                subtitle_hi,
-                subtitle_mr,
-                category_en: category_en || req.body.category,
-                category_hi,
-                category_mr,
+                title: buildLangJson(title_en || req.body.title, title_hi, title_mr),
+                subtitle: buildLangJson(subtitle_en || req.body.subtitle, subtitle_hi, subtitle_mr),
+                category: buildLangJson(category_en || req.body.category, category_hi, category_mr),
                 thumbnail,
                 videoSrc,
                 active: active === 'true' || active === true,
@@ -381,10 +366,12 @@ export const deleteTestimonial = async (req: Request, res: Response) => {
 // CTA Card Controllers
 export const getCTACards = async (req: Request, res: Response) => {
     try {
+        const lang = getLang(req);
         const ctaCards = await prisma.cTACard.findMany({
+            where: (lang !== 'raw' ? { active: true } : {}),
             orderBy: { order: 'asc' }
         });
-        res.json({ success: true, data: ctaCards });
+        res.json({ success: true, data: localize(ctaCards, lang) });
     } catch (error) {
         console.error('Error fetching CTA cards:', error);
         res.status(500).json({ error: 'Failed to fetch CTA cards' });
@@ -421,16 +408,14 @@ export const createCTACard = async (req: Request, res: Response) => {
 
         const ctaCard = await prisma.cTACard.create({
             data: {
-                title_en: final_title_en,
-                title_hi: title_hi || null,
-                title_mr: title_mr || null,
-                points_en: parsePoints(points_en || req.body.points),
-                points_hi: parsePoints(points_hi),
-                points_mr: parsePoints(points_mr),
+                title: buildLangJson(final_title_en, title_hi, title_mr),
+                points: buildLangArray(
+                    safeParse(points_en || req.body.points),
+                    safeParse(points_hi),
+                    safeParse(points_mr)
+                ),
                 icon,
-                buttonText_en: buttonText_en || req.body.buttonText || "Learn More",
-                buttonText_hi: buttonText_hi || null,
-                buttonText_mr: buttonText_mr || null,
+                buttonText: buildLangJson(buttonText_en || req.body.buttonText || 'Learn More', buttonText_hi, buttonText_mr),
                 buttonLink,
                 cardType,
                 active: active === 'true' || active === true,
@@ -481,16 +466,14 @@ export const updateCTACard = async (req: Request, res: Response) => {
         const ctaCard = await prisma.cTACard.update({
             where: { id: id as string },
             data: {
-                title_en: title_en || req.body.title,
-                title_hi,
-                title_mr,
-                points_en: parsePoints(points_en || req.body.points),
-                points_hi: parsePoints(points_hi),
-                points_mr: parsePoints(points_mr),
+                title: buildLangJson(title_en || req.body.title, title_hi, title_mr),
+                points: buildLangArray(
+                    safeParse(points_en || req.body.points),
+                    safeParse(points_hi),
+                    safeParse(points_mr)
+                ),
                 icon,
-                buttonText_en: buttonText_en || req.body.buttonText,
-                buttonText_hi,
-                buttonText_mr,
+                buttonText: buildLangJson(buttonText_en || req.body.buttonText, buttonText_hi, buttonText_mr),
                 buttonLink,
                 cardType,
                 active: active === 'true' || active === true,

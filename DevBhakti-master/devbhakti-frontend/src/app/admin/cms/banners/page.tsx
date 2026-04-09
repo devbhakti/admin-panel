@@ -3,7 +3,6 @@
 import React, { useState, useEffect } from "react";
 import {
     Plus,
-    Search,
     Edit2,
     Trash2,
     Upload,
@@ -33,19 +32,18 @@ import {
 import { Label } from "@/components/ui/label";
 import { Badge } from "@/components/ui/badge";
 import { Switch } from "@/components/ui/switch";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { fetchAllBannersAdmin, createBannerAdmin, updateBannerAdmin, deleteBannerAdmin, fetchBannerGlobalStatus, toggleBannerGlobalStatus } from "@/api/adminController";
 import { API_URL, BASE_URL } from "@/config/apiConfig";
 
 
 export default function BannersPage() {
     const [banners, setBanners] = useState<any[]>([]);
-    const [searchTerm, setSearchTerm] = useState("");
     const [isDialogOpen, setIsDialogOpen] = useState(false);
     const [editingBanner, setEditingBanner] = useState<any>(null);
     const [loading, setLoading] = useState(true);
     const [bannerSectionActive, setBannerSectionActive] = useState(true);
     const [formData, setFormData] = useState({
-        link: "",
         active: "true",
     });
     const [imageFile, setImageFile] = useState<File | null>(null);
@@ -61,7 +59,7 @@ export default function BannersPage() {
         try {
             setLoading(true);
             const [data, statusData] = await Promise.all([
-                fetchAllBannersAdmin(),
+                fetchAllBannersAdmin({ lang: 'raw' }),
                 fetchBannerGlobalStatus()
             ]);
             setBanners(data);
@@ -77,7 +75,6 @@ export default function BannersPage() {
         if (banner) {
             setEditingBanner(banner);
             setFormData({
-                link: banner.link || "",
                 active: banner.active ? "true" : "false",
             });
             setImagePreview(banner.image.startsWith('http') ? banner.image : `${BASE_URL}${banner.image}`);
@@ -85,7 +82,6 @@ export default function BannersPage() {
         } else {
             setEditingBanner(null);
             setFormData({
-                link: "",
                 active: "true",
             });
             setImagePreview("");
@@ -118,7 +114,6 @@ export default function BannersPage() {
         e.preventDefault();
         try {
             const data = new FormData();
-            data.append('link', formData.link);
             data.append('active', formData.active);
             data.append('order', '1');
 
@@ -165,10 +160,6 @@ export default function BannersPage() {
             alert("Error updating section visibility");
         }
     };
-
-    const filteredBanners = banners.filter(banner =>
-        (banner.link || "").toLowerCase().includes(searchTerm.toLowerCase())
-    );
 
     return (
         <div className="space-y-8 p-6">
@@ -220,18 +211,7 @@ export default function BannersPage() {
                 </div>
             </div>
 
-            {/* Filters & Search */}
-            <div className="flex flex-col md:flex-row gap-4">
-                <div className="relative w-full md:max-w-sm">
-                    <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
-                    <Input
-                        placeholder="Search banners..."
-                        className="pl-10 h-10"
-                        value={searchTerm}
-                        onChange={(e) => setSearchTerm(e.target.value)}
-                    />
-                </div>
-            </div>
+            {/* Filters & Search - Removed since link-search was removed */}
 
             {/* Banners Table */}
             <div className="border border-border rounded-xl bg-card overflow-hidden shadow-sm">
@@ -252,7 +232,7 @@ export default function BannersPage() {
                             </TableRow>
                         </TableHeader>
                         <TableBody>
-                            {filteredBanners.map((banner) => (
+                            {banners.map((banner) => (
                                 <TableRow key={banner.id} className="border-b border-border/50 hover:bg-muted/30 transition-colors">
                                     <TableCell className="pl-6 py-4">
                                         <div className="w-[350px] h-[100px] rounded-md overflow-hidden bg-muted border border-border flex items-center justify-center relative group shadow-sm">
@@ -296,7 +276,7 @@ export default function BannersPage() {
                                     </TableCell>
                                 </TableRow>
                             ))}
-                            {filteredBanners.length === 0 && (
+                            {banners.length === 0 && (
                                 <TableRow>
                                     <TableCell colSpan={4} className="text-center py-12 text-muted-foreground">
                                         No banners found
@@ -318,19 +298,17 @@ export default function BannersPage() {
                         </DialogDescription>
                     </DialogHeader>
                     <form onSubmit={handleSubmit} className="flex flex-col gap-6 p-6 pt-4">
-                        <div className="grid grid-cols-1 gap-6">
-                            <div className="space-y-2">
-                                <Label htmlFor="status" className="text-sm font-medium">Status</Label>
-                                <select
-                                    id="status"
-                                    className="w-full h-10 px-3 rounded-md border border-input bg-background focus:ring-2 focus:ring-ring focus:ring-offset-2 outline-none transition-all"
-                                    value={formData.active}
-                                    onChange={(e) => setFormData({ ...formData, active: e.target.value })}
-                                >
-                                    <option value="true">Active</option>
-                                    <option value="false">Inactive</option>
-                                </select>
-                            </div>
+                        <div className="space-y-2">
+                            <Label htmlFor="status" className="text-sm font-medium">Status</Label>
+                            <select
+                                id="status"
+                                className="w-full h-10 px-3 rounded-md border border-input bg-background focus:ring-2 focus:ring-ring focus:ring-offset-2 outline-none transition-all text-sm"
+                                value={formData.active}
+                                onChange={(e) => setFormData({ ...formData, active: e.target.value })}
+                            >
+                                <option value="true">Active</option>
+                                <option value="false">Inactive</option>
+                            </select>
                         </div>
 
                         <div className="space-y-3">

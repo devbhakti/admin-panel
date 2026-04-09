@@ -26,7 +26,7 @@ export const getAllDonations = async (req: Request, res: Response) => {
                 { displayId: { contains: String(search), mode: 'insensitive' } },
                 { donorName: { contains: String(search), mode: 'insensitive' } },
                 { userId: { contains: String(search), mode: 'insensitive' } },
-                { temple: { name_en: { contains: String(search), mode: 'insensitive' } } }
+                { temple: { name: { path: ['en'], string_contains: String(search) } } }
             ];
 
         }
@@ -45,7 +45,7 @@ export const getAllDonations = async (req: Request, res: Response) => {
         const [donations, total] = await Promise.all([
             prisma.donation.findMany({
                 where,
-                include: { temple: { select: { name_en: true, name_hi: true, name_mr: true } } as any },
+                include: { temple: { select: { name: true } } as any },
                 orderBy: { [String(sortBy)]: sortOrder as any },
                 skip,
                 take: Number(limit)
@@ -144,7 +144,7 @@ export const downloadDonationsExcel = async (req: Request, res: Response) => {
             orderBy: { createdAt: 'desc' },
             include: {
                 temple: {
-                    select: { name_en: true, name_hi: true, name_mr: true }
+                    select: { name: true }
                 } as any
             }
         });

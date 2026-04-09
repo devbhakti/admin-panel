@@ -59,6 +59,7 @@ import { useToast } from "@/hooks/use-toast";
 import { BASE_URL } from "@/config/apiConfig";
 import { useAdminAuth } from "@/hooks/use-admin-auth";
 import { useLanguage } from "@/context/LanguageContext";
+import { parseLocalizedValue } from "@/utils/textUtils";
 
 import { Suspense } from "react";
 import { useSearchParams } from "next/navigation";
@@ -93,7 +94,12 @@ function ProductsContent() {
 
   const getLocalizedName = (item: any) => {
     if (!item) return "";
-    return item[`name_${language}`] || item.name_en || item.name || "";
+    // If it has properties like name_en, name_hi etc. (legacy or specific API format)
+    if (item[`name_${language}`] || item.name_en || item.name_hi || item.name_mr) {
+      return item[`name_${language}`] || item.name_en || item.name_hi || item.name_mr || "";
+    }
+    // Fallback to our new localized parser
+    return parseLocalizedValue(item.name || item, language);
   };
 
 
@@ -452,7 +458,7 @@ function ProductsContent() {
                           <Building2 className="w-3.5 h-3.5" />
                           <div className="flex flex-col">
                             <span className="text-[10px] font-bold uppercase leading-none mb-0.5">Temple</span>
-                            <span className="text-sm font-medium leading-none text-slate-700">{getLocalizedName(product.temple)}</span>
+                            <span className="text-sm font-medium leading-none text-slate-700">{parseLocalizedValue(product.temple.name, language)}</span>
                           </div>
                         </div>
                       ) : product.seller ? (
@@ -460,7 +466,7 @@ function ProductsContent() {
                           <Store className="w-3.5 h-3.5" />
                           <div className="flex flex-col">
                             <span className="text-[10px] font-bold uppercase leading-none mb-0.5">Seller</span>
-                            <span className="text-sm font-medium leading-none text-slate-700">{product.seller.name_en || product.seller.name || product.seller.storeName}</span>
+                            <span className="text-sm font-medium leading-none text-slate-700">{parseLocalizedValue(product.seller.name_en || product.seller.name || product.seller.storeName, language)}</span>
                           </div>
                         </div>
                       ) : (

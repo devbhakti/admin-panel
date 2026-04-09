@@ -114,7 +114,7 @@ export default function TempleDetail() {
             if (templeId) {
                 setLoading(true);
                 const [templeData, settingsData] = await Promise.all([
-                    fetchPublicTempleById(templeId as string),
+                    fetchPublicTempleById(templeId as string, language),
                     fetchRatingsSettings()
                 ]);
                 setTemple(templeData);
@@ -125,7 +125,7 @@ export default function TempleDetail() {
             }
         };
         loadTempleAndSettings();
-    }, [params?.id, params?.subdomain]);
+    }, [params?.id, params?.subdomain, language]);
 
     const getFullImageUrl = (path: string) => {
         if (!path) return "/placeholder.jpg";
@@ -597,7 +597,7 @@ export default function TempleDetail() {
                                         <div key={index} className="aspect-square rounded-lg overflow-hidden">
                                             <img
                                                 src={(img as any).src || img}
-                                                alt={`${temple.name} gallery ${index + 1}`}
+                                                alt={`${getLocalized(temple, 'name', language)} gallery ${index + 1}`}
                                                 className="w-full h-full object-cover hover:scale-110 transition-transform duration-500"
                                             />
                                         </div>

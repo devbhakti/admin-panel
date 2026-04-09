@@ -30,6 +30,7 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Input } from "@/components/ui/input";
 import { fetchUserDetailAdmin } from "@/api/adminController";
 import { format } from "date-fns";
+import { safeFormat } from "@/utils/dateUtils";
 import { BASE_URL } from "@/config/apiConfig";
 
 export default function DevoteeDetailPage() {
@@ -164,7 +165,7 @@ export default function DevoteeDetailPage() {
                         { label: "Donations", value: user.donations?.length || 0, icon: Heart, color: "text-rose-600", bg: "bg-rose-50" },
                         { label: "Spent", value: `₹${[...(user.bookings || []), ...(user.orders || []), ...(user.donations || [])].reduce((acc, curr) => acc + (curr.packagePrice || curr.totalAmount || curr.amount || 0), 0).toLocaleString()}`, icon: MapPin, color: "text-emerald-600", bg: "bg-emerald-50" },
                     ]),
-                    { label: "Join Date", value: user.createdAt ? format(new Date(user.createdAt), "MMM yyyy") : "N/A", icon: Calendar, color: "text-purple-600", bg: "bg-purple-50" },
+                    { label: "Join Date", value: safeFormat(user.createdAt, "MMM yyyy"), icon: Calendar, color: "text-purple-600", bg: "bg-purple-50" },
                 ].map((stat, i) => (
                     <Card key={i} className="border-none shadow-sm bg-card hover:shadow-md transition-all duration-300">
                         <CardContent className="p-4 flex flex-col sm:flex-row items-center sm:items-start gap-3 sm:gap-4">
@@ -233,7 +234,7 @@ export default function DevoteeDetailPage() {
                                 </div>
                                 <div className="flex-1">
                                     <p className="text-[10px] uppercase font-bold text-slate-400 tracking-tight">Joined On</p>
-                                    <p className="text-sm font-medium text-slate-700">{user.createdAt ? format(new Date(user.createdAt), "MMMM d, yyyy") : "N/A"}</p>
+                                    <p className="text-sm font-medium text-slate-700">{safeFormat(user.createdAt, "MMMM d, yyyy")}</p>
                                 </div>
                             </div>
                         </div>
@@ -254,7 +255,7 @@ export default function DevoteeDetailPage() {
                                         <div className="bg-slate-50/50 p-3 rounded-xl border border-slate-100 hover:border-primary/20 transition-all">
                                             <p className="text-[10px] text-slate-400 font-bold uppercase">Date of Birth</p>
                                             <p className="text-sm font-semibold text-slate-800">
-                                                {format(new Date(user.dob), "d MMMM yyyy")}
+                                                {safeFormat(user.dob, "d MMMM yyyy")}
                                             </p>
                                         </div>
                                     )}
@@ -262,7 +263,7 @@ export default function DevoteeDetailPage() {
                                         <div className="bg-slate-50/50 p-3 rounded-xl border border-slate-100 hover:border-primary/20 transition-all">
                                             <p className="text-[10px] text-slate-400 font-bold uppercase">Anniversary</p>
                                             <p className="text-sm font-semibold text-slate-800">
-                                                {format(new Date(user.anniversary), "d MMMM yyyy")}
+                                                {safeFormat(user.anniversary, "d MMMM yyyy")}
                                             </p>
                                         </div>
                                     )}
@@ -415,7 +416,7 @@ export default function DevoteeDetailPage() {
                                                             <div className="flex items-center gap-3 mt-2 text-xs text-muted-foreground font-medium">
                                                                 <span className="flex items-center gap-1">
                                                                     <Calendar className="w-3.5 h-3.5 opacity-60" />
-                                                                    {booking.createdAt ? format(new Date(booking.createdAt), "PPP") : "N/A"}
+                                                                    {safeFormat(booking.createdAt, "PPP")}
                                                                 </span>
                                                             </div>
                                                         </div>
@@ -503,7 +504,7 @@ export default function DevoteeDetailPage() {
                                                                 <div className="flex items-center gap-3 mt-2 text-xs text-muted-foreground font-medium">
                                                                     <span className="flex items-center gap-1">
                                                                         <Calendar className="w-3.5 h-3.5 opacity-60" />
-                                                                        {order.createdAt ? format(new Date(order.createdAt), "PPP") : "N/A"}
+                                                                        {safeFormat(order.createdAt, "PPP")}
                                                                     </span>
                                                                 </div>
                                                             </div>
@@ -570,7 +571,7 @@ export default function DevoteeDetailPage() {
                                                             <div className="flex items-center gap-3 mt-2 text-xs text-muted-foreground font-medium">
                                                                 <span className="flex items-center gap-1">
                                                                     <Calendar className="w-3.5 h-3.5 opacity-60" />
-                                                                    {donation.createdAt ? format(new Date(donation.createdAt), "PPP") : "N/A"}
+                                                                    {safeFormat(donation.createdAt, "PPP")}
                                                                 </span>
                                                             </div>
                                                         </div>
@@ -626,7 +627,7 @@ export default function DevoteeDetailPage() {
                                                 </div>
                                                 <div>
                                                     <p className="font-black text-lg text-slate-900">₹{withdrawal.amount}</p>
-                                                    <p className="text-xs text-slate-500">{format(new Date(withdrawal.createdAt), "PPP")}</p>
+                                                    <p className="text-xs text-slate-500">{safeFormat(withdrawal.createdAt, "PPP")}</p>
                                                 </div>
                                             </div>
                                             <Badge variant={withdrawal.status === 'PAID' ? 'outline' : 'outline'}>{withdrawal.status}</Badge>

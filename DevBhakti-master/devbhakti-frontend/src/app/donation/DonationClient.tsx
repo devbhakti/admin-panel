@@ -88,9 +88,11 @@ function DonationForm() {
 
     const [temples, setTemples] = useState<Temple[]>([]);
     const [loading, setLoading] = useState(false);
+    const [donatingTo, setDonatingTo] = useState<Temple | null>(null);
     const [transactionId, setTransactionId] = useState("");
     const [donationId, setDonationId] = useState("");
     const [searchQuery, setSearchQuery] = useState("");
+    const [errors, setErrors] = useState<Record<string, string>>({});
 
     const RAZORPAY_KEY = process.env.NEXT_PUBLIC_RAZORPAY_KEY_ID || "";
 
@@ -143,14 +145,45 @@ function DonationForm() {
             toast({ title: t("toasts.enter_amount"), variant: "destructive" });
             return;
         }
-        if (step === 3 && !isAnonymous && (!formData.name || !formData.phone || !formData.email)) {
-            toast({ title: t("toasts.fill_required"), variant: "destructive" });
-            return;
+        if (step === 3 && !isAnonymous) {
+            const newErrors: Record<string, string> = {};
+            const missingFields: string[] = [];
+
+            if (!formData.name.trim()) {
+                newErrors.name = "Donar name is required";
+                missingFields.push(t("step3.labels.donor_name"));
+            }
+            if (!formData.phone.trim()) {
+                newErrors.phone = "Phone number is required";
+                missingFields.push(t("step3.labels.phone_number"));
+            } else if (formData.phone.length !== 10) {
+                newErrors.phone = "Phone number must be exactly 10 digits";
+                missingFields.push(t("step3.labels.phone_number") + " (10 digits)");
+            }
+            if (!formData.email.trim()) {
+                newErrors.email = "Email address is required";
+                missingFields.push(t("step3.labels.email_address"));
+            } else if (!/\S+@\S+\.\S+/.test(formData.email)) {
+                newErrors.email = "Invalid email format";
+                missingFields.push(t("step3.labels.email_address") + " (Invalid)");
+            }
+
+            if (is80GRequired && !formData.pan) {
+                newErrors.pan = "PAN is required for 80G receipt";
+                missingFields.push("PAN Number");
+            }
+
+            if (Object.keys(newErrors).length > 0) {
+                setErrors(newErrors);
+                toast({ 
+                    title: t("toasts.fill_required"), 
+                    description: `Missing: ${missingFields.join(", ")}`,
+                    variant: "destructive" 
+                });
+                return;
+            }
         }
-        if (step === 3 && is80GRequired && !formData.pan) {
-            toast({ title: t("toasts.pan_required"), variant: "destructive" });
-            return;
-        }
+        setErrors({});
 
         setDirection(1);
         setStep(step + 1);
@@ -572,11 +605,15 @@ function DonationForm() {
                                                         <Input
                                                             id="name"
                                                             placeholder={t("step3.placeholders.name")}
-                                                            className="pl-10"
+                                                            className={`pl-10 ${errors.name ? 'border-red-500' : ''}`}
                                                             value={formData.name}
-                                                            onChange={(e) => setFormData({ ...formData, name: e.target.value })}
+                                                            onChange={(e) => {
+                                                                setFormData({ ...formData, name: e.target.value });
+                                                                if (errors.name) setErrors(prev => ({ ...prev, name: "" }));
+                                                            }}
                                                         />
                                                     </div>
+                                                    {errors.name && <p className="text-[10px] text-red-500 font-medium ml-1">{errors.name}</p>}
                                                 </div>
 
                                                 <div className="space-y-2">
@@ -586,11 +623,17 @@ function DonationForm() {
                                                         <Input
                                                             id="phone"
                                                             placeholder={t("step3.placeholders.phone")}
-                                                            className="pl-10"
+                                                            className={`pl-10 ${errors.phone ? 'border-red-500' : ''}`}
                                                             value={formData.phone}
-                                                            onChange={(e) => setFormData({ ...formData, phone: e.target.value })}
+                                                            maxLength={10}
+                                                            onChange={(e) => {
+                                                                const val = e.target.value.replace(/\D/g, "").slice(0, 10);
+                                                                setFormData({ ...formData, phone: val });
+                                                                if (errors.phone) setErrors(prev => ({ ...prev, phone: "" }));
+                                                            }}
                                                         />
                                                     </div>
+                                                    {errors.phone && <p className="text-[10px] text-red-500 font-medium ml-1">{errors.phone}</p>}
                                                 </div>
 
                                                 <div className="space-y-2 md:col-span-2">
@@ -601,11 +644,15 @@ function DonationForm() {
                                                             id="email"
                                                             type="email"
                                                             placeholder={t("step3.placeholders.email")}
-                                                            className="pl-10"
+                                                            className={`pl-10 ${errors.email ? 'border-red-500' : ''}`}
                                                             value={formData.email}
-                                                            onChange={(e) => setFormData({ ...formData, email: e.target.value })}
+                                                            onChange={(e) => {
+                                                                setFormData({ ...formData, email: e.target.value });
+                                                                if (errors.email) setErrors(prev => ({ ...prev, email: "" }));
+                                                            }}
                                                         />
                                                     </div>
+                                                    {errors.email && <p className="text-[10px] text-red-500 font-medium ml-1">{errors.email}</p>}
                                                 </div>
 
                                                 <div className="space-y-2 md:col-span-2">

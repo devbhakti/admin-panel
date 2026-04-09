@@ -33,6 +33,7 @@ import {
     TooltipTrigger,
 } from "@/components/ui/tooltip";
 import { Check, ChevronsUpDown } from "lucide-react";
+import { parseLocalizedValue } from "@/utils/textUtils";
 
 interface PoojaFormProps {
     mode: "create" | "edit";
@@ -79,14 +80,12 @@ export const PoojaForm: React.FC<PoojaFormProps> = ({
         about: { en: "", hi: "", mr: "" },
         duration: { en: "", hi: "", mr: "" },
         // Localized Arrays
-        benefits: { en: [] as string[], hi: [] as string[], mr: [] as string[] },
         description: { en: [] as string[], hi: [] as string[], mr: [] as string[] },
         bullets: { en: [] as string[], hi: [] as string[], mr: [] as string[] }
     });
 
-    const [packages, setPackages] = useState<any>({ en: [], hi: [], mr: [] });
+    const [packages, setPackages] = useState<any[]>([]);
     const [faqs, setFaqs] = useState<any>({ en: [], hi: [], mr: [] });
-    const [processSteps, setProcessSteps] = useState<any>({ en: [], hi: [], mr: [] });
 
     // Image State
     const [imageFile, setImageFile] = useState<File | null>(null);
@@ -107,61 +106,88 @@ export const PoojaForm: React.FC<PoojaFormProps> = ({
                 }
             };
 
+            // Helper to get lang value safely from both old (string) and new (multi-lang JSON) formats
+            const getL = (field: any, lang: string, fallback: any = "") => {
+                if (!field) return fallback;
+                if (typeof field === "string") {
+                    try {
+                        const parsed = JSON.parse(field);
+                        if (typeof parsed === "object" && parsed !== null) {
+                            return parsed[lang] !== undefined ? parsed[lang] : fallback;
+                        }
+                    } catch (e) {
+                        // ignore JSON parse errors, treat as a normal string
+                    }
+                    if (lang === "en") return field; // Legacy string format
+                    return fallback;
+                }
+                if (typeof field === "object") {
+                    // Check if it's already an array/object with en/hi/mr
+                    if (field[lang] !== undefined) return field[lang];
+                    // If it's a raw object/array but we're looking for English, take it all
+                    if (lang === "en" && !field.hi && !field.mr) return field;
+                    return fallback;
+                }
+                return fallback;
+            };
+
             setFormData({
                 price: initialData.price || 0,
                 time: initialData.time || "",
                 templeId: initialData.templeId || "",
-                category_en: initialData.category_en || initialData.category || "",
-                category_hi: initialData.category_hi || "",
-                category_mr: initialData.category_mr || "",
+                category_en: getL(initialData.category, "en"),
+                category_hi: getL(initialData.category, "hi"),
+                category_mr: getL(initialData.category, "mr"),
                 name: {
-                    en: initialData.name_en || initialData.name || "",
-                    hi: initialData.name_hi || "",
-                    mr: initialData.name_mr || ""
+                    en: getL(initialData.name, "en"),
+                    hi: getL(initialData.name, "hi"),
+                    mr: getL(initialData.name, "mr")
                 },
                 about: {
-                    en: initialData.about_en || initialData.about || "",
-                    hi: initialData.about_hi || "",
-                    mr: initialData.about_mr || ""
+                    en: getL(initialData.about, "en"),
+                    hi: getL(initialData.about, "hi"),
+                    mr: getL(initialData.about, "mr")
                 },
                 duration: {
-                    en: initialData.duration_en || initialData.duration || "",
-                    hi: initialData.duration_hi || "",
-                    mr: initialData.duration_mr || ""
-                },
-                benefits: {
-                    en: parseArray(initialData.benefits_en || initialData.benefits),
-                    hi: parseArray(initialData.benefits_hi),
-                    mr: parseArray(initialData.benefits_mr)
+                    en: getL(initialData.duration, "en"),
+                    hi: getL(initialData.duration, "hi"),
+                    mr: getL(initialData.duration, "mr")
                 },
                 description: {
-                    en: parseArray(initialData.description_en || initialData.description),
-                    hi: parseArray(initialData.description_hi),
-                    mr: parseArray(initialData.description_mr)
+                    en: parseArray(getL(initialData.description, "en")),
+                    hi: parseArray(getL(initialData.description, "hi")),
+                    mr: parseArray(getL(initialData.description, "mr"))
                 },
                 bullets: {
-                    en: parseArray(initialData.bullets_en || initialData.bullets),
-                    hi: parseArray(initialData.bullets_hi),
-                    mr: parseArray(initialData.bullets_mr)
+                    en: parseArray(getL(initialData.bullets, "en")),
+                    hi: parseArray(getL(initialData.bullets, "hi")),
+                    mr: parseArray(getL(initialData.bullets, "mr"))
                 }
             });
 
             const parseLocalizedJson = (val: any) => {
                 if (!val) return { en: [], hi: [], mr: [] };
-                if (Array.isArray(val)) return { en: val, hi: [], mr: [] };
-                if (typeof val === 'string') {
-                    try {
-                        const parsed = JSON.parse(val);
-                        if (Array.isArray(parsed)) return { en: parsed, hi: [], mr: [] };
-                        return { en: parsed.en || [], hi: parsed.hi || [], mr: parsed.mr || [] };
-                    } catch { return { en: [], hi: [], mr: [] }; }
+                if (typeof val === 'object' && (val.en || val.hi || val.mr)) {
+                    return {
+                        en: parseArray(val.en),
+                        hi: parseArray(val.hi),
+                        mr: parseArray(val.mr)
+                    };
                 }
-                return { en: val.en || [], hi: val.hi || [], mr: val.mr || [] };
+                const parsed = parseArray(val);
+                return { en: parsed, hi: [], mr: [] };
             };
 
-            setPackages(parseLocalizedJson(initialData.packages));
+            const parseLocalizedJsonArray = (val: any) => {
+                if (!val) return [];
+                if (typeof val === 'object' && (val.en || val.hi || val.mr)) {
+                    return parseArray(val.en || val.hi || val.mr);
+                }
+                return parseArray(val);
+            };
+
+            setPackages(parseLocalizedJsonArray(initialData.packages));
             setFaqs(parseLocalizedJson(initialData.faqs));
-            setProcessSteps(parseLocalizedJson(initialData.processSteps));
 
             if (initialData.image) {
                 const imageUrl = initialData.image.startsWith('http')
@@ -188,7 +214,7 @@ export const PoojaForm: React.FC<PoojaFormProps> = ({
         }
     };
 
-    const handleArrayChange = (field: 'benefits' | 'description' | 'bullets', lang: Language, index: number, value: string) => {
+    const handleArrayChange = (field: 'description' | 'bullets', lang: Language, index: number, value: string) => {
         setFormData(prev => {
             const currentLangArray = [...(prev[field][lang] || [])];
             currentLangArray[index] = value;
@@ -199,7 +225,7 @@ export const PoojaForm: React.FC<PoojaFormProps> = ({
         });
     };
 
-    const addArrayItem = (field: 'benefits' | 'description' | 'bullets', lang: Language) => {
+    const addArrayItem = (field: 'description' | 'bullets', lang: Language) => {
         setFormData(prev => {
             const currentLangArray = [...(prev[field][lang] || [])];
             return {
@@ -209,7 +235,7 @@ export const PoojaForm: React.FC<PoojaFormProps> = ({
         });
     };
 
-    const removeArrayItem = (field: 'benefits' | 'description' | 'bullets', lang: Language, index: number) => {
+    const removeArrayItem = (field: 'description' | 'bullets', lang: Language, index: number) => {
         setFormData(prev => {
             const currentLangArray = (prev[field][lang] || []).filter((_: any, i: number) => i !== index);
             return {
@@ -220,39 +246,23 @@ export const PoojaForm: React.FC<PoojaFormProps> = ({
     };
 
     // Packages
-    const togglePackage = (ptype: any, lang: Language) => {
-        const langPackages = packages[lang] || [];
-        const isSelected = langPackages.some((p: any) => p.name === ptype.name);
+    const togglePackage = (ptype: any) => {
+        const isSelected = packages.some((p: any) => p.name === ptype.name);
         if (isSelected) {
-            setPackages({ ...packages, [lang]: langPackages.filter((p: any) => p.name !== ptype.name) });
+            setPackages(packages.filter((p: any) => p.name !== ptype.name));
         } else {
-            setPackages({ ...packages, [lang]: [...langPackages, { ...ptype, price: (ptype.name === "Single" && lang === 'en') ? formData.price : 0 }] });
+            setPackages([...packages, { ...ptype, price: (ptype.name === "Single") ? formData.price : 0 }]);
         }
     };
 
-    const updatePackage = (index: number, field: string, value: any, lang: Language) => {
-        const langPackages = [...(packages[lang] || [])];
-        langPackages[index] = { ...langPackages[index], [field]: value };
-        setPackages({ ...packages, [lang]: langPackages });
+    const updatePackage = (index: number, field: string, value: any) => {
+        const newPkgs = [...packages];
+        newPkgs[index] = { ...newPkgs[index], [field]: value };
+        setPackages(newPkgs);
 
-        if (langPackages[index].name === "Single" && field === 'price' && lang === 'en') {
+        if (newPkgs[index].name === "Single" && field === 'price') {
             setFormData(prev => ({ ...prev, price: value }));
         }
-    };
-
-    const addProcessStep = (lang: Language) => {
-        setProcessSteps({ ...processSteps, [lang]: [...(processSteps[lang] || []), { title: "", description: "" }] });
-    };
-
-    const removeProcessStep = (index: number, lang: Language) => {
-        const langSteps = (processSteps[lang] || []).filter((_: any, i: number) => i !== index);
-        setProcessSteps({ ...processSteps, [lang]: langSteps });
-    };
-
-    const updateProcessStep = (index: number, field: 'title' | 'description', value: string, lang: Language) => {
-        const langSteps = [...(processSteps[lang] || [])];
-        langSteps[index] = { ...langSteps[index], [field]: value };
-        setProcessSteps({ ...processSteps, [lang]: langSteps });
     };
 
     const addFaq = (lang: Language) => {
@@ -315,10 +325,6 @@ export const PoojaForm: React.FC<PoojaFormProps> = ({
         fd.append("category_mr", formData.category_mr);
 
         // Arrays
-        fd.append("benefits_en", JSON.stringify(formData.benefits.en));
-        fd.append("benefits_hi", JSON.stringify(formData.benefits.hi));
-        fd.append("benefits_mr", JSON.stringify(formData.benefits.mr));
-
         fd.append("description_en", JSON.stringify(formData.description.en));
         fd.append("description_hi", JSON.stringify(formData.description.hi));
         fd.append("description_mr", JSON.stringify(formData.description.mr));
@@ -328,9 +334,8 @@ export const PoojaForm: React.FC<PoojaFormProps> = ({
         fd.append("bullets_mr", JSON.stringify(formData.bullets.mr));
 
         // JSON Fields
-        fd.append("packages", JSON.stringify(packages));
+        fd.append("packages", JSON.stringify({ en: packages, hi: packages, mr: packages }));
         fd.append("faqs", JSON.stringify(faqs));
-        fd.append("processSteps", JSON.stringify(processSteps));
 
         if (imageFile) fd.append("image", imageFile);
 
@@ -353,142 +358,178 @@ export const PoojaForm: React.FC<PoojaFormProps> = ({
             </TabsList>
 
             <form onSubmit={handleFormSubmit} className="space-y-10">
-                {/* Multilingual Contents */}
-                {["en", "hi", "mr"].map((lang) => (
-                    <TabsContent key={lang} value={lang} className="space-y-10 mt-0 outline-none">
-                        
-                        {/* 1. Master Pooja Template Toggle */}
-                        <div className="bg-blue-50/50 border border-blue-100 rounded-xl p-4 flex items-center gap-4 transition-all">
-                            <Switch
-                                id={`master-${lang}`}
-                                checked={isMaster}
-                                onCheckedChange={setIsMaster}
-                                className="data-[state=checked]:bg-primary"
-                            />
-                            <div className="space-y-0.5">
-                                <Label htmlFor={`master-${lang}`} className="text-sm font-bold text-blue-900 cursor-pointer">
-                                    {t('admin_pooja_form.labels.is_master')}
-                                </Label>
-                                <p className="text-[11px] text-blue-600/80 font-medium">{t('admin_pooja_form.help.is_master')}</p>
+                {/* 1. Global Settings (Common to all languages) */}
+                <div className="space-y-8 mb-10">
+                    <div className="flex flex-col lg:flex-row gap-8">
+                        {/* Left Side: Core Meta */}
+                        <div className="flex-1 space-y-8">
+                            <div className="bg-white border rounded-2xl p-6 shadow-sm space-y-6">
+                                <div className="flex items-center justify-between p-4 bg-blue-50/50 border border-blue-100 rounded-xl">
+                                    <div className="space-y-0.5">
+                                        <Label htmlFor="master-toggle" className="text-sm font-bold text-blue-900 cursor-pointer">
+                                            {t('admin_pooja_form.labels.is_master')}
+                                        </Label>
+                                        <p className="text-[11px] text-blue-600/80 font-medium">{t('admin_pooja_form.help.is_master')}</p>
+                                    </div>
+                                    <Switch
+                                        id="master-toggle"
+                                        checked={isMaster}
+                                        onCheckedChange={setIsMaster}
+                                        className="data-[state=checked]:bg-primary"
+                                    />
+                                </div>
+
+                                <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                                    <div className="space-y-2.5">
+                                        <Label className="text-sm font-bold text-slate-700">{t('admin_pooja_form.labels.assigned_temple')} <span className="text-destructive">*</span></Label>
+                                        <select
+                                            className="w-full h-12 px-4 rounded-xl border border-slate-200 bg-white text-sm focus:ring-2 focus:ring-primary/20 outline-none disabled:opacity-50 transition-all font-medium"
+                                            value={formData.templeId}
+                                            onChange={e => handleInputChange("templeId", e.target.value)}
+                                            disabled={isMaster}
+                                            required={!isMaster}
+                                        >
+                                            <option value="">{isMaster ? t('admin_pooja_form.placeholders.not_applicable') : t('admin_pooja_form.placeholders.select_temple')}</option>
+                                            {temples.map(t => (
+                                                <option key={t.id} value={t.id}>
+                                                    {parseLocalizedValue(t[`name_${language}`] || t.name_en || t.name, language) || 'Unnamed'}
+                                                </option>
+                                            ))}
+                                        </select>
+                                    </div>
+
+                                    <div className="space-y-2.5">
+                                        <Label className="text-sm font-bold text-slate-700">{t('admin_pooja_form.labels.price')} <span className="text-destructive">*</span></Label>
+                                        <div className="relative">
+                                            <span className="absolute left-4 top-1/2 -translate-y-1/2 text-slate-400 font-bold">₹</span>
+                                            <Input
+                                                type="number"
+                                                value={formData.price}
+                                                onChange={e => {
+                                                    const p = parseInt(e.target.value) || 0;
+                                                    handleInputChange("price", p);
+                                                    const newPkgs = [...packages];
+                                                    const singleIdx = newPkgs.findIndex(pkg => pkg.name === "Single");
+                                                    if (singleIdx > -1) newPkgs[singleIdx].price = p;
+                                                    else newPkgs.push({ name: "Single", description: "For 1 person", price: p });
+                                                    setPackages(newPkgs);
+                                                }}
+                                                className="pl-8 h-12 rounded-xl focus:ring-primary/20 border-slate-200 bg-white font-bold"
+                                                required
+                                            />
+                                        </div>
+                                    </div>
+                                </div>
+
+                                <div className="space-y-2.5">
+                                    <Label className="text-sm font-bold text-slate-700">{t('admin_pooja_form.labels.category')} <span className="text-destructive">*</span></Label>
+                                    <Popover>
+                                        <PopoverTrigger asChild>     
+                                            <Button
+                                                variant="outline"
+                                                role="combobox"
+                                                className={cn(
+                                                    "w-full justify-between h-12 px-4 rounded-xl border border-slate-200 bg-white hover:bg-white",
+                                                    !formData.category_en && "text-muted-foreground"
+                                                )}
+                                            >
+                                                <div className="flex flex-wrap gap-1">
+                                                    {formData.category_en ? (
+                                                        formData.category_en.split(', ').map((cat) => (
+                                                            <Badge key={cat} variant="secondary" className="mr-1">
+                                                                {cat}
+                                                            </Badge>
+                                                        ))
+                                                    ) : (
+                                                        t('admin_pooja_form.placeholders.category')
+                                                    )}
+                                                </div>
+                                                <ChevronsUpDown className="ml-2 h-4 w-4 shrink-0 opacity-50" />
+                                            </Button>
+                                        </PopoverTrigger>
+                                        <PopoverContent className="w-[400px] p-0 shadow-2xl border-primary/10" align="start">
+                                            <Command>
+                                                <CommandInput placeholder={t('admin_pooja_form.placeholders.search_category')} />
+                                                <CommandList>
+                                                    <CommandEmpty>No category found.</CommandEmpty>
+                                                    <CommandGroup>
+                                                        {availableCategories.map((category) => {
+                                                            const catNames = {
+                                                                en: parseLocalizedValue(category.name_en || category.name, 'en'),
+                                                                hi: parseLocalizedValue(category.name_hi || category.name_en || category.name, 'hi'),
+                                                                mr: parseLocalizedValue(category.name_mr || category.name_en || category.name, 'mr')
+                                                            };
+                                                            
+                                                            const currentSelected = {
+                                                                en: formData.category_en ? formData.category_en.split(', ') : [],
+                                                                hi: formData.category_hi ? formData.category_hi.split(', ') : [],
+                                                                mr: formData.category_mr ? formData.category_mr.split(', ') : []
+                                                            };
+
+                                                            const isSelected = currentSelected.en.includes(catNames.en);
+
+                                                            return (
+                                                                <CommandItem
+                                                                    key={category.id}
+                                                                    value={catNames.en}
+                                                                    onSelect={() => {
+                                                                        const updated = {
+                                                                            en: isSelected ? currentSelected.en.filter(c => c !== catNames.en) : [...currentSelected.en, catNames.en],
+                                                                            hi: isSelected ? currentSelected.hi.filter(c => c !== catNames.hi) : [...currentSelected.hi, catNames.hi],
+                                                                            mr: isSelected ? currentSelected.mr.filter(c => c !== catNames.mr) : [...currentSelected.mr, catNames.mr]
+                                                                        };
+                                                                        
+                                                                        handleInputChange("category_en", updated.en.join(', '));
+                                                                        handleInputChange("category_hi", updated.hi.join(', '));
+                                                                        handleInputChange("category_mr", updated.mr.join(', '));
+                                                                    }}
+                                                                >
+                                                                    <Check className={cn("mr-2 h-4 w-4", isSelected ? "opacity-100" : "opacity-0")} />
+                                                                    <div className="flex flex-col">
+                                                                        <span className="font-bold">{catNames.en}</span>
+                                                                        <span className="text-[10px] text-slate-400 font-medium">{catNames.hi} • {catNames.mr}</span>
+                                                                    </div>
+                                                                </CommandItem>
+                                                            );
+                                                        })}
+                                                    </CommandGroup>
+                                                </CommandList>
+                                            </Command>
+                                        </PopoverContent>
+                                    </Popover>
+                                </div>
                             </div>
                         </div>
 
-                        {/* 2. Identity & Core Settings Grid */}
-                        <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
-                            {/* Row 1: Name & Temple */}
-                            <div className="space-y-2.5">
-                                <Label className="text-sm font-bold text-slate-700">{t('admin_pooja_form.labels.name')} <span className="text-destructive">*</span></Label>
-                                <Input
-                                    placeholder={t('admin_pooja_form.placeholders.name')}
-                                    value={(formData.name as any)[lang]}
-                                    onChange={e => handleInputChange("name", e.target.value, lang as Language)}
-                                    className="h-12 rounded-xl focus:ring-primary/20 border-slate-200 bg-white"
-                                    required={lang === 'en'}
-                                />
+                        {/* Tip Side */}
+                        <div className="hidden lg:block w-72 space-y-4">
+                            <div className="p-5 bg-orange-50/50 border border-orange-100 rounded-2xl">
+                                <h4 className="flex items-center gap-2 text-sm font-bold text-orange-900 mb-2">
+                                    <Languages className="w-4 h-4" /> Multilingual Tip
+                                </h4>
+                                <p className="text-[11px] text-orange-800/80 leading-relaxed font-medium">
+                                    Common fields above (Price, Category, Temple) apply to all versions. Use tabs below for localized content.
+                                </p>
                             </div>
-                            <div className="space-y-2.5">
-                                <Label className="text-sm font-bold text-slate-700">{t('admin_pooja_form.labels.assigned_temple')} <span className="text-destructive">*</span></Label>
-                                <select
-                                    className="w-full h-12 px-4 rounded-xl border border-slate-200 bg-white text-sm focus:ring-2 focus:ring-primary/20 outline-none disabled:opacity-50 transition-all font-medium"
-                                    value={formData.templeId}
-                                    onChange={e => handleInputChange("templeId", e.target.value)}
-                                    disabled={isMaster}
-                                    required={!isMaster}
-                                >
-                                    <option value="">{isMaster ? t('admin_pooja_form.placeholders.not_applicable') : t('admin_pooja_form.placeholders.select_temple')}</option>
-                                    {temples.map(t => (
-                                        <option key={t.id} value={t.id}>
-                                            {t[`name_${lang}`] || t.name_en || t.name || 'Unnamed'}
-                                        </option>
-                                    ))}
-                                </select>
-                            </div>
+                        </div>
+                    </div>
+                </div>
 
-                            {/* Row 2: Category & Price */}
-                            <div className="space-y-2.5">
-                                <Label className="text-sm font-bold text-slate-700">{t('admin_pooja_form.labels.category')} <span className="text-destructive">*</span></Label>
-                                <Popover>
-                                    <PopoverTrigger asChild>     
-                                        <Button
-                                            variant="outline"
-                                            role="combobox"
-                                            className={cn(
-                                                "w-full justify-between h-12 px-4 rounded-xl border border-slate-200 bg-white hover:bg-white",
-                                                !formData[`category_${lang}` as keyof typeof formData] && "text-muted-foreground"
-                                            )}
-                                        >
-                                            <div className="flex flex-wrap gap-1">
-                                                {formData[`category_${lang}` as keyof typeof formData] ? (
-                                                    (formData[`category_${lang}` as keyof typeof formData] as string).split(', ').map((cat) => (
-                                                        <Badge key={cat} variant="secondary" className="mr-1">
-                                                            {cat}
-                                                        </Badge>
-                                                    ))
-                                                ) : (
-                                                    t('admin_pooja_form.placeholders.category')
-                                                )}
-                                            </div>
-                                            <ChevronsUpDown className="ml-2 h-4 w-4 shrink-0 opacity-50" />
-                                        </Button>
-                                    </PopoverTrigger>
-                                    <PopoverContent className="w-[300px] p-0">
-                                        <Command>
-                                            <CommandInput placeholder={t('admin_pooja_form.placeholders.search_category')} />
-                                            <CommandList>
-                                                <CommandEmpty>No category found.</CommandEmpty>
-                                                <CommandGroup>
-                                                    {availableCategories.map((category) => {
-                                                        const catName = category[`name_${lang}`] || category.name_en || category.name;
-                                                        const selectedArr = formData[`category_${lang}` as keyof typeof formData]
-                                                            ? (formData[`category_${lang}` as keyof typeof formData] as string).split(', ')
-                                                            : [];
-                                                        const isSelected = selectedArr.includes(catName);
-                                                        return (
-                                                            <CommandItem
-                                                                key={category.id}
-                                                                value={catName}
-                                                                onSelect={() => {
-                                                                    let newArr = [...selectedArr];
-                                                                    if (isSelected) {
-                                                                        newArr = newArr.filter(c => c !== catName);
-                                                                    } else {
-                                                                        newArr.push(catName);
-                                                                    }
-                                                                    handleInputChange(`category_${lang}`, newArr.join(', '));
-                                                                }}
-                                                            >
-                                                                <Check className={cn("mr-2 h-4 w-4", isSelected ? "opacity-100" : "opacity-0")} />
-                                                                {catName}
-                                                            </CommandItem>
-                                                        );
-                                                    })}
-                                                </CommandGroup>
-                                            </CommandList>
-                                        </Command>
-                                    </PopoverContent>
-                                </Popover>
-                            </div>
-                            <div className="space-y-2.5">
-                                <Label className="text-sm font-bold text-slate-700">{t('admin_pooja_form.labels.price')} <span className="text-destructive">*</span></Label>
-                                <div className="relative">
-                                    <span className="absolute left-4 top-1/2 -translate-y-1/2 text-slate-400 font-bold">₹</span>
-                                    <Input
-                                        type="number"
-                                        value={formData.price}
-                                        onChange={e => {
-                                            const p = parseInt(e.target.value) || 0;
-                                            handleInputChange("price", p);
-                                            const newPkgs = [...packages];
-                                            const singleIdx = newPkgs.findIndex(pkg => pkg.name === "Single");
-                                            if (singleIdx > -1) newPkgs[singleIdx].price = p;
-                                            else newPkgs.push({ name: "Single", description: "For 1 person", price: p });
-                                            setPackages(newPkgs);
-                                        }}
-                                        className="pl-8 h-12 rounded-xl focus:ring-primary/20 border-slate-200 bg-white font-bold"
-                                        required
-                                    />
-                                </div>
-                            </div>
+                <div className="h-px bg-slate-100 w-full mb-10" />
+
+                {/* Multilingual Contents Tabs */}
+                {["en", "hi", "mr"].map((lang) => (
+                    <TabsContent key={lang} value={lang} className="space-y-10 mt-0 outline-none">
+                        {/* Pooja Name */}
+                        <div className="space-y-2.5">
+                            <Label className="text-sm font-bold text-slate-700">{t('admin_pooja_form.labels.name')} <span className="text-destructive">*</span></Label>
+                            <Input
+                                placeholder={t('admin_pooja_form.placeholders.name')}
+                                value={(formData.name as any)[lang]}
+                                onChange={e => handleInputChange("name", e.target.value, lang as Language)}
+                                className="h-14 text-lg font-bold rounded-xl focus:ring-primary/20 border-slate-200 bg-white"
+                                required={lang === 'en'}
+                            />
                         </div>
 
                         {/* 3. About Section */}
@@ -502,156 +543,7 @@ export const PoojaForm: React.FC<PoojaFormProps> = ({
                             />
                         </div>
 
-                        {/* 5. Benefits Section */}
-                        <div className="bg-white border rounded-xl p-6 shadow-sm space-y-6">
-                            <div className="flex items-center justify-between">
-                                <Label className="text-sm font-bold text-slate-800">{t('admin_pooja_form.labels.benefits')}</Label>
-                                <Button type="button" variant="outline" size="sm" onClick={() => addArrayItem('benefits', lang as Language)} className="h-9 px-4 rounded-lg bg-orange-50/50 border-orange-100 text-orange-600 hover:bg-orange-50 hover:text-orange-700 font-bold text-xs ring-offset-white transition-colors">
-                                    <Plus className="w-3.5 h-3.5 mr-2" /> {t('common.add')} Benefit
-                                </Button>
-                            </div>
-                            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                                {(formData.benefits as any)[lang].map((item: string, idx: number) => (
-                                    <div key={idx} className="flex gap-2 group relative">
-                                        <Input
-                                            value={item}
-                                            onChange={e => handleArrayChange('benefits', lang as Language, idx, e.target.value)}
-                                            placeholder={`${t('admin_pooja_form.labels.benefit')} ${idx + 1}...`}
-                                            className="h-11 rounded-xl bg-slate-50/50 border-slate-200 pr-10"
-                                        />
-                                        <Button type="button" variant="ghost" size="icon" onClick={() => removeArrayItem('benefits', lang as Language, idx)} className="absolute right-1 top-1/2 -translate-y-1/2 opacity-0 group-hover:opacity-100 transition-opacity">
-                                            <X className="w-4 h-4 text-destructive" />
-                                        </Button>
-                                    </div>
-                                ))}
-                            </div>
-                    </div>
 
-                    {/* Packages Section */}
-                    <div className="bg-white border rounded-xl p-6 shadow-sm space-y-6">
-                        <Label className="text-sm font-bold text-slate-800">Pooja Packages</Label>
-                        
-                        <div className="space-y-4">
-                            <Label className="text-xs font-bold text-slate-500 uppercase">{t('admin_pooja_form.labels.select_tier')}</Label>
-                            <div className="flex flex-wrap gap-2">
-                                {STATIC_PACKAGE_TYPES.map((ptype) => {
-                                    const langPackages = packages[lang as Language] || [];
-                                    const isSelected = langPackages.some((p: any) => p.name === ptype.name);
-                                    return (
-                                        <Button
-                                            key={ptype.name}
-                                            type="button"
-                                            variant={isSelected ? "default" : "outline"}
-                                            onClick={() => togglePackage(ptype, lang as Language)}
-                                            className={`rounded-full px-6 h-[34px] text-xs font-bold transition-all ${isSelected ? 'bg-orange-100 text-orange-700 border-orange-200 hover:bg-orange-100' : 'bg-orange-50/50 text-slate-600 border-orange-100 hover:bg-orange-50 hover:text-orange-700'}`}
-                                        >
-                                            <Plus className={`w-3.5 h-3.5 mr-1.5 ${isSelected ? 'rotate-45' : ''} transition-transform`} /> {ptype.name}
-                                        </Button>
-                                    );
-                                })}
-                            </div>
-                        </div>
-
-                        <div className="min-h-[100px] border border-dashed border-slate-200 rounded-xl flex items-center justify-center bg-slate-50/50">
-                            {(!packages[lang as Language] || packages[lang as Language].length === 0) ? (
-                                <p className="text-xs text-slate-400 font-medium">Select at least one package above to set its price</p>
-                            ) : (
-                                <div className="w-full p-4 grid grid-cols-1 gap-4">
-                                    {(packages[lang as Language] || []).map((pkg: any, idx: number) => (
-                                        <div key={pkg.name} className="flex flex-col md:flex-row gap-4 p-4 bg-white border border-slate-100 rounded-xl relative group shadow-sm">
-                                            <Button
-                                                type="button"
-                                                variant="ghost"
-                                                size="icon"
-                                                onClick={() => togglePackage(pkg, lang as Language)}
-                                                className="absolute top-2 right-2 opacity-0 group-hover:opacity-100 transition-opacity w-6 h-6 rounded-full bg-red-50 hover:bg-red-100"
-                                            >
-                                                <X className="w-3.5 h-3.5 text-red-500" />
-                                            </Button>
-                                            <div className="flex-1 grid grid-cols-1 md:grid-cols-12 gap-4">
-                                                <div className="md:col-span-3 space-y-1.5">
-                                                    <Label className="text-[10px] font-bold text-slate-400 uppercase tracking-wider">{t('admin_pooja_form.labels.tier_type')}</Label>
-                                                    <div className="h-10 flex items-center px-3 bg-slate-50/50 rounded-lg border border-slate-100 text-xs font-bold text-slate-700">
-                                                        {pkg.name}
-                                                    </div>
-                                                </div>
-                                                <div className="md:col-span-3 space-y-1.5">
-                                                    <Label className="text-[10px] font-bold text-slate-400 uppercase tracking-wider">{t('admin_pooja_form.labels.tier_price')}</Label>
-                                                    <Input
-                                                        type="number"
-                                                        value={pkg.price}
-                                                        onChange={e => updatePackage(idx, 'price', parseInt(e.target.value) || 0, lang as Language)}
-                                                        className="h-10 bg-white rounded-lg border-slate-200 font-bold text-sm"
-                                                    />
-                                                </div>
-                                                <div className="md:col-span-6 space-y-1.5">
-                                                    <Label className="text-[10px] font-bold text-slate-400 uppercase tracking-wider">{t('admin_pooja_form.labels.tier_note')}</Label>
-                                                    <Input
-                                                        value={pkg.description}
-                                                        onChange={e => updatePackage(idx, 'description', e.target.value, lang as Language)}
-                                                        placeholder={t('admin_pooja_form.placeholders.tier_note')}
-                                                        className="h-10 bg-white rounded-lg border-slate-200 text-sm"
-                                                    />
-                                                </div>
-                                            </div>
-                                        </div>
-                                    ))}
-                                </div>
-                            )}
-                        </div>
-                    </div>
-
-                    {/* Ritual Process Steps */}
-                    <div className="bg-card border rounded-xl p-8 shadow-sm space-y-8">
-                        <div className="flex items-center justify-between">
-                            <div className="flex items-center gap-2 text-primary font-bold">
-                                <ArrowRight className="w-5 h-5" />
-                                <h2 className="text-xl">{t('admin_pooja_form.sections.ritual')}</h2>
-                            </div>
-                            <Button type="button" variant="outline" size="sm" onClick={() => addProcessStep(lang as Language)} className="rounded-xl px-6">
-                                <Plus className="w-4 h-4 mr-2" /> {t('common.add_step')}
-                            </Button>
-                        </div>
-
-                        <div className="space-y-4">
-                            {(processSteps[lang as Language] || []).map((step: any, idx: number) => (
-                                <div key={idx} className="flex flex-col md:flex-row gap-4 p-6 bg-slate-50/50 border rounded-2xl relative group">
-                                    <div className="flex-shrink-0 w-8 h-8 rounded-full bg-primary/10 text-primary flex items-center justify-center font-bold text-sm">
-                                        {idx + 1}
-                                    </div>
-                                    <Button
-                                        type="button"
-                                        variant="ghost"
-                                        size="icon"
-                                        onClick={() => removeProcessStep(idx, lang as Language)}
-                                        className="absolute top-2 right-2 opacity-0 group-hover:opacity-100 transition-opacity"
-                                    >
-                                        <X className="w-4 h-4 text-destructive" />
-                                    </Button>
-                                    <div className="flex-1 grid grid-cols-1 md:grid-cols-3 gap-4">
-                                        <div className="md:col-span-1 space-y-2">
-                                            <Label className="text-xs font-bold text-slate-500 uppercase">{t('admin_pooja_form.labels.step_title')}</Label>
-                                            <Input
-                                                value={step.title}
-                                                onChange={e => updateProcessStep(idx, 'title', e.target.value, lang as Language)}
-                                                placeholder={t('admin_pooja_form.placeholders.step_title')}
-                                                className="bg-white rounded-xl h-11"
-                                            />
-                                        </div>
-                                        <div className="md:col-span-2 space-y-2">
-                                            <Label className="text-xs font-bold text-slate-500 uppercase">{t('admin_pooja_form.labels.step_desc')}</Label>
-                                            <Input
-                                                value={step.description}
-                                                onChange={e => updateProcessStep(idx, 'description', e.target.value, lang as Language)}
-                                                placeholder={t('admin_pooja_form.placeholders.step_desc')}
-                                                className="bg-white rounded-xl h-11"
-                                            />
-                                        </div>
-                                    </div>
-                                </div>
-                            ))}
-                        </div>
-                    </div>
 
                     {/* FAQs */}
                     <div className="bg-white border rounded-xl p-6 shadow-sm space-y-6">
@@ -700,6 +592,88 @@ export const PoojaForm: React.FC<PoojaFormProps> = ({
                     </div>
                 </TabsContent>
             ))}
+
+            {/* Global Packages Section */}
+            <div className="bg-white border rounded-xl p-8 shadow-sm space-y-8">
+                <div className="flex items-center gap-2 text-primary font-bold">
+                    <Package className="w-5 h-5" />
+                    <h2 className="text-xl">Pooja Packages (Common)</h2>
+                </div>
+                
+                <div className="space-y-4">
+                    <Label className="text-xs font-bold text-slate-500 uppercase tracking-widest">{t('admin_pooja_form.labels.select_tier')}</Label>
+                    <div className="flex flex-wrap gap-2">
+                        {STATIC_PACKAGE_TYPES.map((ptype) => {
+                            const isSelected = packages.some((p: any) => p.name === ptype.name);
+                            return (
+                                <Button
+                                    key={ptype.name}
+                                    type="button"
+                                    variant={isSelected ? "default" : "outline"}
+                                    onClick={() => togglePackage(ptype)}
+                                    className={`rounded-full px-6 h-[34px] text-xs font-bold transition-all ${isSelected ? 'bg-orange-100 text-orange-700 border-orange-200 hover:bg-orange-100' : 'bg-orange-50/50 text-slate-600 border-orange-100 hover:bg-orange-50 hover:text-orange-700'}`}
+                                >
+                                    <Plus className={`w-3.5 h-3.5 mr-1.5 ${isSelected ? 'rotate-45' : ''} transition-transform`} /> {ptype.name}
+                                </Button>
+                            );
+                        })}
+                    </div>
+                </div>
+
+                <div className="min-h-[100px] border border-dashed border-slate-200 rounded-2xl flex items-center justify-center bg-slate-50/50">
+                    {(packages.length === 0) ? (
+                        <div className="flex flex-col items-center gap-2 text-slate-400 py-8">
+                            <Package className="w-8 h-8 opacity-20" />
+                            <p className="text-xs font-medium">Select at least one package above to set its price</p>
+                        </div>
+                    ) : (
+                        <div className="w-full p-6 grid grid-cols-1 gap-4">
+                            {packages.map((pkg: any, idx: number) => (
+                                <div key={pkg.name} className="flex flex-col md:flex-row gap-6 p-6 bg-white border border-slate-100 rounded-2xl relative group shadow-sm hover:shadow-md transition-shadow">
+                                    <Button
+                                        type="button"
+                                        variant="ghost"
+                                        size="icon"
+                                        onClick={() => togglePackage(pkg)}
+                                        className="absolute top-3 right-3 opacity-0 group-hover:opacity-100 transition-opacity w-8 h-8 rounded-full bg-red-50 hover:bg-red-100"
+                                    >
+                                        <X className="w-4 h-4 text-red-500" />
+                                    </Button>
+                                    <div className="flex-1 grid grid-cols-1 md:grid-cols-12 gap-6">
+                                        <div className="md:col-span-3 space-y-2">
+                                            <Label className="text-[10px] font-bold text-slate-400 uppercase tracking-widest">{t('admin_pooja_form.labels.tier_type')}</Label>
+                                            <div className="h-12 flex items-center px-4 bg-slate-50/50 rounded-xl border border-slate-100 text-sm font-bold text-slate-700">
+                                                {pkg.name}
+                                            </div>
+                                        </div>
+                                        <div className="md:col-span-3 space-y-2">
+                                            <Label className="text-[10px] font-bold text-slate-400 uppercase tracking-widest">{t('admin_pooja_form.labels.tier_price')}</Label>
+                                            <div className="relative">
+                                                <span className="absolute left-4 top-1/2 -translate-y-1/2 text-slate-400 font-bold text-sm">₹</span>
+                                                <Input
+                                                    type="number"
+                                                    value={pkg.price}
+                                                    onChange={e => updatePackage(idx, 'price', parseInt(e.target.value) || 0)}
+                                                    className="h-12 pl-8 bg-white rounded-xl border-slate-200 font-bold text-sm shadow-sm"
+                                                />
+                                            </div>
+                                        </div>
+                                        <div className="md:col-span-6 space-y-2">
+                                            <Label className="text-[10px] font-bold text-slate-400 uppercase tracking-widest">{t('admin_pooja_form.labels.tier_note')}</Label>
+                                            <Input
+                                                value={pkg.description}
+                                                onChange={e => updatePackage(idx, 'description', e.target.value)}
+                                                placeholder={t('admin_pooja_form.placeholders.tier_note')}
+                                                className="h-12 bg-white rounded-xl border-slate-200 text-sm shadow-sm"
+                                            />
+                                        </div>
+                                    </div>
+                                </div>
+                            ))}
+                        </div>
+                    )}
+                </div>
+            </div>
 
             {/* Service Image Section (Global) */}
             <div className="bg-white border rounded-xl p-6 shadow-sm space-y-6">

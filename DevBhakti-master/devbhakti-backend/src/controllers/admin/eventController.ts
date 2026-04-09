@@ -1,7 +1,6 @@
 import { Request, Response } from 'express';
-import { PrismaClient } from '@prisma/client';
-
-const prisma = new PrismaClient();
+import { prisma } from '../../lib/prisma';
+import { getLang, localize, buildLangJson } from '../../utils/localization';
 
 // Get all events
 export const getAllEvents = async (req: Request, res: Response) => {
@@ -11,11 +10,12 @@ export const getAllEvents = async (req: Request, res: Response) => {
         const skip = (page - 1) * limit;
         const search = req.query.search as string;
 
+        const lang = getLang(req);
         let where: any = {};
         if (search) {
             where.OR = [
-                { name_en: { contains: search, mode: 'insensitive' } },
-                { temple: { name_en: { contains: search, mode: 'insensitive' } } }
+                { name: { path: ['en'], string_contains: search } },
+                { temple: { name: { path: ['en'], string_contains: search } } }
             ];
         }
 
@@ -26,16 +26,16 @@ export const getAllEvents = async (req: Request, res: Response) => {
                     temple: {
                         select: {
                             id: true,
-                            name_en: true,
-                            location_en: true
+                            name: true,
+                            location: true
                         }
                     },
                     Pooja: {
                         select: {
                             id: true,
-                            name_en: true,
+                            name: true,
                             price: true,
-                            duration_en: true,
+                            duration: true,
                             image: true
                         }
                     }
@@ -51,7 +51,7 @@ export const getAllEvents = async (req: Request, res: Response) => {
 
         res.json({
             success: true,
-            data: events,
+            data: localize(events, lang),
             pagination: {
                 total,
                 page,
@@ -65,6 +65,35 @@ export const getAllEvents = async (req: Request, res: Response) => {
     }
 };
 
+// Get event by ID (Raw for Admin)
+export const getEventById = async (req: Request, res: Response) => {
+    try {
+        const { id } = req.params;
+        const event = await prisma.event.findUnique({
+            where: { id: String(id) },
+            include: {
+                temple: true,
+                Pooja: {
+                    select: {
+                        id: true,
+                        name: true
+                    }
+                }
+            }
+        });
+
+        if (!event) {
+            return res.status(404).json({ success: false, error: 'Event not found' });
+        }
+
+        res.json({ success: true, data: event });
+    } catch (error) {
+        console.error('Error fetching event:', error);
+        res.status(500).json({ success: false, error: 'Failed to fetch event' });
+    }
+};
+
+
 // Get events by temple
 export const getEventsByTemple = async (req: Request, res: Response) => {
     try {
@@ -75,7 +104,8 @@ export const getEventsByTemple = async (req: Request, res: Response) => {
                 date: 'asc'
             }
         });
-        res.json(events);
+        const lang = getLang(req);
+        res.json(localize(events, lang));
     } catch (error) {
         console.error('Error fetching temple events:', error);
         res.status(500).json({ error: 'Failed to fetch temple events' });
@@ -100,14 +130,10 @@ export const createEvent = async (req: Request, res: Response) => {
 
         const event = await prisma.event.create({
             data: {
-                name_en: final_name_en,
-                name_hi: name_hi || null,
-                name_mr: name_mr || null,
+                name: buildLangJson(name_en || req.body.name, name_hi, name_mr),
                 date,
                 time: time || null,
-                description_en: description_en || req.body.description || null,
-                description_hi: description_hi || null,
-                description_mr: description_mr || null,
+                description: buildLangJson(description_en || req.body.description, description_hi, description_mr),
                 templeId: templeId || null,
                 // Connect recommended poojas if provided
                 ...(recommendedPoojaIds && recommendedPoojaIds.length > 0
@@ -122,16 +148,16 @@ export const createEvent = async (req: Request, res: Response) => {
                 temple: {
                     select: {
                         id: true,
-                        name_en: true,
-                        location_en: true
+                        name: true,
+                        location: true
                     }
                 },
                 Pooja: {
                     select: {
                         id: true,
-                        name_en: true,
+                        name: true,
                         price: true,
-                        duration_en: true,
+                        duration: true,
                         image: true
                     }
                 }
@@ -159,14 +185,10 @@ export const updateEvent = async (req: Request, res: Response) => {
         const event = await prisma.event.update({
             where: { id: String(id) },
             data: {
-                name_en: name_en || req.body.name,
-                name_hi,
-                name_mr,
+                name: buildLangJson(name_en || req.body.name, name_hi, name_mr),
                 date,
                 time: time !== undefined ? time : undefined,
-                description_en: description_en || req.body.description,
-                description_hi,
-                description_mr,
+                description: buildLangJson(description_en || req.body.description, description_hi, description_mr),
                 status: req.body.status !== undefined ? req.body.status : undefined,
                 templeId: templeId || null,
                 // Sync recommended poojas if provided
@@ -182,16 +204,16 @@ export const updateEvent = async (req: Request, res: Response) => {
                 temple: {
                     select: {
                         id: true,
-                        name_en: true,
-                        location_en: true
+                        name: true,
+                        location: true
                     }
                 },
                 Pooja: {
                     select: {
                         id: true,
-                        name_en: true,
+                        name: true,
                         price: true,
-                        duration_en: true,
+                        duration: true,
                         image: true
                     }
                 }

@@ -2,6 +2,7 @@ import { Request, Response } from "express";
 import { prisma } from "../../lib/prisma";
 import { notifyUser } from "../../services/firebaseService";
 import { syncOrderAndLedgerStatus } from "../../utils/orderStatusSync";
+import { getLang, localize } from "../../utils/localization";
 
 // Get orders specifically for a Seller (Store)
 export const getSellerOrders = async (req: Request, res: Response) => {
@@ -18,14 +19,15 @@ export const getSellerOrders = async (req: Request, res: Response) => {
                 },
                 items: {
                     include: {
-                        product: { select: { name_en: true, image: true } }
+                        product: { select: { name: true, image: true } }
                     }
                 }
             },
             orderBy: { createdAt: "desc" }
         });
 
-        return res.status(200).json({ success: true, data: subOrders });
+        const lang = getLang(req);
+        return res.status(200).json({ success: true, data: localize(subOrders, lang) });
     } catch (error: any) {
         console.error("Seller Orders Error:", error);
         return res.status(500).json({ success: false, message: error.message });
@@ -73,7 +75,8 @@ export const updateSellerOrderStatus = async (req: Request, res: Response) => {
             });
         }
 
-        return res.status(200).json({ success: true, message: "Order status updated", data: updated });
+        const lang = getLang(req);
+        return res.status(200).json({ success: true, message: "Order status updated", data: localize(updated, lang) });
     } catch (error: any) {
         console.error("Update Seller Order Error:", error);
         return res.status(500).json({ success: false, message: error.message });

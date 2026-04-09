@@ -14,7 +14,7 @@ export const loginAdmin = async (credentials: any) => {
 const getAdminToken = () => localStorage.getItem("admin_token") || localStorage.getItem("staff_token");
 
 // Admin Pooja Management
-export const fetchAllPoojasAdmin = async (params?: { isMaster?: boolean, templeId?: string, search?: string, poojaId?: string }) => {
+export const fetchAllPoojasAdmin = async (params?: { isMaster?: boolean, templeId?: string, search?: string, poojaId?: string, lang?: string }) => {
     const token = getAdminToken();
     let url = `${API_URL}/admin/poojas`;
     if (params) {
@@ -23,6 +23,7 @@ export const fetchAllPoojasAdmin = async (params?: { isMaster?: boolean, templeI
         if (params.templeId) query.append('templeId', params.templeId);
         if (params.search) query.append('search', params.search);
         if (params.poojaId) query.append('poojaId', params.poojaId);
+        if (params.lang) query.append('lang', params.lang);
         url += `?${query.toString()}`;
     }
     const response = await axios.get(url, {
@@ -54,6 +55,14 @@ export const createPoojaAdmin = async (formData: FormData) => {
             Authorization: `Bearer ${token}`,
             'Content-Type': 'multipart/form-data'
         }
+    });
+    return response.data;
+};
+
+export const fetchPoojaByIdAdmin = async (id: string) => {
+    const token = getAdminToken();
+    const response = await axios.get(`${API_URL}/admin/poojas/${id}`, {
+        headers: { Authorization: `Bearer ${token}` }
     });
     return response.data;
 };
@@ -184,8 +193,17 @@ export const toggleEventStatusAdmin = async (id: string, status: boolean) => {
     return response.data;
 };
 
+export const fetchEventByIdAdmin = async (id: string) => {
+    const token = getAdminToken();
+    const response = await axios.get(`${API_URL}/admin/events/${id}`, {
+        headers: { Authorization: `Bearer ${token}` }
+    });
+    return response.data;
+};
+
+
 // Admin Temple Management
-export const fetchAllTemplesAdmin = async (params?: { page?: number; limit?: number; search?: string; isVerified?: boolean; templeId?: string; date?: string; deity?: string; state?: string; district?: string; transactionRange?: string }) => {
+export const fetchAllTemplesAdmin = async (params?: { page?: number; limit?: number; search?: string; isVerified?: boolean; templeId?: string; date?: string; deity?: string; state?: string; district?: string; transactionRange?: string; lang?: string }) => {
     const token = getAdminToken();
     let url = `${API_URL}/admin/temples`;
     if (params) {
@@ -200,9 +218,18 @@ export const fetchAllTemplesAdmin = async (params?: { page?: number; limit?: num
         if (params.state) query.append('state', params.state);
         if (params.district) query.append('district', params.district);
         if (params.transactionRange) query.append('transactionRange', params.transactionRange);
+        if (params.lang) query.append('lang', params.lang);
         url += `?${query.toString()}`;
     }
     const response = await axios.get(url, {
+        headers: { Authorization: `Bearer ${token}` }
+    });
+    return response.data;
+};
+
+export const fetchTempleByIdAdmin = async (id: string | number) => {
+    const token = getAdminToken();
+    const response = await axios.get(`${API_URL}/admin/temples/${id}`, {
         headers: { Authorization: `Bearer ${token}` }
     });
     return response.data;
@@ -300,9 +327,12 @@ export const rejectTempleUpdate = async (requestId: string) => {
 };
 
 // Admin CMS Management
-export const fetchAllBannersAdmin = async () => {
+export const fetchAllBannersAdmin = async (params?: { lang?: string }) => {
     const token = getAdminToken();
-    const response = await axios.get(`${API_URL}/admin/cms/banners`, {
+    let url = `${API_URL}/admin/cms/banners`;
+    if (params?.lang) url += `?lang=${params.lang}`;
+    
+    const response = await axios.get(url, {
         headers: { Authorization: `Bearer ${token}` }
     });
     return response.data.data;
@@ -351,9 +381,12 @@ export const toggleBannerGlobalStatus = async () => {
     return response.data;
 };
 
-export const fetchAllFeaturesAdmin = async () => {
+export const fetchAllFeaturesAdmin = async (params?: { lang?: string }) => {
     const token = getAdminToken();
-    const response = await axios.get(`${API_URL}/admin/cms/features`, {
+    let url = `${API_URL}/admin/cms/features`;
+    if (params?.lang) url += `?lang=${params.lang}`;
+    
+    const response = await axios.get(url, {
         headers: { Authorization: `Bearer ${token}` }
     });
     return response.data.data;
@@ -390,9 +423,12 @@ export const deleteFeatureAdmin = async (id: string) => {
 };
 
 
-export const fetchAllTestimonialsAdmin = async () => {
+export const fetchAllTestimonialsAdmin = async (params?: { lang?: string }) => {
     const token = getAdminToken();
-    const response = await axios.get(`${API_URL}/admin/cms/testimonials`, {
+    let url = `${API_URL}/admin/cms/testimonials`;
+    if (params?.lang) url += `?lang=${params.lang}`;
+    
+    const response = await axios.get(url, {
         headers: { Authorization: `Bearer ${token}` }
     });
     return response.data.data;
@@ -429,9 +465,12 @@ export const deleteTestimonialAdmin = async (id: string) => {
 };
 
 // CTA Cards Management
-export const fetchAllCTACardsAdmin = async () => {
+export const fetchAllCTACardsAdmin = async (params?: { lang?: string }) => {
     const token = getAdminToken();
-    const response = await axios.get(`${API_URL}/admin/cms/cta-cards`, {
+    let url = `${API_URL}/admin/cms/cta-cards`;
+    if (params?.lang) url += `?lang=${params.lang}`;
+    
+    const response = await axios.get(url, {
         headers: { Authorization: `Bearer ${token}` }
     });
     return response.data.data;
@@ -498,7 +537,7 @@ export const fetchProductOwnersAdmin = async () => {
 
 export const fetchProductByIdAdmin = async (id: string) => {
     const token = getAdminToken();
-    const response = await axios.get(`${API_URL}/admin/products/${id}`, {
+    const response = await axios.get(`${API_URL}/admin/products/${id}?lang=raw`, {
         headers: { Authorization: `Bearer ${token}` }
     });
     return response.data.data;
@@ -570,7 +609,7 @@ export const fetchActiveCategoriesAdmin = async () => {
 
 export const fetchCategoryByIdAdmin = async (id: string) => {
     const token = getAdminToken();
-    const response = await axios.get(`${API_URL}/admin/categories/${id}`, {
+    const response = await axios.get(`${API_URL}/admin/categories/${id}?lang=raw`, {
         headers: { Authorization: `Bearer ${token}` }
     });
     return response.data.data;
@@ -749,7 +788,7 @@ export const fetchAllSellersAdmin = async () => {
 
 export const fetchSellerByIdAdmin = async (id: string) => {
     const token = getAdminToken();
-    const response = await axios.get(`${API_URL}/admin/sellers/${id}`, {
+    const response = await axios.get(`${API_URL}/admin/sellers/${id}?lang=raw`, {
         headers: { Authorization: `Bearer ${token}` }
     });
     return response.data.data;

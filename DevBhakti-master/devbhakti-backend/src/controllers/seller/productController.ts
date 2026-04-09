@@ -1,5 +1,6 @@
 import { Request, Response } from "express";
 import { prisma } from "../../lib/prisma";
+import { buildLangJson, buildLangArray, getLang, localize } from "../../utils/localization";
 
 // Get My Products
 export const getMyProducts = async (req: Request, res: Response) => {
@@ -8,13 +9,13 @@ export const getMyProducts = async (req: Request, res: Response) => {
 
         const { page = 1, limit = 10, search, status } = req.query;
         const skip = (Number(page) - 1) * Number(limit);
-
+        const lang = getLang(req);
         const where: any = { sellerId };
 
         if (search) {
             where.OR = [
-                { name_en: { contains: search as string, mode: "insensitive" } },
-                { description_en: { contains: search as string, mode: "insensitive" } }
+                { name: { path: ['en'], string_contains: search as string } },
+                { description: { path: ['en'], string_contains: search as string } }
             ];
         }
 
@@ -27,7 +28,7 @@ export const getMyProducts = async (req: Request, res: Response) => {
                 where,
                 include: {
                     variants: true,
-                    categoryObj: { select: { name_en: true, name_hi: true, name_mr: true } }
+                    categoryObj: { select: { name: true } }
                 },
                 orderBy: { createdAt: "desc" },
                 skip,
@@ -39,7 +40,7 @@ export const getMyProducts = async (req: Request, res: Response) => {
         res.status(200).json({
             success: true,
             data: {
-                products,
+                products: localize(products, lang),
                 pagination: {
                     page: Number(page),
                     limit: Number(limit),
@@ -65,7 +66,7 @@ export const getMyProductById = async (req: Request, res: Response) => {
             where: { id: id as string, sellerId },
             include: {
                 variants: true,
-                categoryObj: { select: { id: true, name_en: true, name_hi: true, name_mr: true } },
+                categoryObj: { select: { id: true, name: true } },
                 seller: { select: { id: true, name: true } }
             }
         });
@@ -74,7 +75,8 @@ export const getMyProductById = async (req: Request, res: Response) => {
             return res.status(404).json({ success: false, message: "Product not found" });
         }
 
-        res.status(200).json({ success: true, data: product });
+        const lang = getLang(req);
+        res.status(200).json({ success: true, data: localize(product as any, lang) });
     } catch (error) {
         console.error("Seller Get Product By ID Error:", error);
         res.status(500).json({ success: false, message: "Internal server error" });
@@ -85,96 +87,42 @@ export const getMyProductById = async (req: Request, res: Response) => {
 export const createProduct = async (req: Request, res: Response) => {
     try {
         const sellerId = (req as any).owner.ownerId;
+        const data = req.body;
+        
+        // Handle images and parsing
+        let image = null;
+        let variants = data.variants ? (typeof data.variants === 'string' ? JSON.parse(data.variants) : data.variants) : [];
+        const files = req.files as any;
 
-        let name, description, category, categoryId, variants, image;
-        let highlights, longDescription, shippingInfo, origin;
+        if (files) {
+            const productFile = files.find((f: any) => f.fieldname === 'image');
+            if (productFile) image = `/uploads/products/${productFile.filename}`;
 
-        if (req.is('multipart/form-data')) {
-            const data = req.body;
-            name = data.name_en || data.name;
-            const name_hi = data.name_hi || null;
-            const name_mr = data.name_mr || null;
-
-            description = data.description_en || data.description;
-            const description_hi = data.description_hi || null;
-            const description_mr = data.description_mr || null;
-
-            category = data.category_en || data.category;
-            const category_hi = data.category_hi || null;
-            const category_mr = data.category_mr || null;
-            categoryId = data.category || null;
-
-            highlights = data.highlights_en ? JSON.parse(data.highlights_en) : (data.highlights ? JSON.parse(data.highlights) : []);
-            const highlights_hi = data.highlights_hi ? JSON.parse(data.highlights_hi) : [];
-            const highlights_mr = data.highlights_mr ? JSON.parse(data.highlights_mr) : [];
-
-            longDescription = data.longDescription_en || data.longDescription || null;
-            const longDescription_hi = data.longDescription_hi || null;
-            const longDescription_mr = data.longDescription_mr || null;
-
-            shippingInfo = data.shippingInfo_en || data.shippingInfo || null;
-            const shippingInfo_hi = data.shippingInfo_hi || null;
-            const shippingInfo_mr = data.shippingInfo_mr || null;
-
-            origin = data.origin_en || data.origin || null;
-            const origin_hi = data.origin_hi || null;
-            const origin_mr = data.origin_mr || null;
-
-            variants = data.variants ? JSON.parse(data.variants) : [];
-
-            const files = req.files as Express.Multer.File[];
-            if (files) {
-                const productFile = files.find(f => f.fieldname === 'image');
-                if (productFile) image = `/uploads/products/${productFile.filename}`;
-
-                variants = variants.map((v: any, index: number) => {
-                    const variantFile = files.find(f => f.fieldname === `variant_image_${index}`);
-                    if (variantFile) v.image = `/uploads/products/${variantFile.filename}`;
-                    return v;
-                });
-            }
-            
-            req.body.localizedData = {
-                name_en: name, name_hi, name_mr,
-                description_en: description, description_hi, description_mr,
-                category_en: category, category_hi, category_mr,
-                highlights_en: highlights, highlights_hi, highlights_mr,
-                longDescription_en: longDescription, longDescription_hi, longDescription_mr,
-                shippingInfo_en: shippingInfo, shippingInfo_hi, shippingInfo_mr,
-                origin_en: origin, origin_hi, origin_mr
-            };
-        } else {
-            const body = req.body;
-            name = body.name_en || body.name;
-            category = body.category_en || body.category;
-            description = body.description_en || body.description;
-            categoryId = body.category || null;
-            variants = body.variants || [];
-            req.body.localizedData = {
-                name_en: name, name_hi: body.name_hi, name_mr: body.name_mr,
-                description_en: description, description_hi: body.description_hi, description_mr: body.description_mr,
-                category_en: category, category_hi: body.category_hi, category_mr: body.category_mr,
-                highlights_en: body.highlights_en || [], highlights_hi: body.highlights_hi || [], highlights_mr: body.highlights_mr || [],
-                longDescription_en: body.longDescription_en, longDescription_hi: body.longDescription_hi, longDescription_mr: body.longDescription_mr,
-                shippingInfo_en: body.shippingInfo_en, shippingInfo_hi: body.shippingInfo_hi, shippingInfo_mr: body.shippingInfo_mr,
-                origin_en: body.origin_en, origin_hi: body.origin_hi, origin_mr: body.origin_mr
-            };
+            variants = variants.map((v: any, index: number) => {
+                const variantFile = files.find((f: any) => f.fieldname === `variant_image_${index}`);
+                if (variantFile) v.image = `/uploads/products/${variantFile.filename}`;
+                return v;
+            });
         }
 
-        if (!name || !description || !category) {
-            return res.status(400).json({ success: false, message: "Name, Description and Category are required" });
-        }
+        const categoryId = data.category || null;
 
         const product = await prisma.product.create({
             data: {
-                ...req.body.localizedData,
+                name: buildLangJson(data.name_en || data.name, data.name_hi, data.name_mr),
+                description: buildLangJson(data.description_en || data.description, data.description_hi, data.description_mr),
+                category: buildLangJson(data.category_en || data.category, data.category_hi, data.category_mr),
+                highlights: buildLangArray(data.highlights_en || data.highlights, data.highlights_hi, data.highlights_mr),
+                longDescription: buildLangJson(data.longDescription_en, data.longDescription_hi, data.longDescription_mr),
+                shippingInfo: buildLangJson(data.shippingInfo_en, data.shippingInfo_hi, data.shippingInfo_mr),
+                origin: buildLangJson(data.origin_en || data.origin, data.origin_hi, data.origin_mr),
                 categoryId,
                 sellerId,
                 status: "pending",
                 image,
                 variants: {
                     create: variants.map((v: any) => ({
-                        name_en: v.name,
+                        name: buildLangJson(v.name_en || v.name, v.name_hi, v.name_mr),
                         price: parseFloat(v.price),
                         stock: parseInt(v.stock) || 0,
                         image: v.image || null
@@ -203,40 +151,21 @@ export const updateProduct = async (req: Request, res: Response) => {
         });
         if (!existingProduct) return res.status(404).json({ success: false, message: "Product not found or access denied" });
 
+        const body = req.body;
         const updateData: any = {};
         let variants, image, removeImage;
-        const body = req.body;
         removeImage = body.removeImage === 'true' || body.removeImage === true;
 
+        // Multilingual fields
+        if (body.name_en || body.name) updateData.name = buildLangJson(body.name_en || body.name, body.name_hi, body.name_mr);
+        if (body.description_en || body.description) updateData.description = buildLangJson(body.description_en || body.description, body.description_hi, body.description_mr);
+        if (body.category_en || body.category) updateData.category = buildLangJson(body.category_en || body.category, body.category_hi, body.category_mr);
+        if (body.highlights_en) updateData.highlights = buildLangArray(body.highlights_en, body.highlights_hi, body.highlights_mr);
+        if (body.longDescription_en !== undefined) updateData.longDescription = buildLangJson(body.longDescription_en, body.longDescription_hi, body.longDescription_mr);
+        if (body.shippingInfo_en !== undefined) updateData.shippingInfo = buildLangJson(body.shippingInfo_en, body.shippingInfo_hi, body.shippingInfo_mr);
+        if (body.origin_en !== undefined) updateData.origin = buildLangJson(body.origin_en, body.origin_hi, body.origin_mr);
+
         if (req.is('multipart/form-data')) {
-            if (body.name_en || body.name) updateData.name_en = body.name_en || body.name;
-            if (body.name_hi !== undefined) updateData.name_hi = body.name_hi;
-            if (body.name_mr !== undefined) updateData.name_mr = body.name_mr;
-            
-            if (body.description_en || body.description) updateData.description_en = body.description_en || body.description;
-            if (body.description_hi !== undefined) updateData.description_hi = body.description_hi;
-            if (body.description_mr !== undefined) updateData.description_mr = body.description_mr;
-
-            if (body.category_en || body.category) updateData.category_en = body.category_en || body.category;
-            if (body.category_hi !== undefined) updateData.category_hi = body.category_hi;
-            if (body.category_mr !== undefined) updateData.category_mr = body.category_mr;
-            
-            if (body.highlights_en) updateData.highlights_en = JSON.parse(body.highlights_en);
-            if (body.highlights_hi) updateData.highlights_hi = JSON.parse(body.highlights_hi);
-            if (body.highlights_mr) updateData.highlights_mr = JSON.parse(body.highlights_mr);
-
-            if (body.longDescription_en !== undefined) updateData.longDescription_en = body.longDescription_en;
-            if (body.longDescription_hi !== undefined) updateData.longDescription_hi = body.longDescription_hi;
-            if (body.longDescription_mr !== undefined) updateData.longDescription_mr = body.longDescription_mr;
-
-            if (body.shippingInfo_en !== undefined) updateData.shippingInfo_en = body.shippingInfo_en;
-            if (body.shippingInfo_hi !== undefined) updateData.shippingInfo_hi = body.shippingInfo_hi;
-            if (body.shippingInfo_mr !== undefined) updateData.shippingInfo_mr = body.shippingInfo_mr;
-
-            if (body.origin_en !== undefined) updateData.origin_en = body.origin_en;
-            if (body.origin_hi !== undefined) updateData.origin_hi = body.origin_hi;
-            if (body.origin_mr !== undefined) updateData.origin_mr = body.origin_mr;
-
             variants = body.variants ? JSON.parse(body.variants) : [];
             const files = req.files as Express.Multer.File[];
             if (files) {
@@ -249,35 +178,6 @@ export const updateProduct = async (req: Request, res: Response) => {
                 });
             }
         } else {
-            const body = req.body;
-            if (body.name_en || body.name) updateData.name_en = body.name_en || body.name;
-            if (body.name_hi !== undefined) updateData.name_hi = body.name_hi;
-            if (body.name_mr !== undefined) updateData.name_mr = body.name_mr;
-            
-            if (body.description_en || body.description) updateData.description_en = body.description_en || body.description;
-            if (body.description_hi !== undefined) updateData.description_hi = body.description_hi;
-            if (body.description_mr !== undefined) updateData.description_mr = body.description_mr;
-
-            if (body.category_en || body.category) updateData.category_en = body.category_en || body.category;
-            if (body.category_hi !== undefined) updateData.category_hi = body.category_hi;
-            if (body.category_mr !== undefined) updateData.category_mr = body.category_mr;
-
-            if (body.highlights_en) updateData.highlights_en = body.highlights_en;
-            if (body.highlights_hi) updateData.highlights_hi = body.highlights_hi;
-            if (body.highlights_mr) updateData.highlights_mr = body.highlights_mr;
-
-            if (body.longDescription_en !== undefined) updateData.longDescription_en = body.longDescription_en;
-            if (body.longDescription_hi !== undefined) updateData.longDescription_hi = body.longDescription_hi;
-            if (body.longDescription_mr !== undefined) updateData.longDescription_mr = body.longDescription_mr;
-
-            if (body.shippingInfo_en !== undefined) updateData.shippingInfo_en = body.shippingInfo_en;
-            if (body.shippingInfo_hi !== undefined) updateData.shippingInfo_hi = body.shippingInfo_hi;
-            if (body.shippingInfo_mr !== undefined) updateData.shippingInfo_mr = body.shippingInfo_mr;
-
-            if (body.origin_en !== undefined) updateData.origin_en = body.origin_en;
-            if (body.origin_hi !== undefined) updateData.origin_hi = body.origin_hi;
-            if (body.origin_mr !== undefined) updateData.origin_mr = body.origin_mr;
-
             variants = body.variants || [];
         }
 
@@ -288,7 +188,7 @@ export const updateProduct = async (req: Request, res: Response) => {
             await prisma.productVariant.deleteMany({ where: { productId: id as string } });
             updateData.variants = {
                 create: variants.map((v: any) => ({
-                    name_en: v.name,
+                    name: buildLangJson(v.name_en || v.name, v.name_hi, v.name_mr),
                     price: parseFloat(v.price),
                     stock: parseInt(v.stock) || 0,
                     image: v.image || null
@@ -302,7 +202,8 @@ export const updateProduct = async (req: Request, res: Response) => {
             include: { variants: true }
         });
 
-        res.status(200).json({ success: true, data: updatedProduct });
+        const lang = getLang(req);
+        res.status(200).json({ success: true, data: localize(updatedProduct, lang) });
 
     } catch (error) {
         console.error("Seller Update Product Error:", error);

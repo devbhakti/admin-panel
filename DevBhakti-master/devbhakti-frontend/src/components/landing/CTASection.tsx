@@ -29,7 +29,7 @@ const CTASection: React.FC = () => {
 
   useEffect(() => {
     fetchCTACards();
-  }, []);
+  }, [language]);
 
   const fetchCTACards = async () => {
     try {

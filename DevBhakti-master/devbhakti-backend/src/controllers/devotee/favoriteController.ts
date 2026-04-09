@@ -1,5 +1,6 @@
 import { Request, Response } from 'express';
 import { prisma } from '../../lib/prisma';
+import { getLang, localize } from '../../utils/localization';
 
 // 1. Add Favorite
 export const addFavorite = async (req: Request, res: Response) => {
@@ -101,8 +102,8 @@ export const getFavorites = async (req: Request, res: Response) => {
                     include: {
                         temple: {
                             select: {
-                                name_en: true,
-                                location_en: true,
+                                name: true,
+                                location: true,
                                 image: true
                             }
                         }
@@ -119,10 +120,11 @@ export const getFavorites = async (req: Request, res: Response) => {
             }
         });
 
+        const lang = getLang(req);
         res.json({
             success: true,
             message: 'Favorites fetched successfully',
-            data: favorites
+            data: localize(favorites, lang)
         });
     } catch (error: any) {
         console.error('Get favorites error:', error);

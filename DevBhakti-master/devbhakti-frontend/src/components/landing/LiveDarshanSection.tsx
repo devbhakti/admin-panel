@@ -59,7 +59,7 @@ const LiveDarshanSection: React.FC = () => {
       setLoading(false);
     };
     loadLiveTemples();
-  }, []);
+  }, [language]);
 
   if (loading) return null;
   if (liveTemples.length === 0) return null;
