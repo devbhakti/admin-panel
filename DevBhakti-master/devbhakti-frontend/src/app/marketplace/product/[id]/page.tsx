@@ -95,7 +95,7 @@ export default function ProductDetailsPage() {
   const params = useParams();
   const router = useRouter();
   const { toast } = useToast();
-  const { language, t } = useLanguage();
+  const { language, t, tRaw } = useLanguage();
 
   const [product, setProduct] = useState<Product | null>(null);
   const [selectedVariant, setSelectedVariant] = useState<string | null>(null);
@@ -411,7 +411,7 @@ export default function ProductDetailsPage() {
               >
                 <h3 className="text-xl font-display font-bold text-[#4A2c01] border-b border-[#794A05]/10 pb-4">{t('marketplace.highlights')}</h3>
                 <ul className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                  {(product.highlights ? product.highlights.split(',').map(s => s.trim()) : t('marketplace.highlights_default')).map((item: string, id: number) => (
+                  {(product.highlights ? product.highlights.split(',').map(s => s.trim()) : tRaw('marketplace.highlights_default')).map((item: string, id: number) => (
                     <li key={id} className="flex items-start gap-3 text-sm text-[#794A05] font-medium">
                       <div className="w-1.5 h-1.5 rounded-full bg-[#794A05] mt-2 flex-shrink-0" />
                       {item}

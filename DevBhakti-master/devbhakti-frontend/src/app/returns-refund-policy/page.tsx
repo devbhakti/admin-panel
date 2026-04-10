@@ -8,7 +8,7 @@ import { RefreshCw, MapPin, Mail, UserCheck, AlertTriangle, Info, Package, Heart
 import { useLanguage } from "@/context/LanguageContext";
 
 export default function ReturnsRefundPolicyPage() {
-    const { t } = useLanguage();
+    const { t, tRaw } = useLanguage();
     const fadeIn = {
         initial: { opacity: 0, y: 20 },
         whileInView: { opacity: 1, y: 0 },
@@ -80,7 +80,7 @@ export default function ReturnsRefundPolicyPage() {
         }
     ];
 
-    const localizedClauses = t('returns_policy.clauses') as Array<any> || [];
+    const localizedClauses = tRaw('returns_policy.clauses') || [];
     const clausesMap = clauses.map((c, idx) => ({
         ...c,
         ...localizedClauses[idx]

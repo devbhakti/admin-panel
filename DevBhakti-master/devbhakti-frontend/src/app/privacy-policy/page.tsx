@@ -8,7 +8,7 @@ import { Shield, Lock, Eye, Users, RefreshCw, FileText, Mail, MapPin } from "luc
 import { useLanguage } from "@/context/LanguageContext";
 
 export default function PrivacyPolicyPage() {
-    const { t } = useLanguage();
+    const { t, tRaw } = useLanguage();
     const fadeIn = {
         initial: { opacity: 0, y: 20 },
         whileInView: { opacity: 1, y: 0 },
@@ -85,7 +85,7 @@ export default function PrivacyPolicyPage() {
         }
     ];
 
-    const localizedSections = t('privacy.sections') as Array<any> || [];
+    const localizedSections = tRaw('privacy.sections') || [];
     const policiesMap = policies.map((p, idx) => ({
         ...p,
         ...localizedSections[idx]

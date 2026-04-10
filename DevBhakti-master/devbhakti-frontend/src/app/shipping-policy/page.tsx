@@ -8,7 +8,7 @@ import { Truck, Package, Clock, Globe, ShieldCheck, MapPin } from "lucide-react"
 import { useLanguage } from "@/context/LanguageContext";
 
 export default function ShippingPolicyPage() {
-    const { t } = useLanguage();
+    const { t, tRaw } = useLanguage();
     const fadeIn = {
         initial: { opacity: 0, y: 20 },
         whileInView: { opacity: 1, y: 0 },
@@ -98,7 +98,7 @@ export default function ShippingPolicyPage() {
         }
     ];
 
-    const localizedClauses = t('shipping_policy.clauses') as Array<any> || [];
+    const localizedClauses = tRaw('shipping_policy.clauses') || [];
     const clausesMap = clauses.map((c, idx) => ({
         ...c,
         ...localizedClauses[idx]

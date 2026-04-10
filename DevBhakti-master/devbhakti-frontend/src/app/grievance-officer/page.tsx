@@ -8,7 +8,7 @@ import { UserCheck, Shield, FileText, Mail, Gavel, Scale, MapPin, Clock, AlertCi
 import { useLanguage } from "@/context/LanguageContext";
 
 export default function GrievanceOfficerPage() {
-    const { t } = useLanguage();
+    const { t, tRaw } = useLanguage();
     const fadeIn = {
         initial: { opacity: 0, y: 20 },
         whileInView: { opacity: 1, y: 0 },
@@ -16,13 +16,16 @@ export default function GrievanceOfficerPage() {
         transition: { duration: 0.6 }
     };
 
-    const complaintCategories = t('grievance.mechanism.categories') as string[] || [
-        "Platform services",
-        "Booking issues",
-        "Privacy concerns",
-        "Refund matters",
-        "Any other platform-related grievances"
-    ];
+    const complaintCategoriesRaw = tRaw('grievance.mechanism.categories');
+    const complaintCategories = Array.isArray(complaintCategoriesRaw)
+        ? complaintCategoriesRaw
+        : [
+            "Platform services",
+            "Booking issues",
+            "Privacy concerns",
+            "Refund matters",
+            "Any other platform-related grievances"
+        ];
 
     return (
         <main className="min-h-screen bg-background">

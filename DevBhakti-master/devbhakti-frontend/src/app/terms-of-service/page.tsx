@@ -8,7 +8,7 @@ import { Scale, CheckCircle2, AlertTriangle, Gavel, Globe, CreditCard, Info } fr
 import { useLanguage } from "@/context/LanguageContext";
 
 export default function TermsOfServicePage() {
-    const { t } = useLanguage();
+    const { t, tRaw } = useLanguage();
     const fadeIn = {
         initial: { opacity: 0, y: 20 },
         whileInView: { opacity: 1, y: 0 },
@@ -83,7 +83,7 @@ export default function TermsOfServicePage() {
         }
     ];
 
-    const localizedClauses = t('terms.clauses') as Array<any> || [];
+    const localizedClauses = tRaw('terms.clauses') || [];
     const clausesMap = clauses.map((c, idx) => ({
         ...c,
         ...localizedClauses[idx]

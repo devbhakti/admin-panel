@@ -15,7 +15,8 @@ interface LanguageContextType {
   language: Language;
   setLanguage: (lang: Language) => void;
   isRTL: boolean;
-  t: (key: string) => any;
+  t: (key: string, params?: Record<string, string | number | boolean>) => string;
+  tRaw: (key: string) => any;
 }
 
 const LanguageContext = createContext<LanguageContextType | undefined>(undefined);
@@ -47,10 +48,10 @@ export const LanguageProvider: React.FC<{ children: React.ReactNode }> = ({ chil
     }
   };
 
-  const t = (key: string) => {
+  const tRaw = (key: string) => {
     const keys = key.split('.');
     let value: any = translations[language];
-    
+
     for (const k of keys) {
       if (value && typeof value === 'object' && k in value) {
         value = value[k];
@@ -58,14 +59,32 @@ export const LanguageProvider: React.FC<{ children: React.ReactNode }> = ({ chil
         return key; // Fallback to key if not found
       }
     }
-    
-    return value || key;
+
+    return value;
+  };
+
+  const t = (key: string, params?: Record<string, string | number | boolean>) => {
+    const value = tRaw(key);
+
+    if (typeof value === 'string') {
+      if (!params) {
+        return value;
+      }
+
+      return value.replace(/\{\{(\w+)\}\}/g, (_, token) => {
+        const replacement = params[token as keyof typeof params];
+        return replacement !== undefined ? String(replacement) : `{{${token}}}`;
+      });
+    }
+
+    // For non-string values, return the key as fallback
+    return key;
   };
 
   const isRTL = false;
 
   return (
-    <LanguageContext.Provider value={{ language, setLanguage, isRTL, t }}>
+    <LanguageContext.Provider value={{ language, setLanguage, isRTL, t, tRaw }}>
       {children}
     </LanguageContext.Provider>
   );
