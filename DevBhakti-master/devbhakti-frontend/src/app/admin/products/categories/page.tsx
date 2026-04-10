@@ -91,7 +91,7 @@ export default function CategoriesManagementPage() {
       const errorDetails = error?.response?.data?.details;
 
       toast({
-        title: t("admin.products.categories.error_loading") || "Error Loading Categories",
+        title: t("admin.categories.error_loading") || "Error Loading Categories",
         description: errorDetails ? `${errorMessage}: ${errorDetails}` : errorMessage,
         variant: "destructive",
       });
@@ -101,10 +101,10 @@ export default function CategoriesManagementPage() {
   };
 
   const handleDelete = async (id: string) => {
-    if (window.confirm(t("admin.products.categories.delete_confirm"))) {
+    if (window.confirm(t("admin.categories.delete_confirm"))) {
       try {
         await deleteCategoryAdmin(id);
-        toast({ title: t("admin.products.categories.success_delete") || "Success", description: t("admin.products.categories.success_delete") || "Category deleted successfully" });
+        toast({ title: t("admin.categories.success_delete") || "Success", description: t("admin.categories.success_delete") || "Category deleted successfully" });
         loadCategories();
       } catch (error: any) {
         console.error("Delete Category Error:", error);
@@ -150,12 +150,12 @@ export default function CategoriesManagementPage() {
         {isActive ? (
           <>
             <ToggleRight className="w-3 h-3" />
-            <span>{t("admin.products.categories.active")}</span>
+            <span>{t("admin.categories.active")}</span>
           </>
         ) : (
           <>
             <ToggleLeft className="w-3 h-3" />
-            <span>{t("admin.products.categories.inactive")}</span>
+            <span>{t("admin.categories.inactive")}</span>
           </>
         )}
       </div>
@@ -182,8 +182,8 @@ export default function CategoriesManagementPage() {
     <div className="space-y-6">
       <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
         <div>
-          <h1 className="text-2xl font-bold tracking-tight text-slate-900">{t("admin.products.categories.title")}</h1>
-          <p className="text-muted-foreground">{t("admin.products.categories.desc")}</p>
+          <h1 className="text-2xl font-bold tracking-tight text-slate-900">{t("admin.categories.title")}</h1>
+          <p className="text-muted-foreground">{t("admin.categories.desc")}</p>
         </div>
         {hasPermission("categories.create") && (
           <Button
@@ -191,7 +191,7 @@ export default function CategoriesManagementPage() {
             className="bg-primary hover:bg-secondary/40"
           >
             <Plus className="w-4 h-4 mr-2" />
-            {t("admin.products.categories.add_new")}
+            {t("admin.categories.add_new")}
           </Button>
         )}
       </div>
@@ -202,7 +202,7 @@ export default function CategoriesManagementPage() {
             <div className="relative flex-1 max-w-sm">
               <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-slate-400 w-4 h-4" />
               <Input
-                placeholder={t("admin.products.categories.search_placeholder")}
+                placeholder={t("admin.categories.search_placeholder")}
                 value={searchTerm}
                 onChange={(e) => setSearchTerm(e.target.value)}
                 className="pl-10"
@@ -212,30 +212,30 @@ export default function CategoriesManagementPage() {
 
           {isLoading ? (
             <div className="text-center py-12">
-              <div className="inline-block animate-spin rounded-full h-8 w-8 border-b-2 border-blue-600"></div>
-              <p className="mt-2 text-slate-600">{t("admin.products.categories.loading_data")}</p>
+              <div className="inline-block animate-spin rounded-full h-8 w-8 border-b-2 border-primary"></div>
+              <p className="mt-2 text-slate-600">{t("admin.categories.loading_data")}</p>
             </div>
           ) : filteredCategories.length === 0 ? (
             <div className="text-center py-12">
               <Package className="w-12 h-12 text-slate-400 mx-auto mb-4" />
-              <h3 className="text-lg font-semibold text-slate-900 mb-2">{t("admin.products.categories.no_categories")}</h3>
-              <p className="text-slate-600 mb-4">{t("admin.products.categories.get_started")}</p>
+              <h3 className="text-lg font-semibold text-slate-900 mb-2">{t("admin.categories.no_categories")}</h3>
+              <p className="text-slate-600 mb-4">{t("admin.categories.get_started")}</p>
               <Button
                 onClick={() => router.push("/admin/products/categories/create")}
-                className="bg-blue-600 hover:bg-blue-700"
+                className="bg-primary hover:bg-secondary/40"
               >
                 <Plus className="w-4 h-4 mr-2" />
-                {t("admin.products.categories.add_new")}
+                {t("admin.categories.add_new")}
               </Button>
             </div>
           ) : (
             <Table>
               <TableHeader>
                 <TableRow>
-                  <TableHead>{t("admin.products.categories.table_category")}</TableHead>
-                  <TableHead>{t("admin.products.categories.table_products")}</TableHead>
-                  <TableHead>{t("admin.products.categories.table_status")}</TableHead>
-                  <TableHead className="text-right">{t("admin.products.categories.table_actions")}</TableHead>
+                  <TableHead>{t("admin.categories.table_category")}</TableHead>
+                  <TableHead>{t("admin.categories.table_products")}</TableHead>
+                  <TableHead>{t("admin.categories.table_status")}</TableHead>
+                  <TableHead className="text-right">{t("admin.categories.table_actions")}</TableHead>
                 </TableRow>
               </TableHeader>
               <TableBody>
@@ -264,7 +264,7 @@ export default function CategoriesManagementPage() {
                     </TableCell>
                     <TableCell>
                       <Badge variant="outline" className="bg-blue-50 text-blue-700 border-blue-200">
-                        {category._count.products} {t("admin.products.categories.table_products") === "admin.products.categories.table_products" ? "products" : t("admin.products.categories.table_products")}
+                        {category._count.products} {t("admin.categories.table_products") === "admin.categories.table_products" ? "products" : t("admin.categories.table_products")}
                       </Badge>
                     </TableCell>
                     <TableCell>
@@ -278,7 +278,7 @@ export default function CategoriesManagementPage() {
                             size="icon"
                             className={`h-8 w-8 ${category.isActive ? 'text-amber-600' : 'text-emerald-600'}`}
                             onClick={() => handleToggleStatus(category.id, category.isActive)}
-                            title={category.isActive ? t("admin.products.categories.deactivate") : t("admin.products.categories.activate")}
+                            title={category.isActive ? t("admin.categories.deactivate") : t("admin.categories.activate")}
                           >
                             {category.isActive ? <ToggleLeft className="w-4 h-4" /> : <ToggleRight className="w-4 h-4" />}
                           </Button>
@@ -291,7 +291,7 @@ export default function CategoriesManagementPage() {
                             setSelectedCategory(category);
                             setIsPreviewOpen(true);
                           }}
-                          title={t("admin.products.categories.view_details")}
+                          title={t("admin.categories.view_details")}
                         >
                           <Eye className="w-4 h-4" />
                         </Button>
@@ -301,7 +301,7 @@ export default function CategoriesManagementPage() {
                             size="icon"
                             className="h-8 w-8 text-blue-600"
                             onClick={() => router.push(`/admin/products/categories/edit/${category.id}`)}
-                            title={t("admin.products.categories.edit_category")}
+                            title={t("admin.categories.edit_category")}
                           >
                             <Edit2 className="w-4 h-4" />
                           </Button>
@@ -312,7 +312,7 @@ export default function CategoriesManagementPage() {
                             size="icon"
                             className="h-8 w-8 text-destructive"
                             onClick={() => handleDelete(category.id)}
-                            title={t("admin.products.categories.delete_category")}
+                            title={t("admin.categories.delete_category")}
                             disabled={category._count.products > 0}
                           >
                             <Trash2 className="w-4 h-4" />
@@ -331,7 +331,7 @@ export default function CategoriesManagementPage() {
       <Dialog open={isPreviewOpen} onOpenChange={setIsPreviewOpen}>
         <DialogContent className="max-w-2xl">
           <DialogHeader>
-            <DialogTitle>{t("admin.products.categories.details_title")}</DialogTitle>
+            <DialogTitle>{t("admin.categories.details_title")}</DialogTitle>
           </DialogHeader>
           {selectedCategory && (
             <div className="space-y-4">
@@ -355,31 +355,31 @@ export default function CategoriesManagementPage() {
 
               <div className="grid grid-cols-2 gap-4">
                 <div>
-                  <label className="text-sm font-medium text-slate-700">{t("admin.products.categories.category_id")}</label>
+                  <label className="text-sm font-medium text-slate-700">{t("admin.categories.category_id")}</label>
                   <p className="text-slate-900">{selectedCategory.id}</p>
                 </div>
                 <div>
-                  <label className="text-sm font-medium text-slate-700">{t("admin.products.categories.sort_order")}</label>
+                  <label className="text-sm font-medium text-slate-700">{t("admin.categories.sort_order")}</label>
                   <p className="text-slate-900">{selectedCategory.sortOrder}</p>
                 </div>
                 <div>
-                  <label className="text-sm font-medium text-slate-700">{t("admin.products.categories.products_count")}</label>
+                  <label className="text-sm font-medium text-slate-700">{t("admin.categories.products_count")}</label>
                   <p className="text-slate-900">{selectedCategory._count.products}</p>
                 </div>
                 <div>
-                  <label className="text-sm font-medium text-slate-700">{t("admin.products.categories.table_status")}</label>
+                  <label className="text-sm font-medium text-slate-700">{t("admin.categories.table_status")}</label>
                   <div className="mt-1">{getStatusBadge(selectedCategory.isActive)}</div>
                 </div>
               </div>
               <div className="grid grid-cols-2 gap-4">
                 <div>
-                  <label className="text-sm font-medium text-slate-700">{t("admin.products.categories.created_at")}</label>
+                  <label className="text-sm font-medium text-slate-700">{t("admin.categories.created_at")}</label>
                   <p className="text-slate-900">
                     {new Date(selectedCategory.createdAt).toLocaleString()}
                   </p>
                 </div>
                 <div>
-                  <label className="text-sm font-medium text-slate-700">{t("admin.products.categories.updated_at")}</label>
+                  <label className="text-sm font-medium text-slate-700">{t("admin.categories.updated_at")}</label>
                   <p className="text-slate-900">
                     {new Date(selectedCategory.updatedAt).toLocaleString()}
                   </p>

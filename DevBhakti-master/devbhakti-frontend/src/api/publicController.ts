@@ -18,9 +18,11 @@ export const fetchPublicTemples = async (params?: {
     }
 };
 
-export const fetchPublicFilters = async () => {
+export const fetchPublicFilters = async (lang?: string) => {
     try {
-        const response = await axios.get(`${API_URL}/temples/filters`);
+        const response = await axios.get(`${API_URL}/temples/filters`, {
+            params: { lang }
+        });
         return response.data.data;
     } catch (error) {
         console.error("Error fetching public filters:", error);
@@ -75,15 +77,19 @@ export const fetchPublicProducts = async (params?: {
     search?: string;
     category?: string;
     templeId?: string;
+    minPrice?: number;
+    maxPrice?: number;
+    sort?: string;
+    lang?: string;
 }) => {
     try {
         const response = await axios.get(`${API_URL}/admin/products/public`, {
             params
         });
-        return response.data.data.products;
+        return response.data.data;
     } catch (error) {
         console.error("Error fetching public products:", error);
-        return [];
+        return { products: [], pagination: { total: 0, pages: 0 } };
     }
 };
 

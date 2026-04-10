@@ -102,7 +102,7 @@ export default function EditCategoryPage() {
       const errorDetails = error?.response?.data?.details;
 
       toast({
-        title: t("admin.products.categories.error_loading") || "Error Loading Category",
+        title: t("admin.categories.error_loading") || "Error Loading Category",
         description: errorDetails ? `${errorMessage}: ${errorDetails}` : errorMessage,
         variant: "destructive",
       });
@@ -164,7 +164,7 @@ export default function EditCategoryPage() {
     const newErrors: Record<string, string> = {};
 
     if (!formData.name_en.trim()) {
-      newErrors.name_en = t("admin.products.categories.name_required") || "Category name (English) is required";
+      newErrors.name_en = t("admin.categories.name_required") || "Category name (English) is required";
     }
 
     if (formData.sortOrder < 0) {
@@ -180,8 +180,8 @@ export default function EditCategoryPage() {
 
     if (!validateForm()) {
       toast({
-        title: t("admin.products.categories.validation_error") || "Validation Error",
-        description: t("admin.products.categories.fill_required") || "Please fill all required fields correctly",
+        title: t("admin.categories.validation_error") || "Validation Error",
+        description: t("admin.categories.fill_required") || "Please fill all required fields correctly",
         variant: "destructive",
       });
       return;
@@ -216,8 +216,8 @@ export default function EditCategoryPage() {
       await updateCategoryAdmin(params.id as string, formDataToSend);
 
       toast({
-        title: t("admin.products.categories.success_update") || "Success",
-        description: t("admin.products.categories.update_message") || "Category updated successfully",
+        title: t("admin.categories.success_update") || "Success",
+        description: t("admin.categories.update_message") || "Category updated successfully",
       });
 
       router.push("/admin/products/categories");
@@ -227,7 +227,7 @@ export default function EditCategoryPage() {
       const errorDetails = error?.response?.data?.details;
 
       toast({
-        title: t("admin.products.categories.error_update") || "Error Updating Category",
+        title: t("admin.categories.error_update") || "Error Updating Category",
         description: errorDetails ? `${errorMessage}: ${errorDetails}` : errorMessage,
         variant: "destructive",
       });
@@ -240,8 +240,8 @@ export default function EditCategoryPage() {
     return (
       <div className="flex items-center justify-center min-h-screen">
          <div className="text-center">
-          <div className="inline-block animate-spin rounded-full h-8 w-8 border-b-2 border-blue-600"></div>
-          <p className="mt-2 text-slate-600">{t("admin.products.categories.loading_data")}</p>
+          <div className="inline-block animate-spin rounded-full h-8 w-8 border-b-2 border-primary"></div>
+          <p className="mt-2 text-slate-600">{t("admin.categories.loading_data")}</p>
         </div>
       </div>
     );
@@ -256,17 +256,17 @@ export default function EditCategoryPage() {
           className="mb-2"
         >
           <ArrowLeft className="w-4 h-4 mr-2" />
-          {t("admin.products.categories.back")}
+          {t("admin.categories.back")}
         </Button>
         <div>
-          <h1 className="text-2xl font-bold tracking-tight text-slate-900">{t("admin.products.categories.edit_title")}</h1>
-          <p className="text-muted-foreground">{t("admin.products.categories.edit_desc")}</p>
+          <h1 className="text-2xl font-bold tracking-tight text-slate-900">{t("admin.categories.edit_title")}</h1>
+          <p className="text-muted-foreground">{t("admin.categories.edit_desc")}</p>
         </div>
       </div>
 
       <Card>
          <CardHeader>
-          <CardTitle>{t("admin.products.categories.info")}</CardTitle>
+          <CardTitle>{t("admin.categories.info")}</CardTitle>
         </CardHeader>
         <CardContent>
           <form onSubmit={handleSubmit} className="space-y-6">
@@ -280,7 +280,7 @@ export default function EditCategoryPage() {
               <TabsContent value="en" className="space-y-6">
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                   <div className="space-y-2">
-                    <Label htmlFor="name_en">{t("admin.products.categories.name")} *</Label>
+                    <Label htmlFor="name_en">{t("admin.categories.name")} *</Label>
                     <Input
                       id="name_en"
                       value={formData.name_en}
@@ -356,7 +356,7 @@ export default function EditCategoryPage() {
             </Tabs>
 
              <div className="space-y-2">
-              <Label>{t("admin.products.categories.image")}</Label>
+              <Label>{t("admin.categories.image")}</Label>
               <div className="flex items-center gap-4">
                 {(categoryImagePreview || existingImage) ? (
                   <div className="relative">
@@ -388,11 +388,11 @@ export default function EditCategoryPage() {
                     className="cursor-pointer"
                   />
                    <p className="text-xs text-slate-500 mt-1">
-                    {t("admin.products.categories.file_hint") || "JPG, PNG, GIF up to 5MB"}
+                    {t("admin.categories.file_hint") || "JPG, PNG, GIF up to 5MB"}
                   </p>
                   {existingImage && !categoryImagePreview && (
                     <p className="text-xs text-green-600 mt-1">
-                      {t("admin.products.categories.current_image_loaded") || "Current image loaded"}
+                      {t("admin.categories.current_image_loaded") || "Current image loaded"}
                     </p>
                   )}
                 </div>
@@ -405,9 +405,9 @@ export default function EditCategoryPage() {
                 checked={formData.isActive}
                  onCheckedChange={(checked) => handleInputChange("isActive", checked)}
               />
-              <Label htmlFor="isActive">{t("admin.products.categories.active")}</Label>
+              <Label htmlFor="isActive">{t("admin.categories.active")}</Label>
               <p className="text-sm text-slate-500">
-                {t("admin.products.categories.status_inactive_hint")}
+                {t("admin.categories.status_inactive_hint")}
               </p>
             </div>
 
@@ -418,22 +418,22 @@ export default function EditCategoryPage() {
                  onClick={() => router.back()}
                 disabled={isSubmitting}
               >
-                {t("admin.products.categories.cancel")}
+                {t("admin.categories.cancel")}
               </Button>
               <Button
                 type="submit"
                 disabled={isSubmitting}
-                className="bg-blue-600 hover:bg-blue-700"
+                className="bg-primary hover:bg-primary/90"
               >
                  {isSubmitting ? (
                   <>
                     <div className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin mr-2"></div>
-                    {t("admin.products.categories.saving")}
+                    {t("admin.categories.saving")}
                   </>
                 ) : (
                   <>
                     <Save className="w-4 h-4 mr-2" />
-                    {t("admin.products.categories.save_changes")}
+                    {t("admin.categories.save_changes")}
                   </>
                 )}
               </Button>

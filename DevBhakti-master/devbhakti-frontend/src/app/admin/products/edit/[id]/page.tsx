@@ -1,7 +1,7 @@
 "use client";
 
 import React, { useState, useEffect } from "react";
-import { useRouter, useParams } from "next/navigation";
+import { useRouter, useParams, useSearchParams } from "next/navigation";
 import {
   ArrowLeft,
   Plus,
@@ -77,6 +77,8 @@ interface Variant {
 export default function EditProductPage() {
   const router = useRouter();
   const params = useParams();
+  const searchParams = useSearchParams();
+  const sourcePage = searchParams.get("page") || "1";
   const { toast } = useToast();
   const { language, setLanguage, t } = useLanguage();
 
@@ -221,9 +223,12 @@ export default function EditProductPage() {
         }))
       );
       if (data.image) setExistingImage(data.image);
+      // Update breadcrumb with product name
+      const productName = data.name?.en || data.name_en || data.name || "Edit Product";
+      window.dispatchEvent(new CustomEvent('updateBreadcrumb', { detail: `Edit: ${productName}` }));
     } catch (error: any) {
       toast({ title: "Error Loading Product", description: error?.response?.data?.message || "Failed to load product", variant: "destructive" });
-      router.push("/admin/products");
+      router.push(`/admin/products?page=${sourcePage}`);
     } finally {
       setIsLoading(false);
     }
@@ -299,7 +304,7 @@ export default function EditProductPage() {
 
       await updateProductAdmin(params.id as string, fd);
       toast({ title: "Success", description: "Product updated successfully" });
-      router.push("/admin/products");
+      router.push(`/admin/products?page=${sourcePage}`);
     } catch (error: any) {
       toast({ title: "Error Updating Product", description: error?.response?.data?.message || "Failed to update product", variant: "destructive" });
     } finally {
@@ -351,7 +356,7 @@ export default function EditProductPage() {
       )}
 
       <div className="flex items-center gap-4">
-        <Button variant="ghost" size="icon" onClick={() => router.back()} className="h-8 w-8">
+        <Button variant="ghost" size="icon" onClick={() => router.push(`/admin/products?page=${sourcePage}`)} className="h-8 w-8">
           <ArrowLeft className="w-4 h-4" />
         </Button>
         <div>
@@ -678,7 +683,7 @@ export default function EditProductPage() {
 
           {/* Action Buttons */}
           <div className="flex justify-end gap-4 pt-2">
-            <Button type="button" variant="outline" onClick={() => router.back()} disabled={isSubmitting}>{t("admin.products.cancel")}</Button>
+            <Button type="button" variant="outline" onClick={() => router.push(`/admin/products?page=${sourcePage}`)} disabled={isSubmitting}>{t("admin.products.cancel")}</Button>
             <Button type="submit" disabled={isSubmitting} className="bg-primary">
               {isSubmitting ? (
                 <><div className="animate-spin rounded-full h-4 w-4 border-b-2 border-white mr-2" />{t("admin.products.saving")}</>

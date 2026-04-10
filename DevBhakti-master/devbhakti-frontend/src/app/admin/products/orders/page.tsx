@@ -107,13 +107,13 @@ function AdminOrdersContent() {
     };
 
     const getStatusText = (status: string) => {
-        const key = `admin.products.orders.status_${status.toLowerCase()}`;
+        const key = `admin.orders.status_${status.toLowerCase()}`;
         const translated = t(key);
         return translated !== key ? translated : status;
     };
 
     const getPaymentStatusText = (status: string) => {
-        const key = `admin.products.orders.status_${status.toLowerCase()}`;
+        const key = `admin.orders.status_${status.toLowerCase()}`;
         const translated = t(key);
         return translated !== key ? translated : status;
     };
@@ -161,8 +161,8 @@ function AdminOrdersContent() {
         } catch (error) {
             console.error("Failed to load orders:", error);
             toast({
-                title: t("admin.products.orders.update_error") || "Error",
-                description: t("admin.products.orders.error_loading") || "Failed to load orders",
+                title: t("admin.orders.update_error") || "Error",
+                description: t("admin.orders.error_loading") || "Failed to load orders",
                 variant: "destructive",
             });
         } finally {
@@ -178,8 +178,8 @@ function AdminOrdersContent() {
             const response = await updateSubOrderStatusAdmin(subOrderId, { status });
             if (response.success) {
                 toast({
-                    title: t("admin.products.orders.update_success") || "Status Updated",
-                    description: (t("admin.products.orders.update_success_msg") || "Order status changed to {status}").replace("{status}", status),
+                    title: t("admin.orders.update_success") || "Status Updated",
+                    description: (t("admin.orders.update_success_msg") || "Order status changed to {status}").replace("{status}", status),
                 });
 
                 // Refresh local state for selected order if it's open
@@ -205,8 +205,8 @@ function AdminOrdersContent() {
             }
         } catch (error) {
             toast({
-                title: t("admin.products.orders.update_error") || "Update Failed",
-                description: t("admin.products.orders.update_error_msg") || "Could not update order status",
+                title: t("admin.orders.update_error") || "Update Failed",
+                description: t("admin.orders.update_error_msg") || "Could not update order status",
                 variant: "destructive",
             });
         } finally {
@@ -274,7 +274,7 @@ function AdminOrdersContent() {
 
     const handleExportOrders = async () => {
         try {
-            toast({ title: t("admin.products.orders.exporting") || "Exporting...", description: t("admin.products.orders.export_msg") || "Please wait while we prepare the Excel file." });
+            toast({ title: t("admin.orders.exporting") || "Exporting...", description: t("admin.orders.export_msg") || "Please wait while we prepare the Excel file." });
             const token = localStorage.getItem('admin_token') || localStorage.getItem('staff_token');
             const response = await axios.get(`${API_URL}/admin/orders/export/excel`, {
                 responseType: 'blob',
@@ -293,13 +293,13 @@ function AdminOrdersContent() {
                 document.body.appendChild(link);
                 link.click();
                 link.parentNode?.removeChild(link);
-                toast({ title: t("admin.products.categories.success") || "Success", description: t("admin.products.orders.export_success") || "Orders exported successfully!" });
+                toast({ title: t("admin.categories.success") || "Success", description: t("admin.orders.export_success") || "Orders exported successfully!" });
             } else {
                 throw new Error("Download failed");
             }
         } catch (error) {
             console.error(error);
-            toast({ title: t("admin.products.orders.update_error") || "Error", description: t("admin.products.orders.export_failed") || "Failed to download Excel.", variant: "destructive" });
+            toast({ title: t("admin.orders.update_error") || "Error", description: t("admin.orders.export_failed") || "Failed to download Excel.", variant: "destructive" });
         }
     };
 
@@ -309,8 +309,8 @@ function AdminOrdersContent() {
         <div className="space-y-6">
             <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
                 <div>
-                    <h1 className="text-3xl font-bold text-slate-900">{t("admin.products.orders.title")}</h1>
-                    <p className="text-slate-600 font-medium">{t("admin.products.orders.desc")}</p>
+                    <h1 className="text-3xl font-bold text-slate-900">{t("admin.orders.title")}</h1>
+                    <p className="text-slate-600 font-medium">{t("admin.orders.desc")}</p>
                 </div>
 
 
@@ -319,7 +319,7 @@ function AdminOrdersContent() {
                     <div className="relative">
                         <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-400" />
                         <Input
-                            placeholder={t("admin.products.orders.search_placeholder")}
+                            placeholder={t("admin.orders.search_placeholder")}
                             value={searchQuery}
                             onChange={(e) => setSearchQuery(e.target.value)}
                             className="pl-10 w-full md:w-80 h-10 border-slate-300 focus:ring-[#794A05] rounded-xl font-bold"
@@ -337,7 +337,7 @@ function AdminOrdersContent() {
                                     )}
                                 >
                                     <CalendarIcon className="mr-2 h-4 w-4" />
-                                    {dateFilter ? format(dateFilter, "PPP") : <span>{t("admin.products.orders.filter_date")}</span>}
+                                    {dateFilter ? format(dateFilter, "PPP") : <span>{t("admin.orders.filter_date")}</span>}
                                 </Button>
                             </PopoverTrigger>
                             <PopoverContent className="w-auto p-0 rounded-xl" align="start">
@@ -364,45 +364,45 @@ function AdminOrdersContent() {
                      <Select value={statusFilter} onValueChange={(val) => { setStatusFilter(val); setCurrentPage(1); }}>
 
                         <SelectTrigger className="w-[150px] h-10 rounded-xl border-slate-300 bg-white font-bold">
-                            <SelectValue placeholder={t("admin.products.orders.filter_status")} />
+                            <SelectValue placeholder={t("admin.orders.filter_status")} />
                         </SelectTrigger>
                         <SelectContent className="rounded-xl">
-                            <SelectItem value="ALL">{t("admin.products.orders.all_status")}</SelectItem>
-                            <SelectItem value="PENDING">{t("admin.products.orders.status_pending")}</SelectItem>
-                            <SelectItem value="ACCEPTED">{t("admin.products.orders.status_accepted")}</SelectItem>
-                            <SelectItem value="PROCESSING">{t("admin.products.orders.status_processing")}</SelectItem>
-                            <SelectItem value="SHIPPED">{t("admin.products.orders.status_shipped")}</SelectItem>
-                            <SelectItem value="DELIVERED">{t("admin.products.orders.status_delivered")}</SelectItem>
-                            <SelectItem value="COMPLETED">{t("admin.products.orders.status_completed")}</SelectItem>
-                            <SelectItem value="CANCELLED">{t("admin.products.orders.status_cancelled")}</SelectItem>
+                            <SelectItem value="ALL">{t("admin.orders.all_status")}</SelectItem>
+                            <SelectItem value="PENDING">{t("admin.orders.status_pending")}</SelectItem>
+                            <SelectItem value="ACCEPTED">{t("admin.orders.status_accepted")}</SelectItem>
+                            <SelectItem value="PROCESSING">{t("admin.orders.status_processing")}</SelectItem>
+                            <SelectItem value="SHIPPED">{t("admin.orders.status_shipped")}</SelectItem>
+                            <SelectItem value="DELIVERED">{t("admin.orders.status_delivered")}</SelectItem>
+                            <SelectItem value="COMPLETED">{t("admin.orders.status_completed")}</SelectItem>
+                            <SelectItem value="CANCELLED">{t("admin.orders.status_cancelled")}</SelectItem>
                         </SelectContent>
                     </Select>
                     <Select value={paymentStatusFilter} onValueChange={(val) => { setPaymentStatusFilter(val); setCurrentPage(1); }}>
                         <SelectTrigger className="w-[150px] h-10 rounded-xl border-slate-300 bg-white font-bold">
-                            <SelectValue placeholder={t("admin.products.orders.filter_payment")} />
+                            <SelectValue placeholder={t("admin.orders.filter_payment")} />
                         </SelectTrigger>
                         <SelectContent className="rounded-xl">
-                            <SelectItem value="ALL">{t("admin.products.orders.all_payment")}</SelectItem>
-                            <SelectItem value="PENDING">{t("admin.products.orders.status_pending")}</SelectItem>
-                            <SelectItem value="PAID">{t("admin.products.orders.status_paid")}</SelectItem>
-                            <SelectItem value="FAILED">{t("admin.products.orders.status_failed")}</SelectItem>
-                            <SelectItem value="REFUNDED">{t("admin.products.orders.status_refunded")}</SelectItem>
+                            <SelectItem value="ALL">{t("admin.orders.all_payment")}</SelectItem>
+                            <SelectItem value="PENDING">{t("admin.orders.status_pending")}</SelectItem>
+                            <SelectItem value="PAID">{t("admin.orders.status_paid")}</SelectItem>
+                            <SelectItem value="FAILED">{t("admin.orders.status_failed")}</SelectItem>
+                            <SelectItem value="REFUNDED">{t("admin.orders.status_refunded")}</SelectItem>
                         </SelectContent>
                     </Select>
                     {selectedOrders.size > 0 && (
                         <>
                             <span className="text-sm font-bold text-[#794A05] bg-orange-50 px-3 py-2 rounded-lg">
-                                {(t("admin.products.orders.selected_count") || "{count} Selected").replace("{count}", selectedOrders.size.toString())}
+                                {(t("admin.orders.selected_count") || "{count} Selected").replace("{count}", selectedOrders.size.toString())}
                             </span>
                             <Button
                                 onClick={handleBulkPrint}
                                 className="bg-[#794A05] hover:bg-[#5d3904] text-white flex items-center gap-2"
                             >
                                 <Printer className="w-4 h-4" />
-                                {t("admin.products.orders.print_labels")}
+                                {t("admin.orders.print_labels")}
                             </Button>
                             <Button variant="ghost" onClick={() => setSelectedOrders(new Set())} className="text-slate-500">
-                                {t("admin.products.categories.cancel")}
+                                {t("admin.categories.cancel")}
                             </Button>
                         </>
                     )}
@@ -411,7 +411,7 @@ function AdminOrdersContent() {
                         variant="sacred"
                     >
                         <Download className="w-4 h-4" />
-                        {t("admin.products.orders.export_excel")}
+                        {t("admin.orders.export_excel")}
                     </Button>
                     {/* <Button onClick={() => loadOrders(currentPage)} variant="outline" className="border-slate-300 hover:bg-slate-50 h-10">
                         <Clock className="w-4 h-4 mr-2" /> Refresh
@@ -430,13 +430,13 @@ function AdminOrdersContent() {
                                     className="border-slate-300 data-[state=checked]:bg-[#794A05] data-[state=checked]:border-[#794A05]"
                                 />
                             </TableHead>
-                            <TableHead className="py-4 font-bold text-slate-800">{t("admin.products.orders.table_order_id")}</TableHead>
-                            <TableHead className="py-4 font-bold text-slate-800">{t("admin.products.orders.table_devotee")}</TableHead>
-                            <TableHead className="py-4 font-bold text-slate-800">{t("admin.products.orders.table_date_time")}</TableHead>
-                            <TableHead className="py-4 font-bold text-slate-800">{t("admin.products.orders.table_amount")}</TableHead>
-                            <TableHead className="py-4 font-bold text-slate-800">{t("admin.products.orders.table_status")}</TableHead>
-                            <TableHead className="py-4 font-bold text-slate-800">{t("admin.products.orders.table_payment")}</TableHead>
-                            <TableHead className="py-4 font-bold text-slate-800 text-right">{t("admin.products.orders.table_actions")}</TableHead>
+                            <TableHead className="py-4 font-bold text-slate-800">{t("admin.orders.table_order_id")}</TableHead>
+                            <TableHead className="py-4 font-bold text-slate-800">{t("admin.orders.table_devotee")}</TableHead>
+                            <TableHead className="py-4 font-bold text-slate-800">{t("admin.orders.table_date_time")}</TableHead>
+                            <TableHead className="py-4 font-bold text-slate-800">{t("admin.orders.table_amount")}</TableHead>
+                            <TableHead className="py-4 font-bold text-slate-800">{t("admin.orders.table_status")}</TableHead>
+                            <TableHead className="py-4 font-bold text-slate-800">{t("admin.orders.table_payment")}</TableHead>
+                            <TableHead className="py-4 font-bold text-slate-800 text-right">{t("admin.orders.table_actions")}</TableHead>
                         </TableRow>
                     </TableHeader>
                     <TableBody>
@@ -444,14 +444,14 @@ function AdminOrdersContent() {
                             <TableRow>
                                 <TableCell colSpan={8} className="h-40 text-center text-slate-900 font-bold">
                                     <Clock className="w-8 h-8 mx-auto mb-2 animate-spin text-[#794A05]" />
-                                    {t("admin.products.orders.fetching_orders")}
+                                    {t("admin.orders.fetching_orders")}
                                 </TableCell>
                             </TableRow>
                         ) : filteredOrders.length === 0 ? (
                             <TableRow>
                                 <TableCell colSpan={8} className="h-40 text-center text-slate-900 font-bold">
                                     <Search className="w-8 h-8 mx-auto mb-2 text-slate-300" />
-                                    {searchQuery ? t("admin.products.orders.no_matching_orders") : t("admin.products.orders.no_orders_yet")}
+                                    {searchQuery ? t("admin.orders.no_matching_orders") : t("admin.orders.no_orders_yet")}
                                 </TableCell>
                             </TableRow>
                         ) : filteredOrders.map((order) => (
@@ -524,7 +524,7 @@ function AdminOrdersContent() {
                                 <div className="flex items-center justify-between border-b border-orange-100 pb-6">
                                     <div>
                                         <DialogTitle className="text-2xl font-bold text-slate-900 font-serif">
-                                            {t("admin.products.orders.details_title")}
+                                            {t("admin.orders.details_title")}
                                         </DialogTitle>
                                         <p className="text-slate-700 font-bold mt-1 uppercase tracking-widest text-xs">
                                             ID: #{selectedOrder.id} • {format(new Date(selectedOrder.createdAt), "dd MMM yyyy")}
@@ -542,11 +542,11 @@ function AdminOrdersContent() {
                                     <div className="bg-white p-6 rounded-[1.5rem] border border-orange-100 shadow-sm">
                                         <h4 className="flex items-center gap-2 text-sm font-extrabold text-slate-900 mb-4 uppercase tracking-wider">
                                             <User className="w-4 h-4 text-[#794A05]" />
-                                            {t("admin.products.orders.customer_info")}
+                                            {t("admin.orders.customer_info")}
                                         </h4>
                                         <div className="space-y-3">
                                             <div className="flex justify-between">
-                                                <span className="text-slate-600 font-bold">{t("admin.products.orders.table_devotee")}</span>
+                                                <span className="text-slate-600 font-bold">{t("admin.orders.table_devotee")}</span>
                                                 <span className="text-slate-900 font-extrabold">{parseLocalizedValue(selectedOrder.user?.name, language)}</span>
                                             </div>
                                             <div className="flex justify-between">
@@ -554,7 +554,7 @@ function AdminOrdersContent() {
                                                 <span className="text-slate-900 font-extrabold">{selectedOrder.user?.phone}</span>
                                             </div>
                                             <div className="flex justify-between">
-                                                <span className="text-slate-600 font-bold">{t("admin.products.orders.item_payment_mode") || "Payment Mode"}</span>
+                                                <span className="text-slate-600 font-bold">{t("admin.orders.item_payment_mode") || "Payment Mode"}</span>
                                                 <span className="text-[#794A05] font-extrabold uppercase">{selectedOrder.paymentMethod}</span>
                                             </div>
                                         </div>
@@ -563,7 +563,7 @@ function AdminOrdersContent() {
                                     <div className="bg-white p-6 rounded-[1.5rem] border border-orange-100 shadow-sm">
                                         <h4 className="flex items-center gap-2 text-sm font-extrabold text-slate-900 mb-4 uppercase tracking-wider">
                                             <MapPin className="w-4 h-4 text-[#794A05]" />
-                                            {t("admin.products.orders.shipping_address")}
+                                            {t("admin.orders.shipping_address")}
                                         </h4>
                                         <div className="text-slate-900 font-bold leading-relaxed">
                                             <p className="font-extrabold text-lg">{selectedOrder.shippingAddress?.fullName}</p>
@@ -580,7 +580,7 @@ function AdminOrdersContent() {
                                 {/* Detailed Breakdown by Consignment */}
                                 <div className="space-y-6">
                                     <h4 className="text-sm font-extrabold text-slate-900 uppercase tracking-[0.2em] pl-1">
-                                        {(t("admin.products.orders.consignments") || "Order Consignments ({count})").replace("{count}", selectedOrder.subOrders.length.toString())}
+                                        {(t("admin.orders.consignments") || "Order Consignments ({count})").replace("{count}", selectedOrder.subOrders.length.toString())}
                                     </h4>
 
                                     {selectedOrder.subOrders.map((sub: any) => (
@@ -594,7 +594,7 @@ function AdminOrdersContent() {
                                                         <span className="font-extrabold text-slate-900">
                                                             {getLocalizedName(sub.temple) || "Official Warehouse"}
                                                         </span>
-                                                        <p className="text-[10px] font-bold text-slate-500 uppercase">{t("admin.products.orders.sub_order_id") || "Sub-Order ID"}: #{sub.id.slice(-6)}</p>
+                                                        <p className="text-[10px] font-bold text-slate-500 uppercase">{t("admin.orders.sub_order_id") || "Sub-Order ID"}: #{sub.id.slice(-6)}</p>
                                                     </div>
                                                 </div>
                                                 <div className="flex items-center gap-3">
@@ -609,15 +609,15 @@ function AdminOrdersContent() {
                                                             <SelectValue />
                                                         </SelectTrigger>
                                                         <SelectContent>
-                                                            <SelectItem value="PENDING" className="font-bold">{t("admin.products.orders.status_pending")}</SelectItem>
-                                                            <SelectItem value="ACCEPTED" className="font-bold">{t("admin.products.orders.status_accepted")}</SelectItem>
-                                                            <SelectItem value="PICKED_UP" className="font-bold">{t("admin.products.orders.status_picked_up") || "Picked Up"}</SelectItem>
-                                                            <SelectItem value="SHIPPED" className="font-bold">{t("admin.products.orders.status_shipped")}</SelectItem>
-                                                            <SelectItem value="OUT_FOR_DELIVERY" className="font-bold">{t("admin.products.orders.status_out_delivery") || "Out for Delivery"}</SelectItem>
-                                                            <SelectItem value="DELIVERED" className="font-bold">{t("admin.products.orders.status_delivered")}</SelectItem>
-                                                            <SelectItem value="CANCELLED" className="font-bold text-red-600">{t("admin.products.orders.status_cancelled")}</SelectItem>
-                                                            <SelectItem value="RTO_INITIATED" className="font-bold">{t("admin.products.orders.status_rto_initiated") || "RTO Initiated"}</SelectItem>
-                                                            <SelectItem value="RTO_DELIVERED" className="font-bold">{t("admin.products.orders.status_rto_delivered") || "RTO Delivered"}</SelectItem>
+                                                            <SelectItem value="PENDING" className="font-bold">{t("admin.orders.status_pending")}</SelectItem>
+                                                            <SelectItem value="ACCEPTED" className="font-bold">{t("admin.orders.status_accepted")}</SelectItem>
+                                                            <SelectItem value="PICKED_UP" className="font-bold">{t("admin.orders.status_picked_up") || "Picked Up"}</SelectItem>
+                                                            <SelectItem value="SHIPPED" className="font-bold">{t("admin.orders.status_shipped")}</SelectItem>
+                                                            <SelectItem value="OUT_FOR_DELIVERY" className="font-bold">{t("admin.orders.status_out_delivery") || "Out for Delivery"}</SelectItem>
+                                                            <SelectItem value="DELIVERED" className="font-bold">{t("admin.orders.status_delivered")}</SelectItem>
+                                                            <SelectItem value="CANCELLED" className="font-bold text-red-600">{t("admin.orders.status_cancelled")}</SelectItem>
+                                                            <SelectItem value="RTO_INITIATED" className="font-bold">{t("admin.orders.status_rto_initiated") || "RTO Initiated"}</SelectItem>
+                                                            <SelectItem value="RTO_DELIVERED" className="font-bold">{t("admin.orders.status_rto_delivered") || "RTO Delivered"}</SelectItem>
                                                         </SelectContent>
                                                     </Select>
                                                 </div>
@@ -627,10 +627,10 @@ function AdminOrdersContent() {
                                                 <Table>
                                                     <TableHeader className="bg-slate-50/50">
                                                         <TableRow className="hover:bg-transparent border-none">
-                                                            <TableHead className="py-4 pl-6 font-extrabold text-slate-600 uppercase text-[10px]">{t("admin.products.orders.item_product")}</TableHead>
-                                                            <TableHead className="py-4 font-extrabold text-slate-600 uppercase text-[10px]">{t("admin.products.orders.item_variant")}</TableHead>
-                                                            <TableHead className="py-4 font-extrabold text-slate-600 uppercase text-[10px]">{t("admin.products.orders.item_qty")}</TableHead>
-                                                            <TableHead className="py-4 pr-6 font-extrabold text-slate-600 uppercase text-[10px] text-right">{t("admin.products.orders.item_amount")}</TableHead>
+                                                            <TableHead className="py-4 pl-6 font-extrabold text-slate-600 uppercase text-[10px]">{t("admin.orders.item_product")}</TableHead>
+                                                            <TableHead className="py-4 font-extrabold text-slate-600 uppercase text-[10px]">{t("admin.orders.item_variant")}</TableHead>
+                                                            <TableHead className="py-4 font-extrabold text-slate-600 uppercase text-[10px]">{t("admin.orders.item_qty")}</TableHead>
+                                                            <TableHead className="py-4 pr-6 font-extrabold text-slate-600 uppercase text-[10px] text-right">{t("admin.orders.item_amount")}</TableHead>
                                                         </TableRow>
                                                     </TableHeader>
                                                     <TableBody>
@@ -655,7 +655,7 @@ function AdminOrdersContent() {
                                                         ))}
                                                         <TableRow className="hover:bg-transparent border-t-2 border-slate-50">
                                                             <TableCell colSpan={3} className="pt-4 pb-4 pr-4 text-right">
-                                                                <span className="text-[10px] font-extrabold text-slate-400 uppercase tracking-widest">{t("admin.products.orders.subtotal")}</span>
+                                                                <span className="text-[10px] font-extrabold text-slate-400 uppercase tracking-widest">{t("admin.orders.subtotal")}</span>
                                                             </TableCell>
                                                             <TableCell className="pt-4 pb-4 pr-6 text-right font-extrabold text-xl text-slate-900">
                                                                 ₹{sub.totalAmount.toLocaleString()}
@@ -675,14 +675,14 @@ function AdminOrdersContent() {
                                             <IndianRupee className="w-8 h-8" />
                                         </div>
                                         <div>
-                                            <p className="text-white/60 font-bold uppercase tracking-widest text-xs">{t("admin.products.orders.total_order_value")}</p>
+                                            <p className="text-white/60 font-bold uppercase tracking-widest text-xs">{t("admin.orders.total_order_value")}</p>
                                             <h3 className="text-4xl font-extrabold">₹{selectedOrder.totalAmount.toLocaleString()}</h3>
                                         </div>
                                     </div>
                                     <div className="text-center md:text-right">
-                                        <p className="text-white/80 font-bold text-sm">{t("admin.products.orders.table_status")}: {getStatusText(selectedOrder.paymentStatus)} via {selectedOrder.paymentMethod}</p>
+                                        <p className="text-white/80 font-bold text-sm">{t("admin.orders.table_status")}: {getStatusText(selectedOrder.paymentStatus)} via {selectedOrder.paymentMethod}</p>
                                         <div className="mt-2 text-white/60 text-xs font-bold uppercase tracking-widest">
-                                            {t("admin.products.orders.delivery_process_hint")}
+                                            {t("admin.orders.delivery_process_hint")}
                                         </div>
                                     </div>
                                 </div>
@@ -694,26 +694,26 @@ function AdminOrdersContent() {
 
             {totalPages > 1 && (
                 <div className="flex justify-center gap-2 mt-4 pb-12">
-                    <Button variant="outline" size="sm" onClick={() => setCurrentPage(p => Math.max(1, p - 1))} disabled={currentPage === 1}>{t("admin.products.orders.prev")}</Button>
+                    <Button variant="outline" size="sm" onClick={() => setCurrentPage(p => Math.max(1, p - 1))} disabled={currentPage === 1}>{t("admin.orders.prev")}</Button>
                     <span className="flex items-center text-sm font-bold px-4">
-                        {(t("admin.products.orders.page_of") || "Page {current} of {total}").replace("{current}", currentPage.toString()).replace("{total}", totalPages.toString())}
+                        {(t("admin.orders.page_of") || "Page {current} of {total}").replace("{current}", currentPage.toString()).replace("{total}", totalPages.toString())}
                     </span>
-                    <Button variant="outline" size="sm" onClick={() => setCurrentPage(p => Math.min(totalPages, p + 1))} disabled={currentPage === totalPages}>{t("admin.products.orders.next")}</Button>
+                    <Button variant="outline" size="sm" onClick={() => setCurrentPage(p => Math.min(totalPages, p + 1))} disabled={currentPage === totalPages}>{t("admin.orders.next")}</Button>
                 </div>
             )}
             <AlertDialog open={showUpdateWarning} onOpenChange={setShowUpdateWarning}>
                 <AlertDialogContent className="rounded-[2rem] border-none shadow-2xl">
                     <AlertDialogHeader>
                         <AlertDialogTitle className="text-xl font-bold flex items-center gap-2">
-                            {t("admin.products.orders.confirm_status_update")}
+                            {t("admin.orders.confirm_status_update")}
                         </AlertDialogTitle>
                         <AlertDialogDescription className="font-medium text-slate-600">
-                            {(t("admin.products.orders.status_change_warning") || "Are you sure you want to change the order status to {status}?").replace("{status}", getStatusText(pendingStatusUpdate?.status || ""))}
+                            {(t("admin.orders.status_change_warning") || "Are you sure you want to change the order status to {status}?").replace("{status}", getStatusText(pendingStatusUpdate?.status || ""))}
                         </AlertDialogDescription>
                     </AlertDialogHeader>
                     <AlertDialogFooter className="gap-2">
-                        <AlertDialogCancel className="rounded-xl border-slate-200">{t("admin.products.categories.no_cancel") || "No, Cancel"}</AlertDialogCancel>
-                        <AlertDialogAction onClick={handleStatusUpdate} className="rounded-xl bg-[#794A05] hover:bg-[#5d3904]">{t("admin.products.orders.yes_update") || "Yes, Update"}</AlertDialogAction>
+                        <AlertDialogCancel className="rounded-xl border-slate-200">{t("admin.categories.no_cancel") || "No, Cancel"}</AlertDialogCancel>
+                        <AlertDialogAction onClick={handleStatusUpdate} className="rounded-xl bg-[#794A05] hover:bg-[#5d3904]">{t("admin.orders.yes_update") || "Yes, Update"}</AlertDialogAction>
                     </AlertDialogFooter>
                 </AlertDialogContent>
             </AlertDialog>

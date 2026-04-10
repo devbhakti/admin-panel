@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import {
@@ -31,7 +31,7 @@ import logo from "@/assets/logo2.png";
 
 import { cn } from "@/lib/utils";
 import { useRouter } from "next/navigation";
-import { useEffect } from "react";
+
 import { fetchMyTempleBookings, fetchTempleOrders, fetchMyTempleProfile } from "@/api/templeAdminController";
 import { useAdminAuth } from "@/hooks/use-admin-auth";
 import { clearAllTokens } from "@/lib/auth-utils";
@@ -242,6 +242,7 @@ export default function TempleAdminLayout({ children }: { children: React.ReactN
     const [isAuthenticated, setIsAuthenticated] = useState<boolean | null>(null);
     const [user, setUser] = useState<any>(null);
     const [templeProfile, setTempleProfile] = useState<any>(null);
+    const [breadcrumbOverride, setBreadcrumbOverride] = useState<string | null>(null);
     const [counts, setCounts] = useState({
         bookings: { total: 0, booked: 0, completed: 0, cancelled: 0 },
         orders: { total: 0, pending: 0, accepted: 0, shipped: 0, delivered: 0, cancelled: 0 }
@@ -295,6 +296,16 @@ export default function TempleAdminLayout({ children }: { children: React.ReactN
             loadCounts();
         }
     }, [isAuthenticated]);
+
+    useEffect(() => {
+        const handleUpdate = (e: any) => setBreadcrumbOverride(e.detail);
+        window.addEventListener('updateBreadcrumb', handleUpdate);
+        return () => window.removeEventListener('updateBreadcrumb', handleUpdate);
+    }, []);
+
+    useEffect(() => {
+        setBreadcrumbOverride(null);
+    }, [pathname]);
 
     useEffect(() => {
         const token = localStorage.getItem("token");
@@ -524,13 +535,16 @@ export default function TempleAdminLayout({ children }: { children: React.ReactN
                             pathname?.split('/').filter(Boolean).slice(2).map((path, index, array) => {
                                 const isLast = index === array.length - 1;
                                 const pathUrl = `/temples/dashboard/${array.slice(0, index + 1).join('/')}`;
-                                const title = path.replace(/-/g, ' ');
+                                let title = path.replace(/-/g, ' ');
+                                if (/^[0-9a-fA-F]{24}$/.test(path) || /^c[a-z0-9]{24}$/.test(path) || path.length === 36) {
+                                    title = "Details";
+                                }
 
                                 return (
                                     <React.Fragment key={pathUrl}>
                                         <ChevronRight className="w-4 h-4 flex-shrink-0" />
                                         {isLast ? (
-                                            <span className="text-foreground font-medium">{title}</span>
+                                            <span className="text-foreground font-medium">{breadcrumbOverride || title}</span>
                                         ) : (
                                             <Link href={pathUrl} className="hover:text-foreground transition-colors">
                                                 {title}

@@ -309,7 +309,7 @@ const FavoritesPage: React.FC = () => {
 
                                                     <div className="mt-auto px-2 border-t border-zinc-50 pt-3 flex items-center justify-between">
                                                         <div className="text-xl font-bold text-zinc-900">₹{pooja.price}</div>
-                                                        <Button size="sm" className="rounded-xl h-8 text-xs px-4">{t("favorites.book")}</Button>
+                                                        <Button size="sm" className="rounded-xl h-8 text-xs px-4 capitalize">{t("common.know_more")}</Button>
                                                     </div>
                                                 </Link>
 

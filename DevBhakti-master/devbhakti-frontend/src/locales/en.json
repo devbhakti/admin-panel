@@ -64,6 +64,13 @@
     "explore": "Explore",
     "filters": "Filters",
     "all_products": "All Products",
+    "price_range": "Price Range",
+    "min": "Min",
+    "max": "Max",
+    "sort_by": "Sort By",
+    "newest": "Newest First",
+    "price_low": "Price: Low to High",
+    "price_high": "Price: High to Low",
     "showing": "Showing",
     "products": "products",
     "add": "Add",
@@ -240,7 +247,9 @@
     "authentic_poojaris_desc": "Experienced priests with expertise in Hindu rituals and poojas.",
     "proof_of_service_title": "Proof of Service",
     "proof_of_service_desc": "Total transparency with personalized photo / video recordings of your poojas and sevas.",
-    "all": "All"
+    "all": "All",
+    "all_locations": "All Locations",
+    "all_temples": "All Temples"
   },
   "temple_detail": {
     "not_found": "Temple not found or not verified.",
@@ -1842,6 +1851,18 @@
         "edit_product": "Edit Product",
         "view_details": "View Details",
         "delete_product": "Delete Product"
+      },
+      "orders": {
+        "title": "Shop Orders",
+        "desc": "Manage and track product orders from the marketplace.",
+        "search_place": "Search by Order ID or Devotee Name...",
+        "table_order_id": "Order ID",
+        "table_devotee": "Devotee",
+        "table_date_time": "Date & Time",
+        "table_amount": "Amount",
+        "table_status": "Order Status",
+        "table_payment": "Payment",
+        "no_orders_yet": "No orders found."
       }
     },
     "categories": {

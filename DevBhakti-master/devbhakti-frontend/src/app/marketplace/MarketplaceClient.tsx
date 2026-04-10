@@ -1,6 +1,8 @@
 "use client";
 
 import React, { useState, useEffect, Suspense } from "react";
+import { Select, SelectTrigger, SelectValue, SelectContent, SelectItem } from "@/components/ui/select";
+
 import Link from "next/link";
 import Image from "next/image";
 import { useRouter, useSearchParams } from "next/navigation";
@@ -96,8 +98,10 @@ export default function MarketplaceClient() {
 
   const { language, t } = useLanguage();
   const [searchQuery, setSearchQuery] = useState("");
+  const [debouncedSearchQuery, setDebouncedSearchQuery] = useState("");
   const [selectedCategory, setSelectedCategory] = useState("All");
   const [priceRange, setPriceRange] = useState([0, 5000]);
+  const [sortBy, setSortBy] = useState("newest");
   const { cartItems, addToCart: addToCartGlobal, updateQuantity, removeFromCart } = useCart();
   const [favorites, setFavorites] = useState<string[]>([]);
   const [cartOpen, setCartOpen] = useState(false);
@@ -113,6 +117,13 @@ export default function MarketplaceClient() {
   const productsPerPage = 10;
 
   useEffect(() => {
+    const timer = setTimeout(() => {
+      setDebouncedSearchQuery(searchQuery);
+    }, 500);
+    return () => clearTimeout(timer);
+  }, [searchQuery]);
+
+  useEffect(() => {
     const categoryParam = searchParams.get("category");
     if (categoryParam) {
       setSelectedCategory(categoryParam);
@@ -124,7 +135,7 @@ export default function MarketplaceClient() {
     loadProducts(1);
     loadFavorites();
     loadRatingsSettings();
-  }, [searchQuery, selectedCategory, showAllProducts, language]);
+  }, [debouncedSearchQuery, selectedCategory, showAllProducts, priceRange, sortBy, language]);
 
   const loadRatingsSettings = async () => {
     try {
@@ -139,7 +150,7 @@ export default function MarketplaceClient() {
 
   const loadCategories = async () => {
     try {
-      const data = await fetchActiveCategoriesAdmin();
+      const data = await fetchActiveCategoriesAdmin({ lang: language });
       setCategories(data);
     } catch (err) {
       console.error("Error loading categories:", err);
@@ -165,25 +176,24 @@ export default function MarketplaceClient() {
     setError(null);
     try {
       const params: any = {
-        search: searchQuery || undefined,
+        search: debouncedSearchQuery || undefined,
         page: showAllProducts ? undefined : page,
-        limit,
+        limit: limit,
+        category: selectedCategory !== "All" ? selectedCategory : undefined,
+        minPrice: priceRange[0],
+        maxPrice: priceRange[1],
+        sort: sortBy,
+        lang: language
       };
 
-      if (selectedCategory !== "All") {
-        const category = categories.find(c => c.id === selectedCategory);
-        if (category) {
-          params.category = getLocalized(category, 'name', 'en');
-        }
-      }
+      params.sort = sortBy;
 
-      const response = await fetchPublicProducts(params);
-      setProducts(response.products || response);
-      setTotalProducts(response.total || response.length || 0);
+      const data = await fetchPublicProducts(params);
+      setProducts(data.products || []);
+      setTotalProducts(data.pagination?.total || 0);
       
       if (!showAllProducts) {
-        const totalPagesCount = Math.ceil((response.total || response.length || 0) / productsPerPage);
-        setTotalPages(totalPagesCount);
+        setTotalPages(data.pagination?.pages || 1);
       } else {
         setTotalPages(1);
       }
@@ -195,12 +205,8 @@ export default function MarketplaceClient() {
     }
   };
 
-  const filteredProducts = products.filter((product) => {
-    const matchesPrice = product.variants.some(v =>
-      v.price >= priceRange[0] && v.price <= priceRange[1]
-    );
-    return matchesPrice;
-  });
+  // Server-side filtering is now used, so we use products directly
+  const filteredProducts = products;
 
   const handlePageChange = (page: number) => {
     setCurrentPage(page);
@@ -331,16 +337,30 @@ export default function MarketplaceClient() {
                 <h3 className="font-semibold text-foreground mb-4 flex items-center gap-2">
                     <Filter className="h-4 w-4" /> 
                     {t('marketplace.filters')}
+                    {(selectedCategory !== "All" || priceRange[0] !== 0 || priceRange[1] !== 5000) && (
+                      <button 
+                        onClick={() => { setSelectedCategory("All"); setPriceRange([0, 5000]); setCurrentPage(1); setSearchQuery(""); }}
+                        className="ml-auto text-xs font-medium text-primary hover:underline"
+                      >
+                        {t('common.reset')}
+                      </button>
+                    )}
                 </h3>
                 <div className="space-y-1.5">
                   <button 
-                    onClick={() => setSelectedCategory("All")} 
+                    onClick={() => { setSelectedCategory("All"); setCurrentPage(1); }} 
                     className={`w-full text-left px-4 py-2.5 rounded-xl text-sm font-medium ${selectedCategory === "All" ? "bg-[#794A05] text-white" : "text-slate-600 hover:bg-[#794A05]/5"}`}
                   >
                     {t('marketplace.all_products')}
                   </button>
                   {categories.map((cat) => (
-                    <button key={cat.id} onClick={() => setSelectedCategory(cat.id)} className={`w-full text-left px-4 py-2.5 rounded-xl text-sm font-medium ${selectedCategory === cat.id ? "bg-[#794A05] text-white" : "text-slate-600 hover:bg-[#794A05]/5"}`}>{getLocalized(cat, 'name', language)}</button>
+                    <button 
+                      key={cat.id} 
+                      onClick={() => { setSelectedCategory(cat.id); setCurrentPage(1); }} 
+                      className={`w-full text-left px-4 py-2.5 rounded-xl text-sm font-medium ${selectedCategory === cat.id ? "bg-[#794A05] text-white" : "text-slate-600 hover:bg-[#794A05]/5"}`}
+                    >
+                      {getLocalized(cat, 'name', language)}
+                    </button>
                   ))}
                   {totalProducts > 10 && (
                     <div className="pt-3 border-t border-border/50">
@@ -355,22 +375,68 @@ export default function MarketplaceClient() {
                 </div>
               </CardContent>
             </Card>
+
+            <Card className="border-border/50">
+              <CardContent className="p-6">
+                <h3 className="font-semibold text-foreground mb-6 flex items-center gap-2">
+                  <Filter className="h-4 w-4" />
+                  {t('marketplace.price_range')}
+                </h3>
+                
+                <div className="px-2">
+                  <Slider
+                    defaultValue={[0, 5000]}
+                    max={5000}
+                    step={100}
+                    value={priceRange}
+                    onValueChange={(value) => setPriceRange(value)}
+                    className="mb-6"
+                  />
+                  
+                  <div className="flex items-center justify-between mt-4">
+                    <div className="flex flex-col">
+                      <span className="text-[10px] uppercase font-bold text-muted-foreground mb-1">{t('marketplace.min')}</span>
+                      <span className="text-sm font-bold text-foreground">₹{priceRange[0]}</span>
+                    </div>
+                    <div className="w-8 h-px bg-border/50 mx-2 mt-4" />
+                    <div className="flex flex-col items-end">
+                      <span className="text-[10px] uppercase font-bold text-muted-foreground mb-1">{t('marketplace.max')}</span>
+                      <span className="text-sm font-bold text-foreground">₹{priceRange[1]}</span>
+                    </div>
+                  </div>
+                </div>
+              </CardContent>
+            </Card>
           </aside>
 
           <div className="flex-1">
             <div className="flex justify-between items-center mb-6 text-foreground">
-              <div>
-                <p>
-                  {t('marketplace.showing')} 
-                  <span className="font-semibold">{showAllProducts ? totalProducts : filteredProducts.length}</span> 
-                  {t('marketplace.products')}
-                  {!showAllProducts && totalPages > 1 && (
-                    <span className="text-sm text-muted-foreground ml-2">
-                      {t('marketplace.page_info', { current: currentPage, total: totalPages })}
-                    </span>
-                  )}
-                </p>
-              </div>
+                <div className="flex flex-col sm:flex-row sm:items-center gap-4 w-full md:w-auto">
+                  <p className="text-sm">
+                    {t('marketplace.showing')} 
+                    <span className="font-semibold">{showAllProducts ? totalProducts : filteredProducts.length}</span> 
+                    {t('marketplace.products')}
+                    {!showAllProducts && totalPages > 1 && (
+                      <span className="text-sm text-muted-foreground ml-2">
+                        {t('marketplace.page_info', { current: currentPage, total: totalPages })}
+                      </span>
+                    )}
+                  </p>
+
+                  <div className="flex items-center gap-2">
+                    <span className="text-xs text-muted-foreground whitespace-nowrap">{t('marketplace.sort_by')}:</span>
+                    <Select value={sortBy} onValueChange={setSortBy}>
+                      <SelectTrigger className="w-[160px] h-8 text-xs">
+                        <SelectValue />
+                      </SelectTrigger>
+                      <SelectContent>
+                        <SelectItem value="newest">{t('marketplace.newest')}</SelectItem>
+                        <SelectItem value="price_asc">{t('marketplace.price_low')}</SelectItem>
+                        <SelectItem value="price_desc">{t('marketplace.price_high')}</SelectItem>
+                      </SelectContent>
+                    </Select>
+                  </div>
+                </div>
               <Button variant="outline" className="gap-2" onClick={() => setCartOpen(true)}>
                 <ShoppingCart className="h-4 w-4" /> 
                 {t('navbar.my_cart')} ({cartItems.length})

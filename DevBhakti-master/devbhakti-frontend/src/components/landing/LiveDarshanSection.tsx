@@ -44,7 +44,7 @@ const LiveDarshanSection: React.FC = () => {
 
   React.useEffect(() => {
     const loadLiveTemples = async () => {
-      const data = await fetchPublicTemples();
+      const data = await fetchPublicTemples({ lang: language });
       // Temple side: isLive / liveUrl / isLiveNow
       const live = data.filter((t: any) => t.isLive && t.liveStatus);
 

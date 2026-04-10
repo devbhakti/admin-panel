@@ -44,6 +44,9 @@ export default function EditPoojaPage() {
 
             if (poojaRes.success && poojaRes.data) {
                 setPoojaData(poojaRes.data);
+                // Update breadcrumb with pooja name
+                const poojaName = poojaRes.data.name?.en || poojaRes.data.name_en || "Edit Pooja";
+                window.dispatchEvent(new CustomEvent('updateBreadcrumb', { detail: `Edit: ${poojaName}` }));
             } else {
                 toast({ title: "Error", description: "Pooja not found", variant: "destructive" });
                 router.push('/admin/poojas');
@@ -84,7 +87,7 @@ export default function EditPoojaPage() {
                     <ArrowLeft className="w-5 h-5" />
                 </Button>
                 <div>
-                    <h1 className="text-3xl font-bold tracking-tight text-slate-900">Edit Pooja Service</h1>
+                    <h1 className="text-3xl font-bold tracking-tight text-slate-900">Edit Pooja</h1>
                     <p className="text-slate-500 font-medium">Modify existing spiritual service details and localization.</p>
                 </div>
             </div>

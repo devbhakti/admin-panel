@@ -22,7 +22,7 @@ const BannerSection: React.FC = () => {
         const fetchBannersAndStatus = async () => {
             try {
                 const [bannerRes, statusRes] = await Promise.all([
-                    axios.get(`${API_URL}/admin/cms/banners`),
+                    axios.get(`${API_URL}/admin/cms/banners`, { params: { lang: language } }),
                     axios.get(`${API_URL}/admin/cms/banners/global-status`)
                 ]);
 

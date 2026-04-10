@@ -91,7 +91,7 @@ export default function CreateCategoryPage() {
     const newErrors: Record<string, string> = {};
 
     if (!formData.name_en.trim()) {
-      newErrors.name_en = t("admin.products.categories.name_required") || "Category name (English) is required";
+      newErrors.name_en = t("admin.categories.name_required") || "Category name (English) is required";
     }
 
     if (formData.sortOrder < 0) {
@@ -107,8 +107,8 @@ export default function CreateCategoryPage() {
 
     if (!validateForm()) {
       toast({
-        title: t("admin.products.categories.validation_error") || "Validation Error",
-        description: t("admin.products.categories.fill_required") || "Please fill all required fields correctly",
+        title: t("admin.categories.validation_error") || "Validation Error",
+        description: t("admin.categories.fill_required") || "Please fill all required fields correctly",
         variant: "destructive",
       });
       return;
@@ -138,8 +138,8 @@ export default function CreateCategoryPage() {
       await createCategoryAdmin(formDataToSend);
 
       toast({
-        title: t("admin.products.categories.success_create") || "Success",
-        description: t("admin.products.categories.success_message") || "Category created successfully",
+        title: t("admin.categories.success_create") || "Success",
+        description: t("admin.categories.success_message") || "Category created successfully",
       });
 
       router.push("/admin/products/categories");
@@ -149,7 +149,7 @@ export default function CreateCategoryPage() {
       const errorDetails = error?.response?.data?.details;
 
       toast({
-        title: t("admin.products.categories.error_create") || "Error Creating Category",
+        title: t("admin.categories.error_create") || "Error Creating Category",
         description: errorDetails ? `${errorMessage}: ${errorDetails}` : errorMessage,
         variant: "destructive",
       });
@@ -167,17 +167,17 @@ export default function CreateCategoryPage() {
           className="mb-2"
         >
           <ArrowLeft className="w-4 h-4 mr-2" />
-          {t("admin.products.categories.back") || "Back"}
+          {t("admin.categories.back") || "Back"}
         </Button>
         <div>
-          <h1 className="text-2xl font-bold tracking-tight text-slate-900">{t("admin.products.categories.create_title")}</h1>
-          <p className="text-muted-foreground">{t("admin.products.categories.create_desc")}</p>
+          <h1 className="text-2xl font-bold tracking-tight text-slate-900">{t("admin.categories.create_title")}</h1>
+          <p className="text-muted-foreground">{t("admin.categories.create_desc")}</p>
         </div>
       </div>
 
       <Card>
         <CardHeader>
-          <CardTitle>{t("admin.products.categories.info")}</CardTitle>
+          <CardTitle>{t("admin.categories.info")}</CardTitle>
         </CardHeader>
         <CardContent>
           <form onSubmit={handleSubmit} className="space-y-6">
@@ -191,7 +191,7 @@ export default function CreateCategoryPage() {
               <TabsContent value="en" className="space-y-6">
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                   <div className="space-y-2">
-                    <Label htmlFor="name_en">{t("admin.products.categories.name")} *</Label>
+                    <Label htmlFor="name_en">{t("admin.categories.name")} *</Label>
                     <Input
                       id="name_en"
                       value={formData.name_en}
@@ -267,7 +267,7 @@ export default function CreateCategoryPage() {
             </Tabs>
 
             <div className="space-y-2">
-              <Label>{t("admin.products.categories.image")}</Label>
+              <Label>{t("admin.categories.image")}</Label>
               <div className="flex items-center gap-4">
                 {categoryImagePreview ? (
                   <div className="relative">
@@ -300,9 +300,9 @@ export default function CreateCategoryPage() {
                     className="cursor-pointer"
                   />
                   <p className="text-xs text-slate-500 mt-1">
-                    {t("admin.products.categories.file_hint") || "JPG, PNG, GIF up to 5MB"}
+                    {t("admin.categories.file_hint") || "JPG, PNG, GIF up to 5MB"}
                   </p>
-                  <p className="text-[10px] font-semibold text-primary mt-1">{t("admin.products.categories.rec_size") || "Recommended: 800x800 px (Square)"}</p>
+                  <p className="text-[10px] font-semibold text-primary mt-1">{t("admin.categories.rec_size") || "Recommended: 800x800 px (Square)"}</p>
 
                 </div>
               </div>
@@ -314,9 +314,9 @@ export default function CreateCategoryPage() {
                 checked={formData.isActive}
                 onCheckedChange={(checked) => handleInputChange("isActive", checked)}
               />
-              <Label htmlFor="isActive">{t("admin.products.categories.active")}</Label>
+              <Label htmlFor="isActive">{t("admin.categories.active")}</Label>
               <p className="text-sm text-slate-500">
-                {t("admin.products.categories.status_inactive_hint")}
+                {t("admin.categories.status_inactive_hint")}
               </p>
             </div>
 
@@ -327,7 +327,7 @@ export default function CreateCategoryPage() {
                 onClick={() => router.back()}
                 disabled={isSubmitting}
               >
-                {t("admin.products.categories.cancel")}
+                {t("admin.categories.cancel")}
               </Button>
               <Button
                 type="submit"
@@ -337,12 +337,12 @@ export default function CreateCategoryPage() {
                 {isSubmitting ? (
                   <>
                     <div className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin mr-2"></div>
-                    {t("admin.products.categories.creating")}
+                    {t("admin.categories.creating")}
                   </>
                 ) : (
                   <>
                     <Save className="w-4 h-4 mr-2" />
-                    {t("admin.products.categories.add_new")}
+                    {t("admin.categories.add_new")}
                   </>
                 )}
               </Button>

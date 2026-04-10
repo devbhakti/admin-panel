@@ -1,6 +1,7 @@
 "use client";
 
 import React, { useState, useEffect } from "react";
+import { useRouter } from "next/navigation";
 import {
     ArrowLeft,
     Upload,
@@ -23,6 +24,7 @@ import { Switch } from "@/components/ui/switch";
 import { Label } from "@/components/ui/label";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { useLanguage, Language } from "@/context/LanguageContext";
+import { parseLocalizedValue } from "@/utils/textUtils";
 import { API_URL } from "@/config/apiConfig";
 import { fetchCommissionSlabsAdmin } from "@/api/adminController";
 
@@ -45,6 +47,7 @@ export function TempleForm({
 }: TempleFormProps) {
     const { t, language, setLanguage } = useLanguage();
     const { toast } = useToast();
+    const router = useRouter();
 
     // Form State
     const [formData, setFormData] = useState({
@@ -582,8 +585,10 @@ export function TempleForm({
                                 <p className="text-sm text-slate-500">{t('registration_form.sections.available_poojas_subtitle') || 'Select poojas that are performed at this temple.'}</p>
 
                                 <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-                                    {allPoojas?.map((pooja) => {
+                                    {allPoojas && allPoojas.length > 0 ? allPoojas.map((pooja) => {
                                         const poojaId = pooja.masterPoojaId || pooja.id;
+                                        const poojaName = parseLocalizedValue(pooja.name, language) || pooja.name_en || pooja.name || "Unnamed Pooja";
+                                        const poojaCategory = parseLocalizedValue(pooja.category, language) || pooja.category || "";
                                         return (
                                             <label
                                                 key={poojaId}
@@ -603,44 +608,33 @@ export function TempleForm({
                                                 </div>
                                                 <div className="flex flex-col flex-1">
                                                     <span className="font-semibold text-sm text-slate-900 leading-tight">
-                                                        {(pooja as any)[`name_${lang}`] || pooja.name_en || pooja.name}
+                                                        {poojaName}
                                                     </span>
-                                                    {pooja.category && (
+                                                    {poojaCategory && (
                                                         <span className="text-xs text-slate-500 mt-1 capitalize leading-tight">
-                                                            {pooja.category}
+                                                            {poojaCategory}
                                                         </span>
                                                     )}
                                                 </div>
                                             </label>
                                         );
-                                    })}
+                                    }) : (
+                                        <p className="text-sm text-slate-400 italic col-span-3">No master poojas found. Click "Add New Pooja" below to create one.</p>
+                                    )}
                                 </div>
 
                                 {onAddMasterPooja && (
-                                    <div className="pt-4 mt-2">
-                                        <div className="flex flex-col sm:flex-row items-start sm:items-center gap-2">
-                                            <Input 
-                                                placeholder={t('registration_form.placeholders.add_pooja') || "Didn't find a pooja? Add a new one..."}
-                                                value={newPoojaName}
-                                                onChange={e => setNewPoojaName(e.target.value)}
-                                                className="max-w-xs"
-                                                onKeyDown={(e) => {
-                                                    if (e.key === 'Enter') {
-                                                        e.preventDefault();
-                                                        handleAddNewMasterPooja();
-                                                    }
-                                                }}
-                                            />
-                                            <Button 
-                                                type="button"
-                                                variant="outline"
-                                                onClick={handleAddNewMasterPooja}
-                                                disabled={isAddingPooja || !newPoojaName.trim()}
-                                            >
-                                                <Plus className="w-4 h-4 mr-1" />
-                                                {t('registration_form.buttons.add') || 'Add'}
-                                            </Button>
-                                        </div>
+                                    <div className="pt-4 mt-2 border-t">
+                                        <Button
+                                            type="button"
+                                            variant="outline"
+                                            className="border-primary text-primary hover:bg-primary/10"
+                                            onClick={() => router.push('/admin/poojas/create')}
+                                        >
+                                            <Plus className="w-4 h-4 mr-2" />
+                                            {t('registration_form.buttons.add') || 'Add New Pooja'}
+                                        </Button>
+                                        <p className="text-xs text-slate-500 mt-2">Click to navigate to Pooja Creation page.</p>
                                     </div>
                                 )}
                             </div>
@@ -791,16 +785,62 @@ export function TempleForm({
                                         />
                                     </div>
                                     <div className="flex gap-4">
-                                        <Input value={slot.start} onChange={e => {
-                                            const newHours = [...formData.operatingHours];
-                                            newHours[index].start = e.target.value;
-                                            setFormData({ ...formData, operatingHours: newHours });
-                                        }} className="text-xs" disabled={!slot.active} placeholder="07:00 AM" />
-                                        <Input value={slot.end} onChange={e => {
-                                            const newHours = [...formData.operatingHours];
-                                            newHours[index].end = e.target.value;
-                                            setFormData({ ...formData, operatingHours: newHours });
-                                        }} className="text-xs" disabled={!slot.active} placeholder="01:00 PM" />
+                                        <Input 
+                                            type="time"
+                                            value={(() => {
+                                                if (!slot.start) return "";
+                                                const [time, modifier] = slot.start.split(' ');
+                                                let [hours, minutes] = time.split(':');
+                                                let h = parseInt(hours, 10);
+                                                if (modifier === 'PM' && h < 12) h += 12;
+                                                if (modifier === 'AM' && h === 12) h = 0;
+                                                return `${String(h).padStart(2, '0')}:${minutes}`;
+                                            })()}
+                                            onChange={e => {
+                                                const time24 = e.target.value;
+                                                if (!time24) return;
+                                                let [hours, minutes] = time24.split(':');
+                                                let h = parseInt(hours, 10);
+                                                const modifier = h >= 12 ? 'PM' : 'AM';
+                                                if (h > 12) h -= 12;
+                                                if (h === 0) h = 12;
+                                                const time12 = `${String(h).padStart(2, '0')}:${minutes} ${modifier}`;
+                                                
+                                                const newHours = [...formData.operatingHours];
+                                                newHours[index].start = time12;
+                                                setFormData({ ...formData, operatingHours: newHours });
+                                            }} 
+                                            className="text-xs" 
+                                            disabled={!slot.active} 
+                                        />
+                                        <Input 
+                                            type="time"
+                                            value={(() => {
+                                                if (!slot.end) return "";
+                                                const [time, modifier] = slot.end.split(' ');
+                                                let [hours, minutes] = time.split(':');
+                                                let h = parseInt(hours, 10);
+                                                if (modifier === 'PM' && h < 12) h += 12;
+                                                if (modifier === 'AM' && h === 12) h = 0;
+                                                return `${String(h).padStart(2, '0')}:${minutes}`;
+                                            })()}
+                                            onChange={e => {
+                                                const time24 = e.target.value;
+                                                if (!time24) return;
+                                                let [hours, minutes] = time24.split(':');
+                                                let h = parseInt(hours, 10);
+                                                const modifier = h >= 12 ? 'PM' : 'AM';
+                                                if (h > 12) h -= 12;
+                                                if (h === 0) h = 12;
+                                                const time12 = `${String(h).padStart(2, '0')}:${minutes} ${modifier}`;
+
+                                                const newHours = [...formData.operatingHours];
+                                                newHours[index].end = time12;
+                                                setFormData({ ...formData, operatingHours: newHours });
+                                            }} 
+                                            className="text-xs" 
+                                            disabled={!slot.active} 
+                                        />
                                     </div>
                                 </div>
                             ))}

@@ -219,7 +219,7 @@ export default function LiveDarshanClient() {
   useEffect(() => {
     const fetchLiveTemples = async () => {
       try {
-        const res = await axios.get(`${API_URL}/temples`);
+        const res = await axios.get(`${API_URL}/temples`, { params: { lang: language } });
         if (res.data.success) {
           const liveTemples = res.data.data.filter(
             (t: any) => t.isLive && t.liveStatus
@@ -251,7 +251,7 @@ export default function LiveDarshanClient() {
       }
     };
     fetchLiveTemples();
-  }, [params, searchParams]);
+  }, [params, searchParams, language]);
 
   const handleTempleClick = (temple: any) => {
     setSelectedTemple(temple);
@@ -459,7 +459,6 @@ export default function LiveDarshanClient() {
               <div className="flex justify-center flex-1">
                 <div className="flex items-center gap-3 md:gap-4 bg-white/10 backdrop-blur-md rounded-full border border-white/20 p-2 shadow-inner group/devotion">
                   <motion.button
-                    whileHover={{ scale: 1.15, y: -2 }}
                     whileTap={{ scale: 0.9 }}
                     onClick={() => setBellTrigger(prev => prev + 1)}
                     className="w-11 h-11 md:w-12 md:h-12 rounded-full bg-white flex items-center justify-center text-xl shadow-lg border border-primary/10 hover:shadow-primary/20 transition-all"
@@ -467,7 +466,6 @@ export default function LiveDarshanClient() {
                     🔔
                   </motion.button>
                   <motion.button
-                    whileHover={{ scale: 1.15, y: -2 }}
                     whileTap={{ scale: 0.9 }}
                     onClick={() => setFlowerTrigger(prev => prev + 1)}
                     className="w-11 h-11 md:w-12 md:h-12 rounded-full bg-white flex items-center justify-center text-xl shadow-lg border border-primary/10 hover:shadow-pink-200 transition-all"
@@ -475,7 +473,6 @@ export default function LiveDarshanClient() {
                     🌸
                   </motion.button>
                   <motion.button
-                    whileHover={{ scale: 1.15, y: -2 }}
                     whileTap={{ scale: 0.9 }}
                     onClick={() => setAartiTrigger(prev => prev + 1)}
                     className="w-11 h-11 md:w-12 md:h-12 rounded-full bg-white flex items-center justify-center shadow-lg border border-primary/10 hover:shadow-yellow-200 transition-all overflow-hidden"
@@ -486,13 +483,13 @@ export default function LiveDarshanClient() {
               </div>
               <div className="flex justify-center lg:justify-end flex-1">
                 <div className="flex items-center gap-2 shrink-0">
-                  <Button variant="outline" className="h-9 px-4 rounded-full border border-primary/20 bg-white text-dark font-bold text-[10px] uppercase tracking-wider gap-2 shadow-sm" asChild>
+                  <Button variant="outline" className="h-9 px-4 rounded-full border border-primary/20 bg-white text-dark font-bold text-[10px] uppercase tracking-wider gap-2 shadow-sm hover:bg-white hover:text-dark hover:border-primary/20" asChild>
                     <Link href={`/donation?temple=${selectedTemple.id}`}>
                       <Heart className="w-3.5 h-3.5 fill-white" />
                       {t('actions_donate')}
                     </Link>
                   </Button>
-                  <Button variant="outline" className="h-9 px-4 rounded-full border border-primary/20 bg-white text-primary font-bold text-[10px] uppercase tracking-wider gap-2 shadow-sm" asChild>
+                  <Button variant="outline" className="h-9 px-4 rounded-full border border-primary/20 bg-white text-primary font-bold text-[10px] uppercase tracking-wider gap-2 shadow-sm hover:bg-white hover:text-primary hover:border-primary/20" asChild>
                     <Link href={`/booking?temple=${selectedTemple.id}`}>
                       <Calendar className="w-3.5 h-3.5" />
                       {t('actions_book_pooja')}

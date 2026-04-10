@@ -47,7 +47,7 @@ const PoojasSection: React.FC = () => {
   };
 
   const loadPoojas = async () => {
-    const data = await fetchPublicPoojas();
+    const data = await fetchPublicPoojas({ lang: language });
 
     // Sort poojas by lowest price
     const sortedData = [...data].sort((a, b) => {

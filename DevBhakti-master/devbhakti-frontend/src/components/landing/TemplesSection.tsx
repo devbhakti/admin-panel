@@ -61,7 +61,7 @@ const TemplesSection: React.FC = () => {
   };
 
   const loadTemples = async () => {
-    const data = await fetchPublicTemples();
+    const data = await fetchPublicTemples({ lang: language });
     setTemples(data);
     setLoading(false);
   };

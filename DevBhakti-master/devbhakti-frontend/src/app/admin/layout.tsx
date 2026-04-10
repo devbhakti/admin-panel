@@ -124,6 +124,7 @@ const sidebarItems = [
       { label: "Manage Rating", href: "/admin/cms/manage-rating", permission: "cms.features" },
       { label: "Manage Testimonials", href: "/admin/cms/testimonials", permission: "cms.testimonials" },
       { label: "Manage CTA Cards", href: "/admin/cms/cta-cards", permission: "cms.features" },
+      { label: "Manage Pooja FAQs", href: "/admin/cms/pooja-faqs", permission: "cms.features" },
       // { label: "SEO Meta Tags", href: "/admin/cms/seo", permission: "cms.features" },
     ]
 
@@ -558,7 +559,10 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
               pathname?.split('/').filter(Boolean).slice(1).map((path, index, array) => {
                 const isLast = index === array.length - 1;
                 const pathUrl = `/admin/${array.slice(0, index + 1).join('/')}`;
-                const title = path.replace(/-/g, ' ');
+                let title = path.replace(/-/g, ' ');
+                if (/^[0-9a-fA-F]{24}$/.test(path) || /^c[a-z0-9]{24}$/.test(path) || path.length === 36) {
+                  title = "Details";
+                }
 
                 return (
                   <React.Fragment key={pathUrl}>

@@ -145,6 +145,14 @@ function DonationForm() {
             toast({ title: t("toasts.enter_amount"), variant: "destructive" });
             return;
         }
+        if (step === 2 && parseFloat(finalAmount) > 10000000) {
+            toast({ 
+                title: "Limit Exceeded", 
+                description: "Maximum donation amount is ₹1 Crore", 
+                variant: "destructive" 
+            });
+            return;
+        }
         if (step === 3 && !isAnonymous) {
             const newErrors: Record<string, string> = {};
             const missingFields: string[] = [];
@@ -553,8 +561,19 @@ function DonationForm() {
                                                 placeholder={t("step2.other_placeholder")}
                                                 className="pl-8 text-lg font-semibold h-12 border-[#e6d5c8] focus:border-[#7c4624] focus:ring-[#7c4624]/20"
                                                 value={customAmount}
+                                                max={10000000}
                                                 onChange={(e) => {
-                                                    setCustomAmount(e.target.value);
+                                                    const val = e.target.value;
+                                                    if (parseFloat(val) > 10000000) {
+                                                        setCustomAmount("10000000");
+                                                        toast({
+                                                            title: "Amount Restricted",
+                                                            description: "Maximum donation amount is ₹1 Crore",
+                                                            variant: "destructive"
+                                                        });
+                                                    } else {
+                                                        setCustomAmount(val);
+                                                    }
                                                     setAmount("");
                                                 }}
                                             />

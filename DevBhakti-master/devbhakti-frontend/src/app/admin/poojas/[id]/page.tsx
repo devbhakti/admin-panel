@@ -34,6 +34,9 @@ export default function ViewPoojaPage() {
 
             if (foundPooja) {
                 setPooja(foundPooja);
+                // Update breadcrumb with pooja name
+                const displayName = parseLocalizedValue(foundPooja.name, 'en') || "Pooja Details";
+                window.dispatchEvent(new CustomEvent('updateBreadcrumb', { detail: displayName }));
             } else {
                 toast({
                     title: "Error",

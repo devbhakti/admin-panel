@@ -29,6 +29,8 @@ export default function TempleViewPoojaPage() {
             const found = (response.data || []).find((p: any) => p.id === poojaId);
             if (found) {
                 setPooja(found);
+                // Update breadcrumb with pooja name
+                window.dispatchEvent(new CustomEvent('updateBreadcrumb', { detail: found.name || "Pooja Details" }));
             } else {
                 toast({ title: "Error", description: "Pooja not found", variant: "destructive" });
                 router.push('/temples/dashboard/poojas');

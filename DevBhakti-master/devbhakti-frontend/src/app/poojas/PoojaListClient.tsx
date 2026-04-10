@@ -1,7 +1,8 @@
 "use client";
 
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import Link from "next/link";
+import { Select, SelectTrigger, SelectValue, SelectContent, SelectItem } from "@/components/ui/select";
 import Image from "next/image";
 import { motion, AnimatePresence } from "framer-motion";
 import {
@@ -18,7 +19,7 @@ import {
     Heart,
     IndianRupee
 } from "lucide-react";
-import { fetchPublicPoojas, fetchRatingsSettings } from "@/api/publicController";
+import { fetchPublicPoojas, fetchRatingsSettings, fetchPublicFilters } from "@/api/publicController";
 import { fetchUserFavorites, addFavorite, removeFavorite } from "@/api/userController";
 import { useRouter } from "next/navigation";
 import { useToast } from "@/hooks/use-toast";
@@ -44,11 +45,13 @@ const PoojaListClient: React.FC = () => {
     const { language, t } = useLanguage();
     const [user, setUser] = useState<any>(null);
     const [showRatings, setShowRatings] = useState(false);
+    const [filters, setFilters] = useState<{ locations: string[], temples: any[], poojaCategories: any[] }>({ locations: [], temples: [], poojaCategories: [] });
+    const [selectedLocation, setSelectedLocation] = useState("All");
+    const [selectedTemple, setSelectedTemple] = useState("All");
 
     const categories = React.useMemo(() => {
-        const uniqueCategories = Array.from(new Set(poojas.map(p => getLocalized(p, 'category', language)?.trim()).filter(Boolean)));
-        return ["All", ...uniqueCategories];
-    }, [poojas, language]);
+        return [{ id: "All", name: t('poojas_list.all') || "All" }, ...filters.poojaCategories];
+    }, [filters.poojaCategories, language, t]);
 
     React.useEffect(() => {
         const savedUser = localStorage.getItem("user");
@@ -56,9 +59,26 @@ const PoojaListClient: React.FC = () => {
             setUser(JSON.parse(savedUser));
             loadFavorites();
         }
-        loadPoojas();
+        loadFilters();
         loadRatingsSettings();
     }, [language]);
+
+    useEffect(() => {
+        loadPoojas();
+    }, [language, selectedLocation, selectedTemple, selectedCategory]);
+
+    const loadFilters = async () => {
+        try {
+            const data = await fetchPublicFilters(language);
+            setFilters({
+                locations: data.locations || [],
+                temples: data.temples || [],
+                poojaCategories: data.poojaCategories || []
+            });
+        } catch (error) {
+            console.error("Error loading filters:", error);
+        }
+    };
 
     const loadRatingsSettings = async () => {
         try {
@@ -83,7 +103,14 @@ const PoojaListClient: React.FC = () => {
     };
 
     const loadPoojas = async () => {
-        const data = await fetchPublicPoojas({ lang: language });
+        setLoading(true);
+        const params: any = { 
+            lang: language,
+            location: selectedLocation !== "All" ? selectedLocation : undefined,
+            templeId: selectedTemple !== "All" ? selectedTemple : undefined,
+            categoryId: selectedCategory !== "All" ? selectedCategory : undefined
+        };
+        const data = await fetchPublicPoojas(params);
 
         // Sort poojas by lowest price
         const sortedData = [...data].sort((a, b) => {
@@ -186,9 +213,7 @@ const PoojaListClient: React.FC = () => {
         const matchesSearch =
             poojaName.includes(searchQuery.toLowerCase()) ||
             poojaCat.includes(searchQuery.toLowerCase());
-        const matchesCategory =
-            selectedCategory === "All" || getLocalized(pooja, 'category', language) === selectedCategory;
-        return matchesSearch && matchesCategory;
+        return matchesSearch;
     });
 
     const suggestion = React.useMemo(() => {
@@ -310,16 +335,46 @@ const PoojaListClient: React.FC = () => {
 
                         {categories.map((category) => (
                             <button
-                                key={category}
-                                onClick={() => setSelectedCategory(category)}
-                                className={`px-4 py-1.5 rounded-full text-sm font-medium transition-all duration-300 whitespace-nowrap ${selectedCategory === category
+                                key={category.id}
+                                onClick={() => setSelectedCategory(category.id)}
+                                className={`px-4 py-1.5 rounded-full text-sm font-medium transition-all duration-300 whitespace-nowrap ${selectedCategory === category.id
                                     ? "bg-primary text-white shadow-md"
                                     : "bg-zinc-100 text-zinc-700 hover:bg-zinc-200"
                                     }`}
                             >
-                                {category === 'All' ? t('poojas_list.all') : category}
+                                {category.name}
                             </button>
                         ))}
+
+                        <div className="flex items-center gap-3 ml-auto">
+                            <Select value={selectedLocation} onValueChange={(val) => { setSelectedLocation(val); setSelectedTemple("All"); }}>
+                                <SelectTrigger className="w-[160px] h-9 rounded-full bg-zinc-100 border-none text-xs font-medium focus:ring-1 focus:ring-primary">
+                                    <MapPin className="w-3 h-3 mr-2 text-primary" />
+                                    <SelectValue placeholder={t('temples.location')} />
+                                </SelectTrigger>
+                                <SelectContent>
+                                    <SelectItem value="All">{t('poojas_list.all_locations') || "All Locations"}</SelectItem>
+                                    {filters.locations.map((loc) => (
+                                        <SelectItem key={loc} value={loc}>{loc}</SelectItem>
+                                    ))}
+                                </SelectContent>
+                            </Select>
+
+                            <Select value={selectedTemple} onValueChange={setSelectedTemple}>
+                                <SelectTrigger className="w-[180px] h-9 rounded-full bg-zinc-100 border-none text-xs font-medium focus:ring-1 focus:ring-primary">
+                                    <Sparkles className="w-3 h-3 mr-2 text-primary" />
+                                    <SelectValue placeholder={t('temples.title')} />
+                                </SelectTrigger>
+                                <SelectContent>
+                                    <SelectItem value="All">{t('poojas_list.all_temples') || "All Temples"}</SelectItem>
+                                    {filters.temples
+                                        .filter(t => selectedLocation === "All" || t.location === selectedLocation)
+                                        .map((temple) => (
+                                            <SelectItem key={temple.id} value={temple.id}>{temple.name}</SelectItem>
+                                        ))}
+                                </SelectContent>
+                            </Select>
+                        </div>
 
                     </div>
                 </div>
@@ -333,9 +388,7 @@ const PoojaListClient: React.FC = () => {
                         <div className="mb-8 flex items-center justify-between">
                             <h2 className="text-2xl font-semibold text-dark">
                                 {t('poojas_list.available')}
-                                <span className="text-dark">
-                                    {selectedCategory === 'All' ? '' : selectedCategory}
-                                </span>
+                                {selectedCategory === 'All' ? '' : categories.find(c => c.id === selectedCategory)?.name}
                                 {t('poojas_list.poojas_sevas')}
                             </h2>
                             <div className="text-sm text-dark-800">
@@ -403,9 +456,18 @@ const PoojaListClient: React.FC = () => {
                                                     {getLocalized(pooja, 'name', language)}
                                                 </h3>
 
-                                                <p className="text-zinc-600 mb-3 leading-relaxed line-clamp-3 text-md font-medium">
+                                                <p className="text-zinc-600 mb-2 leading-relaxed line-clamp-2 text-sm font-medium">
                                                     {pooja.about || getLocalized(pooja, 'description', language)}
                                                 </p>
+
+                                                {pooja.temple && (
+                                                    <div className="flex items-center gap-2 mb-3 text-zinc-500">
+                                                        <MapPin className="w-3.5 h-3.5 text-primary" />
+                                                        <span className="text-xs font-semibold truncate">
+                                                            {getLocalized(pooja.temple, 'name', language)}
+                                                        </span>
+                                                    </div>
+                                                )}
 
                                                 <div className="space-y-3 mb-4">
                                                     {/* <div className="flex items-center gap-2 text-zinc-600">
@@ -431,33 +493,14 @@ const PoojaListClient: React.FC = () => {
                                                         <span className="text-2xl font-bold text-zinc-900 font-display">₹{pooja.price}</span>
                                                     </div> */}
                                                     <div className="flex flex-col gap-2 w-full">
+                                                    <div className="flex flex-col gap-2 w-full">
                                                         <Button
-                                                            className="w-full rounded-xl bg-primary hover:bg-primary/90 group/book transition-all duration-300"
-                                                            onClick={(e) => {
-                                                                e.preventDefault();
-                                                                e.stopPropagation();
-                                                                const token = localStorage.getItem("token");
-                                                                if (!token) {
-                                                                    toast({ 
-                                                                        title: t('auth.please_login_to_book'), 
-                                                                        variant: "destructive" 
-                                                                    });
-                                                                    router.push("/auth");
-                                                                    return;
-                                                                }
-                                                                router.push(`/booking?pooja=${pooja.id}`);
-                                                            }}
+                                                            className="w-full rounded-xl bg-primary hover:bg-primary/90 group/book transition-all duration-300 capitalize"
                                                         >
-                                                            {t('poojas_list.book_now')}
-                                                            <Zap className="w-4 h-4 ml-2 fill-white animate-pulse" />
-                                                        </Button>
-                                                        <Button
-                                                            variant="outline"
-                                                            className="w-full rounded-xl border-orange-100 hover:bg-orange-50 transition-all duration-300"
-                                                        >
-                                                            {t('poojas_list.more_details')}
+                                                            {t('common.know_more')}
                                                             <ChevronRight className="w-4 h-4 ml-2 group-hover/btn:translate-x-1 transition-transform" />
                                                         </Button>
+                                                    </div>
                                                     </div>
                                                 </div>
                                             </div>
@@ -508,7 +551,12 @@ const PoojaListClient: React.FC = () => {
                             <Button
                                 variant="outline"
                                 className="mt-8 rounded-full"
-                                onClick={() => { setSearchQuery(""); setSelectedCategory("All"); }}
+                                onClick={() => { 
+                                    setSearchQuery(""); 
+                                    setSelectedCategory("All"); 
+                                    setSelectedLocation("All"); 
+                                    setSelectedTemple("All"); 
+                                }}
                             >
                                 {t('poojas_list.reset_search')}
                             </Button>

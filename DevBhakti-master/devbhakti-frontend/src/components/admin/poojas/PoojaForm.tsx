@@ -72,6 +72,7 @@ export const PoojaForm: React.FC<PoojaFormProps> = ({
         price: 0,
         time: "",
         templeId: "",
+        categoryId: "",
         category_en: "",
         category_hi: "",
         category_mr: "",
@@ -135,6 +136,7 @@ export const PoojaForm: React.FC<PoojaFormProps> = ({
                 price: initialData.price || 0,
                 time: initialData.time || "",
                 templeId: initialData.templeId || "",
+                categoryId: initialData.categoryId || "",
                 category_en: getL(initialData.category, "en"),
                 category_hi: getL(initialData.category, "hi"),
                 category_mr: getL(initialData.category, "mr"),
@@ -320,6 +322,7 @@ export const PoojaForm: React.FC<PoojaFormProps> = ({
         Object.entries(formData.duration).forEach(([lang, val]) => fd.append(`duration_${lang}`, val));
 
         // Categories
+        fd.append("categoryId", formData.categoryId);
         fd.append("category_en", formData.category_en);
         fd.append("category_hi", formData.category_hi);
         fd.append("category_mr", formData.category_mr);
@@ -435,11 +438,9 @@ export const PoojaForm: React.FC<PoojaFormProps> = ({
                                             >
                                                 <div className="flex flex-wrap gap-1">
                                                     {formData.category_en ? (
-                                                        formData.category_en.split(', ').map((cat) => (
-                                                            <Badge key={cat} variant="secondary" className="mr-1">
-                                                                {cat}
-                                                            </Badge>
-                                                        ))
+                                                        <Badge variant="secondary" className="mr-1">
+                                                            {formData.category_en}
+                                                        </Badge>
                                                     ) : (
                                                         t('admin_pooja_form.placeholders.category')
                                                     )}
@@ -459,29 +460,24 @@ export const PoojaForm: React.FC<PoojaFormProps> = ({
                                                                 hi: parseLocalizedValue(category.name_hi || category.name_en || category.name, 'hi'),
                                                                 mr: parseLocalizedValue(category.name_mr || category.name_en || category.name, 'mr')
                                                             };
-                                                            
-                                                            const currentSelected = {
-                                                                en: formData.category_en ? formData.category_en.split(', ') : [],
-                                                                hi: formData.category_hi ? formData.category_hi.split(', ') : [],
-                                                                mr: formData.category_mr ? formData.category_mr.split(', ') : []
-                                                            };
-
-                                                            const isSelected = currentSelected.en.includes(catNames.en);
+                                                            const isSelected = formData.categoryId === category.id;
 
                                                             return (
                                                                 <CommandItem
                                                                     key={category.id}
                                                                     value={catNames.en}
                                                                     onSelect={() => {
-                                                                        const updated = {
-                                                                            en: isSelected ? currentSelected.en.filter(c => c !== catNames.en) : [...currentSelected.en, catNames.en],
-                                                                            hi: isSelected ? currentSelected.hi.filter(c => c !== catNames.hi) : [...currentSelected.hi, catNames.hi],
-                                                                            mr: isSelected ? currentSelected.mr.filter(c => c !== catNames.mr) : [...currentSelected.mr, catNames.mr]
-                                                                        };
-                                                                        
-                                                                        handleInputChange("category_en", updated.en.join(', '));
-                                                                        handleInputChange("category_hi", updated.hi.join(', '));
-                                                                        handleInputChange("category_mr", updated.mr.join(', '));
+                                                                        if (isSelected) {
+                                                                            handleInputChange("categoryId", "");
+                                                                            handleInputChange("category_en", "");
+                                                                            handleInputChange("category_hi", "");
+                                                                            handleInputChange("category_mr", "");
+                                                                        } else {
+                                                                            handleInputChange("categoryId", category.id);
+                                                                            handleInputChange("category_en", catNames.en);
+                                                                            handleInputChange("category_hi", catNames.hi);
+                                                                            handleInputChange("category_mr", catNames.mr);
+                                                                        }
                                                                     }}
                                                                 >
                                                                     <Check className={cn("mr-2 h-4 w-4", isSelected ? "opacity-100" : "opacity-0")} />

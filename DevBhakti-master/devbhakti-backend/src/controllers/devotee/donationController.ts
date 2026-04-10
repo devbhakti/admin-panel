@@ -28,6 +28,10 @@ export const initiateDonation = async (req: Request, res: Response) => {
             return res.status(400).json({ success: false, message: "Missing required fields" });
         }
 
+        if (amount > 10000000) {
+            return res.status(400).json({ success: false, message: "Donation amount exceeds the maximum limit of ₹1 Crore" });
+        }
+
         const temple = await prisma.temple.findUnique({ where: { id: templeId } });
         if (!temple) return res.status(404).json({ success: false, message: "Temple not found" });
 

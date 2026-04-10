@@ -451,7 +451,8 @@ export default function TempleDetail() {
                                                 {temple.poojas.map((pooja: any, index: number) => (
                                                     <div
                                                         key={index}
-                                                        className="flex flex-col md:flex-row md:items-center justify-between p-6 hover:bg-primary/[0.02] transition-colors"
+                                                        className="flex flex-col md:flex-row md:items-center justify-between p-6 hover:bg-primary/[0.02] transition-colors cursor-pointer"
+                                                        onClick={() => router.push(`/poojas/${pooja.id}`)}
                                                     >
                                                         <div className="flex-1">
                                                             <h4 className="font-bold text-lg text-foreground mb-2">{getLocalized(pooja, 'name', language)}</h4>
@@ -472,24 +473,13 @@ export default function TempleDetail() {
                                                                 {pooja.price}
                                                             </div>
                                                             <Button
-                                                                className="rounded-full px-6 shadow-soft hover:shadow-warm transition-all"
-                                                                onClick={() => {
-                                                                    const bookingUrl = `/booking?temple=${temple.id}`;
-                                                                    const token = localStorage.getItem("token");
-                                                                    const savedUser = localStorage.getItem("user");
-                                                                    const parsedUser = savedUser ? JSON.parse(savedUser) : null;
-                                                                    if (!token || !parsedUser) {
-                                                                        router.push(`/auth?redirect=${encodeURIComponent(bookingUrl)}`);
-                                                                        return;
-                                                                    }
-                                                                    if (parsedUser.role !== "DEVOTEE") {
-                                                                        router.push(`/auth?redirect=${encodeURIComponent(bookingUrl)}`);
-                                                                        return;
-                                                                    }
-                                                                    router.push(bookingUrl);
+                                                                className="rounded-full px-6 shadow-soft hover:shadow-warm transition-all capitalize"
+                                                                onClick={(e) => {
+                                                                    e.stopPropagation();
+                                                                    router.push(`/poojas/${pooja.id}`);
                                                                 }}
                                                             >
-                                                                {t('temple_detail.book_now')}
+                                                                {t('common.know_more')}
                                                             </Button>
                                                         </div>
                                                     </div>
@@ -571,13 +561,13 @@ export default function TempleDetail() {
                                                                         {pooja.price}
                                                                     </div>
                                                                     <Button
-                                                                        className="rounded-lg px-8 h-10 shadow-sm hover:shadow-md group-hover:scale-105 transition-all bg-primary font-bold text-xs"
-                                                                        onClick={() => {
-                                                                            const bookingUrl = `/booking?temple=${temple.id}`;
-                                                                            router.push(bookingUrl);
+                                                                        className="rounded-lg px-8 h-10 shadow-sm hover:shadow-md group-hover:scale-105 transition-all bg-primary font-bold text-xs capitalize"
+                                                                        onClick={(e) => {
+                                                                            e.stopPropagation();
+                                                                            router.push(`/poojas/${pooja.id}`);
                                                                         }}
                                                                     >
-                                                                        Book Now
+                                                                        {t('common.know_more')}
                                                                     </Button>
                                                                 </div>
                                                             </div>

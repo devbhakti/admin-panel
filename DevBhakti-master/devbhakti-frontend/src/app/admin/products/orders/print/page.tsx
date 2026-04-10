@@ -45,7 +45,7 @@ function PrintLabelsContent() {
     if (isLoading) {
         return (
             <div style={{ display: "flex", alignItems: "center", justifyContent: "center", height: "100vh", fontFamily: "sans-serif" }}>
-                <p>{t("admin.products.orders.invoice.preparing")}</p>
+                <p>{t("admin.orders.invoice.preparing")}</p>
             </div>
         );
     }
@@ -53,7 +53,7 @@ function PrintLabelsContent() {
     if (orders.length === 0) {
         return (
             <div style={{ display: "flex", alignItems: "center", justifyContent: "center", height: "100vh", fontFamily: "sans-serif" }}>
-                <p>{t("admin.products.orders.invoice.no_orders")}</p>
+                <p>{t("admin.orders.invoice.no_orders")}</p>
             </div>
         );
     }
@@ -253,10 +253,10 @@ function PrintLabelsContent() {
 
             <div className="no-print">
                 <button onClick={() => window.history.back()} className="btn btn-back">
-                    {t("admin.products.orders.invoice.back_to_orders")}
+                    {t("admin.orders.invoice.back_to_orders")}
                 </button>
                 <button onClick={() => window.print()} className="btn btn-print">
-                    {t("admin.products.orders.invoice.print_invoices")}
+                    {t("admin.orders.invoice.print_invoices")}
                 </button>
             </div>
 
@@ -272,12 +272,12 @@ function PrintLabelsContent() {
                             </div>
 
                             <div className="invoice-title-wrapper">
-                                <span className="invoice-title">{t("admin.products.orders.invoice.title")}</span>
+                                <span className="invoice-title">{t("admin.orders.invoice.title")}</span>
                             </div>
 
                             <div className="grid-3">
                                 <div className="column">
-                                    <h4>{t("admin.products.orders.invoice.shipping_address")}:</h4>
+                                    <h4>{t("admin.orders.invoice.shipping_address")}:</h4>
                                     <div className="column-content">
                                         <strong>{shippingAddress.fullName || order.user?.name}</strong><br />
                                         {shippingAddress.street || "N/A"}<br />
@@ -289,7 +289,7 @@ function PrintLabelsContent() {
                                 </div>
 
                                 <div className="column col-border">
-                                    <h4>{t("admin.products.orders.invoice.sold_by")}:</h4>
+                                    <h4>{t("admin.orders.invoice.sold_by")}:</h4>
                                     <div className="column-content">
                                         {order.subOrders.map((so: any, sIdx: number) => (
                                             <div key={so.id} style={{ marginBottom: sIdx < order.subOrders.length - 1 ? 8 : 0 }}>
@@ -304,34 +304,34 @@ function PrintLabelsContent() {
                                 </div>
 
                                 <div className="column col-border">
-                                    <h4>{t("admin.products.orders.invoice.invoice_details")}:</h4>
+                                    <h4>{t("admin.orders.invoice.invoice_details")}:</h4>
                                      <div className="column-content">
                                         <div className="detail-row">
-                                            <span className="detail-label">{t("admin.products.orders.invoice.invoice_no")}</span>
+                                            <span className="detail-label">{t("admin.orders.invoice.invoice_no")}</span>
                                             <span className="detail-value">: INV-{order.id.slice(-6).toUpperCase()}</span>
                                         </div>
                                         <div className="detail-row">
-                                            <span className="detail-label">{t("admin.products.orders.invoice.invoice_date")}</span>
+                                            <span className="detail-label">{t("admin.orders.invoice.invoice_date")}</span>
                                             <span className="detail-value">: {format(new Date(order.createdAt), "dd MMMM yyyy")}</span>
                                         </div>
                                         <div className="detail-row">
-                                            <span className="detail-label">{t("admin.products.orders.invoice.order_no")}</span>
+                                            <span className="detail-label">{t("admin.orders.invoice.order_no")}</span>
                                             <span className="detail-value">: {order.id.slice(-8).toUpperCase()}</span>
                                         </div>
                                         <div className="detail-row">
-                                            <span className="detail-label">{t("admin.products.orders.invoice.order_date")}</span>
+                                            <span className="detail-label">{t("admin.orders.invoice.order_date")}</span>
                                             <span className="detail-value">: {format(new Date(order.createdAt), "dd MMMM yyyy")}</span>
                                         </div>
                                         <div className="detail-row">
-                                            <span className="detail-label">{t("admin.products.orders.invoice.channel")}</span>
+                                            <span className="detail-label">{t("admin.orders.invoice.channel")}</span>
                                             <span className="detail-value">: CUSTOM DEVBHAKTI</span>
                                         </div>
                                         <div className="detail-row">
-                                            <span className="detail-label">{t("admin.products.orders.invoice.payment_method")}</span>
+                                            <span className="detail-label">{t("admin.orders.invoice.payment_method")}</span>
                                             <span className="detail-value">: {order.paymentMethod === 'COD' ? 'cod' : 'prepaid'}</span>
                                         </div>
                                         <div className="detail-row">
-                                            <span className="detail-label">{t("admin.products.orders.invoice.remark")}</span>
+                                            <span className="detail-label">{t("admin.orders.invoice.remark")}</span>
                                             <span className="detail-value">: Custom Order</span>
                                         </div>
                                     </div>
@@ -341,16 +341,16 @@ function PrintLabelsContent() {
                             <table className="items">
                                  <thead>
                                     <tr>
-                                        <th className="text-left" style={{ width: "5%" }}>{t("admin.products.orders.invoice.table_sno")}</th>
-                                        <th className="text-left" style={{ width: "35%" }}>{t("admin.products.orders.invoice.table_product")}</th>
-                                        <th style={{ width: "5%" }}>{t("admin.products.orders.invoice.table_hsn")}</th>
-                                        <th style={{ width: "5%" }}>{t("admin.products.orders.invoice.table_qty")}</th>
-                                        <th className="text-right" style={{ width: "10%" }}>{t("admin.products.orders.invoice.table_price")}</th>
-                                        <th className="text-right" style={{ width: "10%" }}>{t("admin.products.orders.invoice.table_discount")}</th>
-                                        <th className="text-right" style={{ width: "10%" }}>{t("admin.products.orders.invoice.table_taxable")}</th>
-                                        <th className="text-right" style={{ width: "10%" }}>{t("admin.products.orders.invoice.table_cgst")}</th>
-                                        <th className="text-right" style={{ width: "10%" }}>{t("admin.products.orders.invoice.table_sgst")}</th>
-                                        <th className="text-right" style={{ width: "10%" }}>{t("admin.products.orders.invoice.table_total")}</th>
+                                        <th className="text-left" style={{ width: "5%" }}>{t("admin.orders.invoice.table_sno")}</th>
+                                        <th className="text-left" style={{ width: "35%" }}>{t("admin.orders.invoice.table_product")}</th>
+                                        <th style={{ width: "5%" }}>{t("admin.orders.invoice.table_hsn")}</th>
+                                        <th style={{ width: "5%" }}>{t("admin.orders.invoice.table_qty")}</th>
+                                        <th className="text-right" style={{ width: "10%" }}>{t("admin.orders.invoice.table_price")}</th>
+                                        <th className="text-right" style={{ width: "10%" }}>{t("admin.orders.invoice.table_discount")}</th>
+                                        <th className="text-right" style={{ width: "10%" }}>{t("admin.orders.invoice.table_taxable")}</th>
+                                        <th className="text-right" style={{ width: "10%" }}>{t("admin.orders.invoice.table_cgst")}</th>
+                                        <th className="text-right" style={{ width: "10%" }}>{t("admin.orders.invoice.table_sgst")}</th>
+                                        <th className="text-right" style={{ width: "10%" }}>{t("admin.orders.invoice.table_total")}</th>
                                     </tr>
                                 </thead>
                                 <tbody>
@@ -378,31 +378,31 @@ function PrintLabelsContent() {
                                 <div className="totals-left">
                                     <div className="footer-box"></div>
                                     <div className="footer-sign">
-                                        {t("admin.products.orders.invoice.authorized_sign")}<br />
+                                        {t("admin.orders.invoice.authorized_sign")}<br />
                                         {getLocalizedName(order.subOrders[0]?.temple) || getLocalizedName(order.subOrders[0]?.seller) || "DevBhakti"}
                                     </div>
                                 </div>
 
                                  <div className="totals-right">
                                     <div className="total-line">
-                                        <span>{t("admin.products.orders.invoice.subtotal")}</span>
+                                        <span>{t("admin.orders.invoice.subtotal")}</span>
                                         <span>Rs. {(order.totalAmount - (order.platformFee || 0) - (order.shippingCost || 0)).toFixed(2)}</span>
                                     </div>
                                     <div className="total-line">
-                                        <span>{t("admin.products.orders.invoice.platform_fee")}</span>
+                                        <span>{t("admin.orders.invoice.platform_fee")}</span>
                                         <span>Rs. {(order.platformFee || 0).toFixed(2)}</span>
                                     </div>
                                     <div className="total-line">
-                                        <span>{t("admin.products.orders.invoice.shipping_costs")}</span>
+                                        <span>{t("admin.orders.invoice.shipping_costs")}</span>
                                         <span>{(order.shippingCost || 0) > 0 ? "Rs. " + (order.shippingCost || 0).toFixed(2) : "0.00"}</span>
                                     </div>
                                     <div className="total-line grand">
-                                        <span>{t("admin.products.orders.invoice.net_total")}</span>
+                                        <span>{t("admin.orders.invoice.net_total")}</span>
                                         <span>Rs. {order.totalAmount.toFixed(2)}</span>
                                     </div>
                                     <br />
                                     <div className="total-line text" style={{ justifyContent: "flex-end", fontSize: "10px", fontWeight: 500 }}>
-                                        {t("admin.products.orders.invoice.reverse_charge_note")}
+                                        {t("admin.orders.invoice.reverse_charge_note")}
                                     </div>
                                 </div>
                             </div>
@@ -417,7 +417,7 @@ function PrintLabelsContent() {
 export default function AdminPrintLabelsPage() {
     const { language, t } = useLanguage();
     return (
-        <Suspense fallback={<div style={{ fontFamily: "sans-serif", textAlign: "center", padding: 40 }}>{t("admin.products.orders.invoice.preparing")}</div>}>
+        <Suspense fallback={<div style={{ fontFamily: "sans-serif", textAlign: "center", padding: 40 }}>{t("admin.orders.invoice.preparing")}</div>}>
             <PrintLabelsContent />
         </Suspense>
     );

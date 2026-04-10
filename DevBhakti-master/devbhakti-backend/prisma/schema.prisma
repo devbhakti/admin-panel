@@ -201,6 +201,7 @@ model Pooja {
   benefits      Json?   // {"en":[...],"hi":[...],"mr":[...]}
   bullets       Json?   // {"en":[...],"hi":[...],"mr":[...]}
   category      Json?
+  categoryId    String?
   description   Json?   // {"en":[...],"hi":[...],"mr":[...]}
   duration      Json?
   name          Json?
@@ -211,6 +212,7 @@ model Pooja {
   masterPooja   Pooja?                @relation("MasterPoojaRelation", fields: [masterPoojaId], references: [id])
   templeCopies  Pooja[]               @relation("MasterPoojaRelation")
   temple        Temple?               @relation(fields: [templeId], references: [id])
+  categoryObj   PoojaCategory?        @relation(fields: [categoryId], references: [id])
   bookings      PoojaBooking[]
   Event         Event[]               @relation("EventToPooja")
 }
@@ -221,6 +223,7 @@ model PoojaCategory {
   nameSlug  String   @unique  // English slug for uniqueness e.g. "ram-navami-pooja"
   status    String   @default("APPROVED")
   createdAt DateTime @default(now())
+  poojas    Pooja[]
 }
 
 model Event {

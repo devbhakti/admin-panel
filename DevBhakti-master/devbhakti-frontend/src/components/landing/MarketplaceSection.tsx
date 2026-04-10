@@ -55,7 +55,7 @@ const MarketplaceSection: React.FC = () => {
           fetchRatingsSettings()
         ]);
 
-        setProducts(productsData);
+        setProducts(productsData?.products || []);
 
         if (settingsData && settingsData.settings) {
           setShowRatings(settingsData.settings.product.home);

@@ -74,13 +74,14 @@ function ProductsContent() {
   const searchParams = useSearchParams();
   const idParam = searchParams.get("id");
   const qParam = searchParams.get("q");
+  const pageParam = searchParams.get("page");
 
   const router = useRouter();
   const [products, setProducts] = useState<any[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [searchTerm, setSearchTerm] = useState("");
   const [stats, setStats] = useState({ total: 0, pending: 0, approved: 0 });
-  const [currentPage, setCurrentPage] = useState(1);
+  const [currentPage, setCurrentPage] = useState(pageParam ? parseInt(pageParam) : 1);
   const [totalPages, setTotalPages] = useState(1);
   const [itemsPerPage] = useState(10);
   const [selectedProduct, setSelectedProduct] = useState<any>(null);
@@ -105,6 +106,9 @@ function ProductsContent() {
 
   useEffect(() => {
     loadProducts();
+    // Update URL without reloading
+    const newPath = `/admin/products?page=${currentPage}${selectedOwner !== 'all' ? `&owner=${selectedOwner}` : ''}${searchTerm ? `&q=${searchTerm}` : ''}`;
+    window.history.replaceState({ ...window.history.state, as: newPath, url: newPath }, '', newPath);
   }, [currentPage, selectedOwner, date]);
 
   useEffect(() => {
@@ -239,11 +243,10 @@ function ProductsContent() {
     }
   };
 
-  const truncateWords = (text: string, maxWords: number) => {
+  const truncateText = (text: string, maxLength: number) => {
     if (!text) return "";
-    const words = text.split(/\s+/);
-    if (words.length <= maxWords) return text;
-    return words.slice(0, maxWords).join(" ") + "...";
+    if (text.length <= maxLength) return text;
+    return text.slice(0, maxLength) + "...";
   };
 
   return (
@@ -429,9 +432,9 @@ function ProductsContent() {
                       </div>
                       <div className="flex flex-col min-w-0">
                         <span className="font-semibold text-slate-900 truncate">{getLocalizedName(product)}</span>
-                        <p className="text-sm text-muted-foreground mt-0.5">
-                          {truncateWords(product.description, 10)}
-                          {product.description?.split(/\s+/).length > 10 && (
+                        <p className="text-sm text-muted-foreground mt-0.5 break-all max-w-[300px]">
+                          {truncateText(product.description, 60)}
+                          {product.description?.length > 60 && (
                             <button
                               onClick={() => {
                                 setSelectedProduct(product);
@@ -525,7 +528,7 @@ function ProductsContent() {
                           variant="ghost"
                           size="icon"
                           className="h-8 w-8 text-blue-600"
-                          onClick={() => router.push(`/admin/products/edit/${product.id}`)}
+                          onClick={() => router.push(`/admin/products/edit/${product.id}?page=${currentPage}`)}
                           title={t("admin.products.list.edit_product")}
                         >
                           <Edit2 className="w-4 h-4" />
@@ -630,7 +633,7 @@ function ProductsContent() {
                 <div className="flex-1">
                   <h3 className="text-lg font-semibold text-slate-900">{getLocalizedName(selectedProduct)}</h3>
                   <Badge variant="outline" className="w-fit mt-1">
-                    {selectedProduct.category}
+                    {selectedProduct.categoryObj ? getLocalizedName(selectedProduct.categoryObj) : selectedProduct.category}
                   </Badge>
                 </div>
               </div>
@@ -641,7 +644,7 @@ function ProductsContent() {
                 </div>
                 <div>
                   <label className="text-sm font-medium text-slate-700">{t("admin.products.list.table_category")}</label>
-                  <p className="text-slate-900">{selectedProduct.category}</p>
+                  <p className="text-slate-900">{selectedProduct.categoryObj ? getLocalizedName(selectedProduct.categoryObj) : selectedProduct.category}</p>
                 </div>
                 <div>
                   <label className="text-sm font-medium text-slate-700">{t("admin.products.list.table_owner")}</label>
@@ -660,7 +663,7 @@ function ProductsContent() {
               </div>
               <div>
                 <label className="text-sm font-medium text-slate-700 mb-2 block">{t("admin.products.description")}</label>
-                <p className="text-slate-900 mt-1">{getLocalizedName({
+                <p className="text-slate-900 mt-1 break-words break-all whitespace-pre-wrap">{getLocalizedName({
                   name_en: selectedProduct.description_en || selectedProduct.description,
                   name_hi: selectedProduct.description_hi,
                   name_mr: selectedProduct.description_mr

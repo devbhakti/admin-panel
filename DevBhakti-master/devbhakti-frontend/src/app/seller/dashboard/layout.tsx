@@ -96,6 +96,17 @@ function SellerDashboardContent({ children }: { children: React.ReactNode }) {
     const [isAuthenticated, setIsAuthenticated] = useState<boolean | null>(null);
     const [user, setUser] = useState<any>(null);
     const [storeProfile, setStoreProfile] = useState<any>(null);
+    const [breadcrumbOverride, setBreadcrumbOverride] = useState<string | null>(null);
+
+    useEffect(() => {
+        const handleUpdate = (e: any) => setBreadcrumbOverride(e.detail);
+        window.addEventListener('updateBreadcrumb', handleUpdate);
+        return () => window.removeEventListener('updateBreadcrumb', handleUpdate);
+    }, []);
+
+    useEffect(() => {
+        setBreadcrumbOverride(null);
+    }, [pathname]);
 
     useEffect(() => {
         const checkAuth = async () => {
@@ -311,13 +322,16 @@ function SellerDashboardContent({ children }: { children: React.ReactNode }) {
                                 pathname?.split('/').filter(Boolean).slice(2).map((path, index, array) => {
                                     const isLast = index === array.length - 1;
                                     const pathUrl = `/seller/dashboard/${array.slice(0, index + 1).join('/')}`;
-                                    const title = path.replace(/-/g, ' ');
+                                    let title = path.replace(/-/g, ' ');
+                                    if (/^[0-9a-fA-F]{24}$/.test(path) || /^c[a-z0-9]{24}$/.test(path) || path.length === 36) {
+                                        title = "Details";
+                                    }
 
                                     return (
                                         <React.Fragment key={pathUrl}>
                                             <ChevronRight className="w-4 h-4 flex-shrink-0 text-slate-500" />
                                             {isLast ? (
-                                                <span className="text-slate-500 font-medium">{title}</span>
+                                                <span className="text-slate-500 font-medium">{breadcrumbOverride || title}</span>
                                             ) : (
                                                 <Link href={pathUrl} className="hover:text-sidebar-primary transition-colors text-slate-900">
                                                     {title}

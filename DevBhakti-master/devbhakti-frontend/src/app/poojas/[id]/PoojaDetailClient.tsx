@@ -35,28 +35,8 @@ interface PoojaDetailClientProps {
     id: string;
 }
 
-const STANDARD_FAQS = (t: (key: string) => string) => [
-    {
-        q: t('pooja_detail.faq_1_q'),
-        a: t('pooja_detail.faq_1_a')
-    },
-    {
-        q: t('pooja_detail.faq_2_q'),
-        a: t('pooja_detail.faq_2_a')
-    },
-    {
-        q: t('pooja_detail.faq_3_q'),
-        a: t('pooja_detail.faq_3_a')
-    },
-    {
-        q: t('pooja_detail.faq_4_q'),
-        a: t('pooja_detail.faq_4_a')
-    },
-    {
-        q: t('pooja_detail.faq_5_q'),
-        a: t('pooja_detail.faq_5_a')
-    },
-];
+// Removed hardcoded STANDARD_FAQS as they are now fetched from the backend
+
 
 const PoojaDetailClient = ({ id }: PoojaDetailClientProps) => {
     const [pooja, setPooja] = useState<any>(null);
@@ -235,7 +215,7 @@ const PoojaDetailClient = ({ id }: PoojaDetailClientProps) => {
                                         }}
                                         className="bg-white text-primary hover:bg-primary hover:text-white transition-all duration-500 rounded-full px-10 py-7 text-lg font-bold border-2 border-primary group shadow-md"
                                     >
-                                        Book Now <ArrowRight className="ml-3 w-5 h-5 group-hover:translate-x-1 transition-transform" />
+                                        {t('common.book_now')} <ArrowRight className="ml-3 w-5 h-5 group-hover:translate-x-1 transition-transform" />
                                     </Button>
                                 </div>
                             </motion.div>
@@ -439,14 +419,14 @@ const PoojaDetailClient = ({ id }: PoojaDetailClientProps) => {
                                         <div className="max-w-6xl mx-auto">
                                             <h2 className="text-4xl font-serif font-bold mb-12 text-center text-primary text-gradient-sacred pb-2">{t('pooja_detail.questions_answers_title')}</h2>
                                             <div className="space-y-6">
-                                                {[...STANDARD_FAQS(t), ...(pooja.faqs && Array.isArray(pooja.faqs) ? pooja.faqs : [])].map((faq: any, idx: number) => (
+                                                {[...(pooja.standardFaqs || []), ...(pooja.faqs && Array.isArray(pooja.faqs) ? pooja.faqs : [])].map((faq: any, idx: number) => (
                                                     <div key={idx} className="p-8 rounded-[2rem] border border-primary/5 bg-[#FFF8F0]/30 hover:bg-white transition-all duration-500 hover:shadow-lg">
                                                         <h4 className="text-xl font-serif font-bold text-[#1a1a1a] mb-4 flex items-start gap-4">
                                                             <HelpCircle className="w-6 h-6 text-primary mt-0.5 shrink-0 opacity-50" />
-                                                            {faq.q}
+                                                            {faq.question || faq.q}
                                                         </h4>
                                                         <p className="text-[#666] leading-relaxed pl-10 italic">
-                                                            {faq.a}
+                                                            {faq.answer || faq.a}
                                                         </p>
                                                     </div>
                                                 ))}

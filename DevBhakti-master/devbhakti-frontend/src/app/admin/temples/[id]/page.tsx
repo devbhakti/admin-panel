@@ -49,6 +49,20 @@ export default function ViewTemplePage() {
             const found = allInst.find((i: any) => i.id === instId);
             setInst(found);
 
+            if (found) {
+                // Update breadcrumb with temple name
+                const nameStr = found.temple?.name;
+                let displayName = "Temple Details";
+                if (typeof nameStr === 'string') {
+                    if (nameStr.startsWith('{')) {
+                        try { displayName = JSON.parse(nameStr).en || JSON.parse(nameStr).hi; } catch(e){}
+                    } else {
+                        displayName = nameStr;
+                    }
+                }
+                window.dispatchEvent(new CustomEvent('updateBreadcrumb', { detail: displayName }));
+            }
+
             if (found?.temple?.id) {
                 // Load Marketplace Slabs
                 const mSlabsResponse = await fetchCommissionSlabsAdmin('TEMPLE', found.temple.id, 'MARKETPLACE');

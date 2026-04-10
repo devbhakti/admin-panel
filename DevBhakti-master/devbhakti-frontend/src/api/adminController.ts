@@ -506,6 +506,43 @@ export const deleteCTACardAdmin = async (id: string) => {
     return response.data;
 };
 
+// Pooja FAQs (Standard FAQs) Management
+export const fetchAllPoojaFAQsAdmin = async (params?: { lang?: string }) => {
+    const token = getAdminToken();
+    let url = `${API_URL}/admin/cms/pooja-faqs`;
+    if (params?.lang) url += `?lang=${params.lang}`;
+    
+    const response = await axios.get(url, {
+        headers: { Authorization: `Bearer ${token}` }
+    });
+    return response.data.data;
+};
+
+export const createPoojaFAQAdmin = async (data: any) => {
+    const token = getAdminToken();
+    const response = await axios.post(`${API_URL}/admin/cms/pooja-faqs`, data, {
+        headers: { Authorization: `Bearer ${token}` }
+    });
+    return response.data;
+};
+
+export const updatePoojaFAQAdmin = async (id: string, data: any) => {
+    const token = getAdminToken();
+    const response = await axios.put(`${API_URL}/admin/cms/pooja-faqs/${id}`, data, {
+        headers: { Authorization: `Bearer ${token}` }
+    });
+    return response.data;
+};
+
+export const deletePoojaFAQAdmin = async (id: string) => {
+    const token = getAdminToken();
+    const response = await axios.delete(`${API_URL}/admin/cms/pooja-faqs/${id}`, {
+        headers: { Authorization: `Bearer ${token}` }
+    });
+    return response.data;
+};
+
+
 // Admin Product Management
 export const fetchAllProductsAdmin = async (params?: { page?: number; limit?: number; search?: string; status?: string; templeId?: string; date?: string; productId?: string }) => {
     const token = getAdminToken();
@@ -602,8 +639,8 @@ export const fetchAllCategoriesAdmin = async () => {
     return response.data.data.categories;
 };
 
-export const fetchActiveCategoriesAdmin = async () => {
-    const response = await axios.get(`${API_URL}/admin/categories/active`);
+export const fetchActiveCategoriesAdmin = async (params?: { lang?: string }) => {
+    const response = await axios.get(`${API_URL}/admin/categories/active`, { params });
     return response.data.data;
 };
 

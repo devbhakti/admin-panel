@@ -99,7 +99,8 @@ export const createPooja = async (req: Request, res: Response) => {
             faqs,
             isMaster,
             masterPoojaId,
-            templeDetails_en, templeDetails_hi, templeDetails_mr
+            templeDetails_en, templeDetails_hi, templeDetails_mr,
+            categoryId
         } = req.body;
 
         // Validate temple exists if provided
@@ -155,6 +156,7 @@ export const createPooja = async (req: Request, res: Response) => {
                 templeId: (templeId && templeId !== 'null') ? String(templeId) : null,
                 isMaster: isMaster === 'true' || isMaster === true,
                 masterPoojaId: masterPoojaId || null,
+                categoryId: (categoryId && categoryId !== 'null') ? String(categoryId) : null,
                 packages: safeParse(packages),
                 faqs: safeParse(faqs)
             }
@@ -185,7 +187,8 @@ export const updatePooja = async (req: Request, res: Response) => {
             templeId,
             packages,
             faqs,
-            templeDetails_en, templeDetails_hi, templeDetails_mr
+            templeDetails_en, templeDetails_hi, templeDetails_mr,
+            categoryId
         } = req.body;
 
         // Validate temple exists if templeId is provided
@@ -231,6 +234,7 @@ export const updatePooja = async (req: Request, res: Response) => {
                 safeParse(processSteps_mr, [])
             ),
             templeId: (templeId && templeId !== 'null') ? String(templeId) : undefined,
+            categoryId: (categoryId && categoryId !== 'null') ? String(categoryId) : undefined,
             packages: safeParse(packages),
             faqs: safeParse(faqs)
         };

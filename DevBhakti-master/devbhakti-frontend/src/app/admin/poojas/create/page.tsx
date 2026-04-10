@@ -68,7 +68,7 @@ export default function CreatePoojaPage() {
                     <ArrowLeft className="w-5 h-5" />
                 </Button>
                 <div>
-                    <h1 className="text-3xl font-bold tracking-tight text-slate-900">Add New Spiritual Service</h1>
+                    <h1 className="text-3xl font-bold tracking-tight text-slate-900">Create New Pooja</h1>
                     <p className="text-slate-500 font-medium">Create a new pooja or ritual template for the platform.</p>
                 </div>
             </div>

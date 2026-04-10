@@ -926,7 +926,7 @@ export const getProductsByTemple = async (req: Request, res: Response) => {
 // Get Public Products (for landing page - only approved products)
 export const getPublicProducts = async (req: Request, res: Response) => {
   try {
-    const { page = 1, limit = 10, search, category, templeId } = req.query;
+    const { page = 1, limit = 10, search, category, templeId, minPrice, maxPrice, sort } = req.query;
 
     const skip = (Number(page) - 1) * Number(limit);
 
@@ -958,6 +958,17 @@ export const getPublicProducts = async (req: Request, res: Response) => {
       ]
     };
 
+    if (minPrice || maxPrice) {
+      where.variants = {
+        some: {
+          price: {
+            gte: minPrice ? parseFloat(minPrice as string) : undefined,
+            lte: maxPrice ? parseFloat(maxPrice as string) : undefined
+          }
+        }
+      };
+    }
+
 
     if (search) {
       where.OR = [
@@ -976,12 +987,21 @@ export const getPublicProducts = async (req: Request, res: Response) => {
       where.templeId = templeId;
     }
 
+    let orderBy: any = { createdAt: "desc" };
+    if (sort === 'price_asc') {
+      orderBy = { variants: { _count: 'desc' } }; // This is hacky, actual sort by min variant price is complex in Prisma findMany
+      // Better way: use raw query or handle in JS if results are small. 
+      // But for Prisma findMany, we can't easily sort by a child aggregation in one go without complex selection.
+      // However, usually we can sort by the price of the first variant.
+    }
+
     const [products, total] = await Promise.all([
       prisma.product.findMany({
         where,
         include: {
           variants: {
-            where: { stock: { gt: 0 } } // Only show variants with stock
+            where: { stock: { gt: 0 } },
+            orderBy: { price: "asc" } 
           },
           categoryObj: {
             select: {
@@ -1005,9 +1025,11 @@ export const getPublicProducts = async (req: Request, res: Response) => {
             }
           }
         },
-        orderBy: { createdAt: "desc" },
-        take: search ? 100 : Number(limit),
-        skip: search ? 0 : (Number(page) - 1) * Number(limit)
+        orderBy: sort === 'price_asc' || sort === 'price_desc' 
+          ? undefined // We will sort manually if it's price-based for accuracy across variants
+          : { createdAt: "desc" },
+        take: search || sort === 'price_asc' || sort === 'price_desc' ? 100 : Number(limit),
+        skip: search || sort === 'price_asc' || sort === 'price_desc' ? 0 : (Number(page) - 1) * Number(limit)
       }),
       prisma.product.count({ where })
     ]);
@@ -1015,25 +1037,30 @@ export const getPublicProducts = async (req: Request, res: Response) => {
     const lang = getLang(req);
     let finalProducts = products.map(p => localize(p, lang));
 
-    // Rank results if searching
-    if (search) {
-      const lowQuery = String(search).toLowerCase();
-      finalProducts.sort((a, b) => {
-        const nameA = ((a as any).name || "").toLowerCase();
-        const nameB = ((b as any).name || "").toLowerCase();
+    // Support for Price Sorting and Search Ranking
+    if (sort === 'price_asc' || sort === 'price_desc' || search) {
+      finalProducts.sort((a: any, b: any) => {
+        // Handle Price Sorting
+        if (sort === 'price_asc' || sort === 'price_desc') {
+          const priceA = a.variants?.[0]?.price || 0;
+          const priceB = b.variants?.[0]?.price || 0;
+          return sort === 'price_asc' ? priceA - priceB : priceB - priceA;
+        }
 
-        // Exact match priority
-        if (nameA === lowQuery && nameB !== lowQuery) return -1;
-        if (nameB === lowQuery && nameA !== lowQuery) return 1;
-
-        // Starts with match priority
-        if (nameA.startsWith(lowQuery) && !nameB.startsWith(lowQuery)) return -1;
-        if (nameB.startsWith(lowQuery) && !nameA.startsWith(lowQuery)) return 1;
-
+        // Handle Search Ranking (already existing logic preserved)
+        if (search) {
+          const lowQuery = String(search).toLowerCase();
+          const nameA = (a.name || "").toLowerCase();
+          const nameB = (b.name || "").toLowerCase();
+          if (nameA === lowQuery && nameB !== lowQuery) return -1;
+          if (nameB === lowQuery && nameA !== lowQuery) return 1;
+          if (nameA.startsWith(lowQuery) && !nameB.startsWith(lowQuery)) return -1;
+          if (nameB.startsWith(lowQuery) && !nameA.startsWith(lowQuery)) return 1;
+        }
         return 0;
       });
 
-      // After ranking, apply pagination manually if searching
+      // Apply pagination for JS-sorted results
       const start = (Number(page) - 1) * Number(limit);
       finalProducts = finalProducts.slice(start, start + Number(limit));
     }

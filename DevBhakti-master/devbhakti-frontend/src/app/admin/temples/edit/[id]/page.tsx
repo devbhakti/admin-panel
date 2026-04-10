@@ -37,11 +37,28 @@ export default function EditTemplePage() {
                 fetchAllPoojasAdmin({ isMaster: true }),
                 fetchTempleByIdAdmin(instId)
             ]);
-            setAllPoojas(poojasResponse);
+            const masterPoojas: any[] = poojasResponse || [];
 
             if (templeRes.success && templeRes.data) {
+                // Merge master poojas + temple-specific poojas not in master list
+                const templePoojas: any[] = templeRes.data.temple?.poojas || [];
+                const masterIds = new Set(masterPoojas.map((p: any) => p.id));
+                const extraPoojas = templePoojas.filter((p: any) => !masterIds.has(p.masterPoojaId) && !masterIds.has(p.id));
+                setAllPoojas([...masterPoojas, ...extraPoojas]);
+
                 console.log('[EditTemple] Raw temple data loaded:', templeRes.data.temple?.name);
                 setTempleData(templeRes.data);
+                // Update breadcrumb
+                const nameStr = templeRes.data.temple?.name;
+                let displayName = "Edit Temple";
+                if (typeof nameStr === 'string') {
+                    if (nameStr.startsWith('{')) {
+                        try { displayName = `Edit: ${JSON.parse(nameStr).en || JSON.parse(nameStr).hi}`; } catch(e){}
+                    } else {
+                        displayName = `Edit: ${nameStr}`;
+                    }
+                }
+                window.dispatchEvent(new CustomEvent('updateBreadcrumb', { detail: displayName }));
             } else {
                 toast({ title: "Error", description: "Temple not found", variant: "destructive" });
                 router.push('/admin/temples');

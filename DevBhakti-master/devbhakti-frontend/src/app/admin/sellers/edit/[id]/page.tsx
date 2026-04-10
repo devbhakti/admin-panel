@@ -70,6 +70,8 @@ export default function EditSellerPage() {
                 address: data.address || "",
                 productCommissionRate: data.productCommissionRate?.toString() || "10.0",
             });
+            // Update breadcrumb with seller store name
+            window.dispatchEvent(new CustomEvent('updateBreadcrumb', { detail: `Edit: ${data.storeName || "Seller"}` }));
 
             // Set slabs if they exist in the response
             if (data.commissionSlabs && data.commissionSlabs.length > 0) {

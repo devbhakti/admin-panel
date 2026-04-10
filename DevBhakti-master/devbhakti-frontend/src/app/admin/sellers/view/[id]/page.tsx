@@ -58,6 +58,8 @@ export default function ViewSellerPage() {
             console.log("Seller Logo:", data.logo);
             console.log("Products:", data.products);
             setSeller(data);
+            // Update breadcrumb with seller store name
+            window.dispatchEvent(new CustomEvent('updateBreadcrumb', { detail: data.storeName || "Seller Details" }));
         } catch (error: any) {
             console.error("Load Seller Error:", error);
             toast({

@@ -137,6 +137,11 @@ type Toast = Omit<ToasterToast, "id">;
 function toast({ ...props }: Toast) {
   const id = genId();
 
+  // Automatically set variant to success if title is "Success" and no variant is provided
+  if (props.title === "Success" && !props.variant) {
+    props.variant = "success";
+  }
+
   const update = (props: ToasterToast) =>
     dispatch({
       type: "UPDATE_TOAST",

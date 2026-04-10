@@ -110,7 +110,7 @@ const FeaturesSection: React.FC = () => {
   useEffect(() => {
     const fetchFeatures = async () => {
       try {
-        const response = await axios.get(`${API_URL}/admin/cms/features`);
+        const response = await axios.get(`${API_URL}/admin/cms/features`, { params: { lang: language } });
         const activeFeatures = response.data.data?.filter((f: any) => f.active) || [];
         if (activeFeatures.length > 0) {
           setDynamicFeatures(activeFeatures);

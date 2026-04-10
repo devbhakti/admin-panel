@@ -70,12 +70,44 @@ export const getTempleFilters = async (req: Request, res: Response) => {
       }
     });
 
+    // Fetch all active temples for dropdown
+    const allTemples = await prisma.temple.findMany({
+      where: {
+        isActive: true,
+        user: { isVerified: true }
+      },
+      select: {
+        id: true,
+        name: true,
+        location: true
+      }
+    });
+
+    const templesList = allTemples.map(t => ({
+        id: t.id,
+        name: (t.name as any)[lang] || (t.name as any)['en'] || '',
+        location: (t.location as any)[lang] || (t.location as any)['en'] || ''
+    }));
+
+    // Fetch all active pooja categories
+    const poojaCatList = await prisma.poojaCategory.findMany({
+      where: { status: "APPROVED" },
+    });
+    
+    const poojaCategories = poojaCatList.map(c => ({
+      id: c.id,
+      name: (c.name as any)[lang] || (c.name as any)['en'] || '',
+      nameSlug: c.nameSlug
+    }));
+
     res.json({
       success: true,
       data: {
         categories: Array.from(categoriesSet).sort(),
         locations: Array.from(locationsSet).sort(),
         poojas: Array.from(poojasSet).sort(),
+        temples: templesList,
+        poojaCategories
       }
     });
 
@@ -344,6 +376,11 @@ export const getPoojaById = async (req: Request, res: Response) => {
       return res.status(404).json({ success: false, message: 'Pooja not found' });
     }
 
+    const standardFaqs = await prisma.standardFAQ.findMany({
+      where: { isActive: true },
+      orderBy: { order: 'asc' }
+    });
+
     let isFavorite = false;
     if (userId) {
       const fav = await prisma.favorite.findUnique({
@@ -357,7 +394,7 @@ export const getPoojaById = async (req: Request, res: Response) => {
       if (fav) isFavorite = true;
     }
 
-    res.json({ success: true, data: localize({ ...pooja, isFavorite }, lang) });
+    res.json({ success: true, data: localize({ ...pooja, isFavorite, standardFaqs }, lang) });
 
   } catch (error) {
     console.error('Get pooja error:', error);
@@ -369,7 +406,7 @@ export const getAllPoojas = async (req: Request, res: Response) => {
   try {
     const userId = getUserIdFromRequest(req);
     const lang = getLang(req);
-    const { templeId, category, location, search } = req.query;
+    const { templeId, category, location, search, categoryId } = req.query;
 
     const where: any = {
       status: true
@@ -386,23 +423,45 @@ export const getAllPoojas = async (req: Request, res: Response) => {
     if (templeId) {
       where.templeId = String(templeId);
     } else {
-      where.isMaster = true;
+      // Global View: Deduplicate - Show Master poojas OR Standalone poojas
+      where.OR = [
+        { isMaster: true },
+        { AND: [{ isMaster: false }, { masterPoojaId: null }] }
+      ];
     }
 
-    if (category && category !== 'All') {
+    if (categoryId && categoryId !== 'All') {
+      where.categoryId = String(categoryId);
+    } else if (category && category !== 'All') {
       where.category = { path: ['en'], equals: String(category) };
     }
 
     if (location && location !== 'All') {
+      const locationFilter = { location: { path: ['en'], string_contains: String(location) } };
+      
       if (templeId) {
-        where.temple = { location: { path: ['en'], string_contains: String(location) } };
+        where.temple = locationFilter;
       } else {
-        where.templeCopies = {
-          some: {
-            temple: { location: { path: ['en'], string_contains: String(location) } },
-            status: true
-          }
-        };
+        // Advanced Global Filtering: Master poojas with copies in this location OR Standalone poojas in this location
+        where.AND = where.AND || [];
+        where.AND.push({
+          OR: [
+            {
+              isMaster: true,
+              templeCopies: {
+                some: {
+                  temple: locationFilter,
+                  status: true
+                }
+              }
+            },
+            {
+              isMaster: false,
+              masterPoojaId: null,
+              temple: locationFilter
+            }
+          ]
+        });
       }
     }
 

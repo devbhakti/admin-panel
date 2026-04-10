@@ -509,3 +509,72 @@ export const deleteCTACard = async (req: Request, res: Response) => {
         res.status(500).json({ error: 'Failed to delete CTA card' });
     }
 };
+
+// Standard FAQ Controllers
+export const getStandardFAQs = async (req: Request, res: Response) => {
+    try {
+        const lang = getLang(req);
+        const faqs = await prisma.standardFAQ.findMany({
+            where: (lang !== 'raw' ? { isActive: true } : {}),
+            orderBy: { order: 'asc' }
+        });
+        res.json({ success: true, data: localize(faqs, lang) });
+    } catch (error) {
+        console.error('Error fetching standard FAQs:', error);
+        res.status(500).json({ success: false, message: 'Error fetching standard FAQs' });
+    }
+};
+
+export const createStandardFAQ = async (req: Request, res: Response) => {
+    try {
+        const { question_en, question_hi, question_mr, answer_en, answer_hi, answer_mr, order, isActive } = req.body;
+        
+        const faq = await prisma.standardFAQ.create({
+            data: {
+                question: buildLangJson(question_en, question_hi, question_mr),
+                answer: buildLangJson(answer_en, answer_hi, answer_mr),
+                order: parseInt(order as string) || 0,
+                isActive: isActive === 'true' || isActive === true
+            }
+        });
+        
+        res.status(201).json({ success: true, message: 'Standard FAQ created successfully', data: faq });
+    } catch (error) {
+        console.error('Error creating standard FAQ:', error);
+        res.status(500).json({ success: false, message: 'Error creating standard FAQ' });
+    }
+};
+
+export const updateStandardFAQ = async (req: Request, res: Response) => {
+    try {
+        const { id } = req.params;
+        const { question_en, question_hi, question_mr, answer_en, answer_hi, answer_mr, order, isActive } = req.body;
+        
+        const faq = await prisma.standardFAQ.update({
+            where: { id: id as string },
+            data: {
+                question: buildLangJson(question_en, question_hi, question_mr),
+                answer: buildLangJson(answer_en, answer_hi, answer_mr),
+                order: parseInt(order as string) || 0,
+                isActive: isActive === 'true' || isActive === true
+            }
+        });
+        
+        res.json({ success: true, message: 'Standard FAQ updated successfully', data: faq });
+    } catch (error) {
+        console.error('Error updating standard FAQ:', error);
+        res.status(500).json({ success: false, message: 'Error updating standard FAQ' });
+    }
+};
+
+export const deleteStandardFAQ = async (req: Request, res: Response) => {
+    try {
+        const { id } = req.params;
+        await prisma.standardFAQ.delete({ where: { id: id as string } });
+        res.json({ success: true, message: 'Standard FAQ deleted successfully' });
+    } catch (error) {
+        console.error('Error deleting standard FAQ:', error);
+        res.status(500).json({ success: false, message: 'Error deleting standard FAQ' });
+    }
+};
+
