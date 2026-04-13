@@ -60,6 +60,7 @@ import {
 import { useToast } from "@/hooks/use-toast";
 import { format, isWithinInterval, startOfDay, endOfDay, subWeeks, subMonths, subYears, isAfter } from "date-fns";
 import { cn } from "@/lib/utils";
+import { parseLocalizedValue } from "@/utils/textUtils";
 
 const statusConfig = {
     BOOKED: {
@@ -238,7 +239,7 @@ export default function TempleBookingsPage() {
         const filtered = bookings.filter((b) => {
             const matchesSearch =
                 b.devoteeName?.toLowerCase().includes(searchQuery.toLowerCase()) ||
-                b.pooja?.name?.toLowerCase().includes(searchQuery.toLowerCase()) ||
+                parseLocalizedValue(b.pooja?.name).toLowerCase().includes(searchQuery.toLowerCase()) ||
                 b.id?.toLowerCase().includes(searchQuery.toLowerCase());
 
             const matchesStatus = statusFilter ? b.status === statusFilter : true;
@@ -685,8 +686,8 @@ export default function TempleBookingsPage() {
                                                 </td>
                                                 <td className="p-4">
                                                     <div className="flex flex-col">
-                                                        <span className="text-sm text-foreground">{booking.pooja?.name}</span>
-                                                        <span className="text-xs text-muted-foreground">{booking.packageName}</span>
+                                                        <span className="text-sm text-foreground">{parseLocalizedValue(booking.pooja?.name)}</span>
+                                                        <span className="text-xs text-muted-foreground">{parseLocalizedValue(booking.packageName)}</span>
                                                     </div>
                                                 </td>
                                                 <td className="p-4">
@@ -843,12 +844,12 @@ export default function TempleBookingsPage() {
                                             <p className="text-[10px] text-slate-400 font-bold uppercase tracking-widest mb-1">Ritual Service</p>
                                             <div className="flex items-center gap-2 text-slate-800 font-bold">
                                                 <div className="w-2 h-2 rounded-full bg-primary" />
-                                                {selectedBooking.pooja?.name}
+                                                {parseLocalizedValue(selectedBooking.pooja?.name)}
                                             </div>
                                         </div>
                                         <div>
                                             <p className="text-[10px] text-slate-400 font-bold uppercase tracking-widest mb-1">Package Type</p>
-                                            <p className="text-slate-700 font-medium">{selectedBooking.packageName}</p>
+                                            <p className="text-slate-700 font-medium">{parseLocalizedValue(selectedBooking.packageName)}</p>
                                         </div>
                                     </div>
 

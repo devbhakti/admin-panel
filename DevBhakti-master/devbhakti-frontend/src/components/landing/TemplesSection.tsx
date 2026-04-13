@@ -87,7 +87,11 @@ const TemplesSection: React.FC = () => {
     e.stopPropagation();
 
     if (!user) {
-      router.push("/auth");
+      toast({
+        title: "Please Login",
+        description: "You need to login as a devotee to add favourites.",
+        variant: "destructive",
+      });
       return;
     }
 
@@ -96,11 +100,11 @@ const TemplesSection: React.FC = () => {
       if (isFav) {
         await removeFavorite({ templeId });
         setFavorites(favorites.filter((f) => f.templeId !== templeId));
-        toast({ title: t('common.removed_from_favorites') });
+        toast({ title: "Removed from Favourites", description: "Temple removed from your favourites.", variant: "success" });
       } else {
         await addFavorite({ templeId });
         setFavorites([...favorites, { templeId }]);
-        toast({ title: t('common.added_to_favorites') });
+        toast({ title: "❤️ Added to Favourites", description: "Temple added to your favourites!", variant: "success" });
       }
     } catch (error: any) {
       toast({

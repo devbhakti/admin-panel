@@ -25,6 +25,7 @@ import {
 import { Input } from "@/components/ui/input";
 import { toast } from "react-hot-toast";
 import axios from 'axios';
+import { parseLocalizedValue } from '@/utils/textUtils';
 
 interface Devotee {
     id: string;
@@ -175,7 +176,7 @@ export default function MarketingDashboard() {
                                     </SelectTrigger>
                                     <SelectContent>
                                         {poojas.map(pooja => (
-                                            <SelectItem key={pooja.id} value={pooja.id}>{pooja.name}</SelectItem>
+                                            <SelectItem key={pooja.id} value={pooja.id}>{parseLocalizedValue(pooja.name)}</SelectItem>
                                         ))}
                                     </SelectContent>
                                 </Select>

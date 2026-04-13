@@ -9,6 +9,7 @@ import { Badge } from "@/components/ui/badge";
 import { fetchMyPoojas } from "@/api/templeAdminController";
 import { useToast } from "@/hooks/use-toast";
 import { API_URL } from "@/config/apiConfig";
+import { parseLocalizedValue } from '@/utils/textUtils';
 
 export default function TempleViewPoojaPage() {
     const router = useRouter();
@@ -30,7 +31,7 @@ export default function TempleViewPoojaPage() {
             if (found) {
                 setPooja(found);
                 // Update breadcrumb with pooja name
-                window.dispatchEvent(new CustomEvent('updateBreadcrumb', { detail: found.name || "Pooja Details" }));
+                window.dispatchEvent(new CustomEvent('updateBreadcrumb', { detail: parseLocalizedValue(found.name) || "Pooja Details" }));
             } else {
                 toast({ title: "Error", description: "Pooja not found", variant: "destructive" });
                 router.push('/temples/dashboard/poojas');
@@ -66,7 +67,7 @@ export default function TempleViewPoojaPage() {
                     <Button variant="ghost" size="icon" onClick={() => router.back()} className="rounded-full hover:bg-slate-100">
                         <ArrowLeft className="w-5 h-5 text-[#7b4623]" />
                     </Button>
-                    <h1 className="text-3xl font-serif font-bold text-[#7b4623]">{pooja.name}</h1>
+                    <h1 className="text-3xl font-serif font-bold text-[#7b4623]">{parseLocalizedValue(pooja.name)}</h1>
                 </div>
                 <Button onClick={() => router.push(`/temples/dashboard/poojas/edit/${pooja.id}`)} className="bg-[#7b4623] hover:bg-[#5d351a] text-white shadow-lg shadow-orange-900/20 rounded-xl px-6">
                     <Edit2 className="w-4 h-4 mr-2" /> Edit Details
@@ -78,7 +79,7 @@ export default function TempleViewPoojaPage() {
                     <div className="aspect-video rounded-3xl overflow-hidden border bg-slate-50 shadow-sm">
                         <img
                             src={getImageUrl(pooja.image)}
-                            alt={pooja.name}
+                            alt={parseLocalizedValue(pooja.name)}
                             className="w-full h-full object-cover"
                         />
                     </div>
@@ -92,7 +93,7 @@ export default function TempleViewPoojaPage() {
                         </CardHeader>
                         <CardContent>
                             <p className="text-slate-600 leading-relaxed whitespace-pre-wrap">
-                                {pooja.about || "No detailed description provided."}
+                                {parseLocalizedValue(pooja.about) || "No detailed description provided."}
                             </p>
                         </CardContent>
                     </Card>
@@ -107,7 +108,7 @@ export default function TempleViewPoojaPage() {
                                     {pooja.benefits.map((benefit: string, i: number) => (
                                         <li key={i} className="flex items-start gap-2 text-slate-600 text-sm">
                                             <div className="w-1.5 h-1.5 rounded-full bg-orange-400 mt-1.5 flex-shrink-0" />
-                                            {benefit}
+                                            {parseLocalizedValue(benefit)}
                                         </li>
                                     ))}
                                 </ul>
@@ -146,7 +147,7 @@ export default function TempleViewPoojaPage() {
                                     </div>
                                     <div>
                                         <p className="text-white/60 text-[10px] uppercase">Service Category</p>
-                                        <p className="font-semibold">{pooja.category}</p>
+                                        <p className="font-semibold">{parseLocalizedValue(pooja.category)}</p>
                                     </div>
                                 </div>
                             </div>
@@ -162,8 +163,8 @@ export default function TempleViewPoojaPage() {
                                 {pooja.packages.map((pkg: any, i: number) => (
                                     <div key={i} className="p-4 rounded-xl bg-slate-50 border border-slate-100 flex justify-between items-center group hover:border-orange-200 transition-colors">
                                         <div>
-                                            <p className="font-semibold text-slate-800 text-sm">{pkg.name}</p>
-                                            <p className="text-[10px] text-slate-500 uppercase tracking-tight">{pkg.description}</p>
+                                            <p className="font-semibold text-slate-800 text-sm">{parseLocalizedValue(pkg.name)}</p>
+                                            <p className="text-[10px] text-slate-500 uppercase tracking-tight">{parseLocalizedValue(pkg.description)}</p>
                                         </div>
                                         <div className="text-[#7b4623] font-bold">
                                             ₹{pkg.price}

@@ -27,6 +27,7 @@ import { Badge } from "@/components/ui/badge";
 import { fetchMyPoojas, deleteMyPooja, togglePoojaStatus } from "@/api/templeAdminController";
 import { useToast } from "@/hooks/use-toast";
 import { API_URL } from "@/config/apiConfig";
+import { parseLocalizedValue } from '@/utils/textUtils';
 
 export default function TemplePoojasListPage() {
     const router = useRouter();
@@ -90,8 +91,8 @@ export default function TemplePoojasListPage() {
     };
 
     const filteredPoojas = poojas.filter(pooja =>
-        (pooja.name || "").toLowerCase().includes(searchTerm.toLowerCase()) ||
-        (pooja.category || "").toLowerCase().includes(searchTerm.toLowerCase())
+        parseLocalizedValue(pooja.name).toLowerCase().includes(searchTerm.toLowerCase()) ||
+        parseLocalizedValue(pooja.category).toLowerCase().includes(searchTerm.toLowerCase())
     );
 
     const getImageUrl = (path: string) => {
@@ -168,20 +169,20 @@ export default function TemplePoojasListPage() {
                                         <div className="w-12 h-12 rounded-lg overflow-hidden bg-muted border border-border">
                                             <img
                                                 src={getImageUrl(pooja.image)}
-                                                alt={pooja.name}
+                                                alt={parseLocalizedValue(pooja.name)}
                                                 className="w-full h-full object-cover"
                                             />
                                         </div>
                                     </TableCell>
                                     <TableCell>
-                                        <div className="font-semibold text-slate-900">{pooja.name}</div>
+                                        <div className="font-semibold text-slate-900">{parseLocalizedValue(pooja.name)}</div>
                                         <div className="text-xs text-muted-foreground line-clamp-1 max-w-[250px]">
-                                            {pooja.about || (pooja.description && pooja.description[0])}
+                                            {parseLocalizedValue(pooja.about) || (pooja.description && pooja.description[0])}
                                         </div>
                                     </TableCell>
                                     <TableCell>
                                         <Badge variant="outline" className="bg-orange-50 text-orange-700 border-orange-100">
-                                            {pooja.category}
+                                            {parseLocalizedValue(pooja.category)}
                                         </Badge>
                                     </TableCell>
                                     <TableCell>

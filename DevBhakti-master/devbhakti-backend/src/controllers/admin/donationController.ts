@@ -2,6 +2,8 @@ import { Request, Response } from "express";
 import { prisma } from "../../lib/prisma";
 import ExcelJS from 'exceljs';
 import { localize } from "../../utils/localization";
+import { sendEmail } from "../../utils/sendEmail";
+import { generateReceiptHTML } from "../../utils/donationReceipt";
 
 export const getAllDonations = async (req: Request, res: Response) => {
     try {
@@ -213,5 +215,51 @@ export const downloadDonationsExcel = async (req: Request, res: Response) => {
     } catch (error: any) {
         console.error("Excel Export Error:", error);
         return res.status(500).json({ success: false, message: "Failed to export Excel" });
+    }
+};
+
+export const sendDonationEmail = async (req: Request, res: Response) => {
+    try {
+        const { id } = req.params;
+        const lang = (req.headers['x-lang'] as string) || (req.query.lang as string) || 'en';
+
+        const donation = await prisma.donation.findUnique({
+            where: { id },
+            include: { temple: { select: { name: true } } as any }
+        });
+
+        if (!donation) {
+            return res.status(404).json({ success: false, message: "Donation not found" });
+        }
+
+        if (!donation.donorEmail) {
+            return res.status(400).json({ success: false, message: "Donor email not available" });
+        }
+
+        const lt = (donation as any).temple ? localize((donation as any).temple, lang) : null;
+        
+        const receiptData = {
+            ...donation,
+            templeName: lt?.name || "Dev Bhakti Sacred Offering"
+        };
+
+        const html = generateReceiptHTML(receiptData as any);
+
+        const emailResult = await sendEmail(
+            donation.donorEmail,
+            `Dev Bhakti - Donation Receipt (${donation.displayId || donation.id})`,
+            `Thank you for your donation of ₹${donation.amount}. Your receipt is attached.`,
+            html
+        );
+
+        if (emailResult.success) {
+            return res.status(200).json({ success: true, message: "Receipt sent successfully" });
+        } else {
+            return res.status(500).json({ success: false, message: "Failed to send email" });
+        }
+
+    } catch (error: any) {
+        console.error("Send Donation Email Error:", error);
+        res.status(500).json({ success: false, message: error.message });
     }
 };

@@ -39,6 +39,7 @@ import {
 import { downloadDonationsExcel, downloadDonationsPdf } from "@/api/templeAdminController";
 import { toast } from "@/hooks/use-toast";
 import { FileText, FileSpreadsheet } from "lucide-react";
+import { parseLocalizedValue } from "@/utils/textUtils";
 
 
 
@@ -349,7 +350,7 @@ export default function TempleDashboardPage() {
                     <div className="flex items-center gap-3">
                         <div className="h-8 w-2 bg-amber-600 rounded-full" />
                         <p className="text-2xl md:text-3xl font-black text-slate-800 font-serif">
-                            {templeProfile?.name || "Sacred Temple"}
+                            {parseLocalizedValue(templeProfile?.name) || "Sacred Temple"}
                         </p>
                     </div>
                     <p className="text-slate-400 text-sm font-black uppercase tracking-[0.2em] flex items-center gap-2 pl-1">
@@ -527,7 +528,7 @@ export default function TempleDashboardPage() {
                                                 <Video className="w-6 h-6 text-rose-600 group-hover:text-white" />
                                             </div>
                                             <div>
-                                                <p className="text-sm font-black text-slate-900">{event.name || 'Event'}</p>
+                                                <p className="text-sm font-black text-slate-900">{parseLocalizedValue(event.name) || 'Event'}</p>
                                                 <p className="text-xs font-bold text-slate-400">
                                                     {event.date ? format(new Date(event.date), "MMM d, yyyy") : 'Date TBD'}
                                                 </p>
@@ -576,7 +577,7 @@ export default function TempleDashboardPage() {
                                                 <Calendar className="w-6 h-6 text-orange-600 group-hover:text-white" />
                                             </div>
                                             <div>
-                                                <p className="text-sm font-black text-slate-900">{booking.pooja?.name || 'Sacred Pooja'}</p>
+                                                <p className="text-sm font-black text-slate-900">{parseLocalizedValue(booking.pooja?.name) || 'Sacred Pooja'}</p>
                                                 <p className="text-xs font-bold text-slate-400">For {booking.devoteeName || 'Devotee'}</p>
                                             </div>
                                         </div>

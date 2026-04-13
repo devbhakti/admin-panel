@@ -25,7 +25,9 @@ import {
     PopoverContent,
     PopoverTrigger,
 } from "@/components/ui/popover";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Button } from "@/components/ui/button";
+
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
@@ -64,6 +66,7 @@ import {
 } from "@/api/templeAdminController";
 import { useToast } from "@/hooks/use-toast";
 import { Switch } from "@/components/ui/switch";
+import { parseLocalizedValue } from '@/utils/textUtils';
 
 export default function TempleEventsPage() {
     const [events, setEvents] = useState<any[]>([]);
@@ -80,12 +83,21 @@ export default function TempleEventsPage() {
     const [loadingPoojas, setLoadingPoojas] = useState(false);
 
     const [formData, setFormData] = useState({
-        name: "",
+        name_en: "",
+        name_hi: "",
+        name_mr: "",
         date: "",
         time: "",
-        description: "",
+        description_en: "",
+        description_hi: "",
+        description_mr: "",
         status: true,
     });
+
+    const getL = (value: any, lang: 'en' | 'hi' | 'mr') => {
+        const result = parseLocalizedValue(value, lang);
+        return result === "N/A" ? "" : result;
+    };
 
     const [timeData, setTimeData] = useState({
         hours: "10",
@@ -142,10 +154,14 @@ export default function TempleEventsPage() {
         if (event) {
             setEditingEvent(event);
             setFormData({
-                name: event.name,
+                name_en: getL(event.name, 'en'),
+                name_hi: getL(event.name, 'hi'),
+                name_mr: getL(event.name, 'mr'),
                 date: event.date,
                 time: event.time || "",
-                description: event.description || "",
+                description_en: getL(event.description, 'en'),
+                description_hi: getL(event.description, 'hi'),
+                description_mr: getL(event.description, 'mr'),
                 status: event.status,
             });
             setTimeData(parseStoredTime(event.time));
@@ -158,10 +174,14 @@ export default function TempleEventsPage() {
         } else {
             setEditingEvent(null);
             setFormData({
-                name: "",
+                name_en: "",
+                name_hi: "",
+                name_mr: "",
                 date: "",
                 time: "",
-                description: "",
+                description_en: "",
+                description_hi: "",
+                description_mr: "",
                 status: true,
             });
             setTimeData({ hours: "10", minutes: "00", period: "AM" });
@@ -250,9 +270,10 @@ export default function TempleEventsPage() {
         }
     };
 
-    const filteredEvents = events.filter((event) =>
-        event.name.toLowerCase().includes(searchTerm.toLowerCase())
-    );
+    const filteredEvents = events.filter((event) => {
+        const name = getL(event.name, 'en').toLowerCase();
+        return name.includes(searchTerm.toLowerCase());
+    });
 
     return (
         <div className="space-y-6">
@@ -323,7 +344,7 @@ export default function TempleEventsPage() {
                                             <div className="w-9 h-9 rounded-lg bg-[#7b4623]/10 flex items-center justify-center">
                                                 <CalendarIcon className="w-5 h-5 text-[#7b4623]" />
                                             </div>
-                                            <span className="font-semibold text-slate-900">{event.name}</span>
+                                            <span className="font-semibold text-slate-900">{getL(event.name, 'en')}</span>
                                         </div>
                                     </TableCell>
                                     <TableCell>
@@ -341,7 +362,7 @@ export default function TempleEventsPage() {
                                     </TableCell>
                                     <TableCell>
                                         <div className="text-sm text-muted-foreground line-clamp-1 max-w-[400px]">
-                                            {event.description || "No description"}
+                                            {getL(event.description, 'en') || "No description"}
                                         </div>
                                     </TableCell>
                                     <TableCell>
@@ -350,7 +371,7 @@ export default function TempleEventsPage() {
                                                 {event.Pooja.slice(0, 2).map((pooja: any) => (
                                                     <Badge key={pooja.id} variant="secondary" className="text-xs bg-amber-50 text-amber-700 border-amber-200">
                                                         <Sparkles className="w-3 h-3 mr-1" />
-                                                        {pooja.name}
+                                                        {parseLocalizedValue(pooja.name)}
                                                     </Badge>
                                                 ))}
                                                 {event.Pooja.length > 2 && (
@@ -414,21 +435,46 @@ export default function TempleEventsPage() {
                             Fill in the details for your upcoming temple festival or event.
                         </DialogDescription>
                     </DialogHeader>
-                    <form onSubmit={handleSubmit} className="space-y-5 py-4">
-                        <div className="space-y-2">
-                            <Label htmlFor="name" className="text-slate-700 font-medium">Event Name *</Label>
-                            <Input
-                                id="name"
-                                placeholder="e.g. Annual Mahaprasad"
-                                value={formData.name}
-                                onChange={(e) =>
-                                    setFormData({ ...formData, name: e.target.value })
-                                }
-                                className="h-11 rounded-xl border-slate-200 focus:border-[#7b4623] focus:ring-[#7b4623]/10"
-                                required
-                                maxLength={100}
-                            />
-                        </div>
+                    <form onSubmit={handleSubmit} className="space-y-4 py-4">
+                        <Tabs defaultValue="en" className="w-full">
+                            <TabsList className="grid w-full grid-cols-3 mb-4 bg-slate-100 p-1 rounded-xl">
+                                <TabsTrigger value="en" className="rounded-lg data-[state=active]:bg-white data-[state=active]:shadow-sm">English</TabsTrigger>
+                                <TabsTrigger value="hi" className="rounded-lg data-[state=active]:bg-white data-[state=active]:shadow-sm">हिन्दी</TabsTrigger>
+                                <TabsTrigger value="mr" className="rounded-lg data-[state=active]:bg-white data-[state=active]:shadow-sm">मराठी</TabsTrigger>
+                            </TabsList>
+                            
+                            {['en', 'hi', 'mr'].map((lang) => (
+                                <TabsContent key={lang} value={lang} className="space-y-4 outline-none">
+                                    <div className="space-y-2">
+                                        <Label htmlFor={`name_${lang}`} className="text-slate-700 font-medium">Event Name * ({lang.toUpperCase()})</Label>
+                                        <Input
+                                            id={`name_${lang}`}
+                                            placeholder="e.g. Annual Mahaprasad"
+                                            value={(formData as any)[`name_${lang}`]}
+                                            onChange={(e) =>
+                                                setFormData({ ...formData, [`name_${lang}`]: e.target.value })
+                                            }
+                                            className="h-11 rounded-xl border-slate-200 focus:border-[#7b4623] focus:ring-[#7b4623]/10"
+                                            required={lang === 'en'}
+                                            maxLength={100}
+                                        />
+                                    </div>
+                                    <div className="space-y-2">
+                                        <Label htmlFor={`description_${lang}`} className="text-slate-700 font-medium">Description ({lang.toUpperCase()})</Label>
+                                        <Textarea
+                                            id={`description_${lang}`}
+                                            placeholder="Briefly describe what happens during this event..."
+                                            value={(formData as any)[`description_${lang}`]}
+                                            onChange={(e) =>
+                                                setFormData({ ...formData, [`description_${lang}`]: e.target.value })
+                                            }
+                                            className="h-32 rounded-xl resize-none border-slate-200 focus:border-[#7b4623] focus:ring-[#7b4623]/10"
+                                            maxLength={1000}
+                                        />
+                                    </div>
+                                </TabsContent>
+                            ))}
+                        </Tabs>
 
                         <div className="grid grid-cols-2 gap-4">
                             <div className="space-y-2">
@@ -443,11 +489,7 @@ export default function TempleEventsPage() {
                                             )}
                                         >
                                             <CalendarIcon className="mr-2 h-4 w-4" />
-                                            {formData.date ? (
-                                                formData.date
-                                            ) : (
-                                                <span>Pick a date</span>
-                                            )}
+                                            {formData.date ? formData.date : <span>Pick a date</span>}
                                         </Button>
                                     </PopoverTrigger>
                                     <PopoverContent className="w-auto p-0" align="start">
@@ -502,20 +544,6 @@ export default function TempleEventsPage() {
                             </div>
                         </div>
 
-                        <div className="space-y-2">
-                            <Label htmlFor="description" className="text-slate-700 font-medium">Description</Label>
-                            <Textarea
-                                id="description"
-                                placeholder="Briefly describe what happens during this event..."
-                                value={formData.description}
-                                onChange={(e) =>
-                                    setFormData({ ...formData, description: e.target.value })
-                                }
-                                className="h-32 rounded-xl resize-none border-slate-200 focus:border-[#7b4623] focus:ring-[#7b4623]/10"
-                                maxLength={1000}
-                            />
-                        </div>
-
                         <div className="flex items-center justify-between p-4 border rounded-xl bg-slate-50">
                             <div className="space-y-0.5">
                                 <Label className="text-base font-semibold text-slate-700">Event Status</Label>
@@ -558,7 +586,7 @@ export default function TempleEventsPage() {
                                                     .filter(p => selectedPoojaIds.includes(p.id))
                                                     .map(pooja => (
                                                         <Badge key={pooja.id} variant="secondary" className="bg-amber-50 text-amber-800 border-amber-200">
-                                                            {pooja.name}
+                                                            {parseLocalizedValue(pooja.name)}
                                                             <X
                                                                 className="w-3 h-3 ml-1 cursor-pointer hover:text-amber-900"
                                                                 onClick={(e) => {
@@ -582,7 +610,7 @@ export default function TempleEventsPage() {
                                             {templePoojas.map((pooja) => (
                                                 <CommandItem
                                                     key={pooja.id}
-                                                    value={pooja.name}
+                                                    value={parseLocalizedValue(pooja.name)}
                                                     onSelect={() => {
                                                         handlePoojaToggle(pooja.id, !selectedPoojaIds.includes(pooja.id));
                                                     }}
@@ -595,7 +623,7 @@ export default function TempleEventsPage() {
                                                         )}
                                                     />
                                                     <div className="flex-1">
-                                                        <div className="font-medium">{pooja.name}</div>
+                                                        <div className="font-medium">{parseLocalizedValue(pooja.name)}</div>
                                                         <div className="text-sm text-muted-foreground">
                                                             ₹{pooja.price}
                                                         </div>

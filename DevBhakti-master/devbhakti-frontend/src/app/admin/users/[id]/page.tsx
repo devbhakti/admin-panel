@@ -32,10 +32,13 @@ import { fetchUserDetailAdmin } from "@/api/adminController";
 import { format } from "date-fns";
 import { safeFormat } from "@/utils/dateUtils";
 import { BASE_URL } from "@/config/apiConfig";
+import { parseLocalizedValue } from "@/utils/textUtils";
+import { useLanguage } from "@/context/LanguageContext";
 
 export default function DevoteeDetailPage() {
     const { id } = useParams();
     const router = useRouter();
+    const { language } = useLanguage();
     const [user, setUser] = useState<any>(null);
     const [loading, setLoading] = useState(true);
 
@@ -66,9 +69,9 @@ export default function DevoteeDetailPage() {
 
     useEffect(() => {
         if (user?.name) {
-            window.dispatchEvent(new CustomEvent('updateBreadcrumb', { detail: user.name }));
+            window.dispatchEvent(new CustomEvent('updateBreadcrumb', { detail: parseLocalizedValue(user.name, language) }));
         }
-    }, [user]);
+    }, [user, language]);
 
 
 
@@ -199,7 +202,7 @@ export default function DevoteeDetailPage() {
                             </div>
                         </div>
                         <div className="mt-6 text-center">
-                            <CardTitle className="text-2xl font-serif font-bold text-slate-900">{user.name || "Blessed Soul"}</CardTitle>
+                            <CardTitle className="text-2xl font-serif font-bold text-slate-900">{parseLocalizedValue(user.name, language) || "Blessed Soul"}</CardTitle>
                             <div className="flex items-center justify-center gap-2 mt-2">
                                 <Badge className="bg-emerald-50 text-emerald-700 hover:bg-emerald-100 border-none px-3 font-bold">
                                     {user.role}
@@ -288,7 +291,7 @@ export default function DevoteeDetailPage() {
                                 <div className="grid grid-cols-1 gap-3">
                                     <div className="bg-emerald-50/30 p-4 rounded-xl border border-emerald-100">
                                         <p className="text-[10px] text-emerald-600 font-bold uppercase">Shop Name</p>
-                                        <p className="text-base font-bold text-slate-900">{user.sellerProfile.name}</p>
+                                        <p className="text-base font-bold text-slate-900">{parseLocalizedValue(user.sellerProfile.name, language)}</p>
                                         <p className="text-xs text-slate-500 mt-1">{user.sellerProfile.location || "Online Seller"}</p>
                                     </div>
                                     <div className="flex items-center justify-between px-2">
@@ -314,7 +317,7 @@ export default function DevoteeDetailPage() {
                                 <div className="grid grid-cols-1 gap-3">
                                     <div className="bg-blue-50/30 p-4 rounded-xl border border-blue-100">
                                         <p className="text-[10px] text-blue-600 font-bold uppercase">Temple Linked</p>
-                                        <p className="text-base font-bold text-slate-900">{user.temple.name}</p>
+                                        <p className="text-base font-bold text-slate-900">{parseLocalizedValue(user.temple.name, language)}</p>
                                         <p className="text-xs text-slate-500 mt-1">{user.temple.location}</p>
                                     </div>
                                     <div className="flex items-center justify-between px-2">
@@ -408,10 +411,10 @@ export default function DevoteeDetailPage() {
                                                             <History className="w-7 h-7 text-primary" />
                                                         </div>
                                                         <div className="space-y-1">
-                                                            <h4 className="text-lg font-bold text-slate-900 group-hover:text-primary transition-colors">{booking.pooja?.name || "Sacred Pooja"}</h4>
+                                                            <h4 className="text-lg font-bold text-slate-900 group-hover:text-primary transition-colors">{parseLocalizedValue(booking.pooja?.name, language) || "Sacred Pooja"}</h4>
                                                             <p className="text-sm font-medium text-slate-600 flex items-center gap-1.5">
                                                                 <MapPin className="w-3.5 h-3.5 text-slate-400" />
-                                                                {booking.temple?.name || "N/A"}
+                                                                {parseLocalizedValue(booking.temple?.name, language) || "N/A"}
                                                             </p>
                                                             <div className="flex items-center gap-3 mt-2 text-xs text-muted-foreground font-medium">
                                                                 <span className="flex items-center gap-1">
@@ -475,7 +478,7 @@ export default function DevoteeDetailPage() {
                                 {filteredOrders.length > 0 ? (
                                     filteredOrders.map((order: any) => {
                                         const firstItem = order.subOrders?.[0]?.items?.[0];
-                                        const productName = firstItem?.product?.name || `Order #${order.id.substring(0, 8)}`;
+                                        const productName = parseLocalizedValue(firstItem?.product?.name, language) || `Order #${order.id.substring(0, 8)}`;
                                         const productImage = firstItem?.product?.image;
                                         const totalItems = (order.subOrders || []).reduce((acc: number, so: any) => acc + (so.items || []).length, 0);
 
@@ -566,7 +569,7 @@ export default function DevoteeDetailPage() {
                                                             </h4>
                                                             <p className="text-sm font-medium text-slate-600 flex items-center gap-1.5">
                                                                 <MapPin className="w-3.5 h-3.5 text-slate-400" />
-                                                                {donation.temple?.name || "DevBhakti Platform"}
+                                                                {parseLocalizedValue(donation.temple?.name, language) || "DevBhakti Platform"}
                                                             </p>
                                                             <div className="flex items-center gap-3 mt-2 text-xs text-muted-foreground font-medium">
                                                                 <span className="flex items-center gap-1">
@@ -606,7 +609,7 @@ export default function DevoteeDetailPage() {
                                                 {product.image && <img src={`${BASE_URL}${product.image}`} className="w-full h-full object-cover" />}
                                             </div>
                                             <div>
-                                                <h4 className="font-bold text-slate-900">{product.name}</h4>
+                                                <h4 className="font-bold text-slate-900">{parseLocalizedValue(product.name, language)}</h4>
                                                 <p className="text-xs text-slate-500">{product.category}</p>
                                                 <Badge className="mt-2" variant={product.status === 'active' ? 'outline' : 'outline'}>{product.status}</Badge>
                                             </div>

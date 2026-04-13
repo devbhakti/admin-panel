@@ -41,6 +41,12 @@ import {
     SelectTrigger,
     SelectValue,
 } from "@/components/ui/select";
+import {
+    Tabs,
+    TabsList,
+    TabsTrigger,
+    TabsContent
+} from "@/components/ui/tabs";
 import { fetchMyTempleProfile, updateMyTempleProfile } from "@/api/templeAdminController";
 import { useToast } from "@/hooks/use-toast";
 import { API_URL } from "@/config/apiConfig";
@@ -66,11 +72,21 @@ export default function TempleProfilePage() {
 
     // Form states
     const [formData, setFormData] = useState<any>({
-        name: "",
-        category: "",
-        description: "",
-        location: "",
-        fullAddress: "",
+        name_en: "",
+        name_hi: "",
+        name_mr: "",
+        category_en: "",
+        category_hi: "",
+        category_mr: "",
+        description_en: "",
+        description_hi: "",
+        description_mr: "",
+        location_en: "",
+        location_hi: "",
+        location_mr: "",
+        fullAddress_en: "",
+        fullAddress_hi: "",
+        fullAddress_mr: "",
         phone: "",
         website: "",
         mapUrl: "",
@@ -110,12 +126,28 @@ export default function TempleProfilePage() {
             if (response.success) {
                 const data = response.data;
                 setProfile(data);
+
+                const getL = (field: any, lang: string, fallback: any = "") => {
+                    const result = parseLocalizedValue(field, lang);
+                    return result === "N/A" ? fallback : result;
+                };
+
                 setFormData({
-                    name: data.name || "",
-                    category: data.category || "",
-                    description: data.description || "",
-                    location: data.location || "",
-                    fullAddress: data.fullAddress || "",
+                    name_en: getL(data.name, 'en'),
+                    name_hi: getL(data.name, 'hi'),
+                    name_mr: getL(data.name, 'mr'),
+                    category_en: getL(data.category, 'en'),
+                    category_hi: getL(data.category, 'hi'),
+                    category_mr: getL(data.category, 'mr'),
+                    description_en: getL(data.description, 'en'),
+                    description_hi: getL(data.description, 'hi'),
+                    description_mr: getL(data.description, 'mr'),
+                    location_en: getL(data.location, 'en'),
+                    location_hi: getL(data.location, 'hi'),
+                    location_mr: getL(data.location, 'mr'),
+                    fullAddress_en: getL(data.fullAddress, 'en'),
+                    fullAddress_hi: getL(data.fullAddress, 'hi'),
+                    fullAddress_mr: getL(data.fullAddress, 'mr'),
                     phone: data.phone || "",
                     website: data.website || "",
                     mapUrl: data.mapUrl || "",
@@ -157,8 +189,8 @@ export default function TempleProfilePage() {
 
     const calculateCompleteness = () => {
         const fields = [
-            'name', 'category', 'description', 
-            'location', 'fullAddress', 'phone', 'website', 'mapUrl'
+            'name_en', 'category_en', 'description_en', 
+            'location_en', 'fullAddress_en', 'phone', 'website', 'mapUrl'
         ];
         const filled = fields.filter(f => !!formData[f]).length;
         const mainImg = mainImagePreview ? 1 : 0;
@@ -719,21 +751,73 @@ export default function TempleProfilePage() {
                             </CardHeader>
                             <CardContent className="p-8 space-y-8">
                                 <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
-                                    <div className="space-y-2">
+                                    <div className="space-y-4">
                                         <Label className="text-xs uppercase font-bold tracking-widest text-[#7b4623]/60 ml-1">Temple Name</Label>
-                                        <Input
-                                            value={formData.name}
-                                            onChange={e => setFormData({ ...formData, name: e.target.value })}
-                                            className="h-14 px-5 border-white/40 bg-white/40 focus:bg-white rounded-2xl focus:ring-[#7b4623]/10 text-lg font-bold text-slate-800"
-                                        />
+                                        <Tabs defaultValue="en" className="w-full">
+                                            <TabsList className="grid w-full grid-cols-3 bg-slate-100/50 p-1 rounded-xl h-10">
+                                                <TabsTrigger value="en" className="rounded-lg text-[10px] font-bold uppercase tracking-widest data-[state=active]:bg-white data-[state=active]:text-[#7b4623] data-[state=active]:shadow-sm">English</TabsTrigger>
+                                                <TabsTrigger value="hi" className="rounded-lg text-[10px] font-bold uppercase tracking-widest data-[state=active]:bg-white data-[state=active]:text-[#7b4623] data-[state=active]:shadow-sm">हिन्दी</TabsTrigger>
+                                                <TabsTrigger value="mr" className="rounded-lg text-[10px] font-bold uppercase tracking-widest data-[state=active]:bg-white data-[state=active]:text-[#7b4623] data-[state=active]:shadow-sm">मराठी</TabsTrigger>
+                                            </TabsList>
+                                            <TabsContent value="en" className="mt-2">
+                                                <Input
+                                                    value={formData.name_en}
+                                                    onChange={e => setFormData({ ...formData, name_en: e.target.value })}
+                                                    className="h-14 px-5 border-white/40 bg-white/40 focus:bg-white rounded-2xl focus:ring-[#7b4623]/10 text-lg font-bold text-slate-800"
+                                                    placeholder="Temple Name (English)"
+                                                />
+                                            </TabsContent>
+                                            <TabsContent value="hi" className="mt-2">
+                                                <Input
+                                                    value={formData.name_hi}
+                                                    onChange={e => setFormData({ ...formData, name_hi: e.target.value })}
+                                                    className="h-14 px-5 border-white/40 bg-white/40 focus:bg-white rounded-2xl focus:ring-[#7b4623]/10 text-lg font-bold text-slate-800"
+                                                    placeholder="मंदिर का नाम (हिन्दी)"
+                                                />
+                                            </TabsContent>
+                                            <TabsContent value="mr" className="mt-2">
+                                                <Input
+                                                    value={formData.name_mr}
+                                                    onChange={e => setFormData({ ...formData, name_mr: e.target.value })}
+                                                    className="h-14 px-5 border-white/40 bg-white/40 focus:bg-white rounded-2xl focus:ring-[#7b4623]/10 text-lg font-bold text-slate-800"
+                                                    placeholder="मंदिराचे नाव (मराठी)"
+                                                />
+                                            </TabsContent>
+                                        </Tabs>
                                     </div>
-                                    <div className="space-y-2">
+                                    <div className="space-y-4">
                                         <Label className="text-xs uppercase font-bold tracking-widest text-[#7b4623]/60 ml-1">Category</Label>
-                                        <Input
-                                            value={formData.category}
-                                            onChange={e => setFormData({ ...formData, category: e.target.value })}
-                                            className="h-14 px-5 border-white/40 bg-white/40 focus:bg-white rounded-2xl focus:ring-[#7b4623]/10 text-lg font-bold text-slate-800"
-                                        />
+                                        <Tabs defaultValue="en" className="w-full">
+                                            <TabsList className="grid w-full grid-cols-3 bg-slate-100/50 p-1 rounded-xl h-10">
+                                                <TabsTrigger value="en" className="rounded-lg text-[10px] font-bold uppercase tracking-widest data-[state=active]:bg-white data-[state=active]:text-[#7b4623] data-[state=active]:shadow-sm">English</TabsTrigger>
+                                                <TabsTrigger value="hi" className="rounded-lg text-[10px] font-bold uppercase tracking-widest data-[state=active]:bg-white data-[state=active]:text-[#7b4623] data-[state=active]:shadow-sm">हिन्दी</TabsTrigger>
+                                                <TabsTrigger value="mr" className="rounded-lg text-[10px] font-bold uppercase tracking-widest data-[state=active]:bg-white data-[state=active]:text-[#7b4623] data-[state=active]:shadow-sm">मराठी</TabsTrigger>
+                                            </TabsList>
+                                            <TabsContent value="en" className="mt-2">
+                                                <Input
+                                                    value={formData.category_en}
+                                                    onChange={e => setFormData({ ...formData, category_en: e.target.value })}
+                                                    className="h-14 px-5 border-white/40 bg-white/40 focus:bg-white rounded-2xl focus:ring-[#7b4623]/10 text-lg font-bold text-slate-800"
+                                                    placeholder="Category (English)"
+                                                />
+                                            </TabsContent>
+                                            <TabsContent value="hi" className="mt-2">
+                                                <Input
+                                                    value={formData.category_hi}
+                                                    onChange={e => setFormData({ ...formData, category_hi: e.target.value })}
+                                                    className="h-14 px-5 border-white/40 bg-white/40 focus:bg-white rounded-2xl focus:ring-[#7b4623]/10 text-lg font-bold text-slate-800"
+                                                    placeholder="श्रेणी (हिन्दी)"
+                                                />
+                                            </TabsContent>
+                                            <TabsContent value="mr" className="mt-2">
+                                                <Input
+                                                    value={formData.category_mr}
+                                                    onChange={e => setFormData({ ...formData, category_mr: e.target.value })}
+                                                    className="h-14 px-5 border-white/40 bg-white/40 focus:bg-white rounded-2xl focus:ring-[#7b4623]/10 text-lg font-bold text-slate-800"
+                                                    placeholder="श्रेणी (मराठी)"
+                                                />
+                                            </TabsContent>
+                                        </Tabs>
                                     </div>
                                     <div className="md:col-span-2 space-y-4 pt-4 border-t border-slate-100">
                                         <div className="flex items-center justify-between mb-2">
@@ -831,13 +915,39 @@ export default function TempleProfilePage() {
                                     </div>
                                 </div>
                                 <div className="grid grid-cols-1 pt-4">
-                                    <div className="space-y-2">
+                                    <div className="space-y-4">
                                         <Label className="text-xs uppercase font-bold tracking-widest text-[#7b4623]/60 ml-1">Description</Label>
-                                        <Textarea
-                                            value={formData.description}
-                                            onChange={e => setFormData({ ...formData, description: e.target.value })}
-                                            className="min-h-[140px] p-5 border-white/40 bg-white/40 focus:bg-white rounded-2xl leading-relaxed"
-                                        />
+                                        <Tabs defaultValue="en" className="w-full">
+                                            <TabsList className="grid w-full grid-cols-3 bg-slate-100/50 p-1 rounded-xl h-10">
+                                                <TabsTrigger value="en" className="rounded-lg text-[10px] font-bold uppercase tracking-widest data-[state=active]:bg-white data-[state=active]:text-[#7b4623] data-[state=active]:shadow-sm">English</TabsTrigger>
+                                                <TabsTrigger value="hi" className="rounded-lg text-[10px] font-bold uppercase tracking-widest data-[state=active]:bg-white data-[state=active]:text-[#7b4623] data-[state=active]:shadow-sm">हिन्दी</TabsTrigger>
+                                                <TabsTrigger value="mr" className="rounded-lg text-[10px] font-bold uppercase tracking-widest data-[state=active]:bg-white data-[state=active]:text-[#7b4623] data-[state=active]:shadow-sm">मराठी</TabsTrigger>
+                                            </TabsList>
+                                            <TabsContent value="en" className="mt-2">
+                                                <Textarea
+                                                    value={formData.description_en}
+                                                    onChange={e => setFormData({ ...formData, description_en: e.target.value })}
+                                                    className="min-h-[140px] p-5 border-white/40 bg-white/40 focus:bg-white rounded-2xl leading-relaxed"
+                                                    placeholder="Description (English)"
+                                                />
+                                            </TabsContent>
+                                            <TabsContent value="hi" className="mt-2">
+                                                <Textarea
+                                                    value={formData.description_hi}
+                                                    onChange={e => setFormData({ ...formData, description_hi: e.target.value })}
+                                                    className="min-h-[140px] p-5 border-white/40 bg-white/40 focus:bg-white rounded-2xl leading-relaxed"
+                                                    placeholder="विवरण (हिन्दी)"
+                                                />
+                                            </TabsContent>
+                                            <TabsContent value="mr" className="mt-2">
+                                                <Textarea
+                                                    value={formData.description_mr}
+                                                    onChange={e => setFormData({ ...formData, description_mr: e.target.value })}
+                                                    className="min-h-[140px] p-5 border-white/40 bg-white/40 focus:bg-white rounded-2xl leading-relaxed"
+                                                    placeholder="वर्णन (मराठी)"
+                                                />
+                                            </TabsContent>
+                                        </Tabs>
                                     </div>
                                 </div>
                             </CardContent>
@@ -862,13 +972,39 @@ export default function TempleProfilePage() {
                             </CardHeader>
                             <CardContent className="p-8">
                                 <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
-                                    <div className="space-y-2">
-                                        <Label className="text-xs uppercase font-bold tracking-widest text-slate-400 ml-1">City / Region</Label>
-                                        <Input
-                                            value={formData.location}
-                                            onChange={e => setFormData({ ...formData, location: e.target.value })}
-                                            className="h-14 px-5 border-white/40 bg-white/40 focus:bg-white rounded-2xl font-bold"
-                                        />
+                                    <div className="space-y-4">
+                                        <Label className="text-xs uppercase font-bold tracking-widest text-[#7b4623]/60 ml-1">City / Region</Label>
+                                        <Tabs defaultValue="en" className="w-full">
+                                            <TabsList className="grid w-full grid-cols-3 bg-slate-100/50 p-1 rounded-xl h-10">
+                                                <TabsTrigger value="en" className="rounded-lg text-[10px] font-bold uppercase tracking-widest data-[state=active]:bg-white data-[state=active]:text-[#7b4623] data-[state=active]:shadow-sm">English</TabsTrigger>
+                                                <TabsTrigger value="hi" className="rounded-lg text-[10px] font-bold uppercase tracking-widest data-[state=active]:bg-white data-[state=active]:text-[#7b4623] data-[state=active]:shadow-sm">हिन्दी</TabsTrigger>
+                                                <TabsTrigger value="mr" className="rounded-lg text-[10px] font-bold uppercase tracking-widest data-[state=active]:bg-white data-[state=active]:text-[#7b4623] data-[state=active]:shadow-sm">मराठी</TabsTrigger>
+                                            </TabsList>
+                                            <TabsContent value="en" className="mt-2">
+                                                <Input
+                                                    value={formData.location_en}
+                                                    onChange={e => setFormData({ ...formData, location_en: e.target.value })}
+                                                    className="h-14 px-5 border-white/40 bg-white/40 focus:bg-white rounded-2xl font-bold"
+                                                    placeholder="City / Region (English)"
+                                                />
+                                            </TabsContent>
+                                            <TabsContent value="hi" className="mt-2">
+                                                <Input
+                                                    value={formData.location_hi}
+                                                    onChange={e => setFormData({ ...formData, location_hi: e.target.value })}
+                                                    className="h-14 px-5 border-white/40 bg-white/40 focus:bg-white rounded-2xl font-bold"
+                                                    placeholder="शहर / क्षेत्र (हिन्दी)"
+                                                />
+                                            </TabsContent>
+                                            <TabsContent value="mr" className="mt-2">
+                                                <Input
+                                                    value={formData.location_mr}
+                                                    onChange={e => setFormData({ ...formData, location_mr: e.target.value })}
+                                                    className="h-14 px-5 border-white/40 bg-white/40 focus:bg-white rounded-2xl font-bold"
+                                                    placeholder="शहर / प्रदेश (मराठी)"
+                                                />
+                                            </TabsContent>
+                                        </Tabs>
                                     </div>
                                     <div className="space-y-2">
                                         <Label className="text-xs uppercase font-bold tracking-widest text-slate-400 ml-1">Website</Label>
@@ -878,13 +1014,39 @@ export default function TempleProfilePage() {
                                             className="h-14 px-5 border-white/40 bg-white/40 focus:bg-white rounded-2xl"
                                         />
                                     </div>
-                                    <div className="space-y-2">
+                                    <div className="space-y-4">
                                         <Label className="text-xs uppercase font-bold tracking-widest text-slate-400 ml-1">Full Address</Label>
-                                        <Input
-                                            value={formData.fullAddress}
-                                            onChange={e => setFormData({ ...formData, fullAddress: e.target.value })}
-                                            className="h-14 px-5 border-white/40 bg-white/40 focus:bg-white rounded-2xl"
-                                        />
+                                        <Tabs defaultValue="en" className="w-full">
+                                            <TabsList className="grid w-full grid-cols-3 bg-slate-100/50 p-1 rounded-xl h-10">
+                                                <TabsTrigger value="en" className="rounded-lg text-[10px] font-bold uppercase tracking-widest data-[state=active]:bg-white data-[state=active]:text-[#7b4623] data-[state=active]:shadow-sm">English</TabsTrigger>
+                                                <TabsTrigger value="hi" className="rounded-lg text-[10px] font-bold uppercase tracking-widest data-[state=active]:bg-white data-[state=active]:text-[#7b4623] data-[state=active]:shadow-sm">हिन्दी</TabsTrigger>
+                                                <TabsTrigger value="mr" className="rounded-lg text-[10px] font-bold uppercase tracking-widest data-[state=active]:bg-white data-[state=active]:text-[#7b4623] data-[state=active]:shadow-sm">मराठी</TabsTrigger>
+                                            </TabsList>
+                                            <TabsContent value="en" className="mt-2">
+                                                <Input
+                                                    value={formData.fullAddress_en}
+                                                    onChange={e => setFormData({ ...formData, fullAddress_en: e.target.value })}
+                                                    className="h-14 px-5 border-white/40 bg-white/40 focus:bg-white rounded-2xl"
+                                                    placeholder="Full Address (English)"
+                                                />
+                                            </TabsContent>
+                                            <TabsContent value="hi" className="mt-2">
+                                                <Input
+                                                    value={formData.fullAddress_hi}
+                                                    onChange={e => setFormData({ ...formData, fullAddress_hi: e.target.value })}
+                                                    className="h-14 px-5 border-white/40 bg-white/40 focus:bg-white rounded-2xl"
+                                                    placeholder="पूरा पता (हिन्दी)"
+                                                />
+                                            </TabsContent>
+                                            <TabsContent value="mr" className="mt-2">
+                                                <Input
+                                                    value={formData.fullAddress_mr}
+                                                    onChange={e => setFormData({ ...formData, fullAddress_mr: e.target.value })}
+                                                    className="h-14 px-5 border-white/40 bg-white/40 focus:bg-white rounded-2xl"
+                                                    placeholder="पूर्ण पत्ता (मराठी)"
+                                                />
+                                            </TabsContent>
+                                        </Tabs>
                                     </div>
                                     <div className="space-y-2">
                                         <Label className="text-xs uppercase font-bold tracking-widest text-slate-400 ml-1">Maps Navigation</Label>

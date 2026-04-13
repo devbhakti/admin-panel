@@ -37,6 +37,7 @@ import { useToast } from "@/hooks/use-toast";
 import { format } from "date-fns";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { BASE_URL } from "@/config/apiConfig";
+import { parseLocalizedValue } from "@/utils/textUtils";
 
 export default function ViewSellerPage() {
     const router = useRouter();
@@ -59,7 +60,7 @@ export default function ViewSellerPage() {
             console.log("Products:", data.products);
             setSeller(data);
             // Update breadcrumb with seller store name
-            window.dispatchEvent(new CustomEvent('updateBreadcrumb', { detail: data.storeName || "Seller Details" }));
+            window.dispatchEvent(new CustomEvent('updateBreadcrumb', { detail: parseLocalizedValue(data.storeName) || "Seller Details" }));
         } catch (error: any) {
             console.error("Load Seller Error:", error);
             toast({
@@ -128,15 +129,15 @@ export default function ViewSellerPage() {
                         <Avatar className="h-16 w-16 border-2 border-white shadow-lg">
                             <AvatarImage
                                 src={seller.logo ? `${BASE_URL}${seller.logo}` : ''}
-                                alt={seller.storeName}
+                                alt={parseLocalizedValue(seller.storeName)}
                                 className="object-cover"
                             />
                             <AvatarFallback className="bg-[#794A05] text-white text-xl font-bold">
-                                {seller.storeName?.substring(0, 2).toUpperCase()}
+                                {parseLocalizedValue(seller.storeName)?.substring(0, 2).toUpperCase()}
                             </AvatarFallback>
                         </Avatar>
                         <div>
-                            <h1 className="text-3xl font-serif font-bold text-slate-900">{seller.storeName}</h1>
+                            <h1 className="text-3xl font-serif font-bold text-slate-900">{parseLocalizedValue(seller.storeName)}</h1>
                             <div className="flex items-center gap-3 mt-1.5 flex-wrap">
                                 <span className="text-xs font-mono text-slate-500 bg-slate-100 px-2 py-0.5 rounded">ID: {seller.sellerId || seller.id.slice(0, 8)}</span>
                                 <span className="text-slate-300">|</span>
@@ -259,7 +260,7 @@ export default function ViewSellerPage() {
                                 <div>
                                     <p className="text-xs font-bold text-slate-400 uppercase tracking-wide">Address</p>
                                     <p className="font-medium text-slate-700 text-sm mt-0.5 leading-relaxed">
-                                        {seller.address || "No address provided"}
+                                        {parseLocalizedValue(seller.address) || "No address provided"}
                                     </p>
                                 </div>
                             </div>
@@ -302,7 +303,7 @@ export default function ViewSellerPage() {
                                                             {product.image ? (
                                                                 <img
                                                                     src={`${BASE_URL}${product.image}`}
-                                                                    alt={product.name}
+                                                                    alt={parseLocalizedValue(product.name)}
                                                                     className="h-full w-full object-cover"
                                                                     onError={(e) => {
                                                                         console.log("Image failed to load:", product.image);
@@ -317,14 +318,14 @@ export default function ViewSellerPage() {
                                                             )}
                                                         </div>
                                                         <div>
-                                                            <p className="font-bold text-sm text-slate-900 line-clamp-1">{product.name}</p>
+                                                            <p className="font-bold text-sm text-slate-900 line-clamp-1">{parseLocalizedValue(product.name)}</p>
                                                             <p className="text-[10px] text-slate-500 font-mono mt-0.5">{product.id.slice(0, 8)}</p>
                                                         </div>
                                                     </div>
                                                 </TableCell>
                                                 <TableCell>
                                                     <Badge variant="outline" className="font-normal text-xs bg-slate-50 text-slate-600">
-                                                        {product.categoryObj?.name || product.category || "Uncategorized"}
+                                                        {parseLocalizedValue(product.categoryObj?.name) || product.category || "Uncategorized"}
                                                     </Badge>
                                                 </TableCell>
                                                 <TableCell>

@@ -485,6 +485,28 @@ export const getAllPoojas = async (req: Request, res: Response) => {
       }
     });
 
+    let finalPoojas = poojas;
+
+    // Deduplicate Poojas in the backend API for Global View
+    if (!templeId) {
+      const uniquePoojasMap = new Map();
+      poojas.forEach((p: any) => {
+        const nameVal = p.name?.en || p.name?.hi || '';
+        const key = nameVal.toLowerCase().trim();
+        if (!key) return;
+        
+        const existing = uniquePoojasMap.get(key);
+        const isBetter = !existing || 
+                         (p.isMaster && !existing.isMaster) || 
+                         (!p.masterPoojaId && existing.masterPoojaId && !p.isMaster);
+        
+        if (isBetter) {
+          uniquePoojasMap.set(key, p);
+        }
+      });
+      finalPoojas = Array.from(uniquePoojasMap.values());
+    }
+
     let favoritedPoojaIds = new Set<string>();
 
     if (userId) {
@@ -500,7 +522,7 @@ export const getAllPoojas = async (req: Request, res: Response) => {
       });
     }
 
-    const poojasWithFav = poojas.map(pooja => ({
+    const poojasWithFav = finalPoojas.map(pooja => ({
       ...pooja,
       isFavorite: favoritedPoojaIds.has(pooja.id)
     }));

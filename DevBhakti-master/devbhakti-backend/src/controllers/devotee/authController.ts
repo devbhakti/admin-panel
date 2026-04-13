@@ -54,7 +54,7 @@ const logToFile = (message: string) => {
 
 export const checkPhoneExistence = async (req: Request, res: Response) => {
     try {
-        const { phone } = req.query || req.body;
+        const { phone, role } = req.query || req.body;
         
         if (!phone) {
             return res.status(400).json({ success: false, message: 'Phone number is required' });
@@ -62,7 +62,10 @@ export const checkPhoneExistence = async (req: Request, res: Response) => {
 
         const normalizedPhone = normalizePhone(phone as string);
         const user = await prisma.user.findFirst({
-            where: { phone: normalizedPhone }
+            where: { 
+                phone: normalizedPhone,
+                ...(role ? { role: role as any } : {})
+            }
         });
 
         return res.json({
@@ -78,7 +81,7 @@ export const checkPhoneExistence = async (req: Request, res: Response) => {
 
 export const checkPhoneOnly = async (req: Request, res: Response) => {
     try {
-        const { phone } = req.body;
+        const { phone, role } = req.body;
         
         if (!phone) {
             return res.status(400).json({ success: false, message: 'Phone number is required' });
@@ -86,7 +89,10 @@ export const checkPhoneOnly = async (req: Request, res: Response) => {
 
         const normalizedPhone = normalizePhone(phone);
         const user = await prisma.user.findFirst({
-            where: { phone: normalizedPhone }
+            where: { 
+                phone: normalizedPhone,
+                ...(role ? { role: role as any } : {})
+            }
         });
 
         return res.json({
@@ -110,7 +116,10 @@ export const checkSellerPhone = async (req: Request, res: Response) => {
 
         const normalizedPhone = normalizePhone(phone);
         const user = await prisma.user.findFirst({
-            where: { phone: normalizedPhone }
+            where: { 
+                phone: normalizedPhone,
+                role: 'SELLER'
+            }
         });
 
         if (!user) {

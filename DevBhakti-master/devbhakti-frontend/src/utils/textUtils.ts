@@ -25,3 +25,36 @@ export const parseLocalizedValue = (value: any, lang: string = 'en'): string => 
     
     return value;
 };
+
+/**
+ * Deduplicates a list of poojas by their localized name,
+ * preferring Master poojas when duplicates are found.
+ */
+export const getDeduplicatedPoojas = (poojas: any[], lang: string = 'en'): any[] => {
+    if (!Array.isArray(poojas)) return [];
+    
+    const uniqueMap = new Map();
+    
+    poojas.forEach(p => {
+        // We use 'en' as a stable key for deduplication if possible, 
+        // to avoid name changes causing issues when switching languages.
+        const dedupeKey = parseLocalizedValue(p.name, 'en').toLowerCase().trim();
+        if (!dedupeKey || dedupeKey === "n/a") return;
+        
+        const existing = uniqueMap.get(dedupeKey);
+        // Preference: 
+        // 1. Master poojas
+        // 2. Original poojas (no masterPoojaId)
+        // 3. Any available
+        
+        const isBetter = !existing || 
+                        (p.isMaster && !existing.isMaster) || 
+                        (!p.masterPoojaId && existing.masterPoojaId && !p.isMaster);
+                        
+        if (isBetter) {
+            uniqueMap.set(dedupeKey, p);
+        }
+    });
+    
+    return Array.from(uniqueMap.values());
+};

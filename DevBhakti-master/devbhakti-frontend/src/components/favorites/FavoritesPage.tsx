@@ -29,6 +29,7 @@ import { useToast } from "@/hooks/use-toast";
 import Navbar from "@/components/landing/Navbar";
 import Footer from "@/components/landing/Footer";
 import { useLanguage } from "@/context/LanguageContext";
+import { parseLocalizedValue } from '@/utils/textUtils';
 
 const FavoritesPage: React.FC = () => {
     const [favorites, setFavorites] = useState<any[]>([]);
@@ -278,7 +279,7 @@ const FavoritesPage: React.FC = () => {
                                                     <div className="relative aspect-[4/3] overflow-hidden rounded-[1.5rem] mb-4">
                                                         <NextImage
                                                             src={getFullImageUrl(pooja.image)}
-                                                            alt={pooja.name}
+                                                            alt={parseLocalizedValue(pooja.name)}
                                                             fill
                                                             className="object-cover group-hover:scale-110 transition-transform duration-700"
                                                         />
@@ -296,7 +297,7 @@ const FavoritesPage: React.FC = () => {
 
                                                     <div className="px-2 pb-3 flex-grow">
                                                         <h3 className="text-xl font-bold text-zinc-900 mb-1 group-hover:text-primary transition-colors line-clamp-1">
-                                                            {pooja.name}
+                                                            {parseLocalizedValue(pooja.name)}
                                                         </h3>
                                                         <div className="flex items-center gap-2 text-zinc-500 mb-3">
                                                             <Clock className="w-3.5 h-3.5 text-primary" />

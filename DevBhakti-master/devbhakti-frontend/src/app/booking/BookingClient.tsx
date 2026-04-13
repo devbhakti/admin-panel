@@ -48,6 +48,7 @@ import { useLanguage } from "@/context/LanguageContext";
 import { fetchPublicTemples, fetchPublicPoojas, fetchPublicPoojaById } from "@/api/publicController";
 import { notifyFailedPayment } from "@/api/adminController";
 import { generatePoojaReceiptHTML } from "@/utils/poojaReceipt";
+import { parseLocalizedValue } from '@/utils/textUtils';
 
 
 function BookingForm() {
@@ -636,7 +637,7 @@ function BookingForm() {
                             <RadioGroupItem value={pooja.id} id={pooja.id} />
                             <div>
                               <Label htmlFor={pooja.id} className="font-semibold cursor-pointer">
-                                {pooja.name}
+                                {parseLocalizedValue(pooja.name)}
                               </Label>
                               <p className="text-sm text-muted-foreground line-clamp-1">{pooja.description?.[0] || pooja.about}</p>
                             </div>

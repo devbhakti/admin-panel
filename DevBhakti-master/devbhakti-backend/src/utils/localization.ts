@@ -33,8 +33,28 @@ export const getLang = (req: any): SupportedLang => {
  * e.g. { en: "...", hi: "...", mr: "..." }
  */
 const isLangObject = (value: any): boolean => {
-  if (!value || typeof value !== 'object' || Array.isArray(value)) return false;
-  return 'en' in value || 'hi' in value || 'mr' in value;
+  if (!value) return false;
+  
+  // If it's already an object
+  if (typeof value === 'object' && !Array.isArray(value)) {
+    return 'en' in value || 'hi' in value || 'mr' in value ||
+           'En' in value || 'Hi' in value || 'Mr' in value;
+  }
+  
+  // If it's a string, it might be a JSON-encoded lang object
+  if (typeof value === 'string' && value.trim().startsWith('{')) {
+    try {
+      const parsed = JSON.parse(value);
+      if (typeof parsed === 'object' && parsed !== null && !Array.isArray(parsed)) {
+        return 'en' in parsed || 'hi' in parsed || 'mr' in parsed ||
+               'En' in parsed || 'Hi' in parsed || 'Mr' in parsed;
+      }
+    } catch (e) {
+      // Not valid JSON or not a lang object
+    }
+  }
+  
+  return false;
 };
 
 /**
@@ -61,9 +81,17 @@ export const localize = <T extends Record<string, any>>(
 
   for (const [key, value] of Object.entries(data)) {
     if (isLangObject(value)) {
+      // Pick the lang object (autodetect if it's a string)
+      let langObj = value;
+      if (typeof value === 'string') {
+        try { langObj = JSON.parse(value); } catch(e) {}
+      }
+
       // This is a multilingual field → pick selected lang, fallback to 'en'
-      const langVal = (value as any)[safeLang];
-      const enVal = (value as any)['en'];
+      // Support both lowercase and Capitalized keys
+      const langVal = langObj[safeLang] || langObj[safeLang.charAt(0).toUpperCase() + safeLang.slice(1)];
+      const enVal = langObj['en'] || langObj['En'];
+      
       result[key] = (langVal !== undefined && langVal !== null && langVal !== '')
         ? langVal
         : enVal ?? null;

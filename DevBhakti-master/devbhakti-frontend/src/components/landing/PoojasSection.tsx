@@ -14,7 +14,7 @@ import { fetchPublicPoojas } from "@/api/publicController";
 import { fetchUserFavorites, addFavorite, removeFavorite } from "@/api/userController";
 import { API_URL } from "@/config/apiConfig";
 import { useLanguage } from "@/context/LanguageContext";
-import { parseLocalizedValue } from "@/utils/textUtils";
+import { parseLocalizedValue, getDeduplicatedPoojas } from "@/utils/textUtils";
 
 const PoojasSection: React.FC = () => {
   const scrollContainerRef = React.useRef<HTMLDivElement>(null);
@@ -54,7 +54,9 @@ const PoojasSection: React.FC = () => {
       return getLowestPrice(a) - getLowestPrice(b);
     });
 
-    setPoojas(sortedData);
+    const deduplicatedPoojas = getDeduplicatedPoojas(sortedData, 'en');
+
+    setPoojas(deduplicatedPoojas);
     setLoading(false);
   };
 
@@ -109,7 +111,11 @@ const PoojasSection: React.FC = () => {
     e.stopPropagation();
 
     if (!user) {
-      router.push("/auth");
+      toast({
+        title: "Please Login",
+        description: "You need to login as a devotee to add favourites.",
+        variant: "destructive",
+      });
       return;
     }
 
@@ -118,16 +124,16 @@ const PoojasSection: React.FC = () => {
       if (isFav) {
         await removeFavorite({ poojaId });
         setFavorites(favorites.filter((f) => f.poojaId !== poojaId));
-        toast({ title: t('common.removed_from_favorites') });
+        toast({ title: "Removed from Favourites", description: "Pooja removed from your favourites.", variant: "success" });
       } else {
         await addFavorite({ poojaId });
         setFavorites([...favorites, { poojaId }]);
-        toast({ title: t('common.added_to_favorites') });
+        toast({ title: "❤️ Added to Favourites", description: "Pooja added to your favourites!", variant: "success" });
       }
     } catch (error: any) {
       toast({
         title: "Error",
-        description: error.response?.data?.message || error.message || "Failed to update favorites",
+        description: error.response?.data?.message || error.message || "Failed to update favourites",
         variant: "destructive",
       });
     }

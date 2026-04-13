@@ -451,7 +451,7 @@ function ProductsContent() {
                   </TableCell>
                   <TableCell>
                     <Badge variant="outline" className="font-medium">
-                      {product.categoryObj?.name || (product.category === "general" ? "General Products" : `Category: ${product.category?.slice(0, 8)}...`)}
+                      {parseLocalizedValue(product.categoryObj?.name) || (product.category === "general" ? "General Products" : `Category: ${product.category?.slice(0, 8)}...`)}
                     </Badge>
                   </TableCell>
                   <TableCell>

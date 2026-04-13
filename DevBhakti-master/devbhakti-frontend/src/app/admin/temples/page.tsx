@@ -144,13 +144,13 @@ function TemplesContent() {
                 setAllTemplesForFilter(data.filter((u: any) => u.temple).map((u: any) => ({
                     userId: u.id,
                     templeId: u.temple.id,
-                    templeName: u.temple.name
+                    templeName: parseLocalizedValue(u.temple.name)
                 })));
             } else if (data.data) {
                 setAllTemplesForFilter(data.data.filter((u: any) => u.temple).map((u: any) => ({
                     userId: u.id,
                     templeId: u.temple.id,
-                    templeName: u.temple.name_en || u.temple.name
+                    templeName: parseLocalizedValue(u.temple.name)
                 })));
             }
         });
@@ -225,8 +225,8 @@ function TemplesContent() {
                     // Temple data
                     temple: user.temple, // Explicitly include temple object
                     templeId: user.temple.id,
-                    templeName: typeof user.temple.name === 'string' ? user.temple.name : (user.temple.name?.en || user.temple.name?.hi || "No Temple"),
-                    templeLocation: typeof user.temple.location === 'string' ? user.temple.location : (user.temple.location?.en || user.temple.location?.hi || ""),
+                    templeName: parseLocalizedValue(user.temple.name),
+                    templeLocation: parseLocalizedValue(user.temple.location),
                     ...user.temple // Keep spread for compatibility with other fields if needed
                 }));
 

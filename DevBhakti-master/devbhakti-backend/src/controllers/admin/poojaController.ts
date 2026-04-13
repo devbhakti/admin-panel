@@ -66,10 +66,10 @@ export const getPoojaById = async (req: Request, res: Response) => {
             return res.status(404).json({ error: 'Pooja not found' });
         }
 
-        // Return raw data for admin editing
+        const lang = getLang(req);
         res.json({
             success: true,
-            data: pooja
+            data: lang === 'raw' ? pooja : localize(pooja, lang)
         });
     } catch (error) {
         console.error('Fetch pooja error:', error);

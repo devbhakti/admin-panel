@@ -55,7 +55,7 @@ const HeroSection: React.FC = () => {
             className="text-4xl sm:text-5xl md:text-6xl lg:text-7xl font-serif font-bold text-foreground leading-tight mb-6"
           >
             {t('landing.hero.title1')}
-            <span className="text-gradient-sacred">{t('landing.hero.title2')}</span>
+            <span className="text-[#88542B]">{t('landing.hero.title2')}</span>
           </motion.h1>
 
           {/* Subtitle */}

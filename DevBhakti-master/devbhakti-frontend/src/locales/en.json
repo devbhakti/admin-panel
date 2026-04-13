@@ -177,7 +177,8 @@
     "no_location_found": "No location found.",
     "active": "Active:",
     "showing": "Showing",
-    "temples_count_label": "temples"
+    "temples_count_label": "temples",
+    "live_now": "Live Now"
   },
   "footer": {
     "about": "DevBhakti - Your gateway to divine experiences and sacred rituals.",
@@ -271,6 +272,8 @@
     "upcoming_events": "Upcoming Events"
   },
   "pooja_detail": {
+    "any_location": "Any Location",
+    "global_booking": "Global Service",
     "loading": "Divine details loading...",
     "not_found": "Pooja not found",
     "return_home": "Return to Home",

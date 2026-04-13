@@ -37,12 +37,16 @@ import {
 } from "@/components/ui/card";
 import { useToast } from "@/hooks/use-toast";
 import { Badge } from "@/components/ui/badge";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { useLanguage, Language } from "@/context/LanguageContext";
 import { fetchCategories, fetchSellerProductById, updateSellerProduct } from "@/api/sellerController";
 import { API_URL, BASE_URL } from "@/config/apiConfig";
 
 interface Variant {
     id: string;
-    name: string;
+    name_en: string;
+    name_hi: string;
+    name_mr: string;
     price: number;
     stock: number;
     image?: string | null;
@@ -53,6 +57,7 @@ interface Variant {
 
 
 export default function EditSellerProductPage() {
+    const { t, language, setLanguage } = useLanguage();
     const router = useRouter();
     const { id } = useParams();
     const { toast } = useToast();
@@ -65,14 +70,26 @@ export default function EditSellerProductPage() {
     const [removeImage, setRemoveImage] = useState(false);
 
     const [formData, setFormData] = useState({
-        name: "",
-        description: "",
+        name_en: "",
+        name_hi: "",
+        name_mr: "",
+        description_en: "",
+        description_hi: "",
+        description_mr: "",
         category: "",
         status: "",
-        highlights: "",
-        longDescription: "",
-        shippingInfo: "",
-        origin: "",
+        highlights_en: "",
+        highlights_hi: "",
+        highlights_mr: "",
+        longDescription_en: "",
+        longDescription_hi: "",
+        longDescription_mr: "",
+        shippingInfo_en: "",
+        shippingInfo_hi: "",
+        shippingInfo_mr: "",
+        origin_en: "",
+        origin_hi: "",
+        origin_mr: "",
         rating: "4.5",
         weight: "",
         length: "",
@@ -87,22 +104,48 @@ export default function EditSellerProductPage() {
         const fetchData = async () => {
             setIsLoading(true);
             try {
+                // Helper to get lang value safely from JSON lang objects
+                const getL = (field: any, lang: string, fallback: string = "") => {
+                    if (!field) return fallback;
+                    if (typeof field === "object") return field[lang] || fallback;
+                    if (typeof field === "string" && field.trim().startsWith('{')) {
+                        try {
+                            const parsed = JSON.parse(field);
+                            return parsed[lang] || fallback;
+                        } catch (e) {}
+                    }
+                    if (lang === "en") return field; // Fallback for old simple string format
+                    return fallback;
+                };
+
                 const [productResponse, cats] = await Promise.all([
-                    fetchSellerProductById(id as string),
+                    fetchSellerProductById(id as string, "raw"), // Get raw JSON for localization
                     fetchCategories()
                 ]);
 
                 if (productResponse.success && productResponse.data) {
                     const p = productResponse.data;
                     setFormData({
-                        name: p.name,
-                        description: p.description,
+                        name_en: getL(p.name, "en"),
+                        name_hi: getL(p.name, "hi"),
+                        name_mr: getL(p.name, "mr"),
+                        description_en: getL(p.description, "en"),
+                        description_hi: getL(p.description, "hi"),
+                        description_mr: getL(p.description, "mr"),
                         category: p.categoryId || p.category,
                         status: p.status,
-                        highlights: p.highlights || "",
-                        longDescription: p.longDescription || "",
-                        shippingInfo: p.shippingInfo || "",
-                        origin: p.origin || "",
+                        highlights_en: getL(p.highlights, "en"),
+                        highlights_hi: getL(p.highlights, "hi"),
+                        highlights_mr: getL(p.highlights, "mr"),
+                        longDescription_en: getL(p.longDescription, "en"),
+                        longDescription_hi: getL(p.longDescription, "hi"),
+                        longDescription_mr: getL(p.longDescription, "mr"),
+                        shippingInfo_en: getL(p.shippingInfo, "en"),
+                        shippingInfo_hi: getL(p.shippingInfo, "hi"),
+                        shippingInfo_mr: getL(p.shippingInfo, "mr"),
+                        origin_en: getL(p.origin, "en"),
+                        origin_hi: getL(p.origin, "hi"),
+                        origin_mr: getL(p.origin, "mr"),
                         rating: p.rating ? p.rating.toString() : "4.5",
                         weight: p.weight ? p.weight.toString() : "",
                         length: p.length ? p.length.toString() : "",
@@ -111,7 +154,9 @@ export default function EditSellerProductPage() {
                     });
                     setVariants(p.variants.map((v: any) => ({
                         id: v.id,
-                        name: v.name,
+                        name_en: getL(v.name, "en"),
+                        name_hi: getL(v.name, "hi"),
+                        name_mr: getL(v.name, "mr"),
                         price: v.price,
                         stock: v.stock,
                         image: v.image,
@@ -161,15 +206,15 @@ export default function EditSellerProductPage() {
 
     const validateForm = () => {
         const newErrors: Record<string, string> = {};
-        if (!formData.name.trim()) newErrors.name = "Product name is required";
-        if (!formData.description.trim()) newErrors.description = "Description is required";
+        if (!formData.name_en.trim()) newErrors.name = "English product name is required";
+        if (!formData.description_en.trim()) newErrors.description = "English description is required";
         if (!formData.category) newErrors.category = "Category is required";
 
-        const validVariants = variants.filter(v => v.name.trim() && v.price > 0);
+        const validVariants = variants.filter(v => v.name_en.trim() && v.price > 0);
         if (validVariants.length === 0) newErrors.variants = "At least one valid variant is required";
 
         validVariants.forEach((variant, index) => {
-            if (!variant.name.trim()) newErrors[`variant_name_${index}`] = "Variant name is required";
+            if (!variant.name_en.trim()) newErrors[`variant_name_${index}`] = "English variant name is required";
             if (variant.price <= 0) newErrors[`variant_price_${index}`] = "Price must be greater than 0";
             if (variant.stock < 0) newErrors[`variant_stock_${index}`] = "Stock cannot be negative";
         });
@@ -187,20 +232,39 @@ export default function EditSellerProductPage() {
 
         setIsSubmitting(true);
         try {
-            const validVariants = variants.filter(v => v.name.trim() && v.price > 0);
+            const validVariants = variants.filter(v => v.name_en.trim() && v.price > 0);
             const formDataToSend = new FormData();
 
-            formDataToSend.append('name', formData.name);
-            formDataToSend.append('description', formData.description);
+            // Localized Fields
+            formDataToSend.append('name_en', formData.name_en);
+            formDataToSend.append('name_hi', formData.name_hi);
+            formDataToSend.append('name_mr', formData.name_mr);
+            
+            formDataToSend.append('description_en', formData.description_en);
+            formDataToSend.append('description_hi', formData.description_hi);
+            formDataToSend.append('description_mr', formData.description_mr);
+            
+            formDataToSend.append('highlights_en', formData.highlights_en);
+            formDataToSend.append('highlights_hi', formData.highlights_hi);
+            formDataToSend.append('highlights_mr', formData.highlights_mr);
+            
+            formDataToSend.append('origin_en', formData.origin_en);
+            formDataToSend.append('origin_hi', formData.origin_hi);
+            formDataToSend.append('origin_mr', formData.origin_mr);
+            
+            formDataToSend.append('shippingInfo_en', formData.shippingInfo_en);
+            formDataToSend.append('shippingInfo_hi', formData.shippingInfo_hi);
+            formDataToSend.append('shippingInfo_mr', formData.shippingInfo_mr);
+            
+            formDataToSend.append('longDescription_en', formData.longDescription_en);
+            formDataToSend.append('longDescription_hi', formData.longDescription_hi);
+            formDataToSend.append('longDescription_mr', formData.longDescription_mr);
+
             formDataToSend.append('category', formData.category);
 
             if (productImage) formDataToSend.append('image', productImage);
             if (removeImage) formDataToSend.append('removeImage', 'true');
 
-            formDataToSend.append('highlights', formData.highlights);
-            formDataToSend.append('longDescription', formData.longDescription);
-            formDataToSend.append('shippingInfo', formData.shippingInfo);
-            formDataToSend.append('origin', formData.origin);
             formDataToSend.append('rating', formData.rating);
             formDataToSend.append('weight', formData.weight);
             formDataToSend.append('length', formData.length);
@@ -213,7 +277,9 @@ export default function EditSellerProductPage() {
                 }
                 return {
                     id: v.id,
-                    name: v.name,
+                    name_en: v.name_en,
+                    name_hi: v.name_hi,
+                    name_mr: v.name_mr,
                     price: v.price,
                     stock: v.stock,
                     image: v.imageFile ? null : (v.image || null)
@@ -235,7 +301,7 @@ export default function EditSellerProductPage() {
     };
 
     const addVariant = () => {
-        setVariants([...variants, { id: Date.now().toString(), name: "", price: 0, stock: 0, imageFile: null, imagePreview: "" }]);
+        setVariants([...variants, { id: Date.now().toString(), name_en: "", name_hi: "", name_mr: "", price: 0, stock: 0, imageFile: null, imagePreview: "" }]);
     };
 
     const removeVariant = (id: string) => {
@@ -290,193 +356,228 @@ export default function EditSellerProductPage() {
             </div>
 
             <form onSubmit={handleSubmit} className="space-y-6">
-                <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
-                    <Card className="lg:col-span-2">
-                        <CardHeader>
-                            <CardTitle className="flex items-center gap-2">
-                                <Package className="w-5 h-5" />
-                                Basic Information
-                            </CardTitle>
-                        </CardHeader>
-                        <CardContent className="space-y-4">
-                            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                                <div className="space-y-2">
-                                    <Label htmlFor="name">Product Name *</Label>
-                                    <Input id="name" value={formData.name} onChange={(e) => setFormData({ ...formData, name: e.target.value })} className={errors.name ? "border-red-500" : ""} />
-                                    {errors.name && <p className="text-sm text-red-500">{errors.name}</p>}
-                                </div>
+                <Tabs value={language} onValueChange={(v) => setLanguage(v as Language)} className="w-full">
+                    <TabsList className="mb-6 grid w-full max-w-md grid-cols-3">
+                        <TabsTrigger value="en">English (EN)</TabsTrigger>
+                        <TabsTrigger value="hi">हिंदी (HI)</TabsTrigger>
+                        <TabsTrigger value="mr">मराठी (MR)</TabsTrigger>
+                    </TabsList>
 
-                                <div className="space-y-2">
-                                    <Label htmlFor="category">Category *</Label>
-                                    <Select value={formData.category} onValueChange={(value) => setFormData({ ...formData, category: value })}>
-                                        <SelectTrigger className={errors.category ? "border-red-500" : ""}>
-                                            <SelectValue placeholder="Select category" />
-                                        </SelectTrigger>
-                                        <SelectContent>
-                                            {categories.map((category) => (
-                                                <SelectItem key={category.id} value={category.id}>{category.name}</SelectItem>
-                                            ))}
-                                        </SelectContent>
-                                    </Select>
-                                    {errors.category && <p className="text-sm text-red-500">{errors.category}</p>}
-                                </div>
-                            </div>
+                    <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+                        <div className="lg:col-span-2 space-y-6">
+                            {["en", "hi", "mr"].map((lang) => (
+                                <TabsContent key={lang} value={lang} className="space-y-6 mt-0">
+                                    <Card>
+                                        <CardHeader>
+                                            <CardTitle className="flex items-center gap-2">
+                                                <Package className="w-5 h-5" />
+                                                Basic Information ({lang.toUpperCase()})
+                                            </CardTitle>
+                                        </CardHeader>
+                                        <CardContent className="space-y-4">
+                                            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                                                <div className="space-y-2">
+                                                    <Label htmlFor={`name_${lang}`}>Product Name ({lang.toUpperCase()}) *</Label>
+                                                    <Input 
+                                                        id={`name_${lang}`} 
+                                                        value={(formData as any)[`name_${lang}`]} 
+                                                        onChange={(e) => setFormData({ ...formData, [`name_${lang}`]: e.target.value })} 
+                                                        className={errors.name && lang === 'en' ? "border-red-500" : ""} 
+                                                        required={lang === 'en'}
+                                                    />
+                                                    {errors.name && lang === 'en' && <p className="text-sm text-red-500">{errors.name}</p>}
+                                                </div>
 
-                            <div className="space-y-2">
-                                <Label htmlFor="description">Description *</Label>
-                                <Textarea id="description" value={formData.description} onChange={(e) => setFormData({ ...formData, description: e.target.value })} rows={4} className={errors.description ? "border-red-500" : ""} />
-                                {errors.description && <p className="text-sm text-red-500">{errors.description}</p>}
-                            </div>
+                                                <div className="space-y-2">
+                                                    <Label htmlFor="category">Category *</Label>
+                                                    <Select value={formData.category} onValueChange={(value) => setFormData({ ...formData, category: value })}>
+                                                        <SelectTrigger className={errors.category ? "border-red-500" : ""}>
+                                                            <SelectValue placeholder="Select category" />
+                                                        </SelectTrigger>
+                                                        <SelectContent>
+                                                            {categories.map((category) => (
+                                                                <SelectItem key={category.id} value={category.id}>{category.name}</SelectItem>
+                                                            ))}
+                                                        </SelectContent>
+                                                    </Select>
+                                                    {errors.category && <p className="text-sm text-red-500">{errors.category}</p>}
+                                                </div>
+                                            </div>
 
-                            <div className="space-y-2">
-                                <Label>Product Image</Label>
-                                <div className="flex items-center gap-4">
-                                    {productImagePreview ? (
-                                        <div className="relative">
-                                            <img src={productImagePreview} alt="Preview" className="w-24 h-24 object-cover rounded-lg border" />
-                                            <Button type="button" variant="destructive" size="icon" className="absolute -top-2 -right-2 h-6 w-6" onClick={removeProductImageAction}>
-                                                <X className="w-3 h-3" />
-                                            </Button>
-                                        </div>
-                                    ) : (
-                                        <div className="w-24 h-24 border-2 border-dashed border-input rounded-lg flex items-center justify-center">
-                                            <ImageIcon className="w-8 h-8 text-muted-foreground" />
-                                        </div>
-                                    )}
-                                    <div className="flex-1">
-                                        <Input type="file" accept="image/*" onChange={handleProductImageChange} className="cursor-pointer" />
-                                        <p className="text-[10px] font-semibold text-primary mt-1">Recommended: 800x800 px (Square)</p>
-                                        <p className="text-xs text-slate-500 mt-0.5">JPG, PNG, GIF up to 5MB</p>
-                                    </div>
-                                </div>
-                            </div>
+                                            <div className="space-y-2">
+                                                <Label htmlFor={`description_${lang}`}>Description ({lang.toUpperCase()}) *</Label>
+                                                <Textarea 
+                                                    id={`description_${lang}`} 
+                                                    value={(formData as any)[`description_${lang}`]} 
+                                                    onChange={(e) => setFormData({ ...formData, [`description_${lang}`]: e.target.value })} 
+                                                    rows={4} 
+                                                    className={errors.description && lang === 'en' ? "border-red-500" : ""} 
+                                                    required={lang === 'en'}
+                                                />
+                                                {errors.description && lang === 'en' && <p className="text-sm text-red-500">{errors.description}</p>}
+                                            </div>
 
-                            <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-                                <div className="space-y-2">
-                                    <Label htmlFor="origin">Origin</Label>
-                                    <Input id="origin" value={formData.origin} onChange={(e) => setFormData({ ...formData, origin: e.target.value })} />
-                                </div>
-                                <div className="space-y-2">
-                                    <Label htmlFor="shippingInfo">Shipping Label (UI)</Label>
-                                    <Input id="shippingInfo" value={formData.shippingInfo} onChange={(e) => setFormData({ ...formData, shippingInfo: e.target.value })} />
-                                </div>
-                                <div className="space-y-2">
-                                    <Label htmlFor="rating">Base Rating (1-5)</Label>
-                                    <Input
-                                        id="rating"
-                                        type="number"
-                                        step="0.1"
-                                        min="1"
-                                        max="5"
-                                        value={formData.rating}
-                                        onChange={(e) => setFormData({ ...formData, rating: e.target.value })}
-                                    />
-                                </div>
-                            </div>
+                                            <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                                                <div className="space-y-2">
+                                                    <Label htmlFor={`origin_${lang}`}>Origin ({lang.toUpperCase()})</Label>
+                                                    <Input id={`origin_${lang}`} value={(formData as any)[`origin_${lang}`]} onChange={(e) => setFormData({ ...formData, [`origin_${lang}`]: e.target.value })} />
+                                                </div>
+                                                <div className="space-y-2">
+                                                    <Label htmlFor={`shippingInfo_${lang}`}>Shipping Label ({lang.toUpperCase()})</Label>
+                                                    <Input id={`shippingInfo_${lang}`} value={(formData as any)[`shippingInfo_${lang}`]} onChange={(e) => setFormData({ ...formData, [`shippingInfo_${lang}`]: e.target.value })} />
+                                                </div>
+                                                <div className="space-y-2">
+                                                    <Label htmlFor="rating">Base Rating (1-5)</Label>
+                                                    <Input
+                                                        id="rating"
+                                                        type="number"
+                                                        step="0.1"
+                                                        min="1"
+                                                        max="5"
+                                                        value={formData.rating}
+                                                        onChange={(e) => setFormData({ ...formData, rating: e.target.value })}
+                                                    />
+                                                </div>
+                                            </div>
 
-                            <div className="bg-blue-50/50 dark:bg-blue-950/30 p-4 rounded-xl border border-blue-100 dark:border-blue-900 space-y-4">
-                                <div className="flex items-center gap-2 text-blue-700 dark:text-blue-300">
-                                    <Truck className="w-5 h-5" />
-                                    <h3 className="font-bold text-sm uppercase tracking-wider">Shiprocket Dimensions (Required)</h3>
-                                </div>
-                                <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+                                            <div className="space-y-2">
+                                                <Label htmlFor={`highlights_${lang}`}>Highlights ({lang.toUpperCase()})</Label>
+                                                <Textarea id={`highlights_${lang}`} value={(formData as any)[`highlights_${lang}`]} onChange={(e) => setFormData({ ...formData, [`highlights_${lang}`]: e.target.value })} rows={2} />
+                                            </div>
+                                            <div className="space-y-2">
+                                                <Label htmlFor={`longDescription_${lang}`}>Detailed Description ({lang.toUpperCase()})</Label>
+                                                <Textarea id={`longDescription_${lang}`} value={(formData as any)[`longDescription_${lang}`]} onChange={(e) => setFormData({ ...formData, [`longDescription_${lang}`]: e.target.value })} rows={6} />
+                                            </div>
+                                        </CardContent>
+                                    </Card>
+                                </TabsContent>
+                            ))}
+
+                            <Card>
+                                <CardHeader>
+                                    <CardTitle className="flex items-center gap-2">
+                                        <ImageIcon className="w-5 h-5" />
+                                        Media & Dimensions
+                                    </CardTitle>
+                                </CardHeader>
+                                <CardContent className="space-y-6">
                                     <div className="space-y-2">
-                                        <Label htmlFor="weight">Weight (kg) *</Label>
-                                        <Input id="weight" type="number" step="0.01" value={formData.weight} onChange={(e) => setFormData({ ...formData, weight: e.target.value })} placeholder="0.5" />
-                                    </div>
-                                    <div className="space-y-2">
-                                        <Label htmlFor="length">Length (cm) *</Label>
-                                        <Input id="length" type="number" value={formData.length} onChange={(e) => setFormData({ ...formData, length: e.target.value })} placeholder="10" />
-                                    </div>
-                                    <div className="space-y-2">
-                                        <Label htmlFor="width">Width (cm) *</Label>
-                                        <Input id="width" type="number" value={formData.width} onChange={(e) => setFormData({ ...formData, width: e.target.value })} placeholder="10" />
-                                    </div>
-                                    <div className="space-y-2">
-                                        <Label htmlFor="height">Height (cm) *</Label>
-                                        <Input id="height" type="number" value={formData.height} onChange={(e) => setFormData({ ...formData, height: e.target.value })} placeholder="10" />
-                                    </div>
-                                </div>
-                                <p className="text-[10px] text-blue-600/70 font-medium">Note: Exact dimensions help in accurate shipping charges.</p>
-                            </div>
-
-                            <div className="space-y-2">
-                                <Label htmlFor="highlights">Highlights</Label>
-                                <Textarea id="highlights" value={formData.highlights} onChange={(e) => setFormData({ ...formData, highlights: e.target.value })} rows={2} />
-                            </div>
-                            <div className="space-y-2">
-                                <Label htmlFor="longDescription">Detailed Description</Label>
-                                <Textarea id="longDescription" value={formData.longDescription} onChange={(e) => setFormData({ ...formData, longDescription: e.target.value })} rows={6} />
-                            </div>
-                        </CardContent>
-                    </Card>
-
-                    <div className="space-y-6">
-                        <Card>
-                            <CardHeader><CardTitle>Variants</CardTitle></CardHeader>
-                            <CardContent className="space-y-4">
-                                {variants.map((variant, index) => (
-                                    <div key={variant.id} className="p-4 border rounded-lg bg-card/50 space-y-4">
-                                        <div className="flex justify-between items-center">
-                                            <Label className="font-semibold">Variant {index + 1}</Label>
-                                            {variants.length > 1 && <Button type="button" variant="ghost" size="sm" onClick={() => removeVariant(variant.id)} className="h-6 w-6 text-red-500"><Trash2 className="w-3 h-3" /></Button>}
+                                        <Label>Product Image</Label>
+                                        <div className="flex items-center gap-4">
+                                            {productImagePreview ? (
+                                                <div className="relative">
+                                                    <img src={productImagePreview} alt="Preview" className="w-24 h-24 object-cover rounded-lg border" />
+                                                    <Button type="button" variant="destructive" size="icon" className="absolute -top-2 -right-2 h-6 w-6" onClick={removeProductImageAction}>
+                                                        <X className="w-3 h-3" />
+                                                    </Button>
+                                                </div>
+                                            ) : (
+                                                <div className="w-24 h-24 border-2 border-dashed border-input rounded-lg flex items-center justify-center">
+                                                    <ImageIcon className="w-8 h-8 text-muted-foreground" />
+                                                </div>
+                                            )}
+                                            <div className="flex-1">
+                                                <Input type="file" accept="image/*" onChange={handleProductImageChange} className="cursor-pointer" />
+                                                <p className="text-[10px] font-semibold text-primary mt-1">Recommended: 800x800 px (Square)</p>
+                                                <p className="text-xs text-slate-500 mt-0.5">JPG, PNG, GIF up to 5MB</p>
+                                            </div>
                                         </div>
-                                        <div className="space-y-2">
-                                            <Label>Variant Name *</Label>
-                                            <Input placeholder="e.g. Small, Red, 100ml" value={variant.name} onChange={(e) => updateVariant(variant.id, 'name', e.target.value)} />
-                                            {errors[`variant_name_${index}`] && <p className="text-xs text-red-500">{errors[`variant_name_${index}`]}</p>}
-                                        </div>
+                                    </div>
 
-                                        <div className="space-y-2">
-                                            <Label>Variant Image</Label>
-                                            <div className="flex items-center gap-3">
-                                                {variant.imagePreview ? (
-                                                    <div className="relative">
-                                                        <img src={variant.imagePreview} alt="Preview" className="w-16 h-16 object-cover rounded-md border" />
-                                                        <Button type="button" variant="destructive" size="icon" className="absolute -top-1 -right-1 h-5 w-5" onClick={() => removeVariantImage(variant.id)}>
-                                                            <X className="w-3 h-3" />
-                                                        </Button>
+                                    <div className="bg-blue-50/50 dark:bg-blue-950/30 p-4 rounded-xl border border-blue-100 dark:border-blue-900 space-y-4">
+                                        <div className="flex items-center gap-2 text-blue-700 dark:text-blue-300">
+                                            <Truck className="w-5 h-5" />
+                                            <h3 className="font-bold text-sm uppercase tracking-wider">Shiprocket Dimensions (Required)</h3>
+                                        </div>
+                                        <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+                                            <div className="space-y-2">
+                                                <Label htmlFor="weight">Weight (kg) *</Label>
+                                                <Input id="weight" type="number" step="0.01" value={formData.weight} onChange={(e) => setFormData({ ...formData, weight: e.target.value })} placeholder="0.5" />
+                                            </div>
+                                            <div className="space-y-2">
+                                                <Label htmlFor="length">Length (cm) *</Label>
+                                                <Input id="length" type="number" value={formData.length} onChange={(e) => setFormData({ ...formData, length: e.target.value })} placeholder="10" />
+                                            </div>
+                                            <div className="space-y-2">
+                                                <Label htmlFor="width">Width (cm) *</Label>
+                                                <Input id="width" type="number" value={formData.width} onChange={(e) => setFormData({ ...formData, width: e.target.value })} placeholder="10" />
+                                            </div>
+                                            <div className="space-y-2">
+                                                <Label htmlFor="height">Height (cm) *</Label>
+                                                <Input id="height" type="number" value={formData.height} onChange={(e) => setFormData({ ...formData, height: e.target.value })} placeholder="10" />
+                                            </div>
+                                        </div>
+                                    </div>
+                                </CardContent>
+                            </Card>
+                        </div>
+
+                        <div className="space-y-6">
+                            <Card>
+                                <CardHeader><CardTitle>Variants</CardTitle></CardHeader>
+                                <CardContent className="space-y-4">
+                                    {variants.map((variant, index) => (
+                                        <div key={variant.id} className="p-4 border rounded-lg bg-card/50 space-y-4">
+                                            <div className="flex justify-between items-center">
+                                                <Label className="font-semibold">Variant {index + 1}</Label>
+                                                {variants.length > 1 && <Button type="button" variant="ghost" size="sm" onClick={() => removeVariant(variant.id)} className="h-6 w-6 text-red-500"><Trash2 className="w-3 h-3" /></Button>}
+                                            </div>
+                                            <div className="space-y-2">
+                                                <Label>Variant Name ({language.toUpperCase()}) *</Label>
+                                                <Input 
+                                                    placeholder="e.g. Small, Red, 100ml" 
+                                                    value={(variant as any)[`name_${language}`]} 
+                                                    onChange={(e) => {
+                                                        const newVariants = [...variants];
+                                                        (newVariants[index] as any)[`name_${language}`] = e.target.value;
+                                                        setVariants(newVariants);
+                                                    }} 
+                                                />
+                                                {errors[`variant_name_${index}`] && language === 'en' && <p className="text-xs text-red-500">{errors[`variant_name_${index}`]}</p>}
+                                            </div>
+
+                                            <div className="space-y-2">
+                                                <Label>Variant Image</Label>
+                                                <div className="flex items-center gap-3">
+                                                    {variant.imagePreview ? (
+                                                        <div className="relative">
+                                                            <img src={variant.imagePreview} alt="Preview" className="w-16 h-16 object-cover rounded-md border" />
+                                                            <Button type="button" variant="destructive" size="icon" className="absolute -top-1 -right-1 h-5 w-5" onClick={() => removeVariantImage(variant.id)}>
+                                                                <X className="w-3 h-3" />
+                                                            </Button>
+                                                        </div>
+                                                    ) : (
+                                                        <div className="w-16 h-16 border-2 border-dashed border-input rounded-md flex items-center justify-center">
+                                                            <ImageIcon className="w-6 h-6 text-muted-foreground" />
+                                                        </div>
+                                                    )}
+                                                    <div className="flex-1">
+                                                        <Input type="file" accept="image/*" onChange={(e) => handleVariantImageChange(variant.id, e)} className="cursor-pointer text-xs" />
                                                     </div>
-                                                ) : (
-                                                    <div className="w-16 h-16 border-2 border-dashed border-input rounded-md flex items-center justify-center">
-                                                        <ImageIcon className="w-6 h-6 text-muted-foreground" />
-                                                    </div>
-                                                )}
-                                                <div className="flex-1">
-                                                    <Input type="file" accept="image/*" onChange={(e) => handleVariantImageChange(variant.id, e)} className="cursor-pointer text-xs" />
-                                                    <p className="text-[10px] font-semibold text-primary mt-0.5">Recommended: 800x800 px</p>
-                                                    <p className="text-[10px] text-muted-foreground mt-0.5">Max 5MB</p>
+                                                </div>
+                                            </div>
+
+                                            <div className="grid grid-cols-2 gap-2">
+                                                <div className="space-y-2">
+                                                    <Label>Selling Price (₹) *</Label>
+                                                    <Input type="number" step="0.01" placeholder="0.00" value={variant.price || ''} onChange={(e) => updateVariant(variant.id, 'price', e.target.value)} />
+                                                    {errors[`variant_price_${index}`] && <p className="text-xs text-red-500">{errors[`variant_price_${index}`]}</p>}
+                                                </div>
+                                                <div className="space-y-2">
+                                                    <Label>Stock Quantity *</Label>
+                                                    <Input type="number" placeholder="0" value={variant.stock || ''} onChange={(e) => updateVariant(variant.id, 'stock', e.target.value)} />
+                                                    {errors[`variant_stock_${index}`] && <p className="text-xs text-red-500">{errors[`variant_stock_${index}`]}</p>}
                                                 </div>
                                             </div>
                                         </div>
-
-                                        <div className="grid grid-cols-2 gap-2">
-                                            <div className="space-y-2">
-                                                <Label>Selling Price (₹) *</Label>
-                                                <Input type="number" step="0.01" placeholder="0.00" value={variant.price || ''} onChange={(e) => updateVariant(variant.id, 'price', e.target.value)} />
-                                                {errors[`variant_price_${index}`] && <p className="text-xs text-red-500">{errors[`variant_price_${index}`]}</p>}
-                                            </div>
-                                            {/* <div className="space-y-2">
-                                                <Label>Cost Price (₹)</Label>
-                                                <Input type="number" step="0.01" placeholder="0.00" value={variant.costPrice || ''} onChange={(e) => updateVariant(variant.id, 'costPrice', e.target.value)} />
-                                            </div> */}
-                                        </div>
-
-
-                                        <div className="space-y-2">
-                                            <Label>Stock Quantity *</Label>
-                                            <Input type="number" placeholder="0" value={variant.stock || ''} onChange={(e) => updateVariant(variant.id, 'stock', e.target.value)} />
-                                            {errors[`variant_stock_${index}`] && <p className="text-xs text-red-500">{errors[`variant_stock_${index}`]}</p>}
-                                        </div>
-                                    </div>
-                                ))}
-                                {errors.variants && <p className="text-sm text-red-500">{errors.variants}</p>}
-                                <Button type="button" variant="outline" size="sm" onClick={addVariant} className="w-full"><Plus className="w-4 h-4 mr-2" /> Add Variant</Button>
-                            </CardContent>
-                        </Card>
-                        <Button type="submit" disabled={isSubmitting} className="w-full bg-primary">{isSubmitting ? "Updating..." : "Update Product"}</Button>
+                                    ))}
+                                    <Button type="button" variant="outline" size="sm" onClick={addVariant} className="w-full"><Plus className="w-4 h-4 mr-2" /> Add Variant</Button>
+                                </CardContent>
+                            </Card>
+                            <Button type="submit" disabled={isSubmitting} className="w-full bg-primary h-12 text-lg">{isSubmitting ? "Updating..." : "Update Product"}</Button>
+                        </div>
                     </div>
-                </div>
+                </Tabs>
             </form>
         </div>
     );

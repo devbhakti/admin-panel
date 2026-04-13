@@ -411,10 +411,10 @@ export const getProductById = async (req: Request, res: Response) => {
       });
     }
 
-    // DO NOT localize data here, admin needs the RAW json to edit all languages!
+    const lang = getLang(req);
     res.status(200).json({
       success: true,
-      data: product
+      data: lang === 'raw' ? product : localize(product, lang)
     });
   } catch (error) {
     console.error("Get Product Error:", error);

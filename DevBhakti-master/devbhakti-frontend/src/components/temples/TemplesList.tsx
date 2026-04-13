@@ -158,7 +158,11 @@ export function TemplesList() {
     e.stopPropagation();
 
     if (!user) {
-      router.push("/auth");
+      toast({
+        title: "Please Login",
+        description: "You need to login as a devotee to add favourites.",
+        variant: "destructive",
+      });
       return;
     }
 
@@ -167,11 +171,11 @@ export function TemplesList() {
       if (isFav) {
         await removeFavorite({ templeId });
         setFavorites(favorites.filter((f) => f.templeId !== templeId));
-        toast({ title: t('marketplace.cart.removed') });
+        toast({ title: "Removed from Favourites", description: "Temple removed from your favourites.", variant: "success" });
       } else {
         await addFavorite({ templeId });
         setFavorites([...favorites, { templeId }]);
-        toast({ title: t('marketplace.cart.added') });
+        toast({ title: "❤️ Added to Favourites", description: "Temple added to your favourites!", variant: "success" });
       }
     } catch (error: any) {
       toast({

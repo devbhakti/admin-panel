@@ -249,20 +249,30 @@ export default function MarketplaceClient() {
   }, [searchQuery, filteredProducts, products]);
 
   const toggleFavorite = async (id: string) => {
+    const savedUser = localStorage.getItem("user");
+    if (!savedUser) {
+      toast({
+        title: "Please Login",
+        description: "You need to login as a devotee to add favourites.",
+        variant: "destructive",
+      });
+      return;
+    }
+
     const isFav = favorites.includes(id);
     setFavorites((prev) => isFav ? prev.filter((f) => f !== id) : [...prev, id]);
     try {
-            if (isFav) {
-                await removeFavorite({ productId: id });
-                toast({ title: t('marketplace.cart.removed'), variant: "destructive" });
-            } else {
-                await addFavorite({ productId: id });
-                toast({ title: t('marketplace.cart.added'), variant: "success" });
-            }
-        } catch (error) {
-            setFavorites((prev) => isFav ? [...prev, id] : prev.filter((f) => f !== id));
-            toast({ title: t('marketplace.cart.failed'), variant: "destructive" });
-        }
+      if (isFav) {
+        await removeFavorite({ productId: id });
+        toast({ title: "Removed from Favourites", description: "Product removed from your favourites.", variant: "success" });
+      } else {
+        await addFavorite({ productId: id });
+        toast({ title: "❤️ Added to Favourites", description: "Product added to your favourites!", variant: "success" });
+      }
+    } catch (error) {
+      setFavorites((prev) => isFav ? [...prev, id] : prev.filter((f) => f !== id));
+      toast({ title: t('marketplace.cart.failed'), variant: "destructive" });
+    }
   };
 
   const addToCart = (product: Product) => {

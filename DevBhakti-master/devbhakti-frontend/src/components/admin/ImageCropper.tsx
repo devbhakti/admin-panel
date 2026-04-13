@@ -110,9 +110,6 @@ export function ImageCropper({
                         <div className="hidden md:flex items-center gap-2 px-4 py-2 bg-emerald-50 rounded-full border border-emerald-100 text-emerald-700 text-[10px] font-black uppercase tracking-widest">
                             <MousePointer2 className="w-3.5 h-3.5" /> {t("image_cropper.corners_active")}
                         </div>
-                        <Button variant="ghost" size="icon" onClick={onCancel} className="h-10 w-10 rounded-full border border-slate-100 bg-[#FDFCFB] text-slate-400 hover:text-red-500 hover:bg-red-50">
-                            <X className="w-5 h-5" />
-                        </Button>
                     </div>
                 </DialogHeader>
 

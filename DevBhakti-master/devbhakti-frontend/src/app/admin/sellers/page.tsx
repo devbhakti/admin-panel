@@ -35,10 +35,11 @@ import {
 import { Badge } from "@/components/ui/badge";
 import { useToast } from "@/hooks/use-toast";
 import {
-    fetchAllSellersAdmin,
     deleteSellerAdmin,
-    toggleSellerStatusAdmin
+    toggleSellerStatusAdmin,
+    fetchAllSellersAdmin
 } from "@/api/adminController";
+import { parseLocalizedValue } from "@/utils/textUtils";
 
 export default function SellersManagementPage() {
     const router = useRouter();
@@ -57,7 +58,12 @@ export default function SellersManagementPage() {
         setIsLoading(true);
         try {
             const data = await fetchAllSellersAdmin();
-            setSellers(data || []);
+            const localizedSellers = (data || []).map((s: any) => ({
+                ...s,
+                storeName: parseLocalizedValue(s.storeName),
+                address: parseLocalizedValue(s.address)
+            }));
+            setSellers(localizedSellers);
         } catch (error: any) {
             console.error("Load Sellers Error:", error);
             toast({

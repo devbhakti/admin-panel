@@ -4,7 +4,7 @@ import { API_URL } from "@/config/apiConfig";
 // Temple Pooja Management
 export const fetchMyPoojas = async () => {
     const token = localStorage.getItem("token");
-    const response = await axios.get(`${API_URL}/temple-admin/poojas`, {
+    const response = await axios.get(`${API_URL}/temple-admin/poojas?lang=raw`, {
         headers: { Authorization: `Bearer ${token}` }
     });
     return response.data;
@@ -51,7 +51,7 @@ export const togglePoojaStatus = async (id: string) => {
 // Temple Event Management
 export const fetchMyEvents = async () => {
     const token = localStorage.getItem("token");
-    const response = await axios.get(`${API_URL}/temple-admin/events`, {
+    const response = await axios.get(`${API_URL}/temple-admin/events?lang=raw`, {
         headers: { Authorization: `Bearer ${token}` }
     });
     return response.data;
@@ -107,7 +107,7 @@ export const fetchAllPoojasPublic = async () => {
 // Temple Profile Management
 export const fetchMyTempleProfile = async () => {
     const token = localStorage.getItem("token");
-    const url = `${API_URL}/temple-admin/temples/profile`;
+    const url = `${API_URL}/temple-admin/temples/profile?lang=raw`;
     console.log(`GET: ${url}`);
     const response = await axios.get(url, {
         headers: { Authorization: `Bearer ${token}` }
@@ -218,7 +218,7 @@ export const requestWithdrawal = async (data: { templeId: string; amount: number
 // Temple Product Management
 export const fetchMyProducts = async (params: any = {}) => {
     const token = localStorage.getItem("token");
-    const response = await axios.get(`${API_URL}/temple-admin/products`, {
+    const response = await axios.get(`${API_URL}/temple-admin/products?lang=raw`, {
         headers: { Authorization: `Bearer ${token}` },
         params
     });
@@ -227,7 +227,7 @@ export const fetchMyProducts = async (params: any = {}) => {
 
 export const fetchMyProductById = async (id: string) => {
     const token = localStorage.getItem("token");
-    const response = await axios.get(`${API_URL}/temple-admin/products/${id}`, {
+    const response = await axios.get(`${API_URL}/temple-admin/products/${id}?lang=raw`, {
         headers: { Authorization: `Bearer ${token}` }
     });
     return response.data;

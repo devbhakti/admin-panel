@@ -51,6 +51,8 @@ export const searchGlobal = async (req: Request, res: Response) => {
                     name: true,
                     image: true,
                     category: true,
+                    isMaster: true,
+                    masterPoojaId: true,
                     temple: {
                         select: { name: true }
                     }
@@ -84,6 +86,21 @@ export const searchGlobal = async (req: Request, res: Response) => {
         const locPoojas = localize(poojas, lang);
         const locProducts = localize(products, lang);
 
+        // Deduplicate Poojas by name, preferring Master poojas
+        const uniquePoojasMap = new Map();
+        (locPoojas as any[]).forEach((p: any) => {
+            const key = (p.name || '').toLowerCase().trim();
+            if (!key) return;
+            const existing = uniquePoojasMap.get(key);
+            const isBetter = !existing || 
+                             (p.isMaster && !existing.isMaster) || 
+                             (!p.masterPoojaId && existing.masterPoojaId && !p.isMaster);
+            if (isBetter) {
+                uniquePoojasMap.set(key, p);
+            }
+        });
+        const deduplicatedPoojas = Array.from(uniquePoojasMap.values());
+
         let unifiedResults = [
             ...(locTemples as any[]).map((t: any) => ({
                 id: t.id,
@@ -93,7 +110,7 @@ export const searchGlobal = async (req: Request, res: Response) => {
                 image: t.image,
                 type: t.category
             })),
-            ...(locPoojas as any[]).map(p => ({
+            ...(deduplicatedPoojas as any[]).map((p: any) => ({
                 id: p.id,
                 title: p.name,
                 category: "Pooja" as const,
@@ -101,7 +118,7 @@ export const searchGlobal = async (req: Request, res: Response) => {
                 image: p.image,
                 type: p.category
             })),
-            ...(locProducts as any[]).map(p => ({
+            ...(locProducts as any[]).map((p: any) => ({
                 id: p.id,
                 title: p.name,
                 category: "Product" as const,

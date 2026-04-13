@@ -106,7 +106,11 @@ export default function AvailabilityManager() {
             });
 
             if (res.success) {
-                toast({ title: "Availability Updated", description: "Changes have been saved successfully." });
+                toast({ 
+                    title: "Availability Updated", 
+                    description: "Changes have been saved successfully.",
+                    variant: "success"
+                });
                 setIsDialogOpen(false);
                 fetchAvailability(month); // Refresh
             } else {

@@ -16,6 +16,7 @@ import { cn } from "@/lib/utils";
 import Link from "next/link";
 import { onMessage } from "firebase/messaging";
 import { getFirebaseMessaging } from "@/lib/firebase";
+import { parseLocalizedValue } from "@/utils/textUtils";
 
 interface Notification {
     id: string;
@@ -168,9 +169,9 @@ export function NotificationBell({ userId, userType }: NotificationBellProps) {
                                         <p className={cn(
                                             "text-xs leading-none",
                                             !n.isRead ? "font-bold text-foreground" : "font-medium text-foreground/70"
-                                        )}>{n.title}</p>
+                                        )}>{parseLocalizedValue(n.title)}</p>
                                         <p className="text-[11px] text-muted-foreground line-clamp-2 leading-relaxed">
-                                            {n.body}
+                                            {parseLocalizedValue(n.body)}
                                         </p>
                                         <div className="flex items-center gap-2 pt-0.5">
                                             <Clock className="w-3 h-3 text-muted-foreground/50" />

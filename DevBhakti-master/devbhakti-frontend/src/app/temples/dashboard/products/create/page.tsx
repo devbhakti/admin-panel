@@ -18,6 +18,7 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import { Label } from "@/components/ui/label";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import {
     Select,
     SelectContent,
@@ -39,7 +40,9 @@ import { ImageCropper } from "@/components/admin/ImageCropper";
 
 interface Variant {
     id: string;
-    name: string;
+    name_en: string;
+    name_hi: string;
+    name_mr: string;
     price: number;
     costPrice?: number;
     stock: number;
@@ -64,12 +67,16 @@ export default function CreateTempleProductPage() {
     const [croppingTarget, setCroppingTarget] = useState<{ type: 'product' | 'variant', id?: string } | null>(null);
 
     const [formData, setFormData] = useState({
-        name: "",
-        description: "",
+        name_en: "",
+        name_hi: "",
+        name_mr: "",
+        description_en: "",
+        description_hi: "",
+        description_mr: "",
         category: "",
-        // templeId is automatic
-        // status is automatic (pending)
-        highlights: "",
+        highlights_en: "",
+        highlights_hi: "",
+        highlights_mr: "",
         longDescription: "",
         shippingInfo: "Ships in 24-48 Hours",
         origin: "India",
@@ -81,7 +88,7 @@ export default function CreateTempleProductPage() {
     });
 
     const [variants, setVariants] = useState<Variant[]>([
-        { id: "1", name: "", price: 0, costPrice: 0, stock: 0, imageFile: null, imagePreview: "" }
+        { id: "1", name_en: "", name_hi: "", name_mr: "", price: 0, costPrice: 0, stock: 0, imageFile: null, imagePreview: "" }
     ]);
 
     const [errors, setErrors] = useState<Record<string, string>>({});
@@ -161,15 +168,15 @@ export default function CreateTempleProductPage() {
 
     const validateForm = () => {
         const newErrors: Record<string, string> = {};
-        if (!formData.name.trim()) newErrors.name = "Product name is required";
-        if (!formData.description.trim()) newErrors.description = "Description is required";
+        if (!formData.name_en.trim()) newErrors.name = "Product name (English) is required";
+        if (!formData.description_en.trim()) newErrors.description = "Description (English) is required";
         if (!formData.category) newErrors.category = "Category is required";
 
-        const validVariants = variants.filter(v => v.name.trim() && v.price > 0);
+        const validVariants = variants.filter(v => v.name_en.trim() && v.price > 0);
         if (validVariants.length === 0) newErrors.variants = "At least one valid variant is required";
 
         validVariants.forEach((variant, index) => {
-            if (!variant.name.trim()) newErrors[`variant_name_${index}`] = "Variant name is required";
+            if (!variant.name_en.trim()) newErrors[`variant_name_${index}`] = "Variant name is required";
             if (variant.price <= 0) newErrors[`variant_price_${index}`] = "Price must be greater than 0";
             if (variant.stock < 0) newErrors[`variant_stock_${index}`] = "Stock cannot be negative";
         });
@@ -188,17 +195,25 @@ export default function CreateTempleProductPage() {
         setIsSubmitting(true);
 
         try {
-            const validVariants = variants.filter(v => v.name.trim() && v.price > 0);
+            const validVariants = variants.filter(v => v.name_en.trim() && v.price > 0);
             const formDataToSend = new FormData();
 
-            formDataToSend.append('name', formData.name);
-            formDataToSend.append('description', formData.description);
+            formDataToSend.append('name_en', formData.name_en);
+            formDataToSend.append('name_hi', formData.name_hi);
+            formDataToSend.append('name_mr', formData.name_mr);
+
+            formDataToSend.append('description_en', formData.description_en);
+            formDataToSend.append('description_hi', formData.description_hi);
+            formDataToSend.append('description_mr', formData.description_mr);
+
             formDataToSend.append('category', formData.category);
-            // Status is automatically pending on backend for create
 
             if (productImage) formDataToSend.append('image', productImage);
 
-            formDataToSend.append('highlights', formData.highlights);
+            formDataToSend.append('highlights_en', formData.highlights_en);
+            formDataToSend.append('highlights_hi', formData.highlights_hi);
+            formDataToSend.append('highlights_mr', formData.highlights_mr);
+
             formDataToSend.append('longDescription', formData.longDescription);
             formDataToSend.append('shippingInfo', formData.shippingInfo);
             formDataToSend.append('origin', formData.origin);
@@ -214,7 +229,9 @@ export default function CreateTempleProductPage() {
                     formDataToSend.append(`variant_image_${index}`, v.imageFile);
                 }
                 return {
-                    name: v.name,
+                    name_en: v.name_en,
+                    name_hi: v.name_hi,
+                    name_mr: v.name_mr,
                     price: v.price,
                     costPrice: v.costPrice || null,
                     stock: v.stock,
@@ -237,7 +254,7 @@ export default function CreateTempleProductPage() {
     };
 
     const addVariant = () => {
-        setVariants([...variants, { id: Date.now().toString(), name: "", price: 0, costPrice: 0, stock: 0, imageFile: null, imagePreview: "" }]);
+        setVariants([...variants, { id: Date.now().toString(), name_en: "", name_hi: "", name_mr: "", price: 0, costPrice: 0, stock: 0, imageFile: null, imagePreview: "" }]);
     };
 
     const removeVariant = (id: string) => {
@@ -283,198 +300,232 @@ export default function CreateTempleProductPage() {
             </div>
 
             <form onSubmit={handleSubmit} className="space-y-6">
-                <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
-                    <Card className="lg:col-span-2">
-                        <CardHeader>
-                            <CardTitle className="flex items-center gap-2">
-                                <Package className="w-5 h-5" />
-                                Basic Information
-                            </CardTitle>
-                        </CardHeader>
-                        <CardContent className="space-y-4">
-                            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                                <div className="space-y-2">
-                                    <Label htmlFor="name">Product Name *</Label>
-                                    <Input id="name" value={formData.name} onChange={(e) => setFormData({ ...formData, name: e.target.value })} placeholder="Enter product name" className={cn("placeholder:text-muted-foreground/50", errors.name ? "border-red-500" : "")} />
-                                    {errors.name && <p className="text-sm text-red-500">{errors.name}</p>}
-                                </div>
+                <Tabs defaultValue="en" className="w-full">
+                    <TabsList className="grid w-full grid-cols-3 mb-6 bg-slate-100 p-1 rounded-xl">
+                        <TabsTrigger value="en" className="rounded-lg data-[state=active]:bg-white data-[state=active]:shadow-sm">English</TabsTrigger>
+                        <TabsTrigger value="hi" className="rounded-lg data-[state=active]:bg-white data-[state=active]:shadow-sm">हिन्दी</TabsTrigger>
+                        <TabsTrigger value="mr" className="rounded-lg data-[state=active]:bg-white data-[state=active]:shadow-sm">मराठी</TabsTrigger>
+                    </TabsList>
 
-                                <div className="space-y-2">
-                                    <Label htmlFor="category">Category *</Label>
-                                    <Select value={formData.category} onValueChange={(value) => setFormData({ ...formData, category: value })}>
-                                        <SelectTrigger className={errors.category ? "border-red-500" : ""}>
-                                            <SelectValue placeholder="Select category" />
-                                        </SelectTrigger>
-                                        <SelectContent>
-                                            {categories.map((category) => (
-                                                <SelectItem key={category.id} value={category.id}>{category.name}</SelectItem>
-                                            ))}
-                                        </SelectContent>
-                                    </Select>
-                                    {errors.category && <p className="text-sm text-red-500">{errors.category}</p>}
-                                </div>
-                            </div>
+                    <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+                        <div className="lg:col-span-2 space-y-6">
+                            {['en', 'hi', 'mr'].map((lang) => (
+                                <TabsContent key={lang} value={lang} className="space-y-6 mt-0 animate-in fade-in-50 duration-300 outline-none">
+                                    <Card>
+                                        <CardHeader>
+                                            <CardTitle className="flex items-center gap-2 text-[#7b4623]">
+                                                <Package className="w-5 h-5" />
+                                                Product Details ({lang.toUpperCase()})
+                                            </CardTitle>
+                                        </CardHeader>
+                                        <CardContent className="space-y-4">
+                                            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                                                <div className="space-y-2">
+                                                    <Label htmlFor={`name_${lang}`}>Product Name * ({lang.toUpperCase()})</Label>
+                                                    <Input
+                                                        id={`name_${lang}`}
+                                                        value={(formData as any)[`name_${lang}`]}
+                                                        onChange={(e) => setFormData({ ...formData, [`name_${lang}`]: e.target.value })}
+                                                        placeholder="Enter product name"
+                                                        className={cn("placeholder:text-muted-foreground/50", lang === 'en' && errors.name ? "border-red-500" : "")}
+                                                        required={lang === 'en'}
+                                                    />
+                                                </div>
 
-                            <div className="space-y-2">
-                                <Label htmlFor="description">Description *</Label>
-                                <Textarea id="description" value={formData.description} onChange={(e) => setFormData({ ...formData, description: e.target.value })} placeholder="Enter product description" rows={4} className={cn("placeholder:text-muted-foreground/50", errors.description ? "border-red-500" : "")} />
-                                {errors.description && <p className="text-sm text-red-500">{errors.description}</p>}
-                            </div>
-
-                            <div className="space-y-2">
-                                <Label>Product Image</Label>
-                                <div className="flex items-center gap-4">
-                                    {productImagePreview ? (
-                                        <div className="relative">
-                                            <img src={productImagePreview} alt="Preview" className="w-24 h-24 object-cover rounded-lg border" />
-                                            <Button type="button" variant="destructive" size="icon" className="absolute -top-2 -right-2 h-6 w-6" onClick={removeProductImage}>
-                                                <X className="w-3 h-3" />
-                                            </Button>
-                                        </div>
-                                    ) : (
-                                        <div className="w-24 h-24 border-2 border-dashed border-input rounded-lg flex items-center justify-center">
-                                            <ImageIcon className="w-8 h-8 text-muted-foreground" />
-                                        </div>
-                                    )}
-                                    <div className="flex-1">
-                                        <Input type="file" accept="image/*" onChange={handleProductImageChange} className="cursor-pointer" />
-                                        <p className="text-[10px] font-semibold text-primary mt-1">Recommended: 800x800 px (Square)</p>
-                                        <p className="text-[10px] text-muted-foreground">JPG, PNG, GIF up to 5MB</p>
-                                    </div>
-                                </div>
-                            </div>
-
-                            <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-                                <div className="space-y-2">
-                                    <Label htmlFor="origin">Origin</Label>
-                                    <Input id="origin" value={formData.origin} onChange={(e) => setFormData({ ...formData, origin: e.target.value })} />
-                                </div>
-                                <div className="space-y-2">
-                                    <Label htmlFor="shippingInfo">Shipping Label (UI)</Label>
-                                    <Input id="shippingInfo" value={formData.shippingInfo} onChange={(e) => setFormData({ ...formData, shippingInfo: e.target.value })} />
-                                </div>
-                                <div className="space-y-2">
-                                    <Label htmlFor="rating">Base Rating (1-5)</Label>
-                                    <Input
-                                        id="rating"
-                                        type="number"
-                                        step="0.1"
-                                        min="1"
-                                        max="5"
-                                        value={formData.rating}
-                                        onChange={(e) => setFormData({ ...formData, rating: e.target.value })}
-                                    />
-                                </div>
-                            </div>
-
-                            <div className="bg-blue-50/50 dark:bg-blue-950/30 p-4 rounded-xl border border-blue-100 dark:border-blue-900 space-y-4">
-                                <div className="flex items-center gap-2 text-blue-700 dark:text-blue-300">
-                                    <Truck className="w-5 h-5" />
-                                    <h3 className="font-bold text-sm uppercase tracking-wider">Shiprocket Dimensions (Required)</h3>
-                                </div>
-                                <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
-                                    <div className="space-y-2">
-                                        <Label htmlFor="weight">Weight (kg) *</Label>
-                                        <Input id="weight" type="number" step="0.01" value={formData.weight} onChange={(e) => setFormData({ ...formData, weight: e.target.value })} placeholder="0.5" className="placeholder:text-muted-foreground/50" />
-                                    </div>
-                                    <div className="space-y-2">
-                                        <Label htmlFor="length">Length (cm) *</Label>
-                                        <Input id="length" type="number" value={formData.length} onChange={(e) => setFormData({ ...formData, length: e.target.value })} placeholder="10" className="placeholder:text-muted-foreground/50" />
-                                    </div>
-                                    <div className="space-y-2">
-                                        <Label htmlFor="width">Width (cm) *</Label>
-                                        <Input id="width" type="number" value={formData.width} onChange={(e) => setFormData({ ...formData, width: e.target.value })} placeholder="10" className="placeholder:text-muted-foreground/50" />
-                                    </div>
-                                    <div className="space-y-2">
-                                        <Label htmlFor="height">Height (cm) *</Label>
-                                        <Input id="height" type="number" value={formData.height} onChange={(e) => setFormData({ ...formData, height: e.target.value })} placeholder="10" className="placeholder:text-muted-foreground/50" />
-                                    </div>
-                                </div>
-                                <p className="text-[10px] text-blue-600/70 font-medium">Note: Exact dimensions help in accurate shipping charges.</p>
-                            </div>
-
-                            <div className="space-y-2">
-                                <Label htmlFor="highlights">Highlights</Label>
-                                <Textarea id="highlights" value={formData.highlights} onChange={(e) => setFormData({ ...formData, highlights: e.target.value })} rows={2} />
-                            </div>
-                            {/* <div className="space-y-2">
-                                <Label htmlFor="longDescription">Detailed Description</Label>
-                                <Textarea id="longDescription" value={formData.longDescription} onChange={(e) => setFormData({ ...formData, longDescription: e.target.value })} rows={6} />
-                            </div> */}
-                        </CardContent>
-                    </Card>
-
-                    <div className="space-y-6">
-                        <Card>
-                            <CardHeader><CardTitle>Variants</CardTitle></CardHeader>
-                            <CardContent className="space-y-4">
-                                {variants.map((variant, index) => (
-                                    <div key={variant.id} className="p-4 border rounded-lg bg-card/50 space-y-3">
-                                        <div className="flex justify-between items-center">
-                                            <Label className="font-semibold">Variant {index + 1}</Label>
-                                            {variants.length > 1 && <Button type="button" variant="ghost" size="sm" onClick={() => removeVariant(variant.id)} className="h-6 w-6 text-red-500"><Trash2 className="w-3 h-3" /></Button>}
-                                        </div>
-
-                                        <div className="space-y-2">
-                                            <Label>Variant Name *</Label>
-                                            <Input placeholder="e.g. Small, Red, 100ml" value={variant.name} onChange={(e) => updateVariant(variant.id, 'name', e.target.value)} className="placeholder:text-muted-foreground/50" />
-                                        </div>
-
-                                        <div className="space-y-2">
-                                            <Label>Variant Image</Label>
-                                            <div className="flex items-center gap-3">
-                                                {variant.imagePreview ? (
-                                                    <div className="relative">
-                                                        <img src={variant.imagePreview} alt="Preview" className="w-16 h-16 object-cover rounded-md border" />
-                                                        <Button type="button" variant="destructive" size="icon" className="absolute -top-1 -right-1 h-5 w-5" onClick={() => removeVariantImage(variant.id)}>
-                                                            <X className="w-3 h-3" />
-                                                        </Button>
-                                                    </div>
-                                                ) : (
-                                                    <div className="w-16 h-16 border-2 border-dashed border-input rounded-md flex items-center justify-center">
-                                                        <ImageIcon className="w-6 h-6 text-muted-foreground" />
+                                                {lang === 'en' && (
+                                                    <div className="space-y-2">
+                                                        <Label htmlFor="category">Category *</Label>
+                                                        <Select value={formData.category} onValueChange={(value) => setFormData({ ...formData, category: value })}>
+                                                            <SelectTrigger className={errors.category ? "border-red-500" : ""}>
+                                                                <SelectValue placeholder="Select category" />
+                                                            </SelectTrigger>
+                                                            <SelectContent>
+                                                                {categories.map((category) => (
+                                                                    <SelectItem key={category.id} value={category.id}>{category.name}</SelectItem>
+                                                                ))}
+                                                            </SelectContent>
+                                                        </Select>
+                                                        {errors.category && <p className="text-sm text-red-500">{errors.category}</p>}
                                                     </div>
                                                 )}
-                                                <div className="flex-1">
-                                                    <Input type="file" accept="image/*" onChange={(e) => handleVariantImageChange(variant.id, e)} className="cursor-pointer text-xs" />
-                                                    <p className="text-[10px] font-semibold text-primary mt-0.5">Recommended: 800x800 px</p>
-                                                    <p className="text-[10px] text-muted-foreground">Max 5MB</p>
+                                            </div>
+
+                                            <div className="space-y-2">
+                                                <Label htmlFor={`description_${lang}`}>Short Description * ({lang.toUpperCase()})</Label>
+                                                <Textarea
+                                                    id={`description_${lang}`}
+                                                    value={(formData as any)[`description_${lang}`]}
+                                                    onChange={(e) => setFormData({ ...formData, [`description_${lang}`]: e.target.value })}
+                                                    placeholder="Enter product description"
+                                                    rows={3}
+                                                    className={cn("placeholder:text-muted-foreground/50", lang === 'en' && errors.description ? "border-red-500" : "")}
+                                                    required={lang === 'en'}
+                                                />
+                                            </div>
+
+                                            <div className="space-y-2">
+                                                <Label htmlFor={`highlights_${lang}`}>Highlights ({lang.toUpperCase()})</Label>
+                                                <Textarea
+                                                    id={`highlights_${lang}`}
+                                                    value={(formData as any)[`highlights_${lang}`]}
+                                                    onChange={(e) => setFormData({ ...formData, [`highlights_${lang}`]: e.target.value })}
+                                                    placeholder="Key features..."
+                                                    rows={2}
+                                                />
+                                            </div>
+                                        </CardContent>
+                                    </Card>
+                                </TabsContent>
+                            ))}
+
+                            <Card>
+                                <CardHeader>
+                                    <CardTitle className="text-sm font-bold uppercase tracking-wider text-slate-500">Shared Settings</CardTitle>
+                                </CardHeader>
+                                <CardContent className="space-y-6">
+                                    <div className="space-y-2">
+                                        <Label>Product Cover Image</Label>
+                                        <div className="flex items-center gap-4">
+                                            {productImagePreview ? (
+                                                <div className="relative">
+                                                    <img src={productImagePreview} alt="Preview" className="w-24 h-24 object-cover rounded-lg border" />
+                                                    <Button type="button" variant="destructive" size="icon" className="absolute -top-2 -right-2 h-6 w-6" onClick={removeProductImage}>
+                                                        <X className="w-3 h-3" />
+                                                    </Button>
+                                                </div>
+                                            ) : (
+                                                <div className="w-24 h-24 border-2 border-dashed border-input rounded-lg flex items-center justify-center">
+                                                    <ImageIcon className="w-8 h-8 text-muted-foreground" />
+                                                </div>
+                                            )}
+                                            <div className="flex-1">
+                                                <Input type="file" accept="image/*" onChange={handleProductImageChange} className="cursor-pointer" />
+                                                <p className="text-[10px] font-semibold text-primary mt-1">Recommended: 800x800 px (Square)</p>
+                                            </div>
+                                        </div>
+                                    </div>
+
+                                    <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                                        <div className="space-y-2">
+                                            <Label htmlFor="origin">Origin</Label>
+                                            <Input id="origin" value={formData.origin} onChange={(e) => setFormData({ ...formData, origin: e.target.value })} />
+                                        </div>
+                                        <div className="space-y-2">
+                                            <Label htmlFor="rating">Base Rating (1-5)</Label>
+                                            <Input
+                                                id="rating"
+                                                type="number"
+                                                step="0.1"
+                                                min="1"
+                                                max="5"
+                                                value={formData.rating}
+                                                onChange={(e) => setFormData({ ...formData, rating: e.target.value })}
+                                            />
+                                        </div>
+                                    </div>
+
+                                    <div className="bg-orange-50/50 p-4 rounded-xl border border-orange-100 space-y-4">
+                                        <div className="flex items-center gap-2 text-[#7b4623]">
+                                            <Truck className="w-5 h-5" />
+                                            <h3 className="font-bold text-sm uppercase tracking-wider">Shipping Dimensions</h3>
+                                        </div>
+                                        <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+                                            <div className="space-y-2">
+                                                <Label htmlFor="weight">Weight (kg) *</Label>
+                                                <Input id="weight" type="number" step="0.01" value={formData.weight} onChange={(e) => setFormData({ ...formData, weight: e.target.value })} placeholder="0.5" />
+                                            </div>
+                                            <div className="space-y-2">
+                                                <Label htmlFor="length">Length (cm) *</Label>
+                                                <Input id="length" type="number" value={formData.length} onChange={(e) => setFormData({ ...formData, length: e.target.value })} placeholder="10" />
+                                            </div>
+                                            <div className="space-y-2">
+                                                <Label htmlFor="width">Width (cm) *</Label>
+                                                <Input id="width" type="number" value={formData.width} onChange={(e) => setFormData({ ...formData, width: e.target.value })} placeholder="10" />
+                                            </div>
+                                            <div className="space-y-2">
+                                                <Label htmlFor="height">Height (cm) *</Label>
+                                                <Input id="height" type="number" value={formData.height} onChange={(e) => setFormData({ ...formData, height: e.target.value })} placeholder="10" />
+                                            </div>
+                                        </div>
+                                    </div>
+                                </CardContent>
+                            </Card>
+                        </div>
+
+                        <div className="space-y-6">
+                            <Card>
+                                <CardHeader><CardTitle className="text-[#7b4623]">Product Variants</CardTitle></CardHeader>
+                                <CardContent className="space-y-6">
+                                    {variants.map((variant, index) => (
+                                        <div key={variant.id} className="p-5 border rounded-2xl bg-slate-50/50 space-y-4 relative group">
+                                            <div className="flex justify-between items-center">
+                                                <Label className="font-bold text-[#7b4623]">Variant {index + 1}</Label>
+                                                {variants.length > 1 && (
+                                                    <Button type="button" variant="ghost" size="sm" onClick={() => removeVariant(variant.id)} className="h-8 w-8 text-red-500 rounded-full hover:bg-red-50">
+                                                        <Trash2 className="w-4 h-4" />
+                                                    </Button>
+                                                )}
+                                            </div>
+
+                                            {['en', 'hi', 'mr'].map((lang) => (
+                                                <TabsContent key={lang} value={lang} className="mt-0">
+                                                    <div className="space-y-2">
+                                                        <Label className="text-[10px] font-bold uppercase text-slate-400">Variant Name ({lang.toUpperCase()}) *</Label>
+                                                        <Input
+                                                            placeholder="e.g. Small, Red, 100ml"
+                                                            value={(variant as any)[`name_${lang}`]}
+                                                            onChange={(e) => updateVariant(variant.id, `name_${lang}` as any, e.target.value)}
+                                                            className={cn("h-10 rounded-lg", lang === 'en' && errors[`variant_name_${index}`] ? "border-red-500" : "")}
+                                                            required={lang === 'en'}
+                                                        />
+                                                    </div>
+                                                </TabsContent>
+                                            ))}
+
+                                            <div className="space-y-2">
+                                                <Label className="text-[10px] font-bold uppercase text-slate-400">Variant Image</Label>
+                                                <div className="flex items-center gap-3">
+                                                    {variant.imagePreview ? (
+                                                        <div className="relative">
+                                                            <img src={variant.imagePreview} alt="Preview" className="w-16 h-16 object-cover rounded-md border" />
+                                                            <Button type="button" variant="destructive" size="icon" className="absolute -top-1 -right-1 h-5 w-5" onClick={() => removeVariantImage(variant.id)}>
+                                                                <X className="w-3 h-3" />
+                                                            </Button>
+                                                        </div>
+                                                    ) : (
+                                                        <div className="w-16 h-16 border-2 border-dashed border-input rounded-md flex items-center justify-center bg-white">
+                                                            <ImageIcon className="w-6 h-6 text-muted-foreground" />
+                                                        </div>
+                                                    )}
+                                                    <div className="flex-1">
+                                                        <Input type="file" accept="image/*" onChange={(e) => handleVariantImageChange(variant.id, e)} className="cursor-pointer text-xs h-9" />
+                                                    </div>
+                                                </div>
+                                            </div>
+
+                                            <div className="grid grid-cols-2 gap-4">
+                                                <div className="space-y-2">
+                                                    <Label className="text-[10px] font-bold uppercase text-slate-400">Price (₹)</Label>
+                                                    <Input type="number" value={variant.price || ''} onChange={(e) => updateVariant(variant.id, 'price', e.target.value)} className="h-10 rounded-lg" />
+                                                </div>
+                                                <div className="space-y-2">
+                                                    <Label className="text-[10px] font-bold uppercase text-slate-400">Stock</Label>
+                                                    <Input type="number" value={variant.stock || ''} onChange={(e) => updateVariant(variant.id, 'stock', e.target.value)} className="h-10 rounded-lg" />
                                                 </div>
                                             </div>
                                         </div>
-
-                                        <div className="grid grid-cols-2 gap-2">
-                                            <div className="space-y-2">
-                                                <Label>Selling Price (₹) *</Label>
-                                                <Input type="number" step="0.01" placeholder="0.00" value={variant.price || ''} onChange={(e) => updateVariant(variant.id, 'price', e.target.value)} className="placeholder:text-muted-foreground/50" />
-                                            </div>
-                                            {/* <div className="space-y-2">
-                                                <Label>Cost Price (₹)</Label>
-                                                <Input type="number" step="0.01" placeholder="0.00" value={variant.costPrice || ''} onChange={(e) => updateVariant(variant.id, 'costPrice', e.target.value)} />
-                                            </div> */}
-                                        </div>
-
-                                        {variant.price > 0 && variant.costPrice && variant.costPrice > 0 && (
-                                            <div className="text-xs bg-green-50 dark:bg-green-950 p-2 rounded border border-green-200 dark:border-green-800">
-                                                <span className="text-green-700 dark:text-green-300 font-medium">
-                                                    Profit Margin: ₹{(variant.price - variant.costPrice).toFixed(2)}
-                                                    ({(((variant.price - variant.costPrice) / variant.price) * 100).toFixed(1)}%)
-                                                </span>
-                                            </div>
-                                        )}
-
-                                        <div className="space-y-2">
-                                            <Label>Stock Quantity *</Label>
-                                            <Input type="number" placeholder="0" value={variant.stock || ''} onChange={(e) => updateVariant(variant.id, 'stock', e.target.value)} className="placeholder:text-muted-foreground/50" />
-                                        </div>
-                                    </div>
-                                ))}
-                                <Button type="button" variant="outline" size="sm" onClick={addVariant} className="w-full"><Plus className="w-4 h-4 mr-2" /> Add Variant</Button>
-                            </CardContent>
-                        </Card>
-                        <Button type="submit" disabled={isSubmitting} className="w-full bg-primary">{isSubmitting ? "Creating..." : "Create Product"}</Button>
+                                    ))}
+                                    <Button type="button" variant="outline" size="sm" onClick={addVariant} className="w-full h-11 border-dashed border-[#7b4623] text-[#7b4623] hover:bg-orange-50 rounded-xl">
+                                        <Plus className="w-4 h-4 mr-2" /> Add More Variant
+                                    </Button>
+                                </CardContent>
+                            </Card>
+                            <Button type="submit" disabled={isSubmitting} className="w-full h-14 text-lg font-bold rounded-2xl bg-[#7b4623] hover:bg-[#5d351a] shadow-lg shadow-orange-900/20">
+                                {isSubmitting ? "Processing..." : "Create Product"}
+                            </Button>
+                        </div>
                     </div>
-                </div>
+                </Tabs>
             </form>
         </div>
     );

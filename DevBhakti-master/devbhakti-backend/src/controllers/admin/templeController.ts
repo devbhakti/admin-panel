@@ -58,15 +58,16 @@ export const getTempleById = async (req: Request, res: Response) => {
         });
     }
 
+    const lang = getLang(req);
     res.json({
       success: true,
-      data: {
+      data: localize({
           ...templeAccount,
           temple: templeAccount.temple ? {
               ...templeAccount.temple,
               commissionSlabs
           } : null
-      }
+      }, lang)
     });
   } catch (error) {
     console.error('Fetch temple error:', error);
@@ -837,60 +838,74 @@ export const deleteTemple = async (req: Request, res: Response) => {
 
     const templeId = user.temple.id;
 
-    // Check for related data before deletion
-    const [productsCount, bookingsCount, poojasCount, eventsCount] = await Promise.all([
-      // Count products owned by this temple
-      prisma.product.count({
+    // Check for related financial data before deletion
+    const [bookingsCount, ledgersCount, donationsCount, subordersCount] = await Promise.all([
+      // Count bookings for this temple
+      prisma.poojaBooking.count({
+        where: { templeId: templeId }
+      }),
+      prisma.templeLedger.count({
+        where: { templeId: templeId }
+      }),
+      prisma.donation.count({
+        where: { templeId: templeId }
+      }),
+      prisma.subOrder.count({
+        where: { templeId: templeId }
+      })
+    ]);
+
+    // Calculate total related financial data
+    const totalRelatedData = bookingsCount + ledgersCount + donationsCount + subordersCount;
+
+    // If there's any financial data, prevent deletion
+    if (totalRelatedData > 0) {
+      const relatedData: any = {};
+      if (bookingsCount > 0) relatedData.bookings = bookingsCount;
+      if (ledgersCount > 0) relatedData.ledgers = ledgersCount;
+      if (donationsCount > 0) relatedData.donations = donationsCount;
+      if (subordersCount > 0) relatedData.subOrders = subordersCount;
+
+      return res.status(400).json({
+        error: 'Cannot delete this temple. It has existing financial data (bookings, donations, ledgers) that must be handled.',
+        message: 'This temple cannot be deleted because it has associated financial data.',
+        relatedData: relatedData
+      });
+    }
+
+    // If no financial data, proceed with deletion
+    await prisma.$transaction(async (tx) => {
+      // Delete commission slabs for this temple
+      await tx.commissionSlab.deleteMany({
+        where: {
+          targetId: templeId,
+          slabType: 'TEMPLE'
+        }
+      });
+
+      // Delete temple-specific poojas
+      await tx.pooja.deleteMany({
+        where: { templeId: templeId }
+      });
+
+      // Delete events
+      await tx.event.deleteMany({
+        where: { templeId: templeId }
+      });
+
+      // Delete products
+      await tx.product.deleteMany({
         where: {
           OR: [
             { templeId: templeId },
             { sellerId: user.id }
           ]
         }
-      }),
-      // Count bookings for this temple
-      prisma.poojaBooking.count({
-        where: { templeId: templeId }
-      }),
-      // Count temple-specific poojas (not master poojas)
-      prisma.pooja.count({
-        where: {
-          templeId: templeId,
-          isMaster: false
-        }
-      }),
-      // Count events for this temple
-      prisma.event.count({
-        where: { templeId: templeId }
-      })
-    ]);
-
-    // Calculate total related data
-    const totalRelatedData = productsCount + bookingsCount + poojasCount + eventsCount;
-
-    // If there's any related data, prevent deletion
-    if (totalRelatedData > 0) {
-      const relatedData: any = {};
-      if (productsCount > 0) relatedData.products = productsCount;
-      if (bookingsCount > 0) relatedData.bookings = bookingsCount;
-      if (poojasCount > 0) relatedData.poojas = poojasCount;
-      if (eventsCount > 0) relatedData.events = eventsCount;
-
-      return res.status(400).json({
-        error: 'Cannot delete this temple. It has existing data that must be removed first.',
-        message: 'This temple cannot be deleted because it has associated data.',
-        relatedData: relatedData
       });
-    }
 
-    // If no related data, proceed with deletion
-    await prisma.$transaction(async (tx) => {
-      // Delete commission slabs for this temple
-      await tx.commissionSlab.deleteMany({
-        where: {
-          targetId: templeId,
-          slabType: SlabType.TEMPLE
-        }
+      // Delete update requests
+      await tx.templeUpdateRequest.deleteMany({
+        where: { templeId: templeId }
       });
 
       // Delete the temple record
@@ -904,10 +919,7 @@ export const deleteTemple = async (req: Request, res: Response) => {
       });
     });
 
-    res.json({
-      success: true,
-      message: 'Temple account deleted successfully'
-    });
+    res.json({ success: true, message: 'Temple account and profile deleted successfully' });
   } catch (error: any) {
     console.error('Delete error:', error);
 

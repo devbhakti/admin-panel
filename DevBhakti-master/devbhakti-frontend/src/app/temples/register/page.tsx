@@ -154,7 +154,7 @@ export default function RegisterTemplePage() {
                                 <Logo size="xl" className="h-32 md:h-40 w-auto pointer-events-none" />
                             </div>
                             <h1 className="text-2xl md:text-4xl lg:text-6xl font-serif font-extrabold tracking-tight mb-8 leading-tight text-foreground">
-                                <span className="text-primary">{t('temple_register.hero.title_part1')}</span>
+                                <span className="text-[#88542B]">{t('temple_register.hero.title_part1')}</span>
                                 <br />
                                 <span>{t('temple_register.hero.title_part2')}</span>
                             </h1>

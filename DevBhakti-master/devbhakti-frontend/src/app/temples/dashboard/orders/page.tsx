@@ -55,6 +55,7 @@ import { cn } from "@/lib/utils";
 import { fetchTempleOrders, updateSubOrderStatus, fetchMyTempleProfile } from "@/api/templeAdminController";
 import { BASE_URL } from "@/config/apiConfig";
 import { Checkbox } from "@/components/ui/checkbox";
+import { parseLocalizedValue } from "@/utils/textUtils";
 
 function TempleOrdersClient() {
     const router = useRouter();
@@ -330,9 +331,9 @@ function TempleOrdersClient() {
                                     </td>
                                     <td className="py-6">
                                         <span className="font-bold text-[#794A05] text-sm">
-                                            {order.items.map((i: any) => i.product?.name).join(", ").length > 30 
-                                                ? order.items.map((i: any) => i.product?.name).join(", ").substring(0, 30) + "..."
-                                                : order.items.map((i: any) => i.product?.name).join(", ")}
+                                            {order.items.map((i: any) => parseLocalizedValue(i.product?.name)).join(", ").length > 30 
+                                                ? order.items.map((i: any) => parseLocalizedValue(i.product?.name)).join(", ").substring(0, 30) + "..."
+                                                : order.items.map((i: any) => parseLocalizedValue(i.product?.name)).join(", ")}
                                         </span>
                                         <p className="text-[10px] text-slate-400 font-mono mt-0.5">#{order.id.slice(-8).toUpperCase()}</p>
                                     </td>
@@ -396,7 +397,7 @@ function TempleOrdersClient() {
                                     <div>
                                         <p className="text-[10px] font-bold text-slate-400 uppercase tracking-[0.2em] mb-1">Consignment Details</p>
                                         <DialogTitle className="text-2xl font-bold text-slate-900 font-serif">
-                                            {selectedOrder.items.map((i: any) => i.product?.name).join(", ")}
+                                            {selectedOrder.items.map((i: any) => parseLocalizedValue(i.product?.name)).join(", ")}
                                         </DialogTitle>
                                         <p className="text-[10px] font-mono text-slate-400 mt-1">ID: #{selectedOrder.id.toUpperCase()}</p>
                                         <p className="text-slate-500 font-bold mt-1 text-xs uppercase tracking-widest">
@@ -512,7 +513,7 @@ function TempleOrdersClient() {
                                                                         className="w-full h-full object-cover"
                                                                     />
                                                                 </div>
-                                                                <span className="font-extrabold text-slate-900 leading-tight">{item.product?.name}</span>
+                                                                <span className="font-extrabold text-slate-900 leading-tight">{parseLocalizedValue(item.product?.name)}</span>
                                                             </div>
                                                         </TableCell>
                                                         <TableCell className="font-bold text-slate-600">{item.variantName}</TableCell>

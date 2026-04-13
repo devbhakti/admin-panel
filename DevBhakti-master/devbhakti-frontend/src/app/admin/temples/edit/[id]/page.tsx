@@ -14,6 +14,7 @@ import {
     fetchTempleByIdAdmin
 } from "@/api/adminController";
 import { TempleForm } from "@/components/admin/temples/TempleForm";
+import { getDeduplicatedPoojas } from "@/utils/textUtils";
 
 export default function EditTemplePage() {
     const router = useRouter();
@@ -34,17 +35,27 @@ export default function EditTemplePage() {
         setIsFetching(true);
         try {
             const [poojasResponse, templeRes] = await Promise.all([
-                fetchAllPoojasAdmin({ isMaster: true }),
+                fetchAllPoojasAdmin({}),
                 fetchTempleByIdAdmin(instId)
             ]);
-            const masterPoojas: any[] = poojasResponse || [];
+            const rawPoojas = Array.isArray(poojasResponse) ? poojasResponse : (poojasResponse.data || []);
+            const allAvailablePoojas = getDeduplicatedPoojas(rawPoojas);
 
             if (templeRes.success && templeRes.data) {
                 // Merge master poojas + temple-specific poojas not in master list
+                // Merge deduplicated general poojas + temple-specific poojas
                 const templePoojas: any[] = templeRes.data.temple?.poojas || [];
-                const masterIds = new Set(masterPoojas.map((p: any) => p.id));
-                const extraPoojas = templePoojas.filter((p: any) => !masterIds.has(p.masterPoojaId) && !masterIds.has(p.id));
-                setAllPoojas([...masterPoojas, ...extraPoojas]);
+                
+                // Ensure temple's own poojas are in the list if they aren't already
+                const listIds = new Set(allAvailablePoojas.map((p: any) => p.id));
+                const listNames = new Set(allAvailablePoojas.map((p: any) => parseLocalizedValue(p.name, 'en').toLowerCase().trim()));
+                
+                const missingTemplePoojas = templePoojas.filter((p: any) => {
+                    const name = parseLocalizedValue(p.name, 'en').toLowerCase().trim();
+                    return !listIds.has(p.id) && !listNames.has(name);
+                });
+
+                setAllPoojas([...allAvailablePoojas, ...missingTemplePoojas]);
 
                 console.log('[EditTemple] Raw temple data loaded:', templeRes.data.temple?.name);
                 setTempleData(templeRes.data);
@@ -83,8 +94,9 @@ export default function EditTemplePage() {
             const res = await createPoojaAdmin(fd);
             if (res.success || res.id) {
                 toast({ title: "Success", description: "New pooja added to master list" });
-                const poojasResponse = await fetchAllPoojasAdmin({ isMaster: true });
-                setAllPoojas(poojasResponse);
+                const poojasResponse = await fetchAllPoojasAdmin({});
+                const rawPoojas = Array.isArray(poojasResponse) ? poojasResponse : (poojasResponse.data || []);
+                setAllPoojas(getDeduplicatedPoojas(rawPoojas));
                 return res.data?.id || res.id;
             }
             return null;

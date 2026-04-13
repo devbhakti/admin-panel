@@ -23,6 +23,7 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
+import { Switch } from "@/components/ui/switch";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
 import {
     Select,
@@ -33,6 +34,7 @@ import {
 } from "@/components/ui/select";
 import { useToast } from "@/hooks/use-toast";
 import { fetchSellerByIdAdmin, updateSellerAdmin, fetchCommissionSlabsAdmin } from "@/api/adminController";
+import { parseLocalizedValue } from "@/utils/textUtils";
 
 export default function EditSellerPage() {
     const router = useRouter();
@@ -41,6 +43,7 @@ export default function EditSellerPage() {
     const [isLoading, setIsLoading] = useState(false);
     const [isFetching, setIsFetching] = useState(true);
     const [slabs, setSlabs] = useState<any[]>([]);
+    const [rateType, setRateType] = useState<"DEFAULT" | "CUSTOM">("DEFAULT");
 
     const [formData, setFormData] = useState({
         storeName: "",
@@ -62,22 +65,24 @@ export default function EditSellerPage() {
         try {
             const data = await fetchSellerByIdAdmin(sellerId);
             setFormData({
-                storeName: data.storeName || "",
+                storeName: parseLocalizedValue(data.storeName),
                 sellerName: data.name || "",
                 email: data.email || "",
                 phone: data.phone || "",
                 status: data.status || "inactive",
-                address: data.address || "",
+                address: parseLocalizedValue(data.address),
                 productCommissionRate: data.productCommissionRate?.toString() || "10.0",
             });
             // Update breadcrumb with seller store name
-            window.dispatchEvent(new CustomEvent('updateBreadcrumb', { detail: `Edit: ${data.storeName || "Seller"}` }));
+            window.dispatchEvent(new CustomEvent('updateBreadcrumb', { detail: `Edit: ${parseLocalizedValue(data.storeName) || "Seller"}` }));
 
             // Set slabs if they exist in the response
             if (data.commissionSlabs && data.commissionSlabs.length > 0) {
                 setSlabs(data.commissionSlabs);
+                setRateType("CUSTOM");
             } else {
                 // Fallback to global slabs as template if no seller slabs exist
+                setRateType("DEFAULT");
                 loadDefaultSlabs();
             }
         } catch (error: any) {
@@ -127,6 +132,14 @@ export default function EditSellerPage() {
         setSlabs(newSlabs);
     };
 
+    const handleRateTypeChange = async (checked: boolean) => {
+        const newType = checked ? "CUSTOM" : "DEFAULT";
+        setRateType(newType);
+        if (newType === "DEFAULT") {
+            loadDefaultSlabs();
+        }
+    };
+
     const handleSubmit = async (e: React.FormEvent) => {
         e.preventDefault();
         setIsLoading(true);
@@ -134,7 +147,7 @@ export default function EditSellerPage() {
         try {
             await updateSellerAdmin(id as string, {
                 ...formData,
-                commissionSlabs: slabs
+                commissionSlabs: rateType === "CUSTOM" ? slabs : []
             });
             toast({
                 title: "Success",
@@ -285,78 +298,112 @@ export default function EditSellerPage() {
                                 </div>
                             </CardHeader>
                             <CardContent className="p-0">
-                                <div className="overflow-x-auto">
-                                    <table className="w-full text-sm text-left">
-                                        <thead>
-                                            <tr className="bg-slate-50/50 text-slate-500 border-b border-slate-100">
-                                                <th className="px-4 py-3 font-semibold">Min (₹)</th>
-                                                <th className="px-4 py-3 font-semibold">Max (₹)</th>
-                                                <th className="px-4 py-3 font-semibold">Fixed (₹)</th>
-                                                <th className="px-4 py-3 font-semibold">%</th>
-                                                <th className="px-4 py-3 w-10"></th>
-                                            </tr>
-                                        </thead>
-                                        <tbody className="divide-y divide-slate-50">
-                                            {slabs.map((slab, index) => (
-                                                <tr key={index} className="group hover:bg-slate-50/30 transition-colors">
-                                                    <td className="px-3 py-2">
-                                                        <Input
-                                                            type="number"
-                                                            value={slab.minAmount}
-                                                            onChange={(e) => handleSlabChange(index, "minAmount", e.target.value)}
-                                                            className="h-8 py-0 focus-visible:ring-amber-500 text-sm font-medium border-slate-200"
-                                                            required
-                                                        />
-                                                    </td>
-                                                    <td className="px-3 py-2">
-                                                        <Input
-                                                            type="number"
-                                                            value={slab.maxAmount || ""}
-                                                            placeholder="∞"
-                                                            onChange={(e) => handleSlabChange(index, "maxAmount", e.target.value)}
-                                                            className="h-8 py-0 focus-visible:ring-amber-500 text-sm font-medium border-slate-200"
-                                                        />
-                                                    </td>
-                                                    <td className="px-3 py-2">
-                                                        <Input
-                                                            type="number"
-                                                            value={slab.platformFee}
-                                                            onChange={(e) => handleSlabChange(index, "platformFee", e.target.value)}
-                                                            className="h-8 py-0 focus-visible:ring-amber-500 text-sm font-medium border-slate-200"
-                                                            required
-                                                        />
-                                                    </td>
-                                                    <td className="px-3 py-2">
-                                                        <Input
-                                                            type="number"
-                                                            value={slab.percentage}
-                                                            onChange={(e) => handleSlabChange(index, "percentage", e.target.value)}
-                                                            className="h-8 py-0 focus-visible:ring-amber-500 text-sm font-medium border-slate-200"
-                                                            required
-                                                        />
-                                                    </td>
-                                                    <td className="px-3 py-2">
-                                                        <Button
-                                                            type="button"
-                                                            variant="ghost"
-                                                            size="icon"
-                                                            onClick={() => handleRemoveSlab(index)}
-                                                            className="h-8 w-8 text-slate-300 hover:text-red-500 hover:bg-red-50 transition-colors opacity-0 group-hover:opacity-100"
-                                                        >
-                                                            <Trash2 className="w-4 h-4" />
-                                                        </Button>
-                                                    </td>
-                                                </tr>
-                                            ))}
-                                            {slabs.length === 0 && (
-                                                <tr>
-                                                    <td colSpan={5} className="py-8 text-center text-slate-400 italic">
-                                                        No custom slabs defined. Using global defaults.
-                                                    </td>
-                                                </tr>
-                                            )}
-                                        </tbody>
-                                    </table>
+                                <div className="flex flex-col space-y-4">
+                                    <div className="flex items-center justify-between p-4 bg-amber-50/50 border border-amber-200 rounded-xl">
+                                        <div className="space-y-0.5">
+                                            <Label className="text-amber-900 font-bold">Commission Model</Label>
+                                            <p className="text-xs text-amber-700">Use global defaults or set custom rates for this seller.</p>
+                                        </div>
+                                        <div className="flex items-center gap-3 bg-white px-4 py-2 rounded-lg border border-amber-200 shadow-sm">
+                                            <span className={`text-[10px] font-bold uppercase tracking-wider ${rateType === 'DEFAULT' ? 'text-primary' : 'text-slate-400'}`}>Default</span>
+                                            <Switch
+                                                checked={rateType === 'CUSTOM'}
+                                                onCheckedChange={handleRateTypeChange}
+                                            />
+                                            <span className={`text-[10px] font-bold uppercase tracking-wider ${rateType === 'CUSTOM' ? 'text-primary' : 'text-slate-400'}`}>Custom</span>
+                                        </div>
+                                    </div>
+
+                                    {rateType === 'CUSTOM' ? (
+                                        <div className="overflow-x-auto">
+                                            <table className="w-full text-sm text-left">
+                                                <thead>
+                                                    <tr className="bg-slate-50/50 text-slate-500 border-b border-slate-100">
+                                                        <th className="px-4 py-3 font-semibold">Min (₹)</th>
+                                                        <th className="px-4 py-3 font-semibold">Max (₹)</th>
+                                                        <th className="px-4 py-3 font-semibold">Fixed (₹)</th>
+                                                        <th className="px-4 py-3 font-semibold">%</th>
+                                                        <th className="px-4 py-3 w-10"></th>
+                                                    </tr>
+                                                </thead>
+                                                <tbody className="divide-y divide-slate-50">
+                                                    {slabs.map((slab, index) => (
+                                                        <tr key={index} className="group hover:bg-slate-50/30 transition-colors">
+                                                            <td className="px-3 py-2">
+                                                                <Input
+                                                                    type="number"
+                                                                    value={slab.minAmount}
+                                                                    onChange={(e) => handleSlabChange(index, "minAmount", e.target.value)}
+                                                                    className="h-8 py-0 focus-visible:ring-amber-500 text-sm font-medium border-slate-200"
+                                                                    required
+                                                                />
+                                                            </td>
+                                                            <td className="px-3 py-2">
+                                                                <Input
+                                                                    type="number"
+                                                                    value={slab.maxAmount || ""}
+                                                                    placeholder="∞"
+                                                                    onChange={(e) => handleSlabChange(index, "maxAmount", e.target.value)}
+                                                                    className="h-8 py-0 focus-visible:ring-amber-500 text-sm font-medium border-slate-200"
+                                                                />
+                                                            </td>
+                                                            <td className="px-3 py-2">
+                                                                <Input
+                                                                    type="number"
+                                                                    value={slab.platformFee}
+                                                                    onChange={(e) => handleSlabChange(index, "platformFee", e.target.value)}
+                                                                    className="h-8 py-0 focus-visible:ring-amber-500 text-sm font-medium border-slate-200"
+                                                                    required
+                                                                />
+                                                            </td>
+                                                            <td className="px-3 py-2">
+                                                                <Input
+                                                                    type="number"
+                                                                    value={slab.percentage}
+                                                                    onChange={(e) => handleSlabChange(index, "percentage", e.target.value)}
+                                                                    className="h-8 py-0 focus-visible:ring-amber-500 text-sm font-medium border-slate-200"
+                                                                    required
+                                                                />
+                                                            </td>
+                                                            <td className="px-3 py-2">
+                                                                <Button
+                                                                    type="button"
+                                                                    variant="ghost"
+                                                                    size="icon"
+                                                                    onClick={() => handleRemoveSlab(index)}
+                                                                    className="h-8 w-8 text-slate-300 hover:text-red-500 hover:bg-red-50 transition-colors opacity-0 group-hover:opacity-100"
+                                                                >
+                                                                    <Trash2 className="w-4 h-4" />
+                                                                </Button>
+                                                            </td>
+                                                        </tr>
+                                                    ))}
+                                                    {slabs.length === 0 && (
+                                                        <tr>
+                                                            <td colSpan={5} className="py-8 text-center text-slate-400 italic">
+                                                                No custom slabs defined. Click "Add Slab" to customize.
+                                                            </td>
+                                                        </tr>
+                                                    )}
+                                                </tbody>
+                                            </table>
+                                        </div>
+                                    ) : (
+                                        <div className="p-8 text-center bg-slate-50/50 border border-dashed rounded-xl">
+                                            <p className="text-sm text-slate-500">
+                                                This seller is using <span className="font-bold text-primary">Global Default Slabs</span>.
+                                                Any changes to global defaults will automatically apply here.
+                                            </p>
+                                            <Button 
+                                                type="button" 
+                                                variant="link" 
+                                                className="mt-2 text-xs"
+                                                onClick={() => setRateType('CUSTOM')}
+                                            >
+                                                Switch to Custom to override
+                                            </Button>
+                                        </div>
+                                    )}
                                 </div>
                                 <div className="px-4 py-3 bg-amber-50/30 border-t border-amber-100/50">
                                     <p className="text-[11px] leading-relaxed text-amber-700/70 font-medium">

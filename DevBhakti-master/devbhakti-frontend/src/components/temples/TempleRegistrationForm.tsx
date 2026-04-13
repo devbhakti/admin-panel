@@ -37,6 +37,7 @@ import { registerTemple, fetchAllPoojasPublic } from "@/api/templeAdminControlle
 import { checkInstitutionPhone } from "@/api/authController";
 import { Badge } from "@/components/ui/badge";
 import { Card, CardContent } from "@/components/ui/card";
+import { parseLocalizedValue, getDeduplicatedPoojas } from '@/utils/textUtils';
 
 export default function TempleRegistrationForm({ onClose }: { onClose?: () => void }) {
     const { t } = useLanguage();
@@ -123,8 +124,10 @@ export default function TempleRegistrationForm({ onClose }: { onClose?: () => vo
         try {
             const data = await fetchAllPoojasPublic();
             const poojas = Array.isArray(data) ? data : data.data || [];
-            // Filter to show only Master Poojas
-            setAllPoojas(poojas.filter((p: any) => p.isMaster === true));
+            
+            // Deduplicate poojas by name, preferring Master poojas
+            const deduplicated = getDeduplicatedPoojas(poojas);
+            setAllPoojas(deduplicated);
         } catch (error) {
             console.error("Failed to load poojas");
         }
@@ -334,7 +337,11 @@ export default function TempleRegistrationForm({ onClose }: { onClose?: () => vo
 
             await registerTemple(fd);
             setShowSuccess(true);
-            toast({ title: t('registration_form.validation.success_title'), description: t('registration_form.validation.success_message') });
+            toast({ 
+                title: t('registration_form.validation.success_title'), 
+                description: t('registration_form.validation.success_message'),
+                variant: "success"
+            });
         } catch (error: any) {
             toast({
                 title: t('registration_form.validation.error_title'),
@@ -749,7 +756,7 @@ export default function TempleRegistrationForm({ onClose }: { onClose?: () => vo
                                         )}
                                     </div>
                                     <div className="flex-1">
-                                        <h4 className="font-semibold text-slate-800 text-sm">{pooja.name}</h4>
+                                        <h4 className="font-semibold text-slate-800 text-sm">{parseLocalizedValue(pooja.name)}</h4>
                                         {pooja.category && (
                                             <p className="text-xs text-slate-500 mt-1">{pooja.category}</p>
                                         )}

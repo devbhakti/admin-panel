@@ -8,6 +8,7 @@ import { useToast } from "@/hooks/use-toast";
 import { createTempleAdmin, fetchAllPoojasAdmin, createPoojaAdmin } from "@/api/adminController";
 import { useLanguage } from "@/context/LanguageContext";
 import { TempleForm } from "@/components/admin/temples/TempleForm";
+import { getDeduplicatedPoojas } from "@/utils/textUtils";
 
 export default function CreateTemplePage() {
     const router = useRouter();
@@ -22,8 +23,13 @@ export default function CreateTemplePage() {
 
     const loadPoojas = async () => {
         try {
-            const data = await fetchAllPoojasAdmin({ isMaster: true });
-            setAllPoojas(data);
+            // Fetch ALL poojas from admin API
+            const data = await fetchAllPoojasAdmin({});
+            const rawPoojas = Array.isArray(data) ? data : (data.data || []);
+            
+            // Deduplicate by name, preferring Master poojas
+            const deduplicated = getDeduplicatedPoojas(rawPoojas);
+            setAllPoojas(deduplicated);
         } catch (error) {
             console.error("Failed to load poojas");
         }

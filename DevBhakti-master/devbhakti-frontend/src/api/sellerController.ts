@@ -17,10 +17,11 @@ export const fetchSellerProducts = async (params: any = {}) => {
     return response.data;
 };
 
-export const fetchSellerProductById = async (id: string) => {
+export const fetchSellerProductById = async (id: string, lang?: string) => {
     const token = localStorage.getItem("token");
     const response = await axios.get(`${API_URL}/seller/products/${id}`, {
-        headers: { Authorization: `Bearer ${token}` }
+        headers: { Authorization: `Bearer ${token}` },
+        params: lang ? { lang } : {}
     });
     return response.data;
 };

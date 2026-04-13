@@ -81,6 +81,7 @@ export default function DonationClient() {
     const [donations, setDonations] = useState<any[]>([]);
     const [loading, setLoading] = useState(true);
     const [selectedDonation, setSelectedDonation] = useState<any | null>(null);
+    const [sendingEmail, setSendingEmail] = useState(false);
     const { toast } = useToast();
 
     // Stats state
@@ -221,6 +222,23 @@ export default function DonationClient() {
         } catch (error) {
             console.error(error);
             toast({ title: "Error", description: "Failed to download Excel", variant: "destructive" });
+        }
+    };
+    const handleSendEmail = async (id: string) => {
+        try {
+            setSendingEmail(true);
+            const response = await axios.post(`${API_URL}/admin/donations/send-email/${id}`, {}, { validateStatus: () => true });
+            const data = response.data;
+            if (data.success) {
+                toast({ title: "Success", description: "Receipt sent successfully via email!" });
+            } else {
+                toast({ title: "Error", description: data.message || "Failed to send email", variant: "destructive" });
+            }
+        } catch (error) {
+            console.error("Send Email Error:", error);
+            toast({ title: "Error", description: "An error occurred while sending email", variant: "destructive" });
+        } finally {
+            setSendingEmail(false);
         }
     };
 
@@ -692,8 +710,21 @@ export default function DonationClient() {
                                         >
                                             <Download className="w-4 h-4 mr-2" /> Print Receipt
                                         </Button>
-                                        <Button variant="outline" className="rounded-xl border-slate-200 text-slate-600 h-10 px-4">
-                                            Send Email
+                                        <Button
+                                            variant="outline"
+                                            className="rounded-xl border-slate-200 text-slate-600 h-10 px-4"
+                                            onClick={() => handleSendEmail(selectedDonation.id)}
+                                            disabled={sendingEmail}
+                                        >
+                                            {sendingEmail ? (
+                                                <>
+                                                    <Sparkles className="w-4 h-4 mr-2 animate-spin" /> Sending...
+                                                </>
+                                            ) : (
+                                                <>
+                                                    <Mail className="w-4 h-4 mr-2" /> Send Email
+                                                </>
+                                            )}
                                         </Button>
                                     </div>
                                     <Button

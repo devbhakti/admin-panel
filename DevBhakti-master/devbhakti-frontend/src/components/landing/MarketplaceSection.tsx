@@ -77,8 +77,18 @@ const MarketplaceSection: React.FC = () => {
   }, [language]);
 
   const toggleFavorite = async (e: React.MouseEvent, id: string) => {
-    e.preventDefault(); // Prevent navigation to product page
+    e.preventDefault();
     e.stopPropagation();
+
+    const savedUser = localStorage.getItem("user");
+    if (!savedUser) {
+      toast({
+        title: "Please Login",
+        description: "You need to login as a devotee to add favourites.",
+        variant: "destructive",
+      });
+      return;
+    }
 
     const isFav = favorites.includes(id);
 
@@ -90,10 +100,10 @@ const MarketplaceSection: React.FC = () => {
     try {
       if (isFav) {
         await removeFavorite({ productId: id });
-        toast({ title: t('common.removed_from_favorites') });
+        toast({ title: "Removed from Favourites", description: "Product removed from your favourites.", variant: "success" });
       } else {
         await addFavorite({ productId: id });
-        toast({ title: t('common.added_to_favorites') });
+        toast({ title: "❤️ Added to Favourites", description: "Product added to your favourites!", variant: "success" });
       }
     } catch (error) {
       // Revert

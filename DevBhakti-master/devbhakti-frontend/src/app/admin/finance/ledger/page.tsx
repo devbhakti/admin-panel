@@ -50,10 +50,9 @@ import { useToast } from "@/hooks/use-toast";
 import { format, startOfDay, endOfDay } from "date-fns";
 import { cn } from "@/lib/utils";
 import {
-    fetchAllTransactionsAdmin,
-    fetchPlatformFinanceSummary,
     exportTransactionsExcelAdmin
 } from "@/api/adminController";
+import { parseLocalizedValue } from "@/utils/textUtils";
 
 function LedgerContent() {
     const searchParams = useSearchParams();
@@ -148,7 +147,7 @@ function LedgerContent() {
                 if (templeId || sellerId) {
                     const firstTx = transRes.data[0];
                     if (firstTx) {
-                        setMerchantName(firstTx.temple?.name || firstTx.seller?.name || "Merchant");
+                        setMerchantName(parseLocalizedValue(firstTx.temple?.name) || parseLocalizedValue(firstTx.seller?.name) || "Merchant");
                     }
                 } else {
                     setMerchantName(null);
@@ -220,7 +219,7 @@ function LedgerContent() {
     };
 
     const filteredTransactions = transactions.filter(tx => {
-        const matchesSearch = (tx.temple?.name || tx.seller?.name || "").toLowerCase().includes(searchTerm.toLowerCase()) ||
+        const matchesSearch = (parseLocalizedValue(tx.temple?.name) || parseLocalizedValue(tx.seller?.name) || "").toLowerCase().includes(searchTerm.toLowerCase()) ||
             tx.description?.toLowerCase().includes(searchTerm.toLowerCase()) ||
             tx.id.toLowerCase().includes(searchTerm.toLowerCase()) ||
             tx.type?.toLowerCase().includes(searchTerm.toLowerCase());
@@ -491,7 +490,7 @@ function LedgerContent() {
                                                 >
                                                     <Building2 className="w-3.5 h-3.5 text-slate-400 group-hover/merchant:text-primary" />
                                                     <span className="text-sm font-bold text-slate-600 group-hover/merchant:text-primary underline decoration-slate-200 underline-offset-4 decoration-dashed">
-                                                        {tx.temple?.name || tx.seller?.name || "DevBhakti"}
+                                                        {parseLocalizedValue(tx.temple?.name) || parseLocalizedValue(tx.seller?.name) || "DevBhakti"}
                                                     </span>
                                                     <ArrowUpRight className="w-3 h-3 opacity-0 group-hover/merchant:opacity-100 transition-opacity" />
                                                 </button>

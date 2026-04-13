@@ -36,6 +36,7 @@ import { fetchMyTempleBookings, fetchTempleOrders, fetchMyTempleProfile } from "
 import { useAdminAuth } from "@/hooks/use-admin-auth";
 import { clearAllTokens } from "@/lib/auth-utils";
 import { NotificationBell } from "@/components/notifications/NotificationBell";
+import { parseLocalizedValue } from "@/utils/textUtils";
 
 const sidebarItems = [
     {
@@ -410,7 +411,7 @@ export default function TempleAdminLayout({ children }: { children: React.ReactN
                                     Temple Dashboard
                                 </span>
                                 <span className="text-[11px] font-bold text-sidebar-foreground/60 truncate mt-1">
-                                    {templeProfile?.name || user?.name || "Sacred Portal"}
+                                    {parseLocalizedValue(templeProfile?.name) || parseLocalizedValue(user?.name) || "Sacred Portal"}
                                 </span>
                             </div>
                         </div>
@@ -485,12 +486,12 @@ export default function TempleAdminLayout({ children }: { children: React.ReactN
                         )}
                     >
                         <div className="w-10 h-10 rounded-full bg-sidebar-accent border border-sidebar-border flex items-center justify-center text-sidebar-foreground font-semibold">
-                            {(templeProfile?.name || user?.name || "I").charAt(0)}
+                            {(parseLocalizedValue(templeProfile?.name) || parseLocalizedValue(user?.name) || "I").charAt(0)}
                         </div>
                         {sidebarOpen && (
                             <div className="flex-1 min-w-0">
                                 <p className="text-sm font-medium text-sidebar-foreground truncate">
-                                    {templeProfile?.name || user?.name || "Temple Admin"}
+                                    {parseLocalizedValue(templeProfile?.name) || parseLocalizedValue(user?.name) || "Temple Admin"}
                                 </p>
                                 <p className="text-xs text-sidebar-foreground/60 truncate">
                                     {user?.phone || user?.email || "admin@temple.com"}

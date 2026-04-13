@@ -176,7 +176,8 @@
     "no_location_found": "कोणतेही स्थान सापडले नाही.",
     "active": "सक्रिय:",
     "showing": "दाखवत आहे",
-    "temples_count_label": "मंदिरे"
+    "temples_count_label": "मंदिरे",
+    "live_now": "आता थेट"
   },
   "footer": {
     "about": "देवभक्ती - दैवी अनुभव आणि पवित्र विधींकडे तुमचा द्वार.",
@@ -270,6 +271,8 @@
     "upcoming_events": "येणारे कार्यक्रम"
   },
   "pooja_detail": {
+    "any_location": "कोणतेही स्थान",
+    "global_booking": "वैश्विक सेवा",
     "loading": "दैवी तपशील लोड होत आहे...",
     "not_found": "पूजा सापडली नाही",
     "return_home": "होमवर परत जा",

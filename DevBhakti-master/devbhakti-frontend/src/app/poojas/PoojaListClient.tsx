@@ -31,6 +31,7 @@ import Navbar from "@/components/landing/Navbar";
 import Footer from "@/components/landing/Footer";
 import { useLanguage } from "@/context/LanguageContext";
 import { getLocalized } from "@/utils/localization";
+import { getDeduplicatedPoojas } from "@/utils/textUtils";
 
 
 
@@ -117,7 +118,10 @@ const PoojaListClient: React.FC = () => {
             return getLowestPrice(a) - getLowestPrice(b);
         });
 
-        setPoojas(sortedData);
+        // Deduplicate poojas by name, preferring Master poojas
+        const deduplicatedPoojas = getDeduplicatedPoojas(sortedData, 'en');
+
+        setPoojas(deduplicatedPoojas);
         setLoading(false);
     };
 
@@ -183,7 +187,11 @@ const PoojaListClient: React.FC = () => {
         e.stopPropagation();
 
         if (!user) {
-            router.push("/auth");
+            toast({
+                title: "Please Login",
+                description: "You need to login as a devotee to add favourites.",
+                variant: "destructive",
+            });
             return;
         }
 
@@ -192,11 +200,11 @@ const PoojaListClient: React.FC = () => {
             if (isFav) {
                 await removeFavorite({ poojaId });
                 setFavorites(favorites.filter((f) => f.poojaId !== poojaId));
-                toast({ title: t('marketplace.cart.removed') });
+                toast({ title: "Removed from Favourites", description: "Pooja removed from your favourites.", variant: "success" });
             } else {
                 await addFavorite({ poojaId });
                 setFavorites([...favorites, { poojaId }]);
-                toast({ title: t('marketplace.cart.added') });
+                toast({ title: "❤️ Added to Favourites", description: "Pooja added to your favourites!", variant: "success" });
             }
         } catch (error: any) {
             toast({

@@ -198,7 +198,7 @@ export const getAllUsers = async (req: Request, res: Response) => {
         res.json({
             success: true,
             data: {
-                users: users.map(user => ({
+                users: localize(users.map(user => ({
                     id: user.id,
                     name: user.name,
                     email: user.email,
@@ -211,7 +211,7 @@ export const getAllUsers = async (req: Request, res: Response) => {
                     anniversary: user.anniversary,
                     profileImage: user.profileImage,
                     isActive: user.isActive,
-                })),
+                })), getLang(req)),
                 pagination: {
                     total,
                     page: Number(page),

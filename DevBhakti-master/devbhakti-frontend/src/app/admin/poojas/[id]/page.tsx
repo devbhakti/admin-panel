@@ -87,7 +87,7 @@ export default function ViewPoojaPage() {
                         <ArrowLeft className="w-5 h-5" />
                     </Button>
                     <div>
-                        <h1 className="text-2xl font-bold tracking-tight">{pooja.name}</h1>
+                        <h1 className="text-2xl font-bold tracking-tight">{parseLocalizedValue(pooja.name, language)}</h1>
                         <p className="text-muted-foreground">Pooja Details</p>
                     </div>
                 </div>
@@ -143,7 +143,7 @@ export default function ViewPoojaPage() {
                                 <MapPin className="w-4 h-4 text-primary" />
                                 <div>
                                     <p className="text-xs text-muted-foreground">Temple</p>
-                                    <p className="font-semibold">{pooja.temple?.name || 'N/A'}</p>
+                                    <p className="font-semibold">{parseLocalizedValue(pooja.temple?.name, language) || 'N/A'}</p>
                                 </div>
                             </div>
                         </div>
@@ -196,8 +196,8 @@ export default function ViewPoojaPage() {
                                         <div className="space-y-4">
                                             {pooja.faqs[l].map((faq: any, index: number) => (
                                                 <div key={index} className="border-b last:border-0 pb-4 last:pb-0">
-                                                    <h4 className="font-semibold text-sm mb-2">{faq.q}</h4>
-                                                    <p className="text-sm text-muted-foreground">{faq.a}</p>
+                                                    <h4 className="font-semibold text-sm mb-2">{parseLocalizedValue(faq.q)}</h4>
+                                                    <p className="text-sm text-muted-foreground">{parseLocalizedValue(faq.a)}</p>
                                                 </div>
                                             ))}
                                         </div>
@@ -218,9 +218,9 @@ export default function ViewPoojaPage() {
                                     <div key={index} className="border rounded-lg p-4 bg-slate-50/50 hover:bg-slate-50 transition-colors">
                                         <div className="flex items-start justify-between">
                                             <div className="flex-1">
-                                                <h4 className="font-semibold">{pkg.name}</h4>
+                                                <h4 className="font-semibold">{parseLocalizedValue(pkg.name)}</h4>
                                                 <p className="text-sm text-muted-foreground mt-1">
-                                                    {pkg.description}
+                                                    {parseLocalizedValue(pkg.description)}
                                                 </p>
                                             </div>
                                             <div className="text-right">

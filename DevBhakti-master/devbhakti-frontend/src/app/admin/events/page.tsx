@@ -72,6 +72,7 @@ import { useDebounce } from "@/hooks/use-debounce";
 import { useAdminAuth } from "@/hooks/use-admin-auth";
 import { useLanguage } from "@/context/LanguageContext";
 import { getLocalized, Language } from "@/utils/localization";
+import { parseLocalizedValue } from '@/utils/textUtils';
 
 
 export default function AdminEventsPage() {
@@ -809,7 +810,7 @@ export default function AdminEventsPage() {
                                                             .filter(p => selectedPoojaIds.includes(p.id))
                                                             .map(pooja => (
                                                                 <Badge key={pooja.id} variant="secondary" className="bg-amber-50 text-amber-800 border-amber-200">
-                                                                    {pooja.name}
+                                                                    {parseLocalizedValue(pooja.name)}
                                                                     <X
                                                                         className="w-3 h-3 ml-1 cursor-pointer hover:text-amber-900"
                                                                         onClick={(e) => {
@@ -834,7 +835,7 @@ export default function AdminEventsPage() {
                                                     {templePoojas.map((pooja) => (
                                                         <CommandItem
                                                             key={pooja.id}
-                                                            value={pooja.name}
+                                                            value={parseLocalizedValue(pooja.name)}
                                                             onSelect={() => {
                                                                 handlePoojaToggle(pooja.id, !selectedPoojaIds.includes(pooja.id));
                                                             }}

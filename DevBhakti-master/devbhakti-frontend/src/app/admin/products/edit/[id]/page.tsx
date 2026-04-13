@@ -142,7 +142,7 @@ export default function EditProductPage() {
         .filter((user: any) => user?.temple?.id)
         .map((user: any) => ({
           id: user.temple.id,
-          name: user.temple.name_en || user.temple.name || "",
+          name: parseLocalizedValue(user.temple.name_en || user.temple.name, "en"),
           role: "TEMPLE",
           icon: <Building2 className="w-4 h-4 text-primary" />,
           searchText: `${user.temple.name_en || user.temple.name} temple institution`,
@@ -151,7 +151,7 @@ export default function EditProductPage() {
         .filter((seller: any) => seller?.sellerId)
         .map((seller: any) => ({
           id: seller.sellerId,
-          name: seller.storeName,
+          name: parseLocalizedValue(seller.storeName),
           role: "SELLER",
           icon: <Store className="w-4 h-4 text-blue-600" />,
           searchText: `${seller.storeName} seller vendor store`,
@@ -224,7 +224,7 @@ export default function EditProductPage() {
       );
       if (data.image) setExistingImage(data.image);
       // Update breadcrumb with product name
-      const productName = data.name?.en || data.name_en || data.name || "Edit Product";
+      const productName = parseLocalizedValue(data.name) || "Edit Product";
       window.dispatchEvent(new CustomEvent('updateBreadcrumb', { detail: `Edit: ${productName}` }));
     } catch (error: any) {
       toast({ title: "Error Loading Product", description: error?.response?.data?.message || "Failed to load product", variant: "destructive" });

@@ -62,9 +62,12 @@ export const createPoojaAdmin = async (formData: FormData) => {
 export const fetchPoojaByIdAdmin = async (id: string) => {
     const token = getAdminToken();
     const response = await axios.get(`${API_URL}/admin/poojas/${id}`, {
-        headers: { Authorization: `Bearer ${token}` }
+        headers: { 
+            Authorization: `Bearer ${token}`,
+            'lang': 'raw'
+        }
     });
-    return response.data;
+    return response.data.data;
 };
 
 export const updatePoojaAdmin = async (id: string, formData: FormData) => {
@@ -230,7 +233,10 @@ export const fetchAllTemplesAdmin = async (params?: { page?: number; limit?: num
 export const fetchTempleByIdAdmin = async (id: string | number) => {
     const token = getAdminToken();
     const response = await axios.get(`${API_URL}/admin/temples/${id}`, {
-        headers: { Authorization: `Bearer ${token}` }
+        headers: { 
+            Authorization: `Bearer ${token}`,
+            'lang': 'raw'
+        }
     });
     return response.data;
 };
@@ -574,8 +580,11 @@ export const fetchProductOwnersAdmin = async () => {
 
 export const fetchProductByIdAdmin = async (id: string) => {
     const token = getAdminToken();
-    const response = await axios.get(`${API_URL}/admin/products/${id}?lang=raw`, {
-        headers: { Authorization: `Bearer ${token}` }
+    const response = await axios.get(`${API_URL}/admin/products/${id}`, {
+        headers: { 
+            Authorization: `Bearer ${token}`,
+            'lang': 'raw'
+        }
     });
     return response.data.data;
 };
@@ -825,8 +834,11 @@ export const fetchAllSellersAdmin = async () => {
 
 export const fetchSellerByIdAdmin = async (id: string) => {
     const token = getAdminToken();
-    const response = await axios.get(`${API_URL}/admin/sellers/${id}?lang=raw`, {
-        headers: { Authorization: `Bearer ${token}` }
+    const response = await axios.get(`${API_URL}/admin/sellers/${id}`, {
+        headers: { 
+            Authorization: `Bearer ${token}`,
+            'lang': 'raw'
+        }
     });
     return response.data.data;
 };

@@ -125,7 +125,7 @@ const Navbar: React.FC<NavbarProps> = ({ variant = "default", isSolid = false })
                 >
                   <Search className="w-4 h-4 text-primary shrink-0 transition-transform group-hover:scale-110" />
                   <span className="text-black/80 dark:text-white/80 text-[13px] font-semibold truncate">
-                    {t('navbar.search_placeholder')}
+                    {mounted ? t('navbar.search_placeholder') : "Search temples, poojas, products..."}
                   </span>
                 </div>
               ) : (
@@ -146,7 +146,13 @@ const Navbar: React.FC<NavbarProps> = ({ variant = "default", isSolid = false })
                       className={`text-[12px] 2xl:text-sm font-bold transition-all whitespace-nowrap uppercase tracking-wider relative group ${active ? "text-primary" : "text-foreground hover:text-primary"
                         }`}
                     >
-                      {link.label}
+                      {mounted ? link.label : (
+                        link.href === "/poojas" ? "Poojas" :
+                        link.href === "/temples" ? "Temples" :
+                        link.href.includes("/marketplace") ? "Marketplace" :
+                        link.href === "/live-darshan" ? "Live Darshan" :
+                        link.href === "/donation" ? "Donation" : link.label
+                      )}
                       {/* Active indicator underline */}
                       {active && (
                         <motion.div
@@ -224,7 +230,7 @@ const Navbar: React.FC<NavbarProps> = ({ variant = "default", isSolid = false })
                   onClick={() => setShowTempleLoginModal(true)}
                   className="hidden md:flex bg-[#88542B] border-[#c2a087] text-white hover:bg-[#CA9E52] hover:text-white rounded-full px-6 h-9 mr-2 text-sm font-medium transition-all hover:border-[#864c20]"
                 >
-                  {t('navbar.temple_login')}
+                  {mounted ? t('navbar.temple_login') : "Temple Login"}
                 </Button>
               )}
 
@@ -452,7 +458,13 @@ const Navbar: React.FC<NavbarProps> = ({ variant = "default", isSolid = false })
                         className={`text-lg font-bold py-3 border-b border-border flex items-center justify-between transition-colors ${active ? "text-primary bg-primary/5 px-2 rounded-lg border-b-0" : "text-foreground"
                           }`}
                       >
-                        {link.label}
+                        {mounted ? link.label : (
+                          link.href === "/poojas" ? "Poojas" :
+                          link.href === "/temples" ? "Temples" :
+                          link.href.includes("/marketplace") ? "Marketplace" :
+                          link.href === "/live-darshan" ? "Live Darshan" :
+                          link.href === "/donation" ? "Donation" : link.label
+                        )}
                         {active && <ChevronRight className="w-5 h-5" />}
                       </Link>
                     );

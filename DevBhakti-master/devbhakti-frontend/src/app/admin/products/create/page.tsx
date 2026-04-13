@@ -134,7 +134,7 @@ export default function CreateProductPage() {
         .filter((user: any) => user?.temple?.id)
         .map((user: any) => ({
           id: user.temple.id,
-          name: user.temple.name_en || user.temple.name || "",
+          name: parseLocalizedValue(user.temple.name_en || user.temple.name, "en"),
           role: "TEMPLE",
           icon: <Building2 className="w-4 h-4 text-primary" />,
           searchText: `${user.temple.name_en || user.temple.name} temple institution`
@@ -144,7 +144,7 @@ export default function CreateProductPage() {
         .filter((seller: any) => seller?.sellerId)
         .map((seller: any) => ({
           id: seller.sellerId,
-          name: seller.storeName,
+          name: parseLocalizedValue(seller.storeName),
           role: "SELLER",
           icon: <Store className="w-4 h-4 text-blue-600" />,
           searchText: `${seller.storeName} seller vendor store`

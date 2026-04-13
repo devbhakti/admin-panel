@@ -53,6 +53,7 @@ import {
     SelectTrigger,
     SelectValue,
 } from "@/components/ui/select";
+import { parseLocalizedValue } from "@/utils/textUtils";
 
 export default function WithdrawalRequestsPage() {
     const [isLoading, setIsLoading] = useState(true);
@@ -151,7 +152,7 @@ export default function WithdrawalRequestsPage() {
     };
 
     const filteredRequests = requests.filter(req => {
-        const nameToCheck = req.temple?.name || req.seller?.name || "";
+        const nameToCheck = parseLocalizedValue(req.temple?.name) || parseLocalizedValue(req.seller?.name) || "";
         const matchesSearch = nameToCheck.toLowerCase().includes(searchTerm.toLowerCase()) ||
             req.id.toLowerCase().includes(searchTerm.toLowerCase());
         const matchesStatus = statusFilter === "ALL" || req.status === statusFilter;
@@ -303,9 +304,9 @@ export default function WithdrawalRequestsPage() {
                                                             <Building2 className="w-5 h-5" />
                                                         </div>
                                                         <div className="flex flex-col">
-                                                            <span className="text-sm font-extrabold text-slate-900">{req.temple?.name || req.seller?.name || "Unknown"}</span>
-                                                            <span className="text-[10px] text-slate-400 font-bold uppercase tracking-tight">
-                                                                {req.temple?.user?.name || req.seller?.user?.name || "N/A"}
+                                                            <span className="text-sm font-extrabold text-slate-900">{parseLocalizedValue(req.temple?.name) || parseLocalizedValue(req.seller?.name) || "Unknown"}</span>
+                                                            <span className="text-[10px] font-bold text-slate-500 uppercase">
+                                                                {parseLocalizedValue(req.temple?.user?.name) || parseLocalizedValue(req.seller?.user?.name) || "N/A"}
                                                             </span>
                                                         </div>
                                                     </div>

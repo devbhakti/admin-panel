@@ -14,6 +14,7 @@ import {
 } from "lucide-react";
 import { API_URL } from "@/config/apiConfig";
 import { useLanguage } from "@/context/LanguageContext";
+import { parseLocalizedValue } from '@/utils/textUtils';
 
 interface TemplePreviewProps {
     temple: any;
@@ -146,7 +147,7 @@ export default function TemplePreview({ temple }: TemplePreviewProps) {
                                                         className="flex items-center justify-between p-3 bg-slate-50 rounded-lg border border-slate-100"
                                                     >
                                                         <div className="flex-1">
-                                                            <h4 className="font-semibold text-slate-900 text-sm mb-1">{pooja.name}</h4>
+                                                            <h4 className="font-semibold text-slate-900 text-sm mb-1">{parseLocalizedValue(pooja.name)}</h4>
                                                             <div className="flex flex-wrap gap-1.5">
                                                                 {pooja.benefits?.map((benefit: string, bIndex: number) => (
                                                                     <span

@@ -386,10 +386,10 @@ export function TempleForm({
             fd.append("existingHeroImages", JSON.stringify(existingHeroImages));
         }
 
-        // Combine both slab types for backend
+        // Combine both slab types for backend, but ONLY if they are CUSTOM
         const combinedSlabs = [
-            ...marketplaceSlabs.map(s => ({ ...s, category: 'MARKETPLACE' })),
-            ...poojaSlabs.map(s => ({ ...s, category: 'POOJA' }))
+            ...(marketplaceRateType === 'CUSTOM' ? marketplaceSlabs.map(s => ({ ...s, category: 'MARKETPLACE' })) : []),
+            ...(poojaRateType === 'CUSTOM' ? poojaSlabs.map(s => ({ ...s, category: 'POOJA' })) : [])
         ];
         fd.append("commissionSlabs", JSON.stringify(combinedSlabs));
 

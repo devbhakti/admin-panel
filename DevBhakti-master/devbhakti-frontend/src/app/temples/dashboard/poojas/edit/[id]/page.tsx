@@ -14,6 +14,8 @@ import { fetchMyPoojas, updateMyPooja, fetchPoojaCategories, suggestPoojaCategor
 import { useToast } from "@/hooks/use-toast";
 import { API_URL } from "@/config/apiConfig";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from "@/components/ui/dialog";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { parseLocalizedValue } from "@/utils/textUtils";
 
 export default function TempleEditPoojaPage() {
     const router = useRouter();
@@ -33,11 +35,15 @@ export default function TempleEditPoojaPage() {
     const [isSuggesting, setIsSuggesting] = useState(false);
 
     const [formData, setFormData] = useState({
-        name: "",
+        name_en: "",
+        name_hi: "",
+        name_mr: "",
         price: 0,
         category: "",
         time: "",
-        about: "",
+        about_en: "",
+        about_hi: "",
+        about_mr: "",
         description: [] as string[],
         benefits: [] as string[],
         bullets: [] as string[],
@@ -75,7 +81,11 @@ export default function TempleEditPoojaPage() {
         try {
             const res = await suggestPoojaCategory(newCategoryName);
             if (res.success) {
-                toast({ title: "Suggested", description: "Your suggestion has been sent to admin for approval." });
+                toast({ 
+                    title: "Suggested", 
+                    description: "Your suggestion has been sent to admin for approval.",
+                    variant: "success"
+                });
                 setNewCategoryName("");
                 setShowAddCategory(false);
             }
@@ -110,13 +120,21 @@ export default function TempleEditPoojaPage() {
                     STATIC_PACKAGE_TYPES.some(st => st.name === p.name)
                 );
 
-                setFormData({
-                    name: pooja.name,
-                    price: pooja.price,
+                const getL = (field: any, lang: string, fallback: any = "") => {
+                    const result = parseLocalizedValue(field, lang);
+                    return result === "N/A" ? fallback : result;
+                };
 
+                setFormData({
+                    name_en: getL(pooja.name, 'en'),
+                    name_hi: getL(pooja.name, 'hi'),
+                    name_mr: getL(pooja.name, 'mr'),
+                    price: pooja.price,
                     category: pooja.category || "",
                     time: pooja.time || "",
-                    about: pooja.about || "",
+                    about_en: getL(pooja.about, 'en'),
+                    about_hi: getL(pooja.about, 'hi'),
+                    about_mr: getL(pooja.about, 'mr'),
                     description: pooja.description || [],
                     benefits: pooja.benefits || [],
                     bullets: pooja.bullets || [],
@@ -126,8 +144,9 @@ export default function TempleEditPoojaPage() {
                     status: pooja.status ?? true
                 });
 
-                if (pooja.category) {
-                    const cats = pooja.category.split(",").map((c: string) => c.trim()).filter(Boolean);
+                const catStr = getL(pooja.category, 'en');
+                if (catStr) {
+                    const cats = catStr.split(",").map((c: string) => c.trim()).filter(Boolean);
                     setSelectedCats(cats);
                 }
 
@@ -206,12 +225,16 @@ export default function TempleEditPoojaPage() {
         setIsSubmitting(true);
 
         const submissionData = new FormData();
-        submissionData.append('name', formData.name);
+        submissionData.append('name_en', formData.name_en);
+        submissionData.append('name_hi', formData.name_hi);
+        submissionData.append('name_mr', formData.name_mr);
+        submissionData.append('about_en', formData.about_en);
+        submissionData.append('about_hi', formData.about_hi);
+        submissionData.append('about_mr', formData.about_mr);
         submissionData.append('price', formData.price.toString());
 
         submissionData.append('category', formData.category);
         submissionData.append('time', formData.time);
-        submissionData.append('about', formData.about);
         submissionData.append('description', JSON.stringify(formData.description));
         submissionData.append('benefits', JSON.stringify(formData.benefits));
         submissionData.append('bullets', JSON.stringify(formData.bullets));
@@ -273,129 +296,129 @@ export default function TempleEditPoojaPage() {
             </div>
 
             <form onSubmit={handleSubmit} className="space-y-8 bg-card p-8 rounded-2xl border shadow-sm">
-                <div className="space-y-6">
-                    <h3 className="text-lg font-semibold border-b pb-2 text-[#7b4623]">Pooja Details</h3>
-                    <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                        <div className="space-y-2">
-                            <Label htmlFor="name">Pooja Name *</Label>
-                            <Input
-                                id="name"
-                                value={formData.name}
-                                onChange={(e) => setFormData({ ...formData, name: e.target.value })}
-                                className="rounded-xl h-11 border-slate-200 focus:border-[#7b4623] focus:ring-[#7b4623]/10"
-                                required
-                            />
-                        </div>
-                        <div className="space-y-4 md:col-span-2">
-                            <div className="flex items-center justify-between">
-                                <Label className="text-base font-semibold text-[#7b4623]">Category/Purpose *</Label>
-                                <Button
-                                    type="button"
-                                    variant="outline"
-                                    onClick={() => setShowAddCategory(true)}
-                                    className="rounded-full px-4 h-9 text-sm border-dashed border-[#7b4623] text-[#7b4623] hover:bg-orange-50"
-                                >
-                                    <Plus className="w-4 h-4 mr-1" />
-                                    Add New
-                                </Button>
-                            </div>
+                <Tabs defaultValue="en" className="w-full">
+                    <TabsList className="grid w-full grid-cols-3 mb-8 bg-slate-100 p-1 rounded-xl">
+                        <TabsTrigger value="en" className="rounded-lg data-[state=active]:bg-white data-[state=active]:shadow-sm">English</TabsTrigger>
+                        <TabsTrigger value="hi" className="rounded-lg data-[state=active]:bg-white data-[state=active]:shadow-sm">हिन्दी</TabsTrigger>
+                        <TabsTrigger value="mr" className="rounded-lg data-[state=active]:bg-white data-[state=active]:shadow-sm">मराठी</TabsTrigger>
+                    </TabsList>
 
-                            <DropdownMenu>
-                                <DropdownMenuTrigger asChild>
-                                    <Button variant="outline" className="w-full justify-between h-11 rounded-xl border-slate-200 text-slate-600 hover:bg-transparent">
-                                        <span>Select purposes...</span>
-                                        <ChevronDown className="w-4 h-4 opacity-50" />
-                                    </Button>
-                                </DropdownMenuTrigger>
-                                <DropdownMenuContent className="w-[var(--radix-dropdown-menu-trigger-width)] max-h-64 overflow-y-auto">
-                                    {poojaCategories.map((cat) => (
-                                        <DropdownMenuCheckboxItem
-                                            key={cat.id}
-                                            checked={selectedCats.includes(cat.name)}
-                                            onCheckedChange={() => toggleCategory(cat.name)}
-                                        >
-                                            {cat.name}
-                                        </DropdownMenuCheckboxItem>
-                                    ))}
-                                </DropdownMenuContent>
-                            </DropdownMenu>
-
-                            <div className="flex flex-wrap gap-2 mt-3">
-                                {selectedCats.map(catName => (
-                                    <div key={catName} className="flex items-center gap-1.5 bg-[#7b4623] text-white px-3 py-1.5 rounded-full text-sm">
-                                        <span>{catName}</span>
-                                        <X
-                                            className="w-3.5 h-3.5 cursor-pointer hover:text-red-300"
-                                            onClick={() => toggleCategory(catName)}
+                    {['en', 'hi', 'mr'].map((lang) => (
+                        <TabsContent key={lang} value={lang} className="space-y-6 mt-0 outline-none animate-in fade-in-50 duration-300">
+                            <div className="space-y-6">
+                                <h3 className="text-lg font-semibold border-b pb-2 text-[#7b4623]">
+                                    {lang === 'en' ? 'Pooja Details' : lang === 'hi' ? 'पूजा विवरण' : 'पूजा तपशील'} ({lang.toUpperCase()})
+                                </h3>
+                                <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                                    <div className="space-y-2">
+                                        <Label htmlFor={`name_${lang}`}>Pooja Name * ({lang.toUpperCase()})</Label>
+                                        <Input
+                                            id={`name_${lang}`}
+                                            value={(formData as any)[`name_${lang}`]}
+                                            onChange={(e) => setFormData({ ...formData, [`name_${lang}`]: e.target.value })}
+                                            className="rounded-xl h-11 border-slate-200 focus:border-[#7b4623] focus:ring-[#7b4623]/10"
+                                            required={lang === 'en'}
                                         />
                                     </div>
+                                    <div className="space-y-2">
+                                        <Label htmlFor="price">Single Person Price (₹) *</Label>
+                                        <Input
+                                            id="price"
+                                            type="number"
+                                            value={formData.price === 0 ? "" : formData.price}
+                                            onChange={(e) => {
+                                                const newPrice = e.target.value === "" ? 0 : parseInt(e.target.value);
+                                                setFormData(prev => {
+                                                    const newPackages = prev.packages.map(pkg => {
+                                                        if (pkg.name === "Single") {
+                                                            return { ...pkg, price: newPrice };
+                                                        }
+                                                        return pkg;
+                                                    });
+                                                    return { ...prev, price: newPrice, packages: newPackages };
+                                                });
+                                            }}
+                                            className="rounded-xl h-11 border-slate-200 focus:border-[#7b4623] focus:ring-[#7b4623]/10"
+                                            required
+                                        />
+                                    </div>
+                                    <div className="flex items-center space-x-2 pt-8">
+                                        <input
+                                            type="checkbox"
+                                            id="status"
+                                            checked={formData.status}
+                                            onChange={(e) => setFormData({ ...formData, status: e.target.checked })}
+                                            className="w-5 h-5 accent-[#7b4623]"
+                                        />
+                                        <Label htmlFor="status" className="font-semibold cursor-pointer">Active (Visible to devotees)</Label>
+                                    </div>
+
+                                </div>
+
+                                <div className="space-y-2">
+                                    <Label htmlFor={`about_${lang}`}>About the Pooja ({lang.toUpperCase()})</Label>
+                                    <Textarea
+                                        id={`about_${lang}`}
+                                        value={(formData as any)[`about_${lang}`]}
+                                        onChange={(e) => setFormData({ ...formData, [`about_${lang}`]: e.target.value })}
+                                        className="h-32 rounded-xl resize-none border-slate-200 focus:border-[#7b4623] focus:ring-[#7b4623]/10"
+                                    />
+                                </div>
+                            </div>
+                        </TabsContent>
+                    ))}
+                </Tabs>
+
+                <div className="space-y-6">
+                    <div className="space-y-4 md:col-span-2">
+                        <div className="flex items-center justify-between">
+                            <Label className="text-base font-semibold text-[#7b4623]">Category/Purpose *</Label>
+                            <Button
+                                type="button"
+                                variant="outline"
+                                onClick={() => setShowAddCategory(true)}
+                                className="rounded-full px-4 h-9 text-sm border-dashed border-[#7b4623] text-[#7b4623] hover:bg-orange-50"
+                            >
+                                <Plus className="w-4 h-4 mr-1" />
+                                Add New
+                            </Button>
+                        </div>
+
+                        <DropdownMenu>
+                            <DropdownMenuTrigger asChild>
+                                <Button variant="outline" className="w-full justify-between h-11 rounded-xl border-slate-200 text-slate-600 hover:bg-transparent">
+                                    <span>Select purposes...</span>
+                                    <ChevronDown className="w-4 h-4 opacity-50" />
+                                </Button>
+                            </DropdownMenuTrigger>
+                            <DropdownMenuContent className="w-[var(--radix-dropdown-menu-trigger-width)] max-h-64 overflow-y-auto">
+                                {poojaCategories.map((cat) => (
+                                    <DropdownMenuCheckboxItem
+                                        key={cat.id}
+                                        checked={selectedCats.includes(cat.name)}
+                                        onCheckedChange={() => toggleCategory(cat.name)}
+                                    >
+                                        {parseLocalizedValue(cat.name)}
+                                    </DropdownMenuCheckboxItem>
                                 ))}
-                            </div>
+                            </DropdownMenuContent>
+                        </DropdownMenu>
 
-                            {selectedCats.length === 0 && (
-                                <p className="text-[10px] text-slate-400 italic">Select one or more purposes for this pooja</p>
-                            )}
-                        </div>
-                        <div className="space-y-2">
-                            <Label htmlFor="price">Single Person Price (₹) *</Label>
-                            <Input
-                                id="price"
-                                type="number"
-                                value={formData.price === 0 ? "" : formData.price}
-                                onChange={(e) => {
-                                    const newPrice = e.target.value === "" ? 0 : parseInt(e.target.value);
-                                    setFormData(prev => {
-                                        const newPackages = prev.packages.map(pkg => {
-                                            if (pkg.name === "Single") {
-                                                return { ...pkg, price: newPrice };
-                                            }
-                                            return pkg;
-                                        });
-                                        return { ...prev, price: newPrice, packages: newPackages };
-                                    });
-                                }}
-                                className="rounded-xl h-11 border-slate-200 focus:border-[#7b4623] focus:ring-[#7b4623]/10"
-                                required
-                            />
-                        </div>
-                        <div className="flex items-center space-x-2 pt-8">
-                            <input
-                                type="checkbox"
-                                id="status"
-                                checked={formData.status}
-                                onChange={(e) => setFormData({ ...formData, status: e.target.checked })}
-                                className="w-5 h-5 accent-[#7b4623]"
-                            />
-                            <Label htmlFor="status" className="font-semibold cursor-pointer">Active (Visible to devotees)</Label>
+                        <div className="flex flex-wrap gap-2 mt-3">
+                            {selectedCats.map(catName => (
+                                <div key={catName} className="flex items-center gap-1.5 bg-[#7b4623] text-white px-3 py-1.5 rounded-full text-sm">
+                                    <span>{parseLocalizedValue(catName)}</span>
+                                    <X
+                                        className="w-3.5 h-3.5 cursor-pointer hover:text-red-300"
+                                        onClick={() => toggleCategory(catName)}
+                                    />
+                                </div>
+                            ))}
                         </div>
 
-                    </div>
-                </div>
-
-                <div className="space-y-4">
-                    <h3 className="text-lg font-semibold border-b pb-2 text-[#7b4623]">Pooja Media</h3>
-                    <div className="flex flex-col sm:flex-row items-center gap-6">
-                        <div className="w-48 h-48 rounded-2xl border-2 border-dashed border-slate-200 overflow-hidden bg-slate-50 relative group cursor-pointer" onClick={() => (document.getElementById('image-edit') as any).click()}>
-                            {imagePreview && (
-                                <img src={imagePreview} className="w-full h-full object-cover" alt="Preview" />
-                            )}
-                            <div className="absolute inset-0 bg-black/40 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center text-white text-xs font-medium">
-                                <Upload className="w-6 h-6 mb-1" />
-                            </div>
-                            <input
-                                id="image-edit"
-                                type="file"
-                                className="hidden"
-                                onChange={handleImageChange}
-                                accept="image/*"
-                            />
-                        </div>
-                        <div className="flex-1 space-y-2">
-                            <p className="text-sm font-semibold">Change Cover Image</p>
-                            <p className="text-xs text-muted-foreground whitespace-pre-wrap">Click on the image preview to pick a new file.
-                                Leave as is if you don't want to change the image.</p>
-                            <p className="text-[10px] font-bold text-primary uppercase tracking-widest mt-1">Recommended: 1200x675 (16:9)</p>
-                        </div>
+                        {selectedCats.length === 0 && (
+                            <p className="text-[10px] text-slate-400 italic">Select one or more purposes for this pooja</p>
+                        )}
                     </div>
                 </div>
 

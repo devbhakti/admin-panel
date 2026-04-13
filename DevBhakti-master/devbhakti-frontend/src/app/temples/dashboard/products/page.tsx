@@ -36,6 +36,7 @@ import { Separator } from "@/components/ui/separator";
 import { fetchMyProducts, deleteMyProduct } from "@/api/templeAdminController";
 import { useToast } from "@/hooks/use-toast";
 import { BASE_URL } from "@/config/apiConfig";
+import { parseLocalizedValue } from '@/utils/textUtils';
 
 
 
@@ -96,8 +97,8 @@ export default function TempleProductsPage() {
     };
 
     const filteredProducts = products.filter((p) =>
-        p.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
-        (p.categoryObj?.name || "").toLowerCase().includes(searchQuery.toLowerCase())
+        parseLocalizedValue(p.name).toLowerCase().includes(searchQuery.toLowerCase()) ||
+        parseLocalizedValue(p.categoryObj?.name || "").toLowerCase().includes(searchQuery.toLowerCase())
     );
 
     const getStatusBadge = (status: string) => {
@@ -220,7 +221,7 @@ export default function TempleProductsPage() {
                                             {product.image ? (
                                                 <img
                                                     src={`${BASE_URL}${product.image}`}
-                                                    alt={product.name}
+                                                    alt={parseLocalizedValue(product.name)}
                                                     className="w-full h-full object-contain p-4 group-hover:scale-105 transition-transform duration-500"
                                                 />
                                             ) : (
@@ -264,15 +265,15 @@ export default function TempleProductsPage() {
                                         <CardContent className="p-4 flex-1">
                                             <div className="mb-2">
                                                 <span className="text-xs font-medium text-primary bg-primary/5 px-2 py-1 rounded-full">
-                                                    {product.categoryObj?.name || "General"}
-                                                </span>
-                                            </div>
-                                            <h3 className="font-bold text-lg text-slate-900 line-clamp-1 mb-1" title={product.name}>
-                                                {product.name}
-                                            </h3>
-                                            <p className="text-sm text-slate-500 line-clamp-2 mb-3 h-10">
-                                                {product.description}
-                                            </p>
+                                                {parseLocalizedValue(product.categoryObj?.name || "General")}
+                                            </span>
+                                        </div>
+                                        <h3 className="font-bold text-lg text-slate-900 line-clamp-1 mb-1" title={parseLocalizedValue(product.name)}>
+                                            {parseLocalizedValue(product.name)}
+                                        </h3>
+                                        <p className="text-sm text-slate-500 line-clamp-2 mb-3 h-10">
+                                            {parseLocalizedValue(product.description)}
+                                        </p>
 
                                             <Separator className="my-3" />
 
@@ -311,13 +312,13 @@ export default function TempleProductsPage() {
                         <div className="flex flex-col md:flex-row h-[80vh] md:h-auto">
                             {/* Image Side */}
                             <div className="w-full md:w-2/5 bg-slate-100 relative min-h-[300px]">
-                                {selectedProduct.image ? (
-                                    <img
-                                        src={`${BASE_URL}${selectedProduct.image}`}
-                                        alt={selectedProduct.name}
-                                        className="w-full h-full object-contain p-4 absolute inset-0"
-                                    />
-                                ) : (
+                                    {selectedProduct.image ? (
+                                        <img
+                                            src={`${BASE_URL}${selectedProduct.image}`}
+                                            alt={parseLocalizedValue(selectedProduct.name)}
+                                            className="w-full h-full object-contain p-4 absolute inset-0"
+                                        />
+                                    ) : (
                                     <div className="w-full h-full flex items-center justify-center">
                                         <Package className="w-16 h-16 text-slate-300" />
                                     </div>
@@ -333,13 +334,13 @@ export default function TempleProductsPage() {
                                     <div className="flex items-start justify-between">
                                         <div>
                                             <Badge variant="outline" className="mb-2 border-primary/20 text-primary">
-                                                {selectedProduct.categoryObj?.name || "General"}
+                                                {parseLocalizedValue(selectedProduct.categoryObj?.name || "General")}
                                             </Badge>
                                             <DialogTitle className="text-2xl font-bold text-slate-900">
-                                                {selectedProduct.name}
+                                                {parseLocalizedValue(selectedProduct.name)}
                                             </DialogTitle>
                                             <DialogDescription className="mt-2 text-base">
-                                                {selectedProduct.description}
+                                                {parseLocalizedValue(selectedProduct.description)}
                                             </DialogDescription>
                                         </div>
                                     </div>
@@ -381,14 +382,14 @@ export default function TempleProductsPage() {
                                                             <tr key={variant.id} className="hover:bg-slate-50/50">
                                                                 <td className="px-4 py-3">
                                                                     {variant.image ? (
-                                                                        <img src={`${BASE_URL}${variant.image}`} alt={variant.name} className="w-12 h-12 object-cover rounded-md border" />
+                                                                        <img src={`${BASE_URL}${variant.image}`} alt={parseLocalizedValue(variant.name)} className="w-12 h-12 object-cover rounded-md border" />
                                                                     ) : (
                                                                         <div className="w-12 h-12 border-2 border-dashed border-slate-200 rounded-md flex items-center justify-center">
                                                                             <Package className="w-5 h-5 text-slate-300" />
                                                                         </div>
                                                                     )}
                                                                 </td>
-                                                                <td className="px-4 py-3 font-medium text-slate-900">{variant.name}</td>
+                                                                <td className="px-4 py-3 font-medium text-slate-900">{parseLocalizedValue(variant.name)}</td>
                                                                 <td className="px-4 py-3 text-slate-700 font-semibold">₹{variant.price}</td>
                                                                 <td className="px-4 py-3 text-slate-600">
                                                                     {variant.costPrice ? `₹${variant.costPrice}` : <span className="text-slate-400">-</span>}

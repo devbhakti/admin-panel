@@ -41,6 +41,7 @@ import { useToast } from "@/hooks/use-toast";
 import { getLiveDarshanUrl } from "@/lib/utils/templeUtils";
 import { useLanguage } from "@/context/LanguageContext";
 import { getLocalized, getLocalizedArray } from "@/utils/localization";
+import { parseLocalizedValue } from '@/utils/textUtils';
 
 export default function TempleDetail() {
     const params = useParams();
@@ -193,7 +194,11 @@ export default function TempleDetail() {
     const toggleFavorite = async () => {
         const templeId = params?.id || params?.subdomain;
         if (!user) {
-            router.push("/auth");
+            toast({
+                title: "Please Login",
+                description: "You need to login as a devotee to add favourites.",
+                variant: "destructive",
+            });
             return;
         }
 
@@ -201,11 +206,11 @@ export default function TempleDetail() {
             if (isFavorite) {
                 await removeFavorite({ templeId: templeId as string });
                 setIsFavorite(false);
-                toast({ title: t('common.removed_from_favorites') });
+                toast({ title: "Removed from Favourites", description: "Temple removed from your favourites.", variant: "success" });
             } else {
                 await addFavorite({ templeId: templeId as string });
                 setIsFavorite(true);
-                toast({ title: t('common.added_to_favorites') });
+                toast({ title: "❤️ Added to Favourites", description: "Temple added to your favourites!", variant: "success" });
             }
         } catch (error: any) {
             toast({
@@ -736,14 +741,6 @@ export default function TempleDetail() {
                 <DialogContent className="max-w-[95vw] w-full h-[90vh] p-0 border-none bg-black/95 flex items-center justify-center overflow-hidden">
                     <DialogTitle className="sr-only">Full Image View</DialogTitle>
                     <div className="relative w-full h-full flex items-center justify-center p-4">
-                        <Button
-                            variant="ghost"
-                            size="icon"
-                            className="absolute top-4 right-4 text-white hover:bg-white/20 z-50 rounded-full"
-                            onClick={() => setIsFullViewOpen(false)}
-                        >
-                            <X className="h-6 w-6" />
-                        </Button>
 
                         <motion.img
                             key={activeImageIndex}
@@ -809,14 +806,6 @@ export default function TempleDetail() {
                             </div>
 
                             {/* Close Button Overlay */}
-                            <Button
-                                variant="ghost"
-                                size="icon"
-                                className="absolute top-4 right-4 text-white/80 hover:text-white hover:bg-white/10 rounded-full"
-                                onClick={() => setSelectedEvent(null)}
-                            >
-                                <X className="h-5 w-5" />
-                            </Button>
 
                             <div className="p-6 space-y-6">
                                 {/* Event Description (if any) */}
@@ -844,7 +833,7 @@ export default function TempleDetail() {
                                             >
                                                 <div className="flex-1 min-w-0">
                                                     <h4 className="font-bold text-sm text-foreground group-hover:text-primary transition-colors truncate">
-                                                        {pooja.name}
+                                                        {parseLocalizedValue(pooja.name)}
                                                     </h4>
                                                     <div className="flex items-center text-primary font-black text-xs mt-1">
                                                         <IndianRupee className="h-3 w-3" />
