@@ -13,7 +13,7 @@ router.get('/seo-public', globalSettingsController.getSeoSettings);
 router.use(authenticate);
 
 // Admin ratings management
-router.patch('/ratings', checkPermission('cms.features'), globalSettingsController.updateRatingsSettings);
+router.patch('/ratings', checkPermission('cms.ratings'), globalSettingsController.updateRatingsSettings);
 
 // SEO Meta Tags management
 router.get('/seo', globalSettingsController.getSeoSettings);

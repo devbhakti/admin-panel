@@ -14,7 +14,7 @@ import {
     fetchTempleByIdAdmin
 } from "@/api/adminController";
 import { TempleForm } from "@/components/admin/temples/TempleForm";
-import { getDeduplicatedPoojas } from "@/utils/textUtils";
+import { getDeduplicatedPoojas, parseLocalizedValue } from "@/utils/textUtils";
 
 export default function EditTemplePage() {
     const router = useRouter();

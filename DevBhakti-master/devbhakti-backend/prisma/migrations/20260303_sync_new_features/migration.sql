@@ -3,23 +3,43 @@ ALTER TABLE "User" ADD COLUMN "address" TEXT,
 ADD COLUMN "anniversary" TEXT,
 ADD COLUMN "dob" TEXT;
 
--- CreateEnum
-CREATE TYPE "OwnerType" AS ENUM ('ADMIN', 'TEMPLE', 'SELLER');
+-- ✅ Safe ENUM: OwnerType
+DO $$ BEGIN
+  IF NOT EXISTS (SELECT 1 FROM pg_type WHERE typname = 'OwnerType') THEN
+    CREATE TYPE "OwnerType" AS ENUM ('ADMIN', 'TEMPLE', 'SELLER');
+  END IF;
+END $$;
 
--- CreateEnum
-CREATE TYPE "LedgerType" AS ENUM ('MARKETPLACE_EARNING', 'POOJA_EARNING', 'DONATION_EARNING', 'WITHDRAWAL');
+-- ✅ Safe ENUM: LedgerType
+DO $$ BEGIN
+  IF NOT EXISTS (SELECT 1 FROM pg_type WHERE typname = 'LedgerType') THEN
+    CREATE TYPE "LedgerType" AS ENUM ('MARKETPLACE_EARNING', 'POOJA_EARNING', 'DONATION_EARNING', 'WITHDRAWAL');
+  END IF;
+END $$;
 
--- CreateEnum
-CREATE TYPE "LedgerStatus" AS ENUM ('PENDING', 'COMPLETED', 'CANCELLED');
+-- ✅ Safe ENUM: LedgerStatus
+DO $$ BEGIN
+  IF NOT EXISTS (SELECT 1 FROM pg_type WHERE typname = 'LedgerStatus') THEN
+    CREATE TYPE "LedgerStatus" AS ENUM ('PENDING', 'COMPLETED', 'CANCELLED');
+  END IF;
+END $$;
 
--- CreateEnum
-CREATE TYPE "WithdrawalStatus" AS ENUM ('PENDING', 'APPROVED', 'REJECTED', 'PAID');
+-- ✅ Safe ENUM: WithdrawalStatus
+DO $$ BEGIN
+  IF NOT EXISTS (SELECT 1 FROM pg_type WHERE typname = 'WithdrawalStatus') THEN
+    CREATE TYPE "WithdrawalStatus" AS ENUM ('PENDING', 'APPROVED', 'REJECTED', 'PAID');
+  END IF;
+END $$;
 
--- CreateEnum
-CREATE TYPE "BookingStatus" AS ENUM ('BOOKED', 'REJECTED', 'COMPLETED', 'CANCELLED', 'PENDING');
+-- ✅ Safe ENUM: BookingStatus
+DO $$ BEGIN
+  IF NOT EXISTS (SELECT 1 FROM pg_type WHERE typname = 'BookingStatus') THEN
+    CREATE TYPE "BookingStatus" AS ENUM ('BOOKED', 'REJECTED', 'COMPLETED', 'CANCELLED', 'PENDING');
+  END IF;
+END $$;
 
 -- CreateTable Donation
-CREATE TABLE "Donation" (
+CREATE TABLE IF NOT EXISTS "Donation" (
     "id" TEXT NOT NULL,
     "userId" TEXT,
     "templeId" TEXT NOT NULL,
@@ -41,7 +61,7 @@ CREATE TABLE "Donation" (
 );
 
 -- CreateTable StaffMember
-CREATE TABLE "StaffMember" (
+CREATE TABLE IF NOT EXISTS "StaffMember" (
     "id" TEXT NOT NULL,
     "name" TEXT NOT NULL,
     "email" TEXT NOT NULL,
@@ -55,7 +75,7 @@ CREATE TABLE "StaffMember" (
 );
 
 -- CreateTable Role
-CREATE TABLE "Role" (
+CREATE TABLE IF NOT EXISTS "Role" (
     "id" TEXT NOT NULL,
     "name" TEXT NOT NULL,
     "description" TEXT,
@@ -67,7 +87,7 @@ CREATE TABLE "Role" (
 );
 
 -- CreateTable Permission
-CREATE TABLE "Permission" (
+CREATE TABLE IF NOT EXISTS "Permission" (
     "id" TEXT NOT NULL,
     "key" TEXT NOT NULL,
     "module" TEXT NOT NULL,
@@ -79,7 +99,7 @@ CREATE TABLE "Permission" (
 );
 
 -- CreateTable RolePermission
-CREATE TABLE "RolePermission" (
+CREATE TABLE IF NOT EXISTS "RolePermission" (
     "id" TEXT NOT NULL,
     "roleId" TEXT NOT NULL,
     "permissionId" TEXT NOT NULL,
@@ -88,7 +108,7 @@ CREATE TABLE "RolePermission" (
 );
 
 -- CreateTable StaffRole
-CREATE TABLE "StaffRole" (
+CREATE TABLE IF NOT EXISTS "StaffRole" (
     "id" TEXT NOT NULL,
     "staffId" TEXT NOT NULL,
     "roleId" TEXT NOT NULL,
@@ -97,7 +117,7 @@ CREATE TABLE "StaffRole" (
 );
 
 -- CreateTable FCMToken
-CREATE TABLE "FCMToken" (
+CREATE TABLE IF NOT EXISTS "FCMToken" (
     "id" TEXT NOT NULL,
     "token" TEXT NOT NULL,
     "userId" TEXT NOT NULL,
@@ -108,7 +128,7 @@ CREATE TABLE "FCMToken" (
 );
 
 -- CreateTable Notification
-CREATE TABLE "Notification" (
+CREATE TABLE IF NOT EXISTS "Notification" (
     "id" TEXT NOT NULL,
     "userId" TEXT NOT NULL,
     "userType" TEXT NOT NULL,
@@ -121,24 +141,73 @@ CREATE TABLE "Notification" (
     CONSTRAINT "Notification_pkey" PRIMARY KEY ("id")
 );
 
--- CreateIndex
-CREATE UNIQUE INDEX "Donation_razorpayOrderId_key" ON "Donation"("razorpayOrderId");
-CREATE UNIQUE INDEX "StaffMember_email_key" ON "StaffMember"("email");
-CREATE UNIQUE INDEX "Role_name_ownerType_ownerId_key" ON "Role"("name", "ownerType", "ownerId");
-CREATE UNIQUE INDEX "Permission_key_key" ON "Permission"("key");
-CREATE UNIQUE INDEX "RolePermission_roleId_permissionId_key" ON "RolePermission"("roleId", "permissionId");
-CREATE UNIQUE INDEX "StaffRole_staffId_roleId_key" ON "StaffRole"("staffId", "roleId");
-CREATE UNIQUE INDEX "FCMToken_token_key" ON "FCMToken"("token");
-CREATE INDEX "Notification_userId_userType_idx" ON "Notification"("userId", "userType");
+-- CreateIndex (IF NOT EXISTS for safety)
+CREATE UNIQUE INDEX IF NOT EXISTS "Donation_razorpayOrderId_key" ON "Donation"("razorpayOrderId");
+CREATE UNIQUE INDEX IF NOT EXISTS "StaffMember_email_key" ON "StaffMember"("email");
+CREATE UNIQUE INDEX IF NOT EXISTS "Role_name_ownerType_ownerId_key" ON "Role"("name", "ownerType", "ownerId");
+CREATE UNIQUE INDEX IF NOT EXISTS "Permission_key_key" ON "Permission"("key");
+CREATE UNIQUE INDEX IF NOT EXISTS "RolePermission_roleId_permissionId_key" ON "RolePermission"("roleId", "permissionId");
+CREATE UNIQUE INDEX IF NOT EXISTS "StaffRole_staffId_roleId_key" ON "StaffRole"("staffId", "roleId");
+CREATE UNIQUE INDEX IF NOT EXISTS "FCMToken_token_key" ON "FCMToken"("token");
+CREATE INDEX IF NOT EXISTS "Notification_userId_userType_idx" ON "Notification"("userId", "userType");
 
--- AddForeignKey
-ALTER TABLE "Donation" ADD CONSTRAINT "Donation_templeId_fkey" FOREIGN KEY ("templeId") REFERENCES "Temple"("id") ON DELETE RESTRICT ON UPDATE CASCADE;
-ALTER TABLE "Donation" ADD CONSTRAINT "Donation_userId_fkey" FOREIGN KEY ("userId") REFERENCES "User"("id") ON DELETE SET NULL ON UPDATE CASCADE;
+-- AddForeignKey (with IF NOT EXISTS check via DO blocks)
+DO $$ BEGIN
+  IF NOT EXISTS (
+    SELECT 1 FROM information_schema.table_constraints 
+    WHERE constraint_name = 'Donation_templeId_fkey'
+  ) THEN
+    ALTER TABLE "Donation" ADD CONSTRAINT "Donation_templeId_fkey" 
+    FOREIGN KEY ("templeId") REFERENCES "Temple"("id") ON DELETE RESTRICT ON UPDATE CASCADE;
+  END IF;
+END $$;
 
--- AddForeignKey
-ALTER TABLE "RolePermission" ADD CONSTRAINT "RolePermission_roleId_fkey" FOREIGN KEY ("roleId") REFERENCES "Role"("id") ON DELETE CASCADE ON UPDATE CASCADE;
-ALTER TABLE "RolePermission" ADD CONSTRAINT "RolePermission_permissionId_fkey" FOREIGN KEY ("permissionId") REFERENCES "Permission"("id") ON DELETE CASCADE ON UPDATE CASCADE;
+DO $$ BEGIN
+  IF NOT EXISTS (
+    SELECT 1 FROM information_schema.table_constraints 
+    WHERE constraint_name = 'Donation_userId_fkey'
+  ) THEN
+    ALTER TABLE "Donation" ADD CONSTRAINT "Donation_userId_fkey" 
+    FOREIGN KEY ("userId") REFERENCES "User"("id") ON DELETE SET NULL ON UPDATE CASCADE;
+  END IF;
+END $$;
 
--- AddForeignKey
-ALTER TABLE "StaffRole" ADD CONSTRAINT "StaffRole_staffId_fkey" FOREIGN KEY ("staffId") REFERENCES "StaffMember"("id") ON DELETE CASCADE ON UPDATE CASCADE;
-ALTER TABLE "StaffRole" ADD CONSTRAINT "StaffRole_roleId_fkey" FOREIGN KEY ("roleId") REFERENCES "Role"("id") ON DELETE CASCADE ON UPDATE CASCADE;
+DO $$ BEGIN
+  IF NOT EXISTS (
+    SELECT 1 FROM information_schema.table_constraints 
+    WHERE constraint_name = 'RolePermission_roleId_fkey'
+  ) THEN
+    ALTER TABLE "RolePermission" ADD CONSTRAINT "RolePermission_roleId_fkey" 
+    FOREIGN KEY ("roleId") REFERENCES "Role"("id") ON DELETE CASCADE ON UPDATE CASCADE;
+  END IF;
+END $$;
+
+DO $$ BEGIN
+  IF NOT EXISTS (
+    SELECT 1 FROM information_schema.table_constraints 
+    WHERE constraint_name = 'RolePermission_permissionId_fkey'
+  ) THEN
+    ALTER TABLE "RolePermission" ADD CONSTRAINT "RolePermission_permissionId_fkey" 
+    FOREIGN KEY ("permissionId") REFERENCES "Permission"("id") ON DELETE CASCADE ON UPDATE CASCADE;
+  END IF;
+END $$;
+
+DO $$ BEGIN
+  IF NOT EXISTS (
+    SELECT 1 FROM information_schema.table_constraints 
+    WHERE constraint_name = 'StaffRole_staffId_fkey'
+  ) THEN
+    ALTER TABLE "StaffRole" ADD CONSTRAINT "StaffRole_staffId_fkey" 
+    FOREIGN KEY ("staffId") REFERENCES "StaffMember"("id") ON DELETE CASCADE ON UPDATE CASCADE;
+  END IF;
+END $$;
+
+DO $$ BEGIN
+  IF NOT EXISTS (
+    SELECT 1 FROM information_schema.table_constraints 
+    WHERE constraint_name = 'StaffRole_roleId_fkey'
+  ) THEN
+    ALTER TABLE "StaffRole" ADD CONSTRAINT "StaffRole_roleId_fkey" 
+    FOREIGN KEY ("roleId") REFERENCES "Role"("id") ON DELETE CASCADE ON UPDATE CASCADE;
+  END IF;
+END $$;

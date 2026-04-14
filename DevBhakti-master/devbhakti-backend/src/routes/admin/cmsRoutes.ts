@@ -34,14 +34,14 @@ router.put('/testimonials/:id', checkPermission('cms.testimonials'), uploadCmsTe
 router.delete('/testimonials/:id', checkPermission('cms.testimonials'), cmsController.deleteTestimonial);
 
 // CTA Cards (Admin)
-router.post('/cta-cards', checkPermission('cms.features'), uploadCmsImage.single('icon'), cmsController.createCTACard);
-router.put('/cta-cards/:id', checkPermission('cms.features'), uploadCmsImage.single('icon'), cmsController.updateCTACard);
-router.delete('/cta-cards/:id', checkPermission('cms.features'), cmsController.deleteCTACard);
+router.post('/cta-cards', checkPermission('cms.cta_cards'), uploadCmsImage.single('icon'), cmsController.createCTACard);
+router.put('/cta-cards/:id', checkPermission('cms.cta_cards'), uploadCmsImage.single('icon'), cmsController.updateCTACard);
+router.delete('/cta-cards/:id', checkPermission('cms.cta_cards'), cmsController.deleteCTACard);
 
 // Standard FAQs (Admin)
-router.post('/pooja-faqs', checkPermission('cms.features'), cmsController.createStandardFAQ);
-router.put('/pooja-faqs/:id', checkPermission('cms.features'), cmsController.updateStandardFAQ);
-router.delete('/pooja-faqs/:id', checkPermission('cms.features'), cmsController.deleteStandardFAQ);
+router.post('/pooja-faqs', checkPermission('cms.faqs'), cmsController.createStandardFAQ);
+router.put('/pooja-faqs/:id', checkPermission('cms.faqs'), cmsController.updateStandardFAQ);
+router.delete('/pooja-faqs/:id', checkPermission('cms.faqs'), cmsController.deleteStandardFAQ);
 
 export default router;
 

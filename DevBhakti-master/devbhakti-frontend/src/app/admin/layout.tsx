@@ -91,7 +91,7 @@ const sidebarItems = [
     permission: "poojas.view",
     subItems: [
       { label: "All Poojas", href: "/admin/poojas", permission: "poojas.view" },
-      { label: "Pooja Purposes", href: "/admin/poojas/categories", permission: "poojas.view" },
+      { label: "Pooja Purposes", href: "/admin/poojas/categories", permission: "poojas.categories" },
     ]
   },
   {
@@ -121,10 +121,10 @@ const sidebarItems = [
     subItems: [
       { label: "Manage Banners", href: "/admin/cms/banners", permission: "cms.banners" },
       { label: "Manage Features", href: "/admin/cms/features", permission: "cms.features" },
-      { label: "Manage Rating", href: "/admin/cms/manage-rating", permission: "cms.features" },
+      { label: "Manage Rating", href: "/admin/cms/manage-rating", permission: "cms.ratings" },
       { label: "Manage Testimonials", href: "/admin/cms/testimonials", permission: "cms.testimonials" },
-      { label: "Manage CTA Cards", href: "/admin/cms/cta-cards", permission: "cms.features" },
-      { label: "Manage Pooja FAQs", href: "/admin/cms/pooja-faqs", permission: "cms.features" },
+      { label: "Manage CTA Cards", href: "/admin/cms/cta-cards", permission: "cms.cta_cards" },
+      { label: "Manage Pooja FAQs", href: "/admin/cms/pooja-faqs", permission: "cms.faqs" },
       // { label: "SEO Meta Tags", href: "/admin/cms/seo", permission: "cms.features" },
     ]
 

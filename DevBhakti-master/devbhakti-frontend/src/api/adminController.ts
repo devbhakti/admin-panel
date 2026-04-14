@@ -82,7 +82,7 @@ export const updatePoojaAdmin = async (id: string, formData: FormData) => {
 };
 
 export const togglePoojaStatusAdmin = async (id: string) => {
-    const token = localStorage.getItem("admin_token");
+    const token = getAdminToken();
     const response = await axios.patch(`${API_URL}/admin/poojas/${id}/toggle-status`, {}, {
         headers: { Authorization: `Bearer ${token}` }
     });

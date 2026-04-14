@@ -224,7 +224,7 @@ export const sendDonationEmail = async (req: Request, res: Response) => {
         const lang = (req.headers['x-lang'] as string) || (req.query.lang as string) || 'en';
 
         const donation = await prisma.donation.findUnique({
-            where: { id },
+            where: { id: id as string },
             include: { temple: { select: { name: true } } as any }
         });
 

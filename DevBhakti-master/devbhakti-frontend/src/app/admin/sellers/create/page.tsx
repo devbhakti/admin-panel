@@ -43,6 +43,7 @@ export default function CreateSellerPage() {
 
     const [phoneValidation, setPhoneValidation] = useState<FieldValidation>({ status: "idle", message: "" });
     const [emailValidation, setEmailValidation] = useState<FieldValidation>({ status: "idle", message: "" });
+    const [slabs, setSlabs] = useState<any[]>([]);
 
     useEffect(() => {
         loadDefaultSlabs();

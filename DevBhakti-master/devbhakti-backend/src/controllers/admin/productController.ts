@@ -743,9 +743,17 @@ export const deleteProduct = async (req: Request, res: Response) => {
   try {
     const { id } = req.params;
 
-    // Check if product exists
+    // Check if product exists and check for dependencies
     const product = await prisma.product.findUnique({
-      where: { id: id as string }
+      where: { id: id as string },
+      include: {
+        _count: {
+          select: {
+            orderItems: true,
+            cartItems: true
+          }
+        }
+      }
     });
 
     if (!product) {
@@ -755,7 +763,26 @@ export const deleteProduct = async (req: Request, res: Response) => {
       });
     }
 
-    // Delete product (variants will be deleted due to cascade)
+    // Check if product has orders
+    if (product._count.orderItems > 0) {
+      return res.status(400).json({
+        success: false,
+        message: "This product has associated orders and cannot be deleted. Try deactivating it instead to keep transaction history intact.",
+        details: "Product is linked to " + product._count.orderItems + " order items."
+      });
+    }
+
+    // If it has cart items, we can either block or delete them. 
+    // Usually it's better to block or delete cart items since they aren't final orders.
+    // For safety, let's block and tell user to try again or we can clean it up.
+    if (product._count.cartItems > 0) {
+        // Option A: Clean up cart items
+        await prisma.cartItem.deleteMany({
+            where: { productId: id as string }
+        });
+    }
+
+    // Delete product (variants will be deleted due to cascade in schema)
     await prisma.product.delete({
       where: { id: id as string }
     });
@@ -764,8 +791,17 @@ export const deleteProduct = async (req: Request, res: Response) => {
       success: true,
       message: "Product deleted successfully"
     });
-  } catch (error) {
+  } catch (error: any) {
     console.error("Delete Product Error:", error);
+    
+    if (error.code === 'P2003') {
+        return res.status(400).json({
+            success: false,
+            message: "Cannot delete product due to existing database dependencies.",
+            details: "Please ensure all associated records are cleared or deactivated instead."
+        });
+    }
+
     res.status(500).json({
       success: false,
       message: "Internal server error"

@@ -51,6 +51,7 @@ import { fetchMyTempleProfile, updateMyTempleProfile } from "@/api/templeAdminCo
 import { useToast } from "@/hooks/use-toast";
 import { API_URL } from "@/config/apiConfig";
 import { ImageCropper } from "@/components/admin/ImageCropper";
+import { parseLocalizedValue } from "@/utils/textUtils";
 
 export default function TempleProfilePage() {
     const [isLoading, setIsLoading] = useState(true);

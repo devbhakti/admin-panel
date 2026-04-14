@@ -6,15 +6,15 @@ import {
     updatePoojaCategoryStatus,
     deletePoojaCategory
 } from "../../controllers/admin/poojaCategoryController";
-import { authenticate, authorize } from "../../middleware/authMiddleware";
+import { authenticate, authorize, checkPermission } from "../../middleware/authMiddleware";
 
 const router = Router();
 
-// Only Admins
-router.get("/", authenticate, authorize("ADMIN"), getAllPoojaCategoriesAdmin);
-router.post("/", authenticate, authorize("ADMIN"), createPoojaCategory);
-router.put("/:id", authenticate, authorize("ADMIN"), updatePoojaCategory);
-router.put("/:id/status", authenticate, authorize("ADMIN"), updatePoojaCategoryStatus);
-router.delete("/:id", authenticate, authorize("ADMIN"), deletePoojaCategory);
+// Only authorized staff or admins
+router.get("/", authenticate, checkPermission("poojas.categories"), getAllPoojaCategoriesAdmin);
+router.post("/", authenticate, checkPermission("poojas.categories"), createPoojaCategory);
+router.put("/:id", authenticate, checkPermission("poojas.categories"), updatePoojaCategory);
+router.put("/:id/status", authenticate, checkPermission("poojas.categories"), updatePoojaCategoryStatus);
+router.delete("/:id", authenticate, checkPermission("poojas.categories"), deletePoojaCategory);
 
 export default router;

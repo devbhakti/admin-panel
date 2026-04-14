@@ -54,10 +54,17 @@ export default function CheckoutPage() {
 
     React.useEffect(() => {
         const fetchFees = async () => {
-            if (cartItems.length === 0) return;
+            console.log('🛒 Cart Items:', cartItems.length, cartItems);
+            console.log('🔗 API_URL:', API_URL);
+            
+            if (cartItems.length === 0) {
+                console.log('❌ Cart is empty, skipping fee calculation');
+                return;
+            }
+            
             setIsCalculatingFees(true);
             try {
-                const response = await axios.post(`${API_URL}/orders/calculate-fees`, {
+                const requestData = {
                     items: cartItems.map(item => ({
                         productId: item.productId,
                         price: item.price,
@@ -65,12 +72,21 @@ export default function CheckoutPage() {
                         templeId: item.templeId,
                         sellerId: (item as any).sellerId
                     }))
-                });
+                };
+                
+                console.log('📤 Sending request:', requestData);
+                
+                const response = await axios.post(`${API_URL}/orders/calculate-fees`, requestData);
+                
+                console.log('📥 API Response:', response.data);
+                
                 if (response.data.success) {
                     setPlatformFee(response.data.totalPlatformFee);
+                    console.log('✅ Platform fee set to:', response.data.totalPlatformFee);
                 }
             } catch (error) {
-                console.error("Fee calculation error:", error);
+                console.error("❌ Fee calculation error:", error);
+                console.error("Error details:", error.response?.data || error.message);
             } finally {
                 setIsCalculatingFees(false);
             }
