@@ -364,9 +364,10 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
           "fixed inset-y-0 left-0 z-50 flex flex-col bg-sidebar transition-all duration-300",
           sidebarOpen ? "translate-x-0 w-64" : "-translate-x-full lg:translate-x-0 lg:w-20"
         )}
+        onClick={!sidebarOpen ? () => setSidebarOpen(true) : undefined}
       >
         {/* Logo */}
-        <div className="flex items-center gap-3 h-20 px-4 border-b border-sidebar-border bg-sidebar/50 backdrop-blur-sm">
+        <div className="flex items-center gap-3 h-20 px-4 border-b border-sidebar-border bg-sidebar/50 backdrop-blur-sm" onClick={(e) => e.stopPropagation()}>
           {sidebarOpen ? (
             <div className="flex items-center gap-3 w-full">
               <div className="bg-white h-16 w-16 rounded-xl shadow-md border border-sidebar-border/50 shrink-0 overflow-hidden flex items-center justify-center translate-y-[-2px]">
@@ -413,7 +414,7 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
         </div>
 
         {/* Navigation */}
-        <nav className="flex-1 py-4 px-3 space-y-1 overflow-y-auto premium-scrollbar">
+        <nav className="flex-1 py-4 px-3 space-y-1 overflow-y-auto premium-scrollbar" onClick={(e) => e.stopPropagation()}>
           {filteredSidebarItems.map((item) => {
             const hasSubItems = item.subItems && item.subItems.length > 0;
             const isOpen = openMenus.includes(item.label);
@@ -497,7 +498,7 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
 
 
         {/* User section */}
-        <div className="p-3 border-t border-sidebar-border">
+        <div className="p-3 border-t border-sidebar-border" onClick={(e) => e.stopPropagation()}>
           <div className={cn(
             "flex items-center gap-3 p-2 rounded-lg",
             sidebarOpen ? "" : "justify-center"
@@ -541,9 +542,9 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
         <header className="sticky top-0 z-40 h-16 bg-background/95 backdrop-blur-md border-b border-border flex items-center justify-between px-4 lg:px-6 w-full overflow-hidden">
           <div className="flex items-center gap-2 text-sm text-muted-foreground capitalize overflow-x-auto whitespace-nowrap premium-scrollbar pb-1">
             <button
-              title="Open sidebar"
-              onClick={() => setSidebarOpen(true)}
-              className="p-1 -ml-1 mr-1 rounded-md lg:hidden hover:bg-muted text-foreground shrink-0"
+              title="Toggle Sidebar"
+              onClick={() => setSidebarOpen(!sidebarOpen)}
+              className="p-2 rounded-md hover:bg-muted text-foreground transition-colors"
             >
               <Menu className="w-5 h-5" />
             </button>

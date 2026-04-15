@@ -25,7 +25,7 @@ import { Switch } from "@/components/ui/switch";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
 import { useToast } from "@/hooks/use-toast";
 import { createSellerAdmin, fetchCommissionSlabsAdmin } from "@/api/adminController";
-import { checkSellerPhone, checkEmailExists } from "@/api/authController";
+import { checkPhoneGlobal, checkEmailExists } from "@/api/authController";
 
 // ---------- inline field validation state type ----------
 type FieldStatus = "idle" | "checking" | "ok" | "error";
@@ -88,46 +88,47 @@ export default function CreateSellerPage() {
         if (name === "email") setEmailValidation({ status: "idle", message: "" });
     };
 
-    // -------- Phone blur: check if already registered as SELLER only --------
+    // -------- Phone blur: check if already registered globally --------
     const handlePhoneBlur = useCallback(async () => {
         const rawPhone = formData.phone.replace(/\D/g, "");
         if (!rawPhone || rawPhone.length < 10) return;
 
         setPhoneValidation({ status: "checking", message: "" });
         try {
-            const result = await checkSellerPhone(rawPhone);
-            if (result.isSellerRegistered) {
-                // Already a SELLER with this number block
+            // Using checkPhoneGlobal with role: SELLER
+            const result = await axios.post(`${API_URL}/auth/check-phone`, { 
+                phone: rawPhone,
+                role: 'SELLER' 
+            }).then(r => r.data);
+            
+            if (result.exists) {
                 setPhoneValidation({
                     status: "error",
-                    message: "This number is already registered as a Seller. Please use a different number.",
+                    message: "A Seller account already exists with this phone number.",
                 });
             } else {
-                // Not a SELLER (could be not_found or wrong_role) allow
-                setPhoneValidation({ status: "ok", message: "Number is available." });
+                setPhoneValidation({ status: "ok", message: "Number is available for Seller account." });
             }
         } catch {
             setPhoneValidation({ status: "idle", message: "" });
         }
     }, [formData.phone]);
 
-    // -------- Email blur: check if already registered as SELLER only --------
+    // -------- Email blur: check if already registered globally --------
     const handleEmailBlur = useCallback(async () => {
         const emailVal = formData.email.trim();
         if (!emailVal || !emailVal.includes("@")) return;
 
         setEmailValidation({ status: "checking", message: "" });
         try {
-            const result = await checkEmailExists(emailVal);
-            if (result.exists && result.role === "SELLER") {
-                // Already a SELLER with this email block
+            const result = await checkEmailExists(emailVal, 'SELLER'); // Passing role
+            if (result.exists) {
                 setEmailValidation({
                     status: "error",
-                    message: "This email is already registered as a Seller. Please use a different email.",
+                    message: "A Seller account already exists with this email address.",
                 });
             } else {
-                // Not a SELLER (not found or other role) allow
-                setEmailValidation({ status: "ok", message: "Email is available." });
+                setEmailValidation({ status: "ok", message: "Email is available for Seller account." });
             }
         } catch {
             setEmailValidation({ status: "idle", message: "" });

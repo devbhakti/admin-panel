@@ -82,6 +82,7 @@ function ProductsContent() {
   const [searchTerm, setSearchTerm] = useState("");
   const [stats, setStats] = useState({ total: 0, pending: 0, approved: 0 });
   const [currentPage, setCurrentPage] = useState(pageParam ? parseInt(pageParam) : 1);
+  const [isReturningFromEdit, setIsReturningFromEdit] = useState(false);
   const [totalPages, setTotalPages] = useState(1);
   const [itemsPerPage] = useState(10);
   const [selectedProduct, setSelectedProduct] = useState<any>(null);
@@ -114,18 +115,31 @@ function ProductsContent() {
   useEffect(() => {
     if (qParam) setSearchTerm(qParam);
     else if (idParam) setSearchTerm(idParam);
-  }, [idParam, qParam]);
+    
+    // If we have a page parameter, we're likely returning from edit
+    if (pageParam && parseInt(pageParam) > 1) {
+      setIsReturningFromEdit(true);
+    }
+  }, [idParam, qParam, pageParam]);
 
   useEffect(() => {
     const timer = setTimeout(() => {
-      if (currentPage !== 1) {
+      // Don't reset page if returning from edit page
+      if (isReturningFromEdit) {
+        setIsReturningFromEdit(false);
+        loadProducts();
+        return;
+      }
+      
+      // Only reset to page 1 if there's a search term and we're not on page 1
+      if (searchTerm && currentPage !== 1) {
         setCurrentPage(1);
       } else {
         loadProducts();
       }
     }, 500);
     return () => clearTimeout(timer);
-  }, [searchTerm]);
+  }, [searchTerm, isReturningFromEdit]);
 
   useEffect(() => {
     loadOwners();

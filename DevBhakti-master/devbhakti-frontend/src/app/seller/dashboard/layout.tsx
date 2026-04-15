@@ -159,9 +159,10 @@ function SellerDashboardContent({ children }: { children: React.ReactNode }) {
                     "fixed inset-y-0 left-0 z-50 flex flex-col bg-sidebar border-r border-sidebar-border transition-all duration-300 shadow-xl",
                     sidebarOpen ? "w-64" : "w-20"
                 )}
+                onClick={!sidebarOpen ? () => setSidebarOpen(true) : undefined}
             >
                 {/* Logo Section */}
-                <div className="flex items-center justify-between h-20 px-4 border-b border-sidebar-border bg-sidebar-primary/5">
+                <div className="flex items-center justify-between h-20 px-4 border-b border-sidebar-border bg-sidebar-primary/5" onClick={(e) => e.stopPropagation()}>
                     {sidebarOpen ? (
                         <Link href="/seller/dashboard" className="flex items-center gap-3 transition-all active:scale-95">
                             {storeProfile?.image ? (
@@ -200,7 +201,7 @@ function SellerDashboardContent({ children }: { children: React.ReactNode }) {
                 </div>
 
                 {/* Navigation */}
-                <nav className="flex-1 py-6 px-3 space-y-6 overflow-y-auto premium-scrollbar">
+                <nav className="flex-1 py-6 px-3 space-y-6 overflow-y-auto premium-scrollbar" onClick={(e) => e.stopPropagation()}>
                     {sellerSidebarGroups
                         .map(group => ({
                             ...group,
@@ -254,7 +255,7 @@ function SellerDashboardContent({ children }: { children: React.ReactNode }) {
                 </nav>
 
                 {/* User Profile */}
-                <div className="p-4 border-t border-sidebar-border">
+                <div className="p-4 border-t border-sidebar-border" onClick={(e) => e.stopPropagation()}>
                     <Link
                         href="/seller/dashboard/profile"
                         className={cn(
@@ -300,6 +301,13 @@ function SellerDashboardContent({ children }: { children: React.ReactNode }) {
                 {/* Header */}
                 <header className="sticky top-0 z-40 h-16 bg-white/80 backdrop-blur-md border-b border-sidebar-border flex items-center justify-between px-6 shadow-sm">
                     <div className="flex items-center gap-4 text-sm text-slate-500">
+                        <button
+                            onClick={() => setSidebarOpen(!sidebarOpen)}
+                            className="p-2 rounded-md hover:bg-muted text-foreground transition-colors"
+                            title="Toggle Sidebar"
+                        >
+                            <Menu className="w-5 h-5" />
+                        </button>
                         {storeProfile?.image ? (
                             <img
                                 src={`${BASE_URL}${storeProfile.image}`}

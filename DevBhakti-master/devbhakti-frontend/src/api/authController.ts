@@ -67,11 +67,14 @@ export const checkPhone = async (phone: string) => {
     return response.data;
 };
 
-// ✅ New: POST method - sirf check kare bina OTP bheje
-export const checkPhoneOnly = async (phone: string) => {
-    const response = await axios.post(`${API_URL}/auth/check-phone`, { phone });
+// ✅ POST method - check if phone exists (can be global or role-specific)
+export const checkPhoneOnly = async (phone: string, role?: string) => {
+    const response = await axios.post(`${API_URL}/auth/check-phone`, { phone, role });
     return response.data;
 };
+
+// Alias for backward compatibility if any components still use it
+export const checkPhoneGlobal = checkPhoneOnly;
 
 // ✅ Seller portal - check if phone is registered with SELLER role
 export const checkSellerPhone = async (phone: string) => {
@@ -80,8 +83,8 @@ export const checkSellerPhone = async (phone: string) => {
 };
 
 // ✅ Check if email is already registered (for admin create forms)
-export const checkEmailExists = async (email: string) => {
-    const response = await axios.post(`${API_URL}/auth/check-email`, { email });
+export const checkEmailExists = async (email: string, role?: string) => {
+    const response = await axios.post(`${API_URL}/auth/check-email`, { email, role });
     return response.data;
 };
 

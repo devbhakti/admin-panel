@@ -15,7 +15,12 @@ export const adminLogin = async (req: Request, res: Response) => {
 
     // Find user by email and ensure they are an ADMIN
     const user = await prisma.user.findUnique({
-      where: { email },
+      where: { 
+        email_role: {
+          email,
+          role: 'ADMIN'
+        }
+      },
     });
 
     if (!user || user.role !== 'ADMIN' || !user.password) {

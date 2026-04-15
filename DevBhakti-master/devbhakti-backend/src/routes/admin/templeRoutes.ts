@@ -44,9 +44,9 @@ router.get('/update-requests', checkPermission('temples.requests_view'), getPend
 router.post('/update-requests/:id/approve', checkPermission('temples.verify'), approveUpdateRequest);
 router.post('/update-requests/:id/reject', checkPermission('temples.verify'), rejectUpdateRequest);
 
-router.get('/categories', checkPermission('temples.view'), getTempleCategories);
-router.get('/', checkPermission('temples.view'), getAllTemples);
-router.get('/:id', checkPermission('temples.view'), getTempleById);
+router.get('/categories', checkPermission('temples.view', 'poojas.view', 'poojas.create', 'poojas.edit'), getTempleCategories);
+router.get('/', checkPermission('temples.view', 'poojas.view', 'poojas.create', 'poojas.edit'), getAllTemples);
+router.get('/:id', checkPermission('temples.view', 'poojas.view', 'poojas.create', 'poojas.edit'), getTempleById);
 router.post('/', checkPermission('temples.create'), templeUpload, createTemple);
 router.put('/:id', checkPermission('temples.edit'), templeUpload, updateTemple);
 router.patch('/:id/status', checkPermission('temples.edit'), toggleTempleStatus);

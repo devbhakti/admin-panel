@@ -7,7 +7,8 @@ import {
     Edit2,
     Trash2,
     X,
-    HelpCircle
+    HelpCircle,
+    Eye
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -143,6 +144,14 @@ export default function PoojaFAQsPage() {
         }
     };
 
+    const [isViewDialogOpen, setIsViewDialogOpen] = useState(false);
+    const [viewingFaq, setViewingFaq] = useState<any>(null);
+
+    const handleViewFaq = (faq: any) => {
+        setViewingFaq(faq);
+        setIsViewDialogOpen(true);
+    };
+
     const handleDelete = async (id: string) => {
         if (window.confirm("Are you sure you want to delete this FAQ?")) {
             try {
@@ -244,6 +253,14 @@ export default function PoojaFAQsPage() {
                                             <Button
                                                 variant="ghost"
                                                 size="icon"
+                                                onClick={() => handleViewFaq(faq)}
+                                                title="View FAQ Details"
+                                            >
+                                                <Eye className="w-4 h-4 text-green-600" />
+                                            </Button>
+                                            <Button
+                                                variant="ghost"
+                                                size="icon"
                                                 onClick={() => handleOpenDialog(faq)}
                                             >
                                                 <Edit2 className="w-4 h-4 text-blue-600" />
@@ -270,6 +287,91 @@ export default function PoojaFAQsPage() {
                     </Table>
                 )}
             </div>
+
+            {/* View FAQ Dialog */}
+            <Dialog open={isViewDialogOpen} onOpenChange={setIsViewDialogOpen}>
+                <DialogContent className="sm:max-w-[700px]">
+                    <DialogHeader>
+                        <DialogTitle className="flex items-center gap-2">
+                            <Eye className="w-5 h-5 text-green-600" />
+                            FAQ Details
+                        </DialogTitle>
+                        <DialogDescription>
+                            Complete information about this FAQ
+                        </DialogDescription>
+                    </DialogHeader>
+                    
+                    {viewingFaq && (
+                        <div className="space-y-6 py-4">
+                            {/* FAQ Order and Status */}
+                            <div className="flex items-center justify-between">
+                                <div className="space-y-2">
+                                    <Label className="text-sm font-semibold text-muted-foreground">Order</Label>
+                                    <Badge variant="outline" className="text-base px-3 py-1">
+                                        #{viewingFaq.order}
+                                    </Badge>
+                                </div>
+                                <div className="space-y-2">
+                                    <Label className="text-sm font-semibold text-muted-foreground">Status</Label>
+                                    <Badge variant={viewingFaq.isActive ? "default" : "secondary"}>
+                                        {viewingFaq.isActive ? "Active" : "Inactive"}
+                                    </Badge>
+                                </div>
+                            </div>
+
+                            {/* Questions in all languages */}
+                            <div className="space-y-4">
+                                <Label className="text-sm font-semibold text-muted-foreground flex items-center gap-2">
+                                    <HelpCircle className="w-4 h-4" />
+                                    Questions
+                                </Label>
+                                <div className="space-y-3">
+                                    {['en', 'hi', 'mr'].map((lang) => (
+                                        <div key={lang} className="space-y-1">
+                                            <Label className="text-xs font-medium text-muted-foreground uppercase">
+                                                {lang === 'en' ? 'English' : lang === 'hi' ? 'Hindi' : 'Marathi'}
+                                            </Label>
+                                            <div className="p-3 bg-blue-50 rounded-lg border border-blue-200">
+                                                <p className="text-sm font-medium text-blue-900">
+                                                    {viewingFaq.question?.[lang] || 'Not provided'}
+                                                </p>
+                                            </div>
+                                        </div>
+                                    ))}
+                                </div>
+                            </div>
+
+                            {/* Answers in all languages */}
+                            <div className="space-y-4">
+                                <Label className="text-sm font-semibold text-muted-foreground">Answers</Label>
+                                <div className="space-y-3">
+                                    {['en', 'hi', 'mr'].map((lang) => (
+                                        <div key={lang} className="space-y-1">
+                                            <Label className="text-xs font-medium text-muted-foreground uppercase">
+                                                {lang === 'en' ? 'English' : lang === 'hi' ? 'Hindi' : 'Marathi'}
+                                            </Label>
+                                            <div className="p-3 bg-green-50 rounded-lg border border-green-200">
+                                                <p className="text-sm text-green-900 whitespace-pre-wrap">
+                                                    {viewingFaq.answer?.[lang] || 'Not provided'}
+                                                </p>
+                                            </div>
+                                        </div>
+                                    ))}
+                                </div>
+                            </div>
+                        </div>
+                    )}
+
+                    <DialogFooter>
+                        <Button
+                            variant="outline"
+                            onClick={() => setIsViewDialogOpen(false)}
+                        >
+                            Close
+                        </Button>
+                    </DialogFooter>
+                </DialogContent>
+            </Dialog>
 
             {/* Add/Edit Dialog */}
             <Dialog open={isDialogOpen} onOpenChange={setIsDialogOpen}>

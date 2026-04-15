@@ -91,44 +91,50 @@ export default function ReturnsRefundPolicyPage() {
             <Navbar />
 
             {/* Hero Header */}
-            <section className="relative pt-24 sm:pt-32 pb-12 sm:pb-16 overflow-hidden">
-                <div className="absolute inset-0 z-0 bg-gradient-to-b from-primary/5 via-transparent to-background" />
-                <div className="container mx-auto px-4 sm:px-6 relative z-10 text-center">
-                    <motion.div
-                        initial={{ opacity: 0, y: -20 }}
-                        animate={{ opacity: 1, y: 0 }}
-                        className="flex justify-center mb-4 sm:mb-6"
-                    >
-                        <div className="p-3 sm:p-4 bg-primary/10 backdrop-blur-md rounded-xl sm:rounded-2xl">
-                            <RefreshCw className="w-8 h-8 sm:w-12 sm:h-12 text-primary" />
-                        </div>
-                    </motion.div>
-                    <motion.h1
-                        initial={{ opacity: 0, scale: 0.95 }}
-                        animate={{ opacity: 1, scale: 1 }}
-                        transition={{ duration: 0.8 }}
-                        className="text-3xl sm:text-4xl md:text-5xl lg:text-7xl font-serif font-bold mb-4 sm:mb-6 text-gradient-sacred pb-2 break-normal"
-                    >
-                        {t('returns_policy.title')}
-                    </motion.h1>
-                    <motion.p
-                        initial={{ opacity: 0 }}
-                        animate={{ opacity: 1 }}
-                        transition={{ delay: 0.2 }}
-                        className="text-xs sm:text-sm font-bold text-primary mb-4 sm:mb-6 uppercase tracking-widest break-words"
-                    >
-                        {t('returns_policy.effective_date')}
-                    </motion.p>
-                    <motion.p
-                        initial={{ opacity: 0 }}
-                        animate={{ opacity: 1 }}
-                        transition={{ delay: 0.3 }}
-                        className="text-base sm:text-lg md:text-xl text-muted-foreground max-w-3xl mx-auto leading-relaxed break-words"
-                    >
-                        {t('returns_policy.intro')}
-                    </motion.p>
-                </div>
-            </section>
+          <section className="relative pt-32 sm:pt-40 pb-12 sm:pb-16">
+    {/* 1. 'overflow-hidden' hata diya hai */}
+    <div className="absolute inset-0 z-0 bg-gradient-to-b from-primary/5 via-transparent to-background" />
+    <div className="container mx-auto px-4 sm:px-6 relative z-10 text-center">
+        <motion.div
+            initial={{ opacity: 0, y: -20 }}
+            animate={{ opacity: 1, y: 0 }}
+            className="flex justify-center mb-4 sm:mb-6"
+        >
+            <div className="p-3 sm:p-4 bg-primary/10 backdrop-blur-md rounded-xl sm:rounded-2xl">
+                <RefreshCw className="w-8 h-8 sm:w-12 sm:h-12 text-primary" />
+            </div>
+        </motion.div>
+
+        {/* 2. H1 Title Fix: Formula Applied */}
+        <motion.h1
+            // 'scale' hata ke 'y' (slide) lagaya
+            initial={{ opacity: 0, y: 20 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ duration: 0.8 }}
+            // 'py-4', 'leading-[1.3]', 'break-words' add kiya
+            className="text-3xl sm:text-4xl md:text-5xl lg:text-7xl font-serif font-bold mb-4 sm:mb-6 text-gradient-sacred pb-2 py-4 leading-[1.3] break-words"
+        >
+            {t('returns_policy.title')}
+        </motion.h1>
+
+        <motion.p
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            transition={{ delay: 0.2 }}
+            className="text-xs sm:text-sm font-bold text-primary mb-4 sm:mb-6 uppercase tracking-widest break-words"
+        >
+            {t('returns_policy.effective_date')}
+        </motion.p>
+        <motion.p
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            transition={{ delay: 0.3 }}
+            className="text-base sm:text-lg md:text-xl text-muted-foreground max-w-3xl mx-auto leading-relaxed break-words"
+        >
+            {t('returns_policy.intro')}
+        </motion.p>
+    </div>
+</section>
 
             {/* Clauses Section */}
             <section className="py-16 sm:py-20 container mx-auto px-4 sm:px-6">

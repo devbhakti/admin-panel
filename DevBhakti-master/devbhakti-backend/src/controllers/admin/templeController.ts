@@ -281,6 +281,35 @@ export const createTemple = async (req: Request, res: Response) => {
 
     const hashedPassword = await bcrypt.hash(data.password || '123456', 10);
 
+    // Check if an INSTITUTION user already exists with this phone or email
+    if (data.email) {
+      const existingUserByEmail = await prisma.user.findFirst({
+        where: { 
+          email: data.email as string,
+          role: 'INSTITUTION'
+        }
+      });
+      if (existingUserByEmail) {
+        return res.status(400).json({ 
+          error: `A Temple account already exists with this email address. Please use a different email.` 
+        });
+      }
+    }
+
+    if (data.phone) {
+      const existingUserByPhone = await prisma.user.findFirst({
+        where: { 
+          phone: data.phone,
+          role: 'INSTITUTION'
+        }
+      });
+      if (existingUserByPhone) {
+        return res.status(400).json({ 
+          error: `A Temple account already exists with this phone number. Please use a different number.` 
+        });
+      }
+    }
+
     const result = await prisma.$transaction(async (tx) => {
       // 1. Create User & Temple
       const user = await tx.user.create({

@@ -102,18 +102,18 @@ export default function TemplePoojasListPage() {
     };
 
     return (
-        <div className="space-y-6">
+        <div className="space-y-6 px-2 sm:px-0">
             {/* Page Header */}
             <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
-                <div>
+                <div className="text-center md:text-left">
                     <h1 className="text-2xl md:text-3xl font-serif font-bold text-[#7b4623]">My Poojas</h1>
-                    <p className="text-muted-foreground mt-1">
+                    <p className="text-muted-foreground mt-1 text-sm sm:text-base">
                         Manage your temple's rituals and offerings.
                     </p>
                 </div>
                 <Button
                     onClick={() => router.push('/temples/dashboard/poojas/create')}
-                    className="bg-[#7b4623] hover:bg-[#5d351a] text-white"
+                    className="bg-[#7b4623] hover:bg-[#5d351a] text-white w-full md:w-auto"
                 >
                     <Plus className="w-4 h-4 mr-2" />
                     Offer New Pooja
@@ -122,7 +122,7 @@ export default function TemplePoojasListPage() {
 
             {/* Search */}
             <div className="flex flex-col md:flex-row gap-4">
-                <div className="relative flex-1">
+                <div className="relative w-full">
                     <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
                     <Input
                         placeholder="Search your poojas..."
@@ -133,118 +133,122 @@ export default function TemplePoojasListPage() {
                 </div>
             </div>
 
-            {/* Poojas Table */}
+            {/* Poojas Table Container */}
             <div className="border rounded-xl bg-card overflow-hidden shadow-sm">
-                <Table>
-                    <TableHeader className="bg-slate-50">
-                        <TableRow>
-                            <TableHead className="w-[80px]">Image</TableHead>
-                            <TableHead>Pooja Name</TableHead>
-                            <TableHead>Category/Purpose</TableHead>
-                            <TableHead> Single Person Price</TableHead>
-                            <TableHead>Status</TableHead>
-                            <TableHead className="text-right">Actions</TableHead>
-                        </TableRow>
-                    </TableHeader>
-                    <TableBody>
-                        {isLoading ? (
+                {/* Wrapper for horizontal scroll on mobile */}
+                <div className="overflow-x-auto">
+                    <Table className="min-w-[800px]">
+                        <TableHeader className="bg-slate-50">
                             <TableRow>
-                                <TableCell colSpan={6} className="text-center py-10">
-                                    <div className="flex flex-col items-center gap-2">
-                                        <div className="w-6 h-6 border-2 border-[#7b4623] border-t-transparent rounded-full animate-spin" />
-                                        <span className="text-sm text-muted-foreground">Loading your poojas...</span>
-                                    </div>
-                                </TableCell>
+                                <TableHead className="w-[80px] whitespace-nowrap">Image</TableHead>
+                                <TableHead className="whitespace-nowrap">Pooja Name</TableHead>
+                                <TableHead className="whitespace-nowrap">Category/Purpose</TableHead>
+                                <TableHead className="whitespace-nowrap"> Single Person Price</TableHead>
+                                <TableHead className="whitespace-nowrap">Status</TableHead>
+                                <TableHead className="text-right whitespace-nowrap">Actions</TableHead>
                             </TableRow>
-                        ) : filteredPoojas.length === 0 ? (
-                            <TableRow>
-                                <TableCell colSpan={6} className="text-center py-10">
-                                    <div className="text-muted-foreground">No poojas found. Start by offering a new pooja!</div>
-                                </TableCell>
-                            </TableRow>
-                        ) : (
-                            filteredPoojas.map((pooja) => (
-                                <TableRow key={pooja.id} className="hover:bg-slate-50/50 transition-colors">
-                                    <TableCell>
-                                        <div className="w-12 h-12 rounded-lg overflow-hidden bg-muted border border-border">
-                                            <img
-                                                src={getImageUrl(pooja.image)}
-                                                alt={parseLocalizedValue(pooja.name)}
-                                                className="w-full h-full object-cover"
-                                            />
-                                        </div>
-                                    </TableCell>
-                                    <TableCell>
-                                        <div className="font-semibold text-slate-900">{parseLocalizedValue(pooja.name)}</div>
-                                        <div className="text-xs text-muted-foreground line-clamp-1 max-w-[250px]">
-                                            {parseLocalizedValue(pooja.about) || (pooja.description && pooja.description[0])}
-                                        </div>
-                                    </TableCell>
-                                    <TableCell>
-                                        <Badge variant="outline" className="bg-orange-50 text-orange-700 border-orange-100">
-                                            {parseLocalizedValue(pooja.category)}
-                                        </Badge>
-                                    </TableCell>
-                                    <TableCell>
-                                        <div className="flex items-center font-bold text-slate-900">
-                                            <IndianRupee className="w-3.5 h-3.5 mr-0.5" />
-                                            {pooja.price}
-                                        </div>
-                                    </TableCell>
-                                    <TableCell>
-                                        <Badge className={pooja.status ? 'bg-green-100 text-green-700 border-green-200' : 'bg-red-100 text-red-700 border-red-200'} variant="outline">
-                                            {pooja.status ? 'Active' : 'Paused'}
-                                        </Badge>
-                                    </TableCell>
-                                    <TableCell className="text-right">
-                                        <div className="flex justify-end gap-2">
-                                            <Button
-                                                variant="ghost"
-                                                size="icon"
-                                                onClick={() => router.push(`/temples/dashboard/poojas/${pooja.id}`)}
-                                                className="hover:bg-blue-50 hover:text-blue-600"
-                                                title="View Details"
-                                            >
-                                                <Eye className="w-4 h-4" />
-                                            </Button>
-                                            <Button
-                                                variant="ghost"
-                                                size="icon"
-                                                onClick={() => router.push(`/temples/dashboard/poojas/edit/${pooja.id}`)}
-                                                className="hover:bg-blue-50 hover:text-blue-600"
-                                                title="Edit Pooja"
-                                            >
-                                                <Edit2 className="w-4 h-4" />
-                                            </Button>
-                                            <Button
-                                                variant="ghost"
-                                                size="icon"
-                                                onClick={() => handleToggleStatus(pooja.id, pooja.status)}
-                                                className="hover:bg-orange-50 hover:text-orange-600"
-                                                title={pooja.status ? "Pause Pooja" : "Resume Pooja"}
-                                            >
-                                                {pooja.status ? (
-                                                    <Pause className="w-4 h-4" />
-                                                ) : (
-                                                    <Play className="w-4 h-4" />
-                                                )}
-                                            </Button>
-                                            <Button
-                                                variant="ghost"
-                                                size="icon"
-                                                onClick={() => handleDelete(pooja.id)}
-                                                className="hover:bg-red-50 hover:text-red-600"
-                                                title="Remove Pooja"
-                                            >
-                                                <Trash2 className="w-4 h-4" />
-                                            </Button>
+                        </TableHeader>
+                        <TableBody>
+                            {isLoading ? (
+                                <TableRow>
+                                    <TableCell colSpan={6} className="text-center py-10">
+                                        <div className="flex flex-col items-center gap-2">
+                                            <div className="w-6 h-6 border-2 border-[#7b4623] border-t-transparent rounded-full animate-spin" />
+                                            <span className="text-sm text-muted-foreground">Loading your poojas...</span>
                                         </div>
                                     </TableCell>
                                 </TableRow>
-                            ))
-                        )}
-                    </TableBody>
-                </Table>
+                            ) : filteredPoojas.length === 0 ? (
+                                <TableRow>
+                                    <TableCell colSpan={6} className="text-center py-10">
+                                        <div className="text-muted-foreground px-4">No poojas found. Start by offering a new pooja!</div>
+                                    </TableCell>
+                                </TableRow>
+                            ) : (
+                                filteredPoojas.map((pooja) => (
+                                    <TableRow key={pooja.id} className="hover:bg-slate-50/50 transition-colors">
+                                        <TableCell className="whitespace-nowrap">
+                                            <div className="w-12 h-12 rounded-lg overflow-hidden bg-muted border border-border shrink-0">
+                                                <img
+                                                    src={getImageUrl(pooja.image)}
+                                                    alt={parseLocalizedValue(pooja.name)}
+                                                    className="w-full h-full object-cover"
+                                                />
+                                            </div>
+                                        </TableCell>
+                                        <TableCell className="whitespace-nowrap">
+                                            <div className="font-semibold text-slate-900">{parseLocalizedValue(pooja.name)}</div>
+                                            {/* Description hidden on very small screens via line-clamp, but visible if table scrolls */}
+                                            <div className="text-xs text-muted-foreground line-clamp-1 max-w-[200px] sm:max-w-[250px]">
+                                                {parseLocalizedValue(pooja.about) || (pooja.description && pooja.description[0])}
+                                            </div>
+                                        </TableCell>
+                                        <TableCell className="whitespace-nowrap">
+                                            <Badge variant="outline" className="bg-orange-50 text-orange-700 border-orange-100">
+                                                {parseLocalizedValue(pooja.category)}
+                                            </Badge>
+                                        </TableCell>
+                                        <TableCell className="whitespace-nowrap">
+                                            <div className="flex items-center font-bold text-slate-900">
+                                                <IndianRupee className="w-3.5 h-3.5 mr-0.5" />
+                                                {pooja.price}
+                                            </div>
+                                        </TableCell>
+                                        <TableCell className="whitespace-nowrap">
+                                            <Badge className={pooja.status ? 'bg-green-100 text-green-700 border-green-200' : 'bg-red-100 text-red-700 border-red-200'} variant="outline">
+                                                {pooja.status ? 'Active' : 'Paused'}
+                                            </Badge>
+                                        </TableCell>
+                                        <TableCell className="text-right whitespace-nowrap">
+                                            <div className="flex justify-end gap-1 sm:gap-2">
+                                                <Button
+                                                    variant="ghost"
+                                                    size="icon"
+                                                    onClick={() => router.push(`/temples/dashboard/poojas/${pooja.id}`)}
+                                                    className="hover:bg-blue-50 hover:text-blue-600"
+                                                    title="View Details"
+                                                >
+                                                    <Eye className="w-4 h-4" />
+                                                </Button>
+                                                <Button
+                                                    variant="ghost"
+                                                    size="icon"
+                                                    onClick={() => router.push(`/temples/dashboard/poojas/edit/${pooja.id}`)}
+                                                    className="hover:bg-blue-50 hover:text-blue-600"
+                                                    title="Edit Pooja"
+                                                >
+                                                    <Edit2 className="w-4 h-4" />
+                                                </Button>
+                                                <Button
+                                                    variant="ghost"
+                                                    size="icon"
+                                                    onClick={() => handleToggleStatus(pooja.id, pooja.status)}
+                                                    className="hover:bg-orange-50 hover:text-orange-600"
+                                                    title={pooja.status ? "Pause Pooja" : "Resume Pooja"}
+                                                >
+                                                    {pooja.status ? (
+                                                        <Pause className="w-4 h-4" />
+                                                    ) : (
+                                                        <Play className="w-4 h-4" />
+                                                    )}
+                                                </Button>
+                                                <Button
+                                                    variant="ghost"
+                                                    size="icon"
+                                                    onClick={() => handleDelete(pooja.id)}
+                                                    className="hover:bg-red-50 hover:text-red-600"
+                                                    title="Remove Pooja"
+                                                >
+                                                    <Trash2 className="w-4 h-4" />
+                                                </Button>
+                                            </div>
+                                        </TableCell>
+                                    </TableRow>
+                                ))
+                            )}
+                        </TableBody>
+                    </Table>
+                </div>
             </div>
         </div>
     );

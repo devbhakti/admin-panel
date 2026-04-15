@@ -153,15 +153,20 @@ export const checkSellerPhone = async (req: Request, res: Response) => {
 
 export const checkEmailExists = async (req: Request, res: Response) => {
     try {
-        const { email } = req.body;
+        const { email, role } = req.body;
 
         if (!email) {
             return res.status(400).json({ success: false, message: 'Email is required' });
         }
 
         const normalizedEmail = (email as string).toLowerCase().trim();
-        const user = await prisma.user.findUnique({
-            where: { email: normalizedEmail }
+        
+        // Use findFirst with role filter to allow same email for different roles
+        const user = await prisma.user.findFirst({
+            where: { 
+                email: normalizedEmail,
+                ...(role ? { role: role as any } : {})
+            }
         });
 
         if (!user) {
@@ -291,10 +296,14 @@ export const sendOTP = async (req: Request, res: Response) => {
                 });
             }
 
-            // Check if email is already taken before creating new user
+            // Check if email is already taken for THIS ROLE specifically
             if (email) {
-                const existingEmail = await prisma.user.findUnique({
-                    where: { email: email.toLowerCase().trim() }
+                const normalizedEmail = email.toLowerCase().trim();
+                const existingEmail = await prisma.user.findFirst({
+                    where: { 
+                        email: normalizedEmail,
+                        role: checkRole as any
+                    }
                 });
                 if (existingEmail) {
                     return res.status(400).json({
@@ -508,32 +517,40 @@ export const updateProfile = async (req: Request, res: Response) => {
         const { name, email, gothra, kuldevi, kuldevta, dob, anniversary, address, nativePlace, phone } = req.body;
         const profileImage = req.file ? `/uploads/users/${req.file.filename}` : undefined;
 
-        // If email is being updated, check if it's already taken by another user
+        // If email is being updated, check if it's already taken by another user with the SAME ROLE
         if (email) {
-            const existingEmail = await prisma.user.findUnique({
-                where: { email: email.toLowerCase().trim() }
+            const userRole = (req as any).user.role;
+            const existingEmail = await prisma.user.findFirst({
+                where: { 
+                    email: email.toLowerCase().trim(),
+                    role: userRole
+                }
             });
 
-            // If email exists and belongs to a different user
+            // If email exists and belongs to a different user record
             if (existingEmail && existingEmail.id !== userId) {
                 return res.status(400).json({
                     success: false,
-                    message: `The email address ${email} is already registered. Please use a unique email address.`
+                    message: `The email address ${email} is already registered to another ${userRole} account. Please use a unique email address.`
                 });
             }
         }
 
-        // If phone is being updated, check if it's already taken by another user
+        // If phone is being updated, check if it's already taken by another user with the SAME ROLE
         if (phone) {
+            const userRole = (req as any).user.role;
             const normalizedPhone = normalizePhone(phone);
             const existingPhone = await prisma.user.findFirst({
-                where: { phone: normalizedPhone }
+                where: { 
+                    phone: normalizedPhone,
+                    role: userRole
+                }
             });
 
             if (existingPhone && existingPhone.id !== userId) {
                 return res.status(400).json({
                     success: false,
-                    message: `The user with number ${phone} is already with us. Please use a different number.`
+                    message: `The phone number ${phone} is already registered to another ${userRole} account.`
                 });
             }
         }

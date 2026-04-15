@@ -246,79 +246,81 @@ export default function DonationClient() {
     return (
         <div className="space-y-6">
             {/* Page header */}
-            <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
-                <div>
-                    <h1 className="text-2xl md:text-3xl font-serif font-bold text-foreground">
+            <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+                <div className="min-w-0 flex-1">
+                    <h1 className="text-xl sm:text-2xl lg:text-3xl font-serif font-bold text-foreground break-words">
                         Donation
                     </h1>
-                    <p className="text-muted-foreground mt-1">
+                    <p className="text-sm sm:text-base text-muted-foreground mt-1 break-words">
                         View and manage all sacred contributions from devotees
                     </p>
                 </div>
                 <Button
                     onClick={handleDownloadExcel}
                     variant="sacred"
+                    className="w-full sm:w-auto flex-shrink-0"
                 >
                     <Download className="w-4 h-4" />
-                    Export All
+                    <span className="hidden sm:inline">Export All</span>
+                    <span className="sm:hidden">Export</span>
                 </Button>
             </div>
 
 
 
             {/* Donations Table */}            {/* Stats Overview */}
-            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 mb-6">
+            <div className="grid grid-cols-1 xs:grid-cols-2 sm:grid-cols-2 lg:grid-cols-4 gap-3 sm:gap-4 mb-6">
                 <Card className="bg-white border-primary/10 shadow-sm hover:shadow-md transition-shadow">
-                    <CardContent className="p-6">
-                        <div className="flex items-center gap-4">
-                            <div className="w-12 h-12 bg-primary/10 rounded-2xl flex items-center justify-center">
-                                <IndianRupee className="w-6 h-6 text-primary" />
+                    <CardContent className="p-4 sm:p-6">
+                        <div className="flex items-center gap-3 sm:gap-4">
+                            <div className="w-10 h-10 sm:w-12 sm:h-12 bg-primary/10 rounded-2xl flex items-center justify-center flex-shrink-0">
+                                <IndianRupee className="w-5 h-5 sm:w-6 sm:h-6 text-primary" />
                             </div>
-                            <div>
-                                <p className="text-sm font-medium text-muted-foreground">Total Success</p>
-                                <h3 className="text-2xl font-bold text-foreground">₹{stats.totalAmount.toLocaleString()}</h3>
+                            <div className="min-w-0 flex-1">
+                                <p className="text-xs sm:text-sm font-medium text-muted-foreground truncate">Total Success</p>
+                                <h3 className="text-lg sm:text-2xl font-bold text-foreground truncate">₹{stats.totalAmount.toLocaleString()}</h3>
                             </div>
                         </div>
                     </CardContent>
                 </Card>
 
                 <Card className="bg-white border-emerald-100 shadow-sm hover:shadow-md transition-shadow">
-                    <CardContent className="p-6">
-                        <div className="flex items-center gap-4">
-                            <div className="w-12 h-12 bg-emerald-100 rounded-2xl flex items-center justify-center">
-                                <CheckCircle2 className="w-6 h-6 text-emerald-600" />
+                    <CardContent className="p-4 sm:p-6">
+                        <div className="flex items-center gap-3 sm:gap-4">
+                            <div className="w-10 h-10 sm:w-12 sm:h-12 bg-emerald-100 rounded-2xl flex items-center justify-center flex-shrink-0">
+                                <CheckCircle2 className="w-5 h-5 sm:w-6 sm:h-6 text-emerald-600" />
                             </div>
-                            <div>
-                                <p className="text-sm font-medium text-muted-foreground">Success Count</p>
-                                <h3 className="text-2xl font-bold text-foreground">{stats.successCount}</h3>
+                            <div className="min-w-0 flex-1">
+                                <p className="text-xs sm:text-sm font-medium text-muted-foreground truncate">Success Count</p>
+                                <h3 className="text-lg sm:text-2xl font-bold text-foreground truncate">{stats.successCount}</h3>
                             </div>
                         </div>
                     </CardContent>
                 </Card>
 
                 <Card className="bg-white border-amber-100 shadow-sm hover:shadow-md transition-shadow">
-                    <CardContent className="p-6">
-                        <div className="flex items-center gap-4">
-                            <div className="w-12 h-12 bg-amber-100 rounded-2xl flex items-center justify-center">
-                                <Clock className="w-6 h-6 text-amber-600" />
+                    <CardContent className="p-4 sm:p-6">
+                        <div className="flex items-center gap-3 sm:gap-4">
+                            <div className="w-10 h-10 sm:w-12 sm:h-12 bg-amber-100 rounded-2xl flex items-center justify-center flex-shrink-0">
+                                <Clock className="w-5 h-5 sm:w-6 sm:h-6 text-amber-600" />
                             </div>
-                            <div>
-                                <p className="text-sm font-medium text-muted-foreground">Pending</p>
-                                <h3 className="text-2xl font-bold text-foreground">{stats.pendingCount}</h3>
+                            <div className="min-w-0 flex-1">
+                                <p className="text-xs sm:text-sm font-medium text-muted-foreground truncate">Pending</p>
+                                <h3 className="text-lg sm:text-2xl font-bold text-foreground truncate">{stats.pendingCount}</h3>
                             </div>
                         </div>
                     </CardContent>
                 </Card>
 
                 <Card className="bg-white border-rose-100 shadow-sm hover:shadow-md transition-shadow">
-                    <CardContent className="p-6">
-                        <div className="flex items-center gap-4">
-                            <div className="w-12 h-12 bg-rose-100 rounded-2xl flex items-center justify-center">
-                                <XCircle className="w-6 h-6 text-rose-600" />
+                    <CardContent className="p-4 sm:p-6">
+                        <div className="flex items-center gap-3 sm:gap-4">
+                            <div className="w-10 h-10 sm:w-12 sm:h-12 bg-rose-100 rounded-2xl flex items-center justify-center flex-shrink-0">
+                                <XCircle className="w-5 h-5 sm:w-6 sm:h-6 text-rose-600" />
                             </div>
-                            <div>
-                                <p className="text-sm font-medium text-muted-foreground">Failed</p>
-                                <h3 className="text-2xl font-bold text-foreground">{stats.failedCount}</h3>
+                            <div className="min-w-0 flex-1">
+                                <p className="text-xs sm:text-sm font-medium text-muted-foreground truncate">Failed</p>
+                                <h3 className="text-lg sm:text-2xl font-bold text-foreground truncate">{stats.failedCount}</h3>
                             </div>
                         </div>
                     </CardContent>
@@ -326,23 +328,23 @@ export default function DonationClient() {
             </div>
 
             {/* Filter Bar */}
-            <div className="flex flex-col gap-4 bg-white p-4 rounded-2xl border border-border shadow-sm">
-                <div className="flex flex-wrap items-center justify-between gap-4">
-                    <div className="relative w-full md:w-96">
+            <div className="flex flex-col gap-4 bg-white p-3 sm:p-4 rounded-2xl border border-border shadow-sm">
+                <div className="flex flex-col lg:flex-row lg:items-center lg:justify-between gap-4">
+                    <div className="relative w-full lg:w-96">
                         <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
                         <Input
                             placeholder="Donation ID, Name, Temple, Donor ID..."
-                            className="pl-10 h-11 bg-muted/20 border-none rounded-xl"
+                            className="pl-10 h-10 sm:h-11 bg-muted/20 border-none rounded-xl text-sm"
                             value={searchQuery}
                             onChange={(e) => setSearchQuery(e.target.value)}
                         />
                     </div>
 
-                    <div className="flex flex-wrap items-center gap-3">
-                        <div className="flex items-center gap-2 bg-muted/20 p-1.5 rounded-xl border border-transparent hover:border-border transition-all">
-                            <Filter className="w-4 h-4 text-muted-foreground ml-2" />
+                    <div className="flex flex-wrap items-center gap-2 sm:gap-3">
+                        <div className="flex items-center gap-2 bg-muted/20 p-1.5 rounded-xl border border-transparent hover:border-border transition-all min-w-0">
+                            <Filter className="w-4 h-4 text-muted-foreground ml-2 flex-shrink-0" />
                             <select
-                                className="bg-transparent text-sm font-medium focus:outline-none cursor-pointer pr-2"
+                                className="bg-transparent text-xs sm:text-sm font-medium focus:outline-none cursor-pointer pr-2 min-w-0"
                                 value={statusFilter}
                                 onChange={(e) => setStatusFilter(e.target.value)}
                             >
@@ -353,29 +355,29 @@ export default function DonationClient() {
                             </select>
                         </div>
 
-                        <div className="flex items-center gap-2 bg-muted/20 p-1.5 rounded-xl border border-transparent hover:border-border transition-all">
-                            <Calendar className="w-4 h-4 text-muted-foreground ml-2" />
+                        <div className="flex items-center gap-2 bg-muted/20 p-1.5 rounded-xl border border-transparent hover:border-border transition-all min-w-0">
+                            <Calendar className="w-4 h-4 text-muted-foreground ml-2 flex-shrink-0" />
                             <div className="flex items-center gap-1">
                                 <Input
                                     type="date"
-                                    className="h-8 bg-transparent border-none text-xs focus-visible:ring-0 p-0 w-24"
+                                    className="h-7 sm:h-8 bg-transparent border-none text-xs focus-visible:ring-0 p-0 w-20 sm:w-24"
                                     value={startDate}
                                     onChange={(e) => setStartDate(e.target.value)}
                                 />
-                                <span className="text-muted-foreground font-bold">-</span>
+                                <span className="text-muted-foreground font-bold flex-shrink-0">-</span>
                                 <Input
                                     type="date"
-                                    className="h-8 bg-transparent border-none text-xs focus-visible:ring-0 p-0 w-24"
+                                    className="h-7 sm:h-8 bg-transparent border-none text-xs focus-visible:ring-0 p-0 w-20 sm:w-24"
                                     value={endDate}
                                     onChange={(e) => setEndDate(e.target.value)}
                                 />
                             </div>
                         </div>
 
-                        <div className="flex items-center gap-2 bg-muted/20 p-1.5 rounded-xl border border-transparent hover:border-border transition-all">
-                            <Clock className="w-4 h-4 text-muted-foreground ml-2" />
+                        <div className="flex items-center gap-2 bg-muted/20 p-1.5 rounded-xl border border-transparent hover:border-border transition-all min-w-0">
+                            <Clock className="w-4 h-4 text-muted-foreground ml-2 flex-shrink-0" />
                             <select
-                                className="bg-transparent text-sm font-medium focus:outline-none cursor-pointer pr-2"
+                                className="bg-transparent text-xs sm:text-sm font-medium focus:outline-none cursor-pointer pr-2 min-w-0"
                                 value={`${sortBy}-${sortOrder}`}
                                 onChange={(e) => {
                                     const [field, order] = e.target.value.split("-");
@@ -395,17 +397,17 @@ export default function DonationClient() {
             {/* Donations Table */}
             <Card className="border-none shadow-sacred overflow-hidden bg-white/50 backdrop-blur-sm">
                 <CardContent className="p-0">
-                    <div className="overflow-x-auto">
-                        <table className="w-full">
+                    <div className="overflow-x-auto overflow-y-hidden">
+                        <table className="w-full min-w-[1200px]">
                             <thead className="border-b border-primary/10 bg-primary/5">
                                 <tr>
-                                    <th className="text-left p-4 text-sm font-bold text-primary/80 uppercase tracking-wider">Donation ID</th>
-                                    <th className="text-left p-4 text-sm font-bold text-primary/80 uppercase tracking-wider">Donor</th>
-                                    <th className="text-left p-4 text-sm font-bold text-primary/80 uppercase tracking-wider">Temple</th>
-                                    <th className="text-left p-4 text-sm font-bold text-primary/80 uppercase tracking-wider">Amount</th>
-                                    <th className="text-left p-4 text-sm font-bold text-primary/80 uppercase tracking-wider">Date</th>
-                                    <th className="text-left p-4 text-sm font-bold text-primary/80 uppercase tracking-wider">Status</th>
-                                    <th className="text-right p-4 text-sm font-bold text-primary/80 uppercase tracking-wider">Actions</th>
+                                    <th className="text-left p-3 sm:p-4 text-xs sm:text-sm font-bold text-primary/80 uppercase tracking-wider whitespace-nowrap">Donation ID</th>
+                                    <th className="text-left p-3 sm:p-4 text-xs sm:text-sm font-bold text-primary/80 uppercase tracking-wider whitespace-nowrap">Donor</th>
+                                    <th className="text-left p-3 sm:p-4 text-xs sm:text-sm font-bold text-primary/80 uppercase tracking-wider whitespace-nowrap">Temple</th>
+                                    <th className="text-left p-3 sm:p-4 text-xs sm:text-sm font-bold text-primary/80 uppercase tracking-wider whitespace-nowrap">Amount</th>
+                                    <th className="text-left p-3 sm:p-4 text-xs sm:text-sm font-bold text-primary/80 uppercase tracking-wider whitespace-nowrap">Date</th>
+                                    <th className="text-left p-3 sm:p-4 text-xs sm:text-sm font-bold text-primary/80 uppercase tracking-wider whitespace-nowrap">Status</th>
+                                    <th className="text-right p-3 sm:p-4 text-xs sm:text-sm font-bold text-primary/80 uppercase tracking-wider whitespace-nowrap">Actions</th>
                                 </tr>
                             </thead>
                             <tbody>
@@ -420,7 +422,7 @@ export default function DonationClient() {
                                     </tr>
                                 ) : donations.length === 0 ? (
                                     <tr>
-                                        <td colSpan={8} className="p-12 text-center text-muted-foreground italic">No donations found in this realm</td>
+                                        <td colSpan={7} className="p-8 sm:p-12 text-center text-muted-foreground italic text-sm sm:text-base">No donations found in this realm</td>
                                     </tr>
                                 ) : donations.map((donation, index) => {
                                     const status = statusConfig[donation.status as keyof typeof statusConfig] || statusConfig.SUCCESS;
@@ -432,70 +434,70 @@ export default function DonationClient() {
                                             transition={{ duration: 0.3, delay: index * 0.05 }}
                                             className="border-b border-primary/5 hover:bg-primary/5 transition-colors group"
                                         >
-                                            <td className="p-4">
-                                                <p className="font-mono text-xs font-bold text-primary/60 group-hover:text-primary transition-colors">
+                                            <td className="p-3 sm:p-4">
+                                                <p className="font-mono text-xs font-bold text-primary/60 group-hover:text-primary transition-colors truncate max-w-[100px] sm:max-w-none">
                                                     {donation.displayId ? donation.displayId : `#${donation.id.slice(-8).toUpperCase()}`}
                                                 </p>
                                             </td>
 
-                                            <td className="p-4">
-                                                <div className="flex items-center gap-3">
-                                                    <div className={`w-10 h-10 rounded-xl flex items-center justify-center text-sm font-bold shadow-sm ${donation.isAnonymous ? "bg-slate-100 text-slate-400" : "bg-primary/10 text-primary border border-primary/20"}`}>
+                                            <td className="p-3 sm:p-4">
+                                                <div className="flex items-center gap-2 sm:gap-3 min-w-0">
+                                                    <div className={`w-8 h-8 sm:w-10 sm:h-10 rounded-xl flex items-center justify-center text-xs sm:text-sm font-bold shadow-sm flex-shrink-0 ${donation.isAnonymous ? "bg-slate-100 text-slate-400" : "bg-primary/10 text-primary border border-primary/20"}`}>
                                                         {donation.isAnonymous ? "?" : donation.donorName.split(' ')[0][0]}
                                                     </div>
-                                                    <div>
-                                                        <p className="font-bold text-foreground group-hover:text-primary transition-colors">{parseLocalizedValue(donation.donorName)}</p>
-                                                        {donation.isAnonymous && <span className="text-[10px] bg-slate-100 px-1.5 py-0.5 rounded uppercase font-black text-slate-400 tracking-tighter">Anonymous</span>}
+                                                    <div className="min-w-0">
+                                                        <p className="font-bold text-foreground group-hover:text-primary transition-colors text-sm sm:text-base truncate">{parseLocalizedValue(donation.donorName)}</p>
+                                                        {donation.isAnonymous && <span className="text-[8px] sm:text-[10px] bg-slate-100 px-1.5 py-0.5 rounded uppercase font-black text-slate-400 tracking-tighter inline-block">Anonymous</span>}
                                                     </div>
                                                 </div>
                                             </td>
-                                            <td className="p-4">
-                                                <div className="flex items-center gap-2">
-                                                    <div className="w-8 h-8 rounded-lg bg-slate-50 flex items-center justify-center border border-slate-100">
-                                                        <Building2 className="w-4 h-4 text-muted-foreground" />
+                                            <td className="p-3 sm:p-4">
+                                                <div className="flex items-center gap-2 min-w-0">
+                                                    <div className="w-6 h-6 sm:w-8 sm:h-8 rounded-lg bg-slate-50 flex items-center justify-center border border-slate-100 flex-shrink-0">
+                                                        <Building2 className="w-3 h-3 sm:w-4 sm:h-4 text-muted-foreground" />
                                                     </div>
-                                                    <span className="text-sm font-medium text-foreground italic">
+                                                    <span className="text-xs sm:text-sm font-medium text-foreground italic truncate">
                                                         {donation.templeName}
                                                     </span>
                                                 </div>
                                             </td>
 
-                                            <td className="p-4">
-                                                <p className="font-bold text-lg text-primary">₹{donation.amount.toLocaleString()}</p>
+                                            <td className="p-3 sm:p-4">
+                                                <p className="font-bold text-sm sm:text-lg text-primary whitespace-nowrap">₹{donation.amount.toLocaleString()}</p>
                                             </td>
-                                            <td className="p-4">
+                                            <td className="p-3 sm:p-4">
                                                 <div className="flex flex-col">
-                                                    <p className="text-sm font-bold text-foreground">
+                                                    <p className="text-xs sm:text-sm font-bold text-foreground whitespace-nowrap">
                                                         {new Date(donation.createdAt).toLocaleDateString('en-GB', { day: '2-digit', month: 'short', year: 'numeric' })}
                                                     </p>
-                                                    <p className="text-[10px] text-muted-foreground font-medium">
+                                                    <p className="text-[8px] sm:text-[10px] text-muted-foreground font-medium whitespace-nowrap">
                                                         {new Date(donation.createdAt).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
                                                     </p>
                                                 </div>
                                             </td>
-                                            <td className="p-4">
-                                                <Badge variant="outline" className={`text-[10px] uppercase font-black tracking-widest px-2 py-1 rounded-lg border-2 ${status.color}`}>
-                                                    <status.icon className="w-3 h-3 mr-1" />
+                                            <td className="p-3 sm:p-4">
+                                                <Badge variant="outline" className={`text-[8px] sm:text-[10px] uppercase font-black tracking-widest px-1.5 sm:px-2 py-1 rounded-lg border-2 whitespace-nowrap ${status.color}`}>
+                                                    <status.icon className="w-2.5 h-2.5 sm:w-3 sm:h-3 mr-1" />
                                                     {status.label}
                                                 </Badge>
                                             </td>
-                                            <td className="p-4 text-right">
-                                                <div className="flex items-center justify-end gap-2">
+                                            <td className="p-3 sm:p-4 text-right">
+                                                <div className="flex items-center justify-end gap-1 sm:gap-2">
                                                     <Button
                                                         variant="ghost"
                                                         size="icon"
-                                                        className="w-9 h-9 rounded-xl hover:bg-primary/10 hover:text-primary transition-all"
+                                                        className="w-7 h-7 sm:w-9 sm:h-9 rounded-xl hover:bg-primary/10 hover:text-primary transition-all flex-shrink-0"
                                                         onClick={() => setSelectedDonation(donation)}
                                                     >
-                                                        <Eye className="w-4.5 h-4.5" />
+                                                        <Eye className="w-3.5 h-3.5 sm:w-4.5 sm:h-4.5" />
                                                     </Button>
                                                     <Button
                                                         variant="ghost"
                                                         size="icon"
-                                                        className="w-9 h-9 rounded-xl text-rose-500 hover:text-rose-600 hover:bg-rose-50 transition-all"
+                                                        className="w-7 h-7 sm:w-9 sm:h-9 rounded-xl text-rose-500 hover:text-rose-600 hover:bg-rose-50 transition-all flex-shrink-0"
                                                         onClick={() => handleDelete(donation.id)}
                                                     >
-                                                        <Trash2 className="w-4.5 h-4.5" />
+                                                        <Trash2 className="w-3.5 h-3.5 sm:w-4.5 sm:h-4.5" />
                                                     </Button>
                                                 </div>
                                             </td>
@@ -509,60 +511,63 @@ export default function DonationClient() {
 
                 {/* Pagination Controls */}
                 {totalPages > 1 && (
-                    <div className="p-6 border-t border-primary/5 bg-primary/2">
-                        <Pagination>
-                            <PaginationContent>
-                                <PaginationItem>
-                                    <PaginationPrevious
-                                        href="#"
-                                        onClick={(e) => { e.preventDefault(); handlePageChange(currentPage - 1); }}
-                                        className={currentPage === 1 ? "pointer-events-none opacity-50" : "cursor-pointer hover:bg-primary/10 hover:text-primary rounded-xl transition-all"}
-                                    />
-                                </PaginationItem>
+                    <div className="p-4 sm:p-6 border-t border-primary/5 bg-primary/2">
+                        <div className="overflow-x-auto">
+                            <Pagination>
+                                <PaginationContent className="flex-wrap justify-center gap-1 sm:gap-2">
+                                    <PaginationItem>
+                                        <PaginationPrevious
+                                            href="#"
+                                            onClick={(e) => { e.preventDefault(); handlePageChange(currentPage - 1); }}
+                                            className={currentPage === 1 ? "pointer-events-none opacity-50" : "cursor-pointer hover:bg-primary/10 hover:text-primary rounded-xl transition-all min-w-[40px] sm:min-w-auto"}
+                                        />
+                                    </PaginationItem>
 
-                                {[...Array(totalPages)].map((_, i) => {
-                                    const pageNum = i + 1;
-                                    // Logic to show only a few page numbers if totalPages is large
-                                    if (
-                                        pageNum === 1 ||
-                                        pageNum === totalPages ||
-                                        (pageNum >= currentPage - 1 && pageNum <= currentPage + 1)
-                                    ) {
-                                        return (
-                                            <PaginationItem key={pageNum}>
-                                                <PaginationLink
-                                                    href="#"
-                                                    onClick={(e) => { e.preventDefault(); handlePageChange(pageNum); }}
-                                                    isActive={currentPage === pageNum}
-                                                    className={currentPage === pageNum ? "bg-primary text-white hover:bg-primary/90 border-none rounded-xl" : "cursor-pointer hover:bg-primary/10 hover:text-primary border-none rounded-xl transition-all"}
-                                                >
-                                                    {pageNum}
-                                                </PaginationLink>
-                                            </PaginationItem>
-                                        );
-                                    } else if (
-                                        pageNum === currentPage - 2 ||
-                                        pageNum === currentPage + 2
-                                    ) {
-                                        return (
-                                            <PaginationItem key={pageNum}>
-                                                <PaginationEllipsis />
-                                            </PaginationItem>
-                                        );
-                                    }
-                                    return null;
-                                })}
+                                    {[...Array(totalPages)].map((_, i) => {
+                                        const pageNum = i + 1;
+                                        // Logic to show only a few page numbers if totalPages is large
+                                        if (
+                                            pageNum === 1 ||
+                                            pageNum === totalPages ||
+                                            (pageNum >= currentPage - 1 && pageNum <= currentPage + 1)
+                                        ) {
+                                            return (
+                                                <PaginationItem key={pageNum}>
+                                                    <PaginationLink
+                                                        href="#"
+                                                        onClick={(e) => { e.preventDefault(); handlePageChange(pageNum); }}
+                                                        isActive={currentPage === pageNum}
+                                                        className={currentPage === pageNum ? "bg-primary text-white hover:bg-primary/90 border-none rounded-xl min-w-[32px] sm:min-w-auto" : "cursor-pointer hover:bg-primary/10 hover:text-primary border-none rounded-xl transition-all min-w-[32px] sm:min-w-auto"}
+                                                    >
+                                                        {pageNum}
+                                                    </PaginationLink>
+                                                </PaginationItem>
+                                            );
+                                        } else if (
+                                            pageNum === currentPage - 2 ||
+                                            pageNum === currentPage + 2
+                                        ) {
+                                            return (
+                                                <PaginationItem key={pageNum}>
+                                                    <PaginationEllipsis className="hidden sm:flex" />
+                                                    <span className="sm:hidden px-2 text-muted-foreground">...</span>
+                                                </PaginationItem>
+                                            );
+                                        }
+                                        return null;
+                                    })}
 
-                                <PaginationItem>
-                                    <PaginationNext
-                                        href="#"
-                                        onClick={(e) => { e.preventDefault(); handlePageChange(currentPage + 1); }}
-                                        className={currentPage === totalPages ? "pointer-events-none opacity-50" : "cursor-pointer hover:bg-primary/10 hover:text-primary rounded-xl transition-all"}
-                                    />
-                                </PaginationItem>
-                            </PaginationContent>
-                        </Pagination>
-                        <p className="text-center mt-4 text-xs font-bold text-muted-foreground uppercase tracking-widest">
+                                    <PaginationItem>
+                                        <PaginationNext
+                                            href="#"
+                                            onClick={(e) => { e.preventDefault(); handlePageChange(currentPage + 1); }}
+                                            className={currentPage === totalPages ? "pointer-events-none opacity-50" : "cursor-pointer hover:bg-primary/10 hover:text-primary rounded-xl transition-all min-w-[40px] sm:min-w-auto"}
+                                        />
+                                    </PaginationItem>
+                                </PaginationContent>
+                            </Pagination>
+                        </div>
+                        <p className="text-center mt-3 sm:mt-4 text-xs font-bold text-muted-foreground uppercase tracking-widest break-words px-2">
                             Showing page <span className="text-primary">{currentPage}</span> of <span className="text-primary">{totalPages}</span> — <span className="text-primary">{totalItems}</span> sacred entries found
                         </p>
                     </div>
@@ -572,7 +577,7 @@ export default function DonationClient() {
             {/* Donation Detail Modal */}
             <AnimatePresence>
                 {selectedDonation && (
-                    <div className="fixed inset-0 z-[60] flex items-center justify-center p-4">
+                    <div className="fixed inset-0 z-[60] flex items-center justify-center p-2 sm:p-4">
                         <motion.div
                             initial={{ opacity: 0 }}
                             animate={{ opacity: 1 }}
@@ -584,63 +589,63 @@ export default function DonationClient() {
                             initial={{ scale: 0.95, opacity: 0, y: 20 }}
                             animate={{ scale: 1, opacity: 1, y: 0 }}
                             exit={{ scale: 0.95, opacity: 0, y: 20 }}
-                            className="bg-white rounded-[32px] w-full max-w-2xl overflow-hidden shadow-2xl relative z-10"
+                            className="bg-white rounded-[20px] sm:rounded-[32px] w-full max-w-[95vw] sm:max-w-2xl max-h-[90vh] sm:max-h-[75vh] overflow-hidden shadow-2xl relative z-10"
                         >
-                            <div className="bg-[#7c4624] p-8 text-white relative">
+                            <div className="bg-[#7c4624] p-4 sm:p-8 text-white relative">
                                 <button
                                     onClick={() => setSelectedDonation(null)}
-                                    className="absolute right-6 top-6 w-10 h-10 rounded-full bg-white/10 flex items-center justify-center hover:bg-white/20 transition-colors"
+                                    className="absolute right-3 sm:right-6 top-3 sm:top-6 w-8 h-8 sm:w-10 sm:h-10 rounded-full bg-white/10 flex items-center justify-center hover:bg-white/20 transition-colors"
                                 >
-                                    <X className="w-5 h-5" />
+                                    <X className="w-4 h-4 sm:w-5 sm:h-5" />
                                 </button>
-                                <div className="flex items-center gap-4 mb-2">
-                                    <div className="w-12 h-12 bg-white/20 rounded-2xl flex items-center justify-center backdrop-blur-md">
-                                        <Heart className="w-7 h-7" />
+                                <div className="flex items-center gap-3 sm:gap-4 mb-2">
+                                    <div className="w-10 h-10 sm:w-12 sm:h-12 bg-white/20 rounded-2xl flex items-center justify-center backdrop-blur-md flex-shrink-0">
+                                        <Heart className="w-5 h-5 sm:w-7 sm:h-7" />
                                     </div>
-                                    <div>
-                                        <h3 className="text-2xl font-serif font-bold">Donation Details</h3>
-                                        <p className="text-white/80 text-sm">Sacred Contribution Ref: {selectedDonation.id}</p>
+                                    <div className="min-w-0">
+                                        <h3 className="text-lg sm:text-2xl font-serif font-bold truncate">Donation Details</h3>
+                                        <p className="text-white/80 text-xs sm:text-sm truncate">Sacred Contribution Ref: {selectedDonation.id}</p>
                                     </div>
                                 </div>
                             </div>
 
-                            <div className="p-8 space-y-8 max-h-[75vh] overflow-y-auto">
+                            <div className="p-4 sm:p-8 space-y-4 sm:space-y-8 max-h-[60vh] sm:max-h-[75vh] overflow-y-auto">
                                 {/* Status & ID */}
-                                <div className="flex items-center justify-between p-4 bg-slate-50 rounded-2xl border border-slate-100">
+                                <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between p-3 sm:p-4 bg-slate-50 rounded-2xl border border-slate-100 gap-3">
                                     <div className="flex items-center gap-3">
-                                        <div className={`p-2 rounded-xl ${(statusConfig[selectedDonation.status as keyof typeof statusConfig] || statusConfig.SUCCESS).color}`}>
-                                            {React.createElement((statusConfig[selectedDonation.status as keyof typeof statusConfig] || statusConfig.SUCCESS).icon, { className: "w-5 h-5" })}
+                                        <div className={`p-2 rounded-xl flex-shrink-0 ${(statusConfig[selectedDonation.status as keyof typeof statusConfig] || statusConfig.SUCCESS).color}`}>
+                                            {React.createElement((statusConfig[selectedDonation.status as keyof typeof statusConfig] || statusConfig.SUCCESS).icon, { className: "w-4 h-4 sm:w-5 sm:h-5" })}
                                         </div>
-                                        <div>
-                                            <p className="text-[10px] text-slate-400 font-bold uppercase tracking-widest">Payment Status</p>
-                                            <p className="font-bold text-slate-700">{selectedDonation.status}</p>
+                                        <div className="min-w-0">
+                                            <p className="text-[8px] sm:text-[10px] text-slate-400 font-bold uppercase tracking-widest">Payment Status</p>
+                                            <p className="font-bold text-slate-700 text-sm sm:text-base truncate">{selectedDonation.status}</p>
                                         </div>
                                     </div>
-                                    <div className="text-right">
-                                        <p className="text-[10px] text-slate-400 font-bold uppercase tracking-widest">Method</p>
-                                        <p className="font-bold text-slate-700">{selectedDonation.paymentMethod}</p>
+                                    <div className="text-right sm:text-left">
+                                        <p className="text-[8px] sm:text-[10px] text-slate-400 font-bold uppercase tracking-widest">Method</p>
+                                        <p className="font-bold text-slate-700 text-sm sm:text-base truncate">{selectedDonation.paymentMethod}</p>
                                     </div>
                                 </div>
 
                                 {/* Main Info Grid */}
-                                <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
-                                    <div className="space-y-6">
+                                <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 sm:gap-8">
+                                    <div className="space-y-4 sm:space-y-6">
                                         <div>
-                                            <p className="text-[10px] text-slate-400 font-bold uppercase tracking-widest mb-1">Donor Information</p>
+                                            <p className="text-[8px] sm:text-[10px] text-slate-400 font-bold uppercase tracking-widest mb-1">Donor Information</p>
                                             <div className="space-y-2">
-                                                <p className="text-slate-800 font-bold flex items-center gap-2">
-                                                    <User className="w-4 h-4 text-[#7c4624]" />
-                                                    {parseLocalizedValue(selectedDonation.donorName)}
+                                                <p className="text-slate-800 font-bold flex items-center gap-2 text-sm sm:text-base">
+                                                    <User className="w-3.5 h-3.5 sm:w-4 sm:h-4 text-[#7c4624] flex-shrink-0" />
+                                                    <span className="truncate">{parseLocalizedValue(selectedDonation.donorName)}</span>
                                                 </p>
                                                 {!selectedDonation.isAnonymous && (
                                                     <>
-                                                        <p className="text-sm text-slate-600 flex items-center gap-2">
-                                                            <Phone className="w-3.5 h-3.5" />
-                                                            {selectedDonation.donorPhone}
+                                                        <p className="text-xs sm:text-sm text-slate-600 flex items-center gap-2">
+                                                            <Phone className="w-3 h-3 sm:w-3.5 sm:h-3.5 flex-shrink-0" />
+                                                            <span className="truncate">{selectedDonation.donorPhone}</span>
                                                         </p>
-                                                        <p className="text-sm text-slate-600 flex items-center gap-2">
-                                                            <Mail className="w-3.5 h-3.5" />
-                                                            {selectedDonation.donorEmail}
+                                                        <p className="text-xs sm:text-sm text-slate-600 flex items-center gap-2">
+                                                            <Mail className="w-3 h-3 sm:w-3.5 sm:h-3.5 flex-shrink-0" />
+                                                            <span className="truncate">{selectedDonation.donorEmail}</span>
                                                         </p>
                                                     </>
                                                 )}
@@ -648,44 +653,44 @@ export default function DonationClient() {
                                         </div>
 
                                         <div>
-                                            <p className="text-[10px] text-slate-400 font-bold uppercase tracking-widest mb-1">Temple</p>
-                                            <p className="text-slate-800 font-bold flex items-center gap-2 mb-1">
-                                                <Building2 className="w-4 h-4 text-[#7c4624]" />
-                                                {selectedDonation.templeName}
+                                            <p className="text-[8px] sm:text-[10px] text-slate-400 font-bold uppercase tracking-widest mb-1">Temple</p>
+                                            <p className="text-slate-800 font-bold flex items-center gap-2 mb-1 text-sm sm:text-base">
+                                                <Building2 className="w-3.5 h-3.5 sm:w-4 sm:h-4 text-[#7c4624] flex-shrink-0" />
+                                                <span className="truncate">{selectedDonation.templeName}</span>
                                             </p>
                                         </div>
                                     </div>
 
-                                    <div className="space-y-6">
+                                    <div className="space-y-4 sm:space-y-6">
                                         <div>
-                                            <p className="text-[10px] text-slate-400 font-bold uppercase tracking-widest mb-1">Amount Details</p>
-                                            <p className="text-3xl font-display font-bold text-[#7c4624]">
+                                            <p className="text-[8px] sm:text-[10px] text-slate-400 font-bold uppercase tracking-widest mb-1">Amount Details</p>
+                                            <p className="text-xl sm:text-3xl font-display font-bold text-[#7c4624] break-words">
                                                 ₹ {selectedDonation.amount.toLocaleString()}
                                             </p>
-                                            <p className="text-xs text-muted-foreground mt-1">
+                                            <p className="text-xs text-muted-foreground mt-1 break-words">
                                                 Received on {new Date(selectedDonation.createdAt).toLocaleString()}
                                             </p>
                                         </div>
 
                                         {selectedDonation.is80GRequired && (
-                                            <div className="p-3 bg-blue-50 border border-blue-100 rounded-xl">
+                                            <div className="p-2 sm:p-3 bg-blue-50 border border-blue-100 rounded-xl">
                                                 <div className="flex items-center gap-2 text-blue-700 font-bold text-xs uppercase tracking-tight mb-1">
-                                                    <ShieldCheck className="w-3.5 h-3.5" />
+                                                    <ShieldCheck className="w-3 h-3 sm:w-3.5 sm:h-3.5 flex-shrink-0" />
                                                     80G Tax Exemption Requested
                                                 </div>
-                                                <p className="text-sm text-blue-900 font-mono font-bold">PAN: {selectedDonation.panNumber}</p>
+                                                <p className="text-xs sm:text-sm text-blue-900 font-mono font-bold truncate">PAN: {selectedDonation.panNumber}</p>
                                             </div>
                                         )}
                                     </div>
                                 </div>
 
                                 {/* Long Text Fields */}
-                                <div className="grid grid-cols-1 gap-6 pt-6 border-t border-slate-100">
+                                <div className="grid grid-cols-1 gap-4 sm:gap-6 pt-4 sm:pt-6 border-t border-slate-100">
                                     {(selectedDonation.address && !selectedDonation.isAnonymous) && (
                                         <div>
-                                            <p className="text-[10px] text-slate-400 font-bold uppercase tracking-widest mb-1">Postal Address</p>
-                                            <p className="text-slate-700 font-medium bg-slate-50 p-4 rounded-xl border border-dashed border-slate-200 text-sm leading-relaxed">
-                                                <MapPin className="w-4 h-4 inline-block mr-2 text-slate-400" />
+                                            <p className="text-[8px] sm:text-[10px] text-slate-400 font-bold uppercase tracking-widest mb-1">Postal Address</p>
+                                            <p className="text-slate-700 font-medium bg-slate-50 p-3 sm:p-4 rounded-xl border border-dashed border-slate-200 text-xs sm:text-sm leading-relaxed break-words">
+                                                <MapPin className="w-3.5 h-3.5 sm:w-4 sm:h-4 inline-block mr-2 text-slate-400 flex-shrink-0" />
                                                 {selectedDonation.address}
                                             </p>
                                         </div>
@@ -693,43 +698,46 @@ export default function DonationClient() {
 
                                     {selectedDonation.message && (
                                         <div>
-                                            <p className="text-[10px] text-slate-400 font-bold uppercase tracking-widest mb-1">Prayer / Sankalp Message</p>
-                                            <div className="bg-yellow-50/50 p-4 rounded-xl border border-dashed border-yellow-200 text-slate-700 italic text-sm leading-relaxed">
+                                            <p className="text-[8px] sm:text-[10px] text-slate-400 font-bold uppercase tracking-widest mb-1">Prayer / Sankalp Message</p>
+                                            <div className="bg-yellow-50/50 p-3 sm:p-4 rounded-xl border border-dashed border-yellow-200 text-slate-700 italic text-xs sm:text-sm leading-relaxed break-words">
                                                 "{selectedDonation.message}"
                                             </div>
                                         </div>
                                     )}
                                 </div>
 
-                                <div className="pt-6 border-t border-slate-100 flex items-center justify-between">
-                                    <div className="flex gap-2">
+                                <div className="pt-4 sm:pt-6 border-t border-slate-100 flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">
+                                    <div className="flex flex-col sm:flex-row gap-2 w-full sm:w-auto">
                                         <Button
                                             variant="outline"
-                                            className="rounded-xl border-slate-200 text-slate-600 h-10 px-4"
+                                            className="rounded-xl border-slate-200 text-slate-600 h-9 sm:h-10 px-3 sm:px-4 w-full sm:w-auto flex items-center justify-center"
                                             onClick={() => handlePrintReceipt(selectedDonation)}
                                         >
-                                            <Download className="w-4 h-4 mr-2" /> Print Receipt
+                                            <Download className="w-3.5 h-3.5 sm:w-4 sm:h-4 mr-2" /> 
+                                            <span className="text-xs sm:text-sm">Print Receipt</span>
                                         </Button>
                                         <Button
                                             variant="outline"
-                                            className="rounded-xl border-slate-200 text-slate-600 h-10 px-4"
+                                            className="rounded-xl border-slate-200 text-slate-600 h-9 sm:h-10 px-3 sm:px-4 w-full sm:w-auto flex items-center justify-center"
                                             onClick={() => handleSendEmail(selectedDonation.id)}
                                             disabled={sendingEmail}
                                         >
                                             {sendingEmail ? (
                                                 <>
-                                                    <Sparkles className="w-4 h-4 mr-2 animate-spin" /> Sending...
+                                                    <Sparkles className="w-3.5 h-3.5 sm:w-4 sm:h-4 mr-2 animate-spin" /> 
+                                                    <span className="text-xs sm:text-sm">Sending...</span>
                                                 </>
                                             ) : (
                                                 <>
-                                                    <Mail className="w-4 h-4 mr-2" /> Send Email
+                                                    <Mail className="w-3.5 h-3.5 sm:w-4 sm:h-4 mr-2" /> 
+                                                    <span className="text-xs sm:text-sm">Send Email</span>
                                                 </>
                                             )}
                                         </Button>
                                     </div>
                                     <Button
                                         onClick={() => setSelectedDonation(null)}
-                                        className="bg-[#7c4624] hover:bg-[#63361c] rounded-xl px-8"
+                                        className="bg-[#7c4624] hover:bg-[#63361c] rounded-xl px-4 sm:px-8 h-9 sm:h-10 w-full sm:w-auto"
                                     >
                                         Close
                                     </Button>

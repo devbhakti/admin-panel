@@ -12,8 +12,13 @@ import {
     MapPin,
     Clock,
     ImageIcon,
-    Trash2
+    Trash2,
+    Loader2,
+    AlertCircle,
+    CheckCircle2
 } from "lucide-react";
+import axios from "axios";
+import { checkPhoneGlobal, checkEmailExists } from "@/api/authController";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
@@ -104,6 +109,10 @@ export function TempleForm({
     const [poojaSlabs, setPoojaSlabs] = useState<any[]>([]);
     const [marketplaceRateType, setMarketplaceRateType] = useState<"DEFAULT" | "CUSTOM">("DEFAULT");
     const [poojaRateType, setPoojaRateType] = useState<"DEFAULT" | "CUSTOM">("DEFAULT");
+
+    // Inline Validation States
+    const [phoneValidation, setPhoneValidation] = useState<any>({ status: "idle", message: "" });
+    const [emailValidation, setEmailValidation] = useState<any>({ status: "idle", message: "" });
 
     // Images State
     const [mainImage, setMainImage] = useState<File | null>(null);
@@ -285,6 +294,49 @@ export function TempleForm({
         }
     };
 
+    // -------- Validation Handlers --------
+    const handlePhoneBlur = async () => {
+        if (mode === "edit") return; // Skip validation in edit mode for simplicity or different logic
+        if (!formData.phone || formData.phone.length < 10) return;
+
+        setPhoneValidation({ status: "checking", message: "" });
+        try {
+            const result = await checkPhoneGlobal(formData.phone, 'INSTITUTION');
+            if (result.exists) {
+                setPhoneValidation({ status: "error", message: "A Temple/Institution account already exists with this phone number." });
+            } else {
+                setPhoneValidation({ status: "ok", message: "Number is available for Temple registration." });
+            }
+        } catch {
+            setPhoneValidation({ status: "idle", message: "" });
+        }
+    };
+
+    const handleEmailBlur = async () => {
+        if (mode === "edit") return;
+        if (!formData.email || !formData.email.includes("@")) return;
+
+        setEmailValidation({ status: "checking", message: "" });
+        try {
+            const result = await checkEmailExists(formData.email, 'INSTITUTION');
+            if (result.exists) {
+                setEmailValidation({ status: "error", message: "A Temple/Institution account already exists with this email address." });
+            } else {
+                setEmailValidation({ status: "ok", message: "Email is available for Temple registration." });
+            }
+        } catch {
+            setEmailValidation({ status: "idle", message: "" });
+        }
+    };
+
+    const renderFieldFeedback = (validation: any) => {
+        if (validation.status === "idle") return null;
+        if (validation.status === "checking") return <p className="text-[10px] text-slate-500 mt-1 animate-pulse flex items-center gap-1"><Loader2 className="w-3 h-3 animate-spin"/> Checking...</p>;
+        if (validation.status === "error") return <p className="text-[10px] text-red-600 mt-1 flex items-center gap-1"><AlertCircle className="w-3 h-3"/> {validation.message}</p>;
+        if (validation.status === "ok") return <p className="text-[10px] text-emerald-600 mt-1 flex items-center gap-1"><CheckCircle2 className="w-3 h-3"/> {validation.message}</p>;
+        return null;
+    };
+
     const getFullImageUrl = (path: string) => {
         if (!path) return "";
         if (path.startsWith('http')) return path;
@@ -451,9 +503,15 @@ export function TempleForm({
                                         <Input
                                             type="email"
                                             value={formData.email}
-                                            onChange={e => setFormData({ ...formData, email: e.target.value })}
+                                            onChange={e => {
+                                                setFormData({ ...formData, email: e.target.value });
+                                                if(emailValidation.status !== 'idle') setEmailValidation({status:'idle', message:''});
+                                            }}
+                                            onBlur={handleEmailBlur}
                                             placeholder={t('registration_form.placeholders.email')}
+                                            className={emailValidation.status === 'error' ? 'border-red-300' : emailValidation.status === 'ok' ? 'border-emerald-300' : ''}
                                         />
+                                        {renderFieldFeedback(emailValidation)}
                                     </div>
                                     <div className="space-y-2">
                                         <label className="text-sm font-semibold text-slate-700">{t('registration_form.labels.phone')}</label>
@@ -463,12 +521,17 @@ export function TempleForm({
                                                 type="tel"
                                                 maxLength={10}
                                                 value={formData.phone}
-                                                onChange={e => setFormData({ ...formData, phone: e.target.value.replace(/\D/g, '') })}
+                                                onChange={e => {
+                                                    setFormData({ ...formData, phone: e.target.value.replace(/\D/g, '') });
+                                                    if(phoneValidation.status !== 'idle') setPhoneValidation({status:'idle', message:''});
+                                                }}
+                                                onBlur={handlePhoneBlur}
                                                 placeholder="10-digit number"
-                                                className="pl-14"
+                                                className={`pl-14 ${phoneValidation.status === 'error' ? 'border-red-300' : phoneValidation.status === 'ok' ? 'border-emerald-300' : ''}`}
                                                  required
                                             />
                                         </div>
+                                        {renderFieldFeedback(phoneValidation)}
                                     </div>
                                 </div>
                             </div>
@@ -661,6 +724,17 @@ export function TempleForm({
                                             <div className="absolute inset-0 bg-black/40 opacity-0 group-hover:opacity-100 flex items-center justify-center">
                                                 <Upload className="text-white w-8 h-8" />
                                             </div>
+                                            <button 
+                                                type="button" 
+                                                onClick={() => {
+                                                    setMainImage(null);
+                                                    setMainImagePreview("");
+                                                    setExistingMainImage("");
+                                                }} 
+                                                className="absolute top-2 right-2 bg-white/80 rounded-full p-1.5 shadow-sm opacity-0 group-hover:opacity-100 hover:bg-white transition-all"
+                                            >
+                                                <X className="w-4 h-4 text-destructive" />
+                                            </button>
                                         </div>
                                     ) : (
                                         <div className="py-8 flex flex-col items-center text-muted-foreground">

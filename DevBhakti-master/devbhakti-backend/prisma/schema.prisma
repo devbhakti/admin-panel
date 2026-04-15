@@ -10,7 +10,7 @@ datasource db {
 model User {
   id            String         @id @default(cuid())
   name          String?
-  email         String?        @unique
+  email         String?
   password      String?
   phone         String?
   role          UserRole       @default(DEVOTEE)
@@ -35,6 +35,9 @@ model User {
   bookings      PoojaBooking[]
   sellerProfile SellerProfile?
   temple        Temple?
+
+  @@unique([email, role])
+  @@unique([phone, role])
 }
 
 model Cart {

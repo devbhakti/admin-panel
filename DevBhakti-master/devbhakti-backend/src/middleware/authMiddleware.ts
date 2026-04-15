@@ -46,7 +46,7 @@ export const authorize = (...roles: string[]) => {
   };
 };
 
-export const checkPermission = (permissionKey: string) => {
+export const checkPermission = (...permissionKeys: string[]) => {
   return (req: AuthRequest, res: Response, next: NextFunction) => {
     if (!req.user) {
       return res.status(401).json({ error: 'Authentication required' });
@@ -59,11 +59,13 @@ export const checkPermission = (permissionKey: string) => {
 
     // Check staff permissions
     const permissions = req.user.permissions || [];
-    if (permissions.includes(permissionKey)) {
+    const hasAnyPermission = permissionKeys.some(key => permissions.includes(key));
+    
+    if (hasAnyPermission) {
       return next();
     }
 
-    return res.status(403).json({ error: `Access denied: Missing permission '${permissionKey}'` });
+    return res.status(403).json({ error: `Access denied: Missing one of required permissions: ${permissionKeys.join(', ')}` });
   };
 };
 

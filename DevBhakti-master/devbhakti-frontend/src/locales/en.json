@@ -2075,7 +2075,7 @@
       "select_poojas": "Select poojas...",
       "search_poojas": "Search poojas...",
       "no_pooja_found": "No pooja found.",
-      "recommended_poojas": "Recommended Poojas for this Temple (Optional)",
+      "recommended_poojas_for_temple": "Recommended Poojas for this Temple (Optional)",
       "select_temple_first": "Please select a temple first to see available poojas",
       "success_create": "Event created successfully",
       "success_update": "Event updated successfully",
@@ -2086,7 +2086,14 @@
       "status_activated": "Event activated successfully",
       "status_deactivated": "Event deactivated successfully",
       "confirm_delete": "Are you sure you want to delete this event?",
-      "fill_details": "Fill in the details for the upcoming event or festival."
+      "fill_details": "Fill in the details for the upcoming event or festival.",
+      "view_event": "Event Details",
+      "view_event_desc": "Complete information about this event",
+      "about_event": "About the Event",
+      "recommended_poojas": "Recommended Poojas",
+      "no_description": "No description available",
+      "no_poojas_recommended": "No poojas recommended yet",
+      "poojas_count": "{count} poojas recommended for this event"
     },
     "cms": {
       "features": {

@@ -389,10 +389,11 @@ export default function TempleAdminLayout({ children }: { children: React.ReactN
                     "fixed inset-y-0 left-0 z-50 flex flex-col bg-sidebar transition-all duration-300 print:hidden",
                     sidebarOpen ? "w-64" : "w-20"
                 )}
+                onClick={!sidebarOpen ? () => setSidebarOpen(true) : undefined}
             >
                 {/* Logo */}
                 {/* Logo */}
-                <div className="flex items-center gap-3 h-20 px-4 border-b border-sidebar-border bg-sidebar/50 backdrop-blur-sm">
+                <div className="flex items-center gap-3 h-20 px-4 border-b border-sidebar-border bg-sidebar/50 backdrop-blur-sm" onClick={(e) => e.stopPropagation()}>
                     {sidebarOpen ? (
                         <div className="flex items-center gap-3 w-full">
                             <div className="bg-white h-16 w-16 rounded-xl shadow-md border border-sidebar-border/50 shrink-0 overflow-hidden flex items-center justify-center translate-y-[-2px]">
@@ -439,7 +440,7 @@ export default function TempleAdminLayout({ children }: { children: React.ReactN
                 </div>
 
                 {/* Navigation */}
-                <nav className="flex-1 py-4 px-3 space-y-1 overflow-y-auto custom-scrollbar">
+                <nav className="flex-1 py-4 px-3 space-y-1 overflow-y-auto custom-scrollbar" onClick={(e) => e.stopPropagation()}>
                     {sidebarItems
                         .filter(item => !item.permission || hasPermission(item.permission))
                         .map((item) => {
@@ -477,7 +478,7 @@ export default function TempleAdminLayout({ children }: { children: React.ReactN
                 </nav>
 
                 {/* User section */}
-                <div className="p-3 border-t border-sidebar-border">
+                <div className="p-3 border-t border-sidebar-border" onClick={(e) => e.stopPropagation()}>
                     <Link
                         href="/temples/dashboard/profile"
                         className={cn(
@@ -523,6 +524,13 @@ export default function TempleAdminLayout({ children }: { children: React.ReactN
                 {/* Header */}
                 <header className="sticky top-0 z-40 h-16 bg-background/95 backdrop-blur-md border-b border-border flex items-center justify-between px-6 w-full overflow-hidden print:hidden">
                     <div className="flex items-center gap-2 text-sm text-muted-foreground capitalize overflow-x-auto whitespace-nowrap custom-scrollbar pb-1">
+                        <button
+                            onClick={() => setSidebarOpen(!sidebarOpen)}
+                            className="p-2 rounded-md hover:bg-muted text-foreground transition-colors"
+                            title="Toggle Sidebar"
+                        >
+                            <Menu className="w-5 h-5" />
+                        </button>
                         <Link href="/temples/dashboard" className="hover:text-foreground transition-colors">
                             Temple Admin
                         </Link>

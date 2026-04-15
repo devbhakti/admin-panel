@@ -14,7 +14,8 @@ import {
     ChevronsUpDown,
     X,
     Power,
-    PowerOff
+    PowerOff,
+    Eye
 } from "lucide-react";
 import { format } from "date-fns";
 import { hi } from "date-fns/locale";
@@ -329,6 +330,14 @@ export default function AdminEventsPage() {
         }
     };
 
+    const [isViewDialogOpen, setIsViewDialogOpen] = useState(false);
+    const [viewingEvent, setViewingEvent] = useState<any>(null);
+
+    const handleViewEvent = (event: any) => {
+        setViewingEvent(event);
+        setIsViewDialogOpen(true);
+    };
+
     const handleDelete = async (id: string) => {
         if (window.confirm(t('admin.events.confirm_delete') || "Are you sure you want to delete this event?")) {
             try {
@@ -513,6 +522,14 @@ export default function AdminEventsPage() {
                                     </TableCell>
                                     <TableCell className="text-right">
                                         <div className="flex justify-end gap-1">
+                                            <Button
+                                                variant="ghost"
+                                                size="icon"
+                                                onClick={() => handleViewEvent(event)}
+                                                title="View Event Details"
+                                            >
+                                                <Eye className="w-4 h-4 text-green-600" />
+                                            </Button>
                                             {hasPermission("events.edit") && (
                                                 <Button
                                                     variant="ghost"
@@ -606,6 +623,130 @@ export default function AdminEventsPage() {
                     </Pagination>
                 </div>
             )}
+
+            {/* View Event Dialog */}
+            <Dialog open={isViewDialogOpen} onOpenChange={setIsViewDialogOpen}>
+                <DialogContent className="sm:max-w-[600px]">
+                    <DialogHeader>
+                        <DialogTitle className="flex items-center gap-2">
+                            <Eye className="w-5 h-5 text-green-600" />
+                            {t('admin.events.view_event') || "Event Details"}
+                        </DialogTitle>
+                        <DialogDescription>
+                            {t('admin.events.view_event_desc') || "Complete information about this event"}
+                        </DialogDescription>
+                    </DialogHeader>
+                    
+                    {viewingEvent && (
+                        <div className="space-y-6 py-4">
+                            {/* Event Name */}
+                            <div className="space-y-2">
+                                <Label className="text-sm font-semibold text-muted-foreground flex items-center gap-2">
+                                    <CalendarIcon className="w-4 h-4" />
+                                    {t('admin.events.table_event') || "Event Name"}
+                                </Label>
+                                <p className="text-base font-medium">{getLocalized(viewingEvent, 'name', language as Language)}</p>
+                            </div>
+
+                            {/* Temple Information */}
+                            <div className="space-y-2">
+                                <Label className="text-sm font-semibold text-muted-foreground flex items-center gap-2">
+                                    <MapPin className="w-4 h-4" />
+                                    {t('admin.events.table_temple') || "Temple"}
+                                </Label>
+                                <p className="text-base">
+                                    {viewingEvent.temple ? (
+                                        getLocalized(viewingEvent.temple, 'name', language as Language)
+                                    ) : (
+                                        <Badge variant="secondary" className="bg-slate-50 text-slate-500 border-slate-200">
+                                            {t('admin.events.global_temple') || "General Event"}
+                                        </Badge>
+                                    )}
+                                </p>
+                            </div>
+
+                            {/* Date and Time */}
+                            <div className="space-y-2">
+                                <Label className="text-sm font-semibold text-muted-foreground flex items-center gap-2">
+                                    <Clock className="w-4 h-4" />
+                                    {t('admin.events.table_datetime') || "Date & Time"}
+                                </Label>
+                                <div className="flex items-center gap-4">
+                                    <Badge variant="outline" className="text-sm">
+                                        {viewingEvent.date}
+                                    </Badge>
+                                    {viewingEvent.time && (
+                                        <Badge variant="outline" className="text-sm">
+                                            {viewingEvent.time}
+                                        </Badge>
+                                    )}
+                                </div>
+                            </div>
+
+                            {/* About the Event */}
+                            <div className="space-y-3">
+                                <Label className="text-base font-semibold text-foreground flex items-center gap-2">
+                                    <CalendarIcon className="w-4 h-4 text-primary" />
+                                    {t('admin.events.about_event') || "About the Event"}
+                                </Label>
+                                <div className="bg-gradient-to-r from-blue-50 to-indigo-50 p-4 rounded-lg border border-blue-200">
+                                    <p className="text-sm text-gray-800 leading-relaxed">
+                                        {getLocalized(viewingEvent, 'description', language as Language) || 
+                                         (t('admin.events.no_description') || "No description available")}
+                                    </p>
+                                </div>
+                            </div>
+
+                            {/* Recommended Poojas */}
+                            <div className="space-y-3">
+                                <Label className="text-base font-semibold text-foreground flex items-center gap-2">
+                                    <Sparkles className="w-4 h-4 text-amber-600" />
+                                    {t('admin.events.recommended_poojas') || "Recommended Poojas"}
+                                </Label>
+                                <div className="bg-gradient-to-r from-amber-50 to-orange-50 p-4 rounded-lg border border-amber-200">
+                                    {viewingEvent.Pooja && viewingEvent.Pooja.length > 0 ? (
+                                        <div className="space-y-2">
+                                            <div className="flex flex-wrap gap-2">
+                                                {viewingEvent.Pooja.map((pooja: any) => (
+                                                    <Badge key={pooja.id} variant="secondary" className="bg-white text-amber-800 border-amber-300 px-3 py-1">
+                                                        <Sparkles className="w-3 h-3 mr-1" />
+                                                        {getLocalized(pooja, 'name', language as Language)}
+                                                    </Badge>
+                                                ))}
+                                            </div>
+                                            <p className="text-xs text-amber-700 mt-2">
+                                                {t('admin.events.poojas_count', { count: viewingEvent.Pooja.length }) || 
+                                                 `${viewingEvent.Pooja.length} poojas recommended for this event`}
+                                            </p>
+                                        </div>
+                                    ) : (
+                                        <div className="text-center py-3">
+                                            <Sparkles className="w-8 h-8 text-amber-400 mx-auto mb-2" />
+                                            <p className="text-sm text-amber-700">
+                                                {t('admin.events.no_poojas_recommended') || "No poojas recommended yet"}
+                                            </p>
+                                        </div>
+                                    )}
+                                </div>
+                            </div>
+
+                            {/* Status */}
+                            <div className="space-y-2">
+                                <Label className="text-sm font-semibold text-muted-foreground">
+                                    {t('admin.events.table_status') || "Status"}
+                                </Label>
+                                <div className="flex items-center gap-2">
+                                    <Badge variant={viewingEvent.status ? "default" : "secondary"}>
+                                        {viewingEvent.status ? (t('admin.poojas.status_active') || "Active") : (t('admin.poojas.status_paused') || "Inactive")}
+                                    </Badge>
+                                </div>
+                            </div>
+                        </div>
+                    )}
+
+                
+                </DialogContent>
+            </Dialog>
 
             {/* Add/Edit Dialog */}
             <Dialog open={isDialogOpen} onOpenChange={setIsDialogOpen}>

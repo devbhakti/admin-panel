@@ -27,30 +27,51 @@ export default function EditPoojaPage() {
     const loadInitialData = async () => {
         setIsLoading(true);
         try {
-            const [templesRes, categoriesRes, poojaRes] = await Promise.all([
-                fetchAllTemplesAdmin(),
-                fetchPoojaCategoriesAdmin({ status: "APPROVED" }),
-                fetchPoojaByIdAdmin(poojaId)
-            ]);
-
-            const actualTemples = templesRes
-                .filter((user: any) => user.temple)
-                .map((user: any) => user.temple);
-            setTemples(actualTemples);
-
-            if (categoriesRes.success) {
-                setAvailableCategories(categoriesRes.data);
+            // Fetch core pooja data first as it is required
+            let poojaRes: any;
+            try {
+                poojaRes = await fetchPoojaByIdAdmin(poojaId);
+            } catch (err) {
+                console.error('Failed to fetch pooja:', err);
+                toast({ title: "Error", description: "Pooja not found or access denied", variant: "destructive" });
+                router.push('/admin/poojas');
+                return;
             }
 
-            if (poojaRes.success && poojaRes.data) {
-                setPoojaData(poojaRes.data);
-                // Update breadcrumb with pooja name
-                const poojaName = poojaRes.data.name?.en || poojaRes.data.name_en || "Edit Pooja";
-                window.dispatchEvent(new CustomEvent('updateBreadcrumb', { detail: `Edit: ${poojaName}` }));
-            } else {
+            if (!poojaRes || !poojaRes.success || !poojaRes.data) {
                 toast({ title: "Error", description: "Pooja not found", variant: "destructive" });
                 router.push('/admin/poojas');
+                return;
             }
+
+            setPoojaData(poojaRes.data);
+            // Update breadcrumb with pooja name
+            const poojaName = poojaRes.data.name?.en || poojaRes.data.name_en || "Edit Pooja";
+            window.dispatchEvent(new CustomEvent('updateBreadcrumb', { detail: `Edit: ${poojaName}` }));
+
+            // Fetch auxiliary data (temples, categories) and don't fail the whole page if these fail
+            // Some staff members might not have permissions for these specifically
+            try {
+                const [templesRes, categoriesRes] = await Promise.all([
+                    fetchAllTemplesAdmin().catch(e => { console.warn('Could not load temples:', e); return []; }),
+                    fetchPoojaCategoriesAdmin({ status: "APPROVED" }).catch(e => { console.warn('Could not load categories:', e); return { success: false, data: [] }; })
+                ]);
+
+                if (Array.isArray(templesRes)) {
+                    const actualTemples = templesRes
+                        .filter((user: any) => user.temple)
+                        .map((user: any) => user.temple);
+                    setTemples(actualTemples);
+                }
+
+                if (categoriesRes && categoriesRes.success) {
+                    setAvailableCategories(categoriesRes.data);
+                }
+            } catch (auxError) {
+                console.warn('Error loading auxiliary data:', auxError);
+                // We continue since the main pooja data is loaded
+            }
+
         } catch (error) {
             console.error('Load initial data error:', error);
             toast({ title: "Error", description: "Failed to load pooja data", variant: "destructive" });

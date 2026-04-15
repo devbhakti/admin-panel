@@ -11,7 +11,7 @@ import { authenticate, authorize, checkPermission } from "../../middleware/authM
 const router = Router();
 
 // Only authorized staff or admins
-router.get("/", authenticate, checkPermission("poojas.categories"), getAllPoojaCategoriesAdmin);
+router.get("/", authenticate, checkPermission("poojas.categories", "poojas.view", "poojas.create", "poojas.edit"), getAllPoojaCategoriesAdmin);
 router.post("/", authenticate, checkPermission("poojas.categories"), createPoojaCategory);
 router.put("/:id", authenticate, checkPermission("poojas.categories"), updatePoojaCategory);
 router.put("/:id/status", authenticate, checkPermission("poojas.categories"), updatePoojaCategoryStatus);
