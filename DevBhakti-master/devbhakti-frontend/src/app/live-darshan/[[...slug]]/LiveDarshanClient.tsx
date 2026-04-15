@@ -417,11 +417,6 @@ export default function LiveDarshanClient() {
                   <Badge className="bg-red-600 hover:bg-red-600 border-0 flex items-center gap-2 px-4 py-1.5 rounded-full text-sm font-bold shadow-lg animate-pulse">
                     <span className="w-2 h-2 rounded-full bg-white" /> {t('status_live')}
                   </Badge>
-                  {selectedTemple.viewers && (
-                    <Badge className="bg-black/40 backdrop-blur-md border border-white/10 text-white flex items-center gap-2 px-4 py-1.5 rounded-full text-sm font-medium">
-                      <Users size={14} /> {selectedTemple.viewers} {t('status_viewers')}
-                    </Badge>
-                  )}
                 </div>
               </motion.div>
             </div>

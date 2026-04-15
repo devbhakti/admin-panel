@@ -23,6 +23,7 @@ import {
     IndianRupee,
     Maximize2,
     X,
+    Play,
 } from "lucide-react";
 import {
     Dialog,
@@ -149,6 +150,21 @@ export default function TempleDetail() {
         return () => clearInterval(interval);
     }, [temple, isAutoScrolling]);
 
+    // Unified media for gallery (Images + YouTube)
+    const galleryMedia = React.useMemo(() => {
+        if (!temple) return [];
+        const images = [temple.image, ...(temple.heroImages || []), ...(temple.gallery || [])]
+            .filter((img, idx, self) => img && self.indexOf(img) === idx)
+            .map((img: any) => ({ type: 'image', url: img }));
+        
+        const videos = [];
+        if (temple.liveUrl && (temple.liveUrl.includes('youtube.com') || temple.liveUrl.includes('youtu.be'))) {
+            videos.push({ type: 'video', url: temple.liveUrl });
+        }
+        
+        return [...images, ...videos];
+    }, [temple]);
+
     if (loading) {
         return (
             <div className="min-h-screen bg-background flex flex-col">
@@ -173,21 +189,16 @@ export default function TempleDetail() {
         );
     }
 
-    const heroImages = temple ? [temple.image, ...(temple.heroImages || [])].filter((img, idx, self) => img && self.indexOf(img) === idx) : [];
-
-    // Navigation functions
+    // Navigation functions (Now used for Lightbox)
     const goToNext = () => {
-        setIsAutoScrolling(false);
-        setActiveImageIndex((prev) => (prev + 1) % heroImages.length);
+        setActiveImageIndex((prev) => (prev + 1) % galleryMedia.length);
     };
 
     const goToPrev = () => {
-        setIsAutoScrolling(false);
-        setActiveImageIndex((prev) => (prev - 1 + heroImages.length) % heroImages.length);
+        setActiveImageIndex((prev) => (prev - 1 + galleryMedia.length) % galleryMedia.length);
     };
 
-    const goToImage = (index: number) => {
-        setIsAutoScrolling(false);
+    const goToMedia = (index: number) => {
         setActiveImageIndex(index);
     };
 
@@ -246,105 +257,62 @@ export default function TempleDetail() {
         router.push(bookingUrl);
     };
 
+    // Helper to get youtube video ID
+    const getYouTubeId = (url: string) => {
+        const regExp = /^.*(youtu.be\/|v\/|u\/\w\/|embed\/|watch\?v=|\&v=)([^#\&\?]*).*/;
+        const match = url.match(regExp);
+        return (match && match[2].length === 11) ? match[2] : null;
+    };
+
     return (
         <div className="min-h-screen bg-background">
             <Navbar isSolid={true} />
 
-            {/* Hero Image Carousel */}
+            {/* Premium Single Image Hero with Ken Burns Effect */}
             <section className="relative h-[70vh] md:h-[80vh] overflow-hidden mt-26">
-                <AnimatePresence mode="wait">
-                    <motion.div
-                        key={activeImageIndex}
-                        initial={{ opacity: 0, scale: 1.05 }}
-                        animate={{ opacity: 1, scale: 1 }}
-                        exit={{ opacity: 0 }}
-                        transition={{ duration: 0.8 }}
-                        className="absolute inset-0"
-                    >
-                        <img
-                            src={getFullImageUrl(heroImages[activeImageIndex])}
-                            alt={getLocalized(temple, 'name', language)}
-                            className="w-full h-full object-cover"
-                        />
-                    </motion.div>
-                </AnimatePresence>
+                <motion.div
+                    initial={{ scale: 1 }}
+                    animate={{ scale: 1.1 }}
+                    transition={{ 
+                        duration: 20, 
+                        repeat: Infinity, 
+                        repeatType: "reverse",
+                        ease: "linear" 
+                    }}
+                    className="absolute inset-0"
+                >
+                    <img
+                        src={getFullImageUrl(temple.image)}
+                        alt={getLocalized(temple, 'name', language)}
+                        className="w-full h-full object-cover"
+                    />
+                </motion.div>
                 <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-black/20 to-transparent pointer-events-none" />
-
-                {/* Carousel Dots - Top center Position */}
-                {heroImages.length > 1 && (
-                    <div className="absolute top-28 left-1/2 -translate-x-1/2 flex gap-2 z-[110] bg-black/40 backdrop-blur-md px-4 py-2 rounded-full border border-white/20 shadow-lg">
-                        {heroImages.map((_, index) => (
-                            <button
-                                key={index}
-                                onClick={() => goToImage(index)}
-                                className={`h-1.5 rounded-full transition-all duration-300 ${activeImageIndex === index
-                                    ? "bg-primary w-8"
-                                    : "bg-white/40 hover:bg-white w-2"
-                                    }`}
-                                aria-label={`Go to slide ${index + 1}`}
-                            />
-                        ))}
-                    </div>
-                )}
 
                 {/* Actions */}
                 <div className="absolute top-6 right-4 md:right-8 flex gap-2 z-20">
                     <Button
                         variant="secondary"
                         size="icon"
-                        className="rounded-full bg-background/80 backdrop-blur-sm pointer-events-auto"
-                        onClick={() => setIsFullViewOpen(true)}
+                        className="rounded-full bg-background/80 backdrop-blur-sm pointer-events-auto hover:bg-white transition-all shadow-lg"
+                        onClick={() => {
+                            setActiveImageIndex(0);
+                            setIsFullViewOpen(true);
+                        }}
                     >
                         <Maximize2 className="h-5 w-5" />
                     </Button>
-                    {/* <Button
-                        variant="secondary"
-                        size="icon"
-                        className="rounded-full bg-background/80 backdrop-blur-sm"
-                        onClick={toggleFavorite}
-                    >
-                        <Heart
-                            className={`h-5 w-5 ${isFavorite ? "fill-red-500 text-red-500" : ""}`}
-                        />
-                    </Button>
-                    <Button
-                        variant="secondary"
-                        size="icon"
-                        className="rounded-full bg-background/80 backdrop-blur-sm"
-                    >
-                        <Share2 className="h-5 w-5" />
-                    </Button> */}
                 </div>
 
-                {/* Left/Right Navigation Arrows */}
-                {heroImages.length > 1 && (
-                    <>
-                        <Button
-                            variant="secondary"
-                            size="icon"
-                            className="absolute left-4 top-1/2 -translate-y-1/2 bg-background/80 backdrop-blur-sm rounded-full hover:bg-background transition-colors z-20"
-                            onClick={goToPrev}
-                        >
-                            <ChevronLeft className="h-6 w-6" />
-                        </Button>
-                        <Button
-                            variant="secondary"
-                            size="icon"
-                            className="absolute right-4 top-1/2 -translate-y-1/2 bg-background/80 backdrop-blur-sm rounded-full hover:bg-background transition-colors z-20"
-                            onClick={goToNext}
-                        >
-                            <ChevronRight className="h-6 w-6" />
-                        </Button>
-                    </>
+                {/* Live Badge Overlay */}
+                {temple.liveStatus && (
+                    <div className="absolute bottom-24 md:bottom-28 left-4 md:left-8 z-20 flex items-center gap-2">
+                        <Badge className="bg-red-500 text-white animate-pulse text-base px-4 py-1.5 rounded-full border border-red-400/50 shadow-lg">
+                            <span className="w-2.5 h-2.5 bg-white rounded-full mr-2 inline-block shrink-0" />
+                            LIVE DARSHAN
+                        </Badge>
+                    </div>
                 )}
-
-                {/* Live Badge */}
-                {/* {temple.liveStatus && (
-                    <Badge className="absolute bottom-24 md:bottom-28 left-4 md:left-8 bg-red-500 text-white animate-pulse text-base px-4 py-2 z-20">
-                        <span className="w-2 h-2 bg-white rounded-full mr-2" />
-                        LIVE NOW
-                    </Badge>
-                )} */}
             </section>
 
             {/* Content */}
@@ -587,14 +555,41 @@ export default function TempleDetail() {
 
 
                             <TabsContent value="gallery" className="mt-6">
-                                <div className="grid grid-cols-2 md:grid-cols-3 gap-4">
-                                    {temple.gallery?.map((img, index) => (
-                                        <div key={index} className="aspect-square rounded-lg overflow-hidden">
-                                            <img
-                                                src={(img as any).src || img}
-                                                alt={`${getLocalized(temple, 'name', language)} gallery ${index + 1}`}
-                                                className="w-full h-full object-cover hover:scale-110 transition-transform duration-500"
-                                            />
+                                <div className="columns-1 sm:columns-2 md:columns-3 gap-4 space-y-4">
+                                    {galleryMedia.map((item, index) => (
+                                        <div 
+                                            key={index} 
+                                            className="break-inside-avoid rounded-xl overflow-hidden cursor-pointer group relative shadow-md hover:shadow-xl transition-all duration-300"
+                                            onClick={() => {
+                                                setActiveImageIndex(index);
+                                                setIsFullViewOpen(true);
+                                            }}
+                                        >
+                                            {item.type === 'image' ? (
+                                                <img
+                                                    src={getFullImageUrl(item.url)}
+                                                    alt={`${getLocalized(temple, 'name', language)} gallery ${index + 1}`}
+                                                    className="w-full h-auto object-cover group-hover:scale-105 transition-transform duration-500"
+                                                />
+                                            ) : (
+                                                <div className="relative aspect-video bg-black flex items-center justify-center">
+                                                    <img 
+                                                        src={`https://img.youtube.com/vi/${getYouTubeId(item.url)}/hqdefault.jpg`} 
+                                                        className="w-full h-full object-cover opacity-60"
+                                                        alt="Video thumbnail"
+                                                    />
+                                                    <div className="absolute inset-0 flex items-center justify-center">
+                                                        <div className="h-12 w-12 bg-primary/90 rounded-full flex items-center justify-center shadow-lg group-hover:scale-110 transition-transform">
+                                                            <Play className="h-6 w-6 text-white fill-white" />
+                                                        </div>
+                                                    </div>
+                                                </div>
+                                            )}
+                                            <div className="absolute inset-0 bg-black/20 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center">
+                                                <div className="bg-white/20 backdrop-blur-md p-2 rounded-full">
+                                                    <Maximize2 className="h-5 w-5 text-white" />
+                                                </div>
+                                            </div>
                                         </div>
                                     ))}
                                 </div>
@@ -728,6 +723,59 @@ export default function TempleDetail() {
                                         </div>
                                     </div>
                                 )}
+
+                                {/* Premium Sidebar Gallery Widget */}
+                                {galleryMedia.length > 0 && (
+                                    <div className="pt-4 space-y-4">
+                                        <div className="flex items-center justify-between px-1">
+                                            <div className="flex items-center gap-2">
+                                                <div className="h-1 w-8 bg-primary/20 rounded-full" />
+                                                <h3 className="text-[11px] font-black uppercase tracking-[0.2em] text-muted-foreground">{t('common.gallery') || 'GALLERY'}</h3>
+                                            </div>
+                                            <button 
+                                                onClick={() => {
+                                                    const element = document.querySelector('[value="gallery"]');
+                                                    if (element) {
+                                                        (element as HTMLElement).click();
+                                                        element.scrollIntoView({ behavior: 'smooth', block: 'center' });
+                                                    }
+                                                }}
+                                                className="text-[10px] font-bold text-primary hover:underline uppercase tracking-wider"
+                                            >
+                                                {t('common.view_all')}
+                                            </button>
+                                        </div>
+                                        <div className="grid grid-cols-3 gap-2">
+                                            {galleryMedia.slice(0, 6).map((item, idx) => (
+                                                <div 
+                                                    key={idx} 
+                                                    className="aspect-square rounded-lg overflow-hidden cursor-pointer group relative shadow-sm hover:shadow-md transition-all border border-primary/5"
+                                                    onClick={() => {
+                                                        setActiveImageIndex(idx);
+                                                        setIsFullViewOpen(true);
+                                                    }}
+                                                >
+                                                    {item.type === 'image' ? (
+                                                        <img 
+                                                            src={getFullImageUrl(item.url)} 
+                                                            className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-500"
+                                                            alt="Gallery thumbnail"
+                                                        />
+                                                    ) : (
+                                                        <div className="w-full h-full bg-black/80 flex items-center justify-center relative">
+                                                            <img 
+                                                                src={`https://img.youtube.com/vi/${getYouTubeId(item.url)}/default.jpg`} 
+                                                                className="w-full h-full object-cover opacity-40"
+                                                                alt="Video thumbnail"
+                                                            />
+                                                            <Play className="absolute h-5 w-5 text-white fill-white group-hover:scale-125 transition-transform" />
+                                                        </div>
+                                                    )}
+                                                </div>
+                                            ))}
+                                        </div>
+                                    </div>
+                                )}
                             </CardContent>
                         </Card>
                     </div>
@@ -740,50 +788,86 @@ export default function TempleDetail() {
             <Dialog open={isFullViewOpen} onOpenChange={setIsFullViewOpen}>
                 <DialogContent className="max-w-[95vw] w-full h-[90vh] p-0 border-none bg-black/95 flex items-center justify-center overflow-hidden">
                     <DialogTitle className="sr-only">Full Image View</DialogTitle>
-                    <div className="relative w-full h-full flex items-center justify-center p-4">
-
-                        <motion.img
-                            key={activeImageIndex}
-                            initial={{ opacity: 0, scale: 0.9 }}
-                            animate={{ opacity: 1, scale: 1 }}
-                            src={getFullImageUrl(heroImages[activeImageIndex])}
-                            alt={getLocalized(temple, 'name', language)}
-                            className="max-w-full max-h-full object-contain shadow-2xl rounded-lg"
-                        />
-
-                        {heroImages.length > 1 && (
-                            <>
-                                <button
-                                    className="absolute left-4 top-1/2 -translate-y-1/2 p-3 bg-black/40 hover:bg-black/60 text-white rounded-full transition-colors z-50"
-                                    onClick={(e) => {
-                                        e.stopPropagation();
-                                        goToPrev();
-                                    }}
+                    <div className="relative w-full h-full flex flex-col items-center justify-center p-4">
+                        <div className="relative w-full h-full flex items-center justify-center">
+                            {galleryMedia[activeImageIndex]?.type === 'image' ? (
+                                <motion.img
+                                    key={activeImageIndex}
+                                    initial={{ opacity: 0, scale: 0.9 }}
+                                    animate={{ opacity: 1, scale: 1 }}
+                                    src={getFullImageUrl(galleryMedia[activeImageIndex].url)}
+                                    alt={getLocalized(temple, 'name', language)}
+                                    className="max-w-full max-h-full object-contain shadow-2xl rounded-lg"
+                                />
+                            ) : (
+                                <motion.div
+                                    key={activeImageIndex}
+                                    initial={{ opacity: 0 }}
+                                    animate={{ opacity: 1 }}
+                                    className="w-full max-w-4xl aspect-video rounded-2xl overflow-hidden shadow-2xl border border-white/10"
                                 >
-                                    <ChevronLeft className="h-8 w-8" />
-                                </button>
-                                <button
-                                    className="absolute right-4 top-1/2 -translate-y-1/2 p-3 bg-black/40 hover:bg-black/60 text-white rounded-full transition-colors z-50"
-                                    onClick={(e) => {
-                                        e.stopPropagation();
-                                        goToNext();
-                                    }}
-                                >
-                                    <ChevronRight className="h-8 w-8" />
-                                </button>
-                            </>
-                        )}
+                                    <iframe
+                                        width="100%"
+                                        height="100%"
+                                        src={`https://www.youtube.com/embed/${getYouTubeId(galleryMedia[activeImageIndex].url)}?autoplay=1`}
+                                        title="YouTube video player"
+                                        frameBorder="0"
+                                        allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
+                                        allowFullScreen
+                                    ></iframe>
+                                </motion.div>
+                            )}
 
-                        <div className="absolute bottom-6 left-1/2 -translate-x-1/2 flex gap-2 z-50">
-                            {heroImages.map((_, index) => (
+                            {galleryMedia.length > 1 && (
+                                <>
+                                    <button
+                                        className="absolute left-0 md:left-4 top-1/2 -translate-y-1/2 p-3 bg-white/10 hover:bg-white/20 text-white rounded-full backdrop-blur-md transition-all z-50 shadow-xl border border-white/10"
+                                        onClick={(e) => {
+                                            e.stopPropagation();
+                                            goToPrev();
+                                        }}
+                                    >
+                                        <ChevronLeft className="h-6 w-6 md:h-8 md:w-8" />
+                                    </button>
+                                    <button
+                                        className="absolute right-0 md:right-4 top-1/2 -translate-y-1/2 p-3 bg-white/10 hover:bg-white/20 text-white rounded-full backdrop-blur-md transition-all z-50 shadow-xl border border-white/10"
+                                        onClick={(e) => {
+                                            e.stopPropagation();
+                                            goToNext();
+                                        }}
+                                    >
+                                        <ChevronRight className="h-6 w-6 md:h-8 md:w-8" />
+                                    </button>
+                                </>
+                            )}
+                        </div>
+
+                        {/* Media Counter/Label */}
+                        <div className="absolute top-4 left-1/2 -translate-x-1/2 px-4 py-2 bg-black/50 backdrop-blur-md rounded-full border border-white/10 text-white/80 text-xs font-bold tracking-widest z-50">
+                            {activeImageIndex + 1} / {galleryMedia.length} 
+                            {galleryMedia[activeImageIndex]?.type === 'video' && ' • VIDEO'}
+                        </div>
+
+                        {/* Thumbnail Navigation (Desktop) */}
+                        <div className="hidden md:flex absolute bottom-6 left-1/2 -translate-x-1/2 gap-3 z-50 max-w-[80vw] overflow-x-auto p-2 scrollbar-hide">
+                            {galleryMedia.map((item, index) => (
                                 <button
                                     key={index}
-                                    onClick={() => goToImage(index)}
-                                    className={`h-1.5 rounded-full transition-all duration-300 ${activeImageIndex === index
-                                        ? "bg-primary w-10"
-                                        : "bg-white/30 hover:bg-white/60 w-3"
+                                    onClick={() => goToMedia(index)}
+                                    className={`h-12 w-16 md:h-16 md:w-24 rounded-lg overflow-hidden shrink-0 transition-all border-2 ${activeImageIndex === index
+                                        ? "border-primary scale-110 shadow-lg"
+                                        : "border-transparent opacity-50 hover:opacity-100"
                                         }`}
-                                />
+                                >
+                                    {item.type === 'image' ? (
+                                        <img src={getFullImageUrl(item.url)} className="w-full h-full object-cover" alt="" />
+                                    ) : (
+                                        <div className="w-full h-full bg-black flex items-center justify-center relative">
+                                            <img src={`https://img.youtube.com/vi/${getYouTubeId(item.url)}/default.jpg`} className="w-full h-full object-cover opacity-60" alt="" />
+                                            <Play className="absolute h-4 w-4 text-white fill-white" />
+                                        </div>
+                                    )}
+                                </button>
                             ))}
                         </div>
                     </div>

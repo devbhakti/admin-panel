@@ -1,5 +1,6 @@
 "use client";
 
+
 import React, { useState, useEffect, useCallback } from "react";
 import { useRouter } from "next/navigation";
 import {
@@ -26,6 +27,8 @@ import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/com
 import { useToast } from "@/hooks/use-toast";
 import { createSellerAdmin, fetchCommissionSlabsAdmin } from "@/api/adminController";
 import { checkPhoneGlobal, checkEmailExists } from "@/api/authController";
+import axios from "axios";
+import { API_URL } from "@/config/apiConfig";
 
 // ---------- inline field validation state type ----------
 type FieldStatus = "idle" | "checking" | "ok" | "error";

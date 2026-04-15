@@ -1,7 +1,7 @@
 "use client";
 
 import React, { useEffect, useState } from "react";
-import { Eye, Loader2, Radio, Video, Power, PowerOff, Star, Info, Pencil } from "lucide-react";
+import { Eye, Loader2, Radio, Video, Power, PowerOff, Star, Info, Pencil, Search } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Switch } from "@/components/ui/switch";
@@ -21,6 +21,8 @@ import {
 } from "@/components/ui/dialog";
 import { Card, CardHeader, CardTitle, CardContent, CardDescription } from "@/components/ui/card";
 import { Label } from "@/components/ui/label";
+import { Command, CommandEmpty, CommandGroup, CommandInput, CommandItem, CommandList } from "@/components/ui/command";
+import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
 import { useToast } from "@/hooks/use-toast";
 import {
   Tooltip,
@@ -65,6 +67,7 @@ export default function AdminLiveDarshanPage() {
   const [isAddMode, setIsAddMode] = useState(false);
   const [isEditMode, setIsEditMode] = useState(false);
   const [isViewOnly, setIsViewOnly] = useState(false);
+  const [templeSearchQuery, setTempleSearchQuery] = useState("");
 
   useEffect(() => {
     const load = async () => {
@@ -463,22 +466,65 @@ export default function AdminLiveDarshanPage() {
                   {isAddMode && (
                     <div className="space-y-2">
                       <Label className="text-slate-700 text-xs">Temple</Label>
-                      <select
-                        value={selectedTemple?.userId || ""}
-                        onChange={(e) => {
-                          const entry = allTemples.find((t) => t.userId === e.target.value);
-                          if (!entry) return;
-                          setSelectedTemple(entry);
-                          setEditLiveUrl(entry.temple?.liveUrl || "");
-                        }}
-                        className="w-full h-9 rounded-md border border-slate-200 bg-white px-2 text-sm"
-                      >
-                        {allTemples.map((entry) => (
-                          <option key={entry.userId} value={entry.userId}>
-                            {getLocalized(entry.temple, 'name', language) || "Untitled Temple"}
-                          </option>
-                        ))}
-                      </select>
+                      <Popover>
+                        <PopoverTrigger asChild>
+                          <Button
+                            variant="outline"
+                            role="combobox"
+                            className="w-full h-9 justify-between text-sm"
+                          >
+                            {selectedTemple
+                              ? getLocalized(selectedTemple.temple, 'name', language) || "Untitled Temple"
+                              : "Select temple..."}
+                            <Search className="ml-2 h-4 w-4 shrink-0 opacity-50" />
+                          </Button>
+                        </PopoverTrigger>
+                        <PopoverContent className="w-full p-0">
+                          <Command>
+                            <CommandInput
+                              placeholder="Search temples..."
+                              value={templeSearchQuery}
+                              onValueChange={setTempleSearchQuery}
+                              className="h-9"
+                            />
+                            <CommandList>
+                              <CommandEmpty>No temple found.</CommandEmpty>
+                              <CommandGroup>
+                                {allTemples
+                                  .filter((temple) => {
+                                    const searchLower = templeSearchQuery.toLowerCase();
+                                    const templeName = getLocalized(temple.temple, 'name', language) || "";
+                                    const templeLocation = getLocalized(temple.temple, 'location', language) || "";
+                                    return (
+                                      templeName.toLowerCase().includes(searchLower) ||
+                                      templeLocation.toLowerCase().includes(searchLower)
+                                    );
+                                  })
+                                  .map((entry) => (
+                                    <CommandItem
+                                      key={entry.userId}
+                                      value={entry.userId}
+                                      onSelect={() => {
+                                        setSelectedTemple(entry);
+                                        setEditLiveUrl(entry.temple?.liveUrl || "");
+                                        setTempleSearchQuery("");
+                                      }}
+                                    >
+                                      <div className="flex flex-col">
+                                        <span className="font-medium">
+                                          {getLocalized(entry.temple, 'name', language) || "Untitled Temple"}
+                                        </span>
+                                        <span className="text-xs text-muted-foreground">
+                                          {getLocalized(entry.temple, 'location', language) || ""}
+                                        </span>
+                                      </div>
+                                    </CommandItem>
+                                  ))}
+                              </CommandGroup>
+                            </CommandList>
+                          </Command>
+                        </PopoverContent>
+                      </Popover>
                     </div>
                   )}
 
