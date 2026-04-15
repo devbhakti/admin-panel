@@ -120,27 +120,27 @@ export default function DevoteeDetailPage() {
     }
 
     return (
-        <div className="container mx-auto py-8 px-4 max-w-7xl animate-in fade-in duration-700">
+        <div className="container mx-auto py-6 sm:py-8 px-4 max-w-7xl animate-in fade-in duration-700">
             {/* Header Section */}
-            <div className="flex flex-col md:flex-row md:items-center justify-between gap-6 mb-10">
-                <div className="flex items-center gap-5">
+            <div className="flex flex-col gap-4 mb-8">
+                <div className="flex items-center gap-3">
                     <Button
                         variant="outline"
                         size="icon"
                         onClick={() => router.back()}
-                        className="rounded-full hover:bg-primary hover:text-white transition-all duration-300 shadow-sm"
+                        className="rounded-full hover:bg-primary hover:text-white transition-all duration-300 shadow-sm flex-shrink-0"
                     >
-                        <ArrowLeft className="w-5 h-5" />
+                        <ArrowLeft className="w-4 h-4 sm:w-5 sm:h-5" />
                     </Button>
-                    <div>
-                        <h1 className="text-3xl font-serif font-bold text-slate-900 tracking-tight">
+                    <div className="min-w-0 flex-1">
+                        <h1 className="text-xl sm:text-2xl md:text-3xl font-serif font-bold text-slate-900 tracking-tight">
                             {user.role === 'SELLER' ? 'Seller Profile' :
                                 user.role === 'INSTITUTION' ? 'Temple Admin Profile' :
                                     user.role === 'ADMIN' ? 'Staff Profile' : 'Devotee Profile'}
                         </h1>
-                        <div className="flex items-center gap-2 mt-1">
-                            <Badge variant="secondary" className="bg-primary/10 text-primary border-none shadow-none font-bold">ADMIN VIEW</Badge>
-                            <span className="text-muted-foreground text-sm">
+                        <div className="flex flex-col sm:flex-row sm:items-center gap-1 sm:gap-2 mt-1">
+                            <Badge variant="secondary" className="bg-primary/10 text-primary border-none shadow-none font-bold text-xs w-fit">ADMIN VIEW</Badge>
+                            <span className="text-muted-foreground text-xs sm:text-sm">
                                 {user.role === 'SELLER' ? 'Vendor management and sales overview' :
                                     user.role === 'INSTITUTION' ? 'Temple operations and pooja management' :
                                         'Spiritual and commercial journey'}
@@ -151,7 +151,7 @@ export default function DevoteeDetailPage() {
             </div>
 
             {/* Quick Stats Overview */}
-            <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-5 gap-4 mb-8">
+            <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-5 gap-3 sm:gap-4 mb-6 sm:mb-8">
                 {[
                     ...(user.role === 'SELLER' ? [
                         { label: "Sales", value: (user.sellerProfile?.subOrders || []).length, icon: TrendingUp, color: "text-emerald-600", bg: "bg-emerald-50" },
@@ -171,73 +171,73 @@ export default function DevoteeDetailPage() {
                     { label: "Join Date", value: safeFormat(user.createdAt, "MMM yyyy"), icon: Calendar, color: "text-purple-600", bg: "bg-purple-50" },
                 ].map((stat, i) => (
                     <Card key={i} className="border-none shadow-sm bg-card hover:shadow-md transition-all duration-300">
-                        <CardContent className="p-4 flex flex-col sm:flex-row items-center sm:items-start gap-3 sm:gap-4">
-                            <div className={`p-2.5 rounded-xl shrink-0 ${stat.bg}`}>
-                                <stat.icon className={`w-5 h-5 ${stat.color}`} />
+                        <CardContent className="p-3 sm:p-4 flex flex-col items-center gap-2 sm:gap-3">
+                            <div className={`p-2 sm:p-2.5 rounded-xl shrink-0 ${stat.bg}`}>
+                                <stat.icon className={`w-4 h-4 sm:w-5 sm:h-5 ${stat.color}`} />
                             </div>
-                            <div className="text-center sm:text-left">
-                                <p className="text-[10px] text-muted-foreground font-bold uppercase tracking-wider">{stat.label}</p>
-                                <p className="text-lg sm:text-xl font-bold text-slate-900 truncate">{stat.value}</p>
+                            <div className="text-center">
+                                <p className="text-[9px] sm:text-[10px] text-muted-foreground font-bold uppercase tracking-wider">{stat.label}</p>
+                                <p className="text-sm sm:text-lg sm:text-xl font-bold text-slate-900 truncate">{stat.value}</p>
                             </div>
                         </CardContent>
                     </Card>
                 ))}
             </div>
 
-            <div className="grid grid-cols-1 lg:grid-cols-12 gap-8">
+            <div className="grid grid-cols-1 lg:grid-cols-12 gap-6 lg:gap-8">
                 {/* Left Column: Personal Information */}
                 <Card className="lg:col-span-4 border-none shadow-lg bg-white/80 backdrop-blur-md lg:sticky lg:top-6 h-fit overflow-hidden">
-                    <div className="h-24 bg-gradient-to-r from-primary/20 via-primary/10 to-transparent absolute top-0 left-0 right-0" />
-                    <CardHeader className="flex flex-col items-center pb-6 relative pt-12">
+                    <div className="h-20 sm:h-24 bg-gradient-to-r from-primary/20 via-primary/10 to-transparent absolute top-0 left-0 right-0" />
+                    <CardHeader className="flex flex-col items-center pb-4 sm:pb-6 relative pt-10 sm:pt-12">
                         <div className="relative group">
                             <div className="absolute -inset-1 bg-gradient-to-r from-primary to-orange-400 rounded-full blur opacity-25 group-hover:opacity-50 transition duration-1000 group-hover:duration-200"></div>
-                            <div className="w-28 h-28 rounded-full bg-white p-1 relative">
+                            <div className="w-20 h-20 sm:w-28 sm:h-28 rounded-full bg-white p-1 relative">
                                 {user.profileImage ? (
                                     <img src={user.profileImage} alt={user.name} className="w-full h-full rounded-full object-cover shadow-inner" />
                                 ) : (
                                     <div className="w-full h-full rounded-full bg-slate-50 flex items-center justify-center border-2 border-slate-100">
-                                        <User className="w-12 h-12 text-slate-300" />
+                                        <User className="w-8 h-8 sm:w-12 sm:h-12 text-slate-300" />
                                     </div>
                                 )}
                             </div>
                         </div>
-                        <div className="mt-6 text-center">
-                            <CardTitle className="text-2xl font-serif font-bold text-slate-900">{parseLocalizedValue(user.name, language) || "Blessed Soul"}</CardTitle>
-                            <div className="flex items-center justify-center gap-2 mt-2">
-                                <Badge className="bg-emerald-50 text-emerald-700 hover:bg-emerald-100 border-none px-3 font-bold">
+                        <div className="mt-4 sm:mt-6 text-center">
+                            <CardTitle className="text-lg sm:text-2xl font-serif font-bold text-slate-900 truncate px-2">{parseLocalizedValue(user.name, language) || "Blessed Soul"}</CardTitle>
+                            <div className="flex flex-col sm:flex-row items-center justify-center gap-1 sm:gap-2 mt-2">
+                                <Badge className="bg-emerald-50 text-emerald-700 hover:bg-emerald-100 border-none px-2 sm:px-3 font-bold text-xs">
                                     {user.role}
                                 </Badge>
-                                <span className="text-[10px] text-muted-foreground uppercase tracking-widest font-bold">Verified</span>
+                                <span className="text-[9px] sm:text-[10px] text-muted-foreground uppercase tracking-widest font-bold">Verified</span>
                             </div>
                         </div>
                     </CardHeader>
-                    <CardContent className="space-y-6 px-8 pb-10">
-                        <div className="space-y-4">
-                            <div className="flex items-center gap-4 group">
-                                <div className="p-2 rounded-lg bg-slate-50 group-hover:bg-primary/10 transition-colors">
-                                    <Mail className="w-4 h-4 text-slate-500 group-hover:text-primary" />
+                    <CardContent className="space-y-4 sm:space-y-6 px-4 sm:px-6 lg:px-8 pb-6 sm:pb-10">
+                        <div className="space-y-3 sm:space-y-4">
+                            <div className="flex items-center gap-3 sm:gap-4 group">
+                                <div className="p-1.5 sm:p-2 rounded-lg bg-slate-50 group-hover:bg-primary/10 transition-colors flex-shrink-0">
+                                    <Mail className="w-3.5 h-3.5 sm:w-4 sm:h-4 text-slate-500 group-hover:text-primary" />
                                 </div>
-                                <div className="flex-1 overflow-hidden">
-                                    <p className="text-[10px] uppercase font-bold text-slate-400 tracking-tight">Email Address</p>
-                                    <p className="text-sm font-medium text-slate-700 truncate">{user.email || "No email linked"}</p>
-                                </div>
-                            </div>
-                            <div className="flex items-center gap-4 group">
-                                <div className="p-2 rounded-lg bg-slate-50 group-hover:bg-primary/10 transition-colors">
-                                    <Phone className="w-4 h-4 text-slate-500 group-hover:text-primary" />
-                                </div>
-                                <div className="flex-1 overflow-hidden">
-                                    <p className="text-[10px] uppercase font-bold text-slate-400 tracking-tight">Contact Number</p>
-                                    <p className="text-sm font-medium text-slate-700">{user.phone || "No phone linked"}</p>
+                                <div className="flex-1 overflow-hidden min-w-0">
+                                    <p className="text-[9px] sm:text-[10px] uppercase font-bold text-slate-400 tracking-tight">Email Address</p>
+                                    <p className="text-xs sm:text-sm font-medium text-slate-700 truncate">{user.email || "No email linked"}</p>
                                 </div>
                             </div>
-                            <div className="flex items-center gap-4 group">
-                                <div className="p-2 rounded-lg bg-slate-50 group-hover:bg-primary/10 transition-colors">
-                                    <Calendar className="w-4 h-4 text-slate-500 group-hover:text-primary" />
+                            <div className="flex items-center gap-3 sm:gap-4 group">
+                                <div className="p-1.5 sm:p-2 rounded-lg bg-slate-50 group-hover:bg-primary/10 transition-colors flex-shrink-0">
+                                    <Phone className="w-3.5 h-3.5 sm:w-4 sm:h-4 text-slate-500 group-hover:text-primary" />
                                 </div>
-                                <div className="flex-1">
-                                    <p className="text-[10px] uppercase font-bold text-slate-400 tracking-tight">Joined On</p>
-                                    <p className="text-sm font-medium text-slate-700">{safeFormat(user.createdAt, "MMMM d, yyyy")}</p>
+                                <div className="flex-1 overflow-hidden min-w-0">
+                                    <p className="text-[9px] sm:text-[10px] uppercase font-bold text-slate-400 tracking-tight">Contact Number</p>
+                                    <p className="text-xs sm:text-sm font-medium text-slate-700 truncate">{user.phone || "No phone linked"}</p>
+                                </div>
+                            </div>
+                            <div className="flex items-center gap-3 sm:gap-4 group">
+                                <div className="p-1.5 sm:p-2 rounded-lg bg-slate-50 group-hover:bg-primary/10 transition-colors flex-shrink-0">
+                                    <Calendar className="w-3.5 h-3.5 sm:w-4 sm:h-4 text-slate-500 group-hover:text-primary" />
+                                </div>
+                                <div className="flex-1 overflow-hidden min-w-0">
+                                    <p className="text-[9px] sm:text-[10px] uppercase font-bold text-slate-400 tracking-tight">Joined On</p>
+                                    <p className="text-xs sm:text-sm font-medium text-slate-700 truncate">{safeFormat(user.createdAt, "MMMM d, yyyy")}</p>
                                 </div>
                             </div>
                         </div>
@@ -335,35 +335,45 @@ export default function DevoteeDetailPage() {
                 </Card>
 
                 {/* Right Column: Activity Tabs with Search & Filters */}
-                <div className="lg:col-span-8 flex flex-col gap-6 w-full">
+                <div className="lg:col-span-8 flex flex-col gap-4 sm:gap-6 w-full">
                     <Tabs defaultValue={user.role === 'SELLER' ? 'inventory' : 'bookings'} className="w-full">
-                        <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 mb-6 bg-white p-2 rounded-2xl shadow-sm border border-slate-100 overflow-x-auto premium-scrollbar">
-                            <TabsList className="flex w-fit bg-slate-50/50 p-1">
+                        <div className="bg-white p-2 sm:p-3 rounded-2xl shadow-sm border border-slate-100 overflow-x-auto">
+                            <TabsList className="flex w-fit bg-slate-50/50 p-1 min-w-max">
                                 {user.role !== 'SELLER' && (
-                                    <TabsTrigger value="bookings" className="data-[state=active]:bg-white data-[state=active]:shadow-sm px-4 font-bold whitespace-nowrap">
-                                        <History className="w-4 h-4 mr-2" />
-                                        Bookings ({(user.bookings || []).length})
+                                    <TabsTrigger value="bookings" className="data-[state=active]:bg-white data-[state=active]:shadow-sm px-2 sm:px-4 font-bold whitespace-nowrap text-xs sm:text-sm">
+                                        <History className="w-3.5 h-3.5 sm:w-4 sm:h-4 mr-1 sm:mr-2" />
+                                        <span className="hidden sm:inline">Bookings</span>
+                                        <span className="sm:hidden">Bkg</span>
+                                        ({(user.bookings || []).length})
                                     </TabsTrigger>
                                 )}
-                                <TabsTrigger value="orders" className="data-[state=active]:bg-white data-[state=active]:shadow-sm px-4 font-bold whitespace-nowrap">
-                                    <ShoppingBag className="w-4 h-4 mr-2" />
-                                    Orders ({(user.orders || []).length})
+                                <TabsTrigger value="orders" className="data-[state=active]:bg-white data-[state=active]:shadow-sm px-2 sm:px-4 font-bold whitespace-nowrap text-xs sm:text-sm">
+                                    <ShoppingBag className="w-3.5 h-3.5 sm:w-4 sm:h-4 mr-1 sm:mr-2" />
+                                    <span className="hidden sm:inline">Orders</span>
+                                    <span className="sm:hidden">Ord</span>
+                                    ({(user.orders || []).length})
                                 </TabsTrigger>
                                 {(user.role === 'DEVOTEE' || user.role === 'INSTITUTION') && (
-                                    <TabsTrigger value="donations" className="data-[state=active]:bg-white data-[state=active]:shadow-sm px-4 font-bold whitespace-nowrap">
-                                        <Heart className="w-4 h-4 mr-2" />
-                                        Donations ({(user.temple?.donations || user.donations || []).length})
+                                    <TabsTrigger value="donations" className="data-[state=active]:bg-white data-[state=active]:shadow-sm px-2 sm:px-4 font-bold whitespace-nowrap text-xs sm:text-sm">
+                                        <Heart className="w-3.5 h-3.5 sm:w-4 sm:h-4 mr-1 sm:mr-2" />
+                                        <span className="hidden sm:inline">Donations</span>
+                                        <span className="sm:hidden">Don</span>
+                                        ({(user.temple?.donations || user.donations || []).length})
                                     </TabsTrigger>
                                 )}
                                 {(user.role === 'SELLER' || user.role === 'INSTITUTION') && (
                                     <>
-                                        <TabsTrigger value="inventory" className="data-[state=active]:bg-white data-[state=active]:shadow-sm px-4 font-bold whitespace-nowrap">
-                                            <Package className="w-4 h-4 mr-2" />
-                                            Products ({(user.sellerProfile?.products || user.temple?.products || []).length})
+                                        <TabsTrigger value="inventory" className="data-[state=active]:bg-white data-[state=active]:shadow-sm px-2 sm:px-4 font-bold whitespace-nowrap text-xs sm:text-sm">
+                                            <Package className="w-3.5 h-3.5 sm:w-4 sm:h-4 mr-1 sm:mr-2" />
+                                            <span className="hidden sm:inline">Products</span>
+                                            <span className="sm:hidden">Prd</span>
+                                            ({(user.sellerProfile?.products || user.temple?.products || []).length})
                                         </TabsTrigger>
-                                        <TabsTrigger value="withdrawals" className="data-[state=active]:bg-white data-[state=active]:shadow-sm px-4 font-bold whitespace-nowrap">
-                                            <Wallet className="w-4 h-4 mr-2" />
-                                            Withdrawals ({(user.sellerProfile?.withdrawals || user.temple?.withdrawals || []).length})
+                                        <TabsTrigger value="withdrawals" className="data-[state=active]:bg-white data-[state=active]:shadow-sm px-2 sm:px-4 font-bold whitespace-nowrap text-xs sm:text-sm">
+                                            <Wallet className="w-3.5 h-3.5 sm:w-4 sm:h-4 mr-1 sm:mr-2" />
+                                            <span className="hidden sm:inline">Withdrawals</span>
+                                            <span className="sm:hidden">Wth</span>
+                                            ({(user.sellerProfile?.withdrawals || user.temple?.withdrawals || []).length})
                                         </TabsTrigger>
                                     </>
                                 )}
@@ -371,23 +381,23 @@ export default function DevoteeDetailPage() {
                         </div>
 
                         <TabsContent value="bookings" className="mt-0 focus-visible:outline-none">
-                            <div className="bg-white rounded-3xl p-6 shadow-sm border border-slate-100 mb-6 flex flex-col md:flex-row gap-4">
-                                <div className="relative flex-1">
+                            <div className="bg-white rounded-2xl sm:rounded-3xl p-4 sm:p-6 shadow-sm border border-slate-100 mb-4 sm:mb-6 space-y-4">
+                                <div className="relative">
                                     <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-400" />
                                     <Input
                                         placeholder="Search by pooja or temple..."
-                                        className="pl-10 h-11 border-slate-200 focus:ring-primary rounded-xl"
+                                        className="pl-10 h-10 sm:h-11 border-slate-200 focus:ring-primary rounded-xl text-sm"
                                         value={bookingSearch}
                                         onChange={(e) => setBookingSearch(e.target.value)}
                                     />
                                 </div>
-                                <div className="flex gap-2 shrink-0 overflow-x-auto pb-2 md:pb-0">
+                                <div className="flex flex-wrap gap-2">
                                     {["all", "BOOKED", "COMPLETED", "CANCELLED"].map((status) => (
                                         <Button
                                             key={status}
                                             variant={bookingStatus === status ? "sacred" : "outline"}
                                             size="sm"
-                                            className="rounded-full h-11 px-5 capitalize font-bold"
+                                            className="rounded-full h-9 sm:h-11 px-3 sm:px-5 capitalize font-bold text-xs sm:text-sm"
                                             onClick={() => setBookingStatus(status)}
                                         >
                                             {status.toLowerCase()}
@@ -401,34 +411,34 @@ export default function DevoteeDetailPage() {
                                     filteredBookings.map((booking: any) => (
                                         <Card
                                             key={booking.id}
-                                            className="group overflow-hidden border-slate-100 hover:border-primary/30 hover:shadow-lg transition-all duration-300 rounded-3xl cursor-pointer"
+                                            className="group overflow-hidden border-slate-100 hover:border-primary/30 hover:shadow-lg transition-all duration-300 rounded-2xl sm:rounded-3xl cursor-pointer"
                                             onClick={() => router.push(`/admin/pooja-bookings?id=${booking.id}`)}
                                         >
-                                            <CardContent className="p-6">
-                                                <div className="flex flex-col sm:flex-row justify-between sm:items-center gap-4">
-                                                    <div className="flex gap-4">
-                                                        <div className="w-14 h-14 rounded-2xl bg-primary/5 flex items-center justify-center shrink-0 group-hover:bg-primary/10 transition-colors">
-                                                            <History className="w-7 h-7 text-primary" />
+                                            <CardContent className="p-4 sm:p-6">
+                                                <div className="flex flex-col gap-4">
+                                                    <div className="flex gap-3 sm:gap-4">
+                                                        <div className="w-12 h-12 sm:w-14 sm:h-14 rounded-xl sm:rounded-2xl bg-primary/5 flex items-center justify-center shrink-0 group-hover:bg-primary/10 transition-colors">
+                                                            <History className="w-6 h-6 sm:w-7 sm:h-7 text-primary" />
                                                         </div>
-                                                        <div className="space-y-1">
-                                                            <h4 className="text-lg font-bold text-slate-900 group-hover:text-primary transition-colors">{parseLocalizedValue(booking.pooja?.name, language) || "Sacred Pooja"}</h4>
-                                                            <p className="text-sm font-medium text-slate-600 flex items-center gap-1.5">
-                                                                <MapPin className="w-3.5 h-3.5 text-slate-400" />
-                                                                {parseLocalizedValue(booking.temple?.name, language) || "N/A"}
+                                                        <div className="min-w-0 flex-1 space-y-1">
+                                                            <h4 className="text-base sm:text-lg font-bold text-slate-900 group-hover:text-primary transition-colors truncate">{parseLocalizedValue(booking.pooja?.name, language) || "Sacred Pooja"}</h4>
+                                                            <p className="text-xs sm:text-sm font-medium text-slate-600 flex items-center gap-1.5">
+                                                                <MapPin className="w-3 h-3 sm:w-3.5 sm:h-3.5 text-slate-400 flex-shrink-0" />
+                                                                <span className="truncate">{parseLocalizedValue(booking.temple?.name, language) || "N/A"}</span>
                                                             </p>
-                                                            <div className="flex items-center gap-3 mt-2 text-xs text-muted-foreground font-medium">
+                                                            <div className="flex items-center gap-2 sm:gap-3 mt-1 sm:mt-2 text-xs text-muted-foreground font-medium">
                                                                 <span className="flex items-center gap-1">
-                                                                    <Calendar className="w-3.5 h-3.5 opacity-60" />
+                                                                    <Calendar className="w-3 h-3 sm:w-3.5 sm:h-3.5 opacity-60" />
                                                                     {safeFormat(booking.createdAt, "PPP")}
                                                                 </span>
                                                             </div>
                                                         </div>
                                                     </div>
-                                                    <div className="flex sm:flex-col items-center sm:items-end justify-between gap-2">
-                                                        <p className="text-xl font-black text-primary">₹{booking.packagePrice}</p>
+                                                    <div className="flex items-center justify-between gap-2">
+                                                        <p className="text-lg sm:text-xl font-black text-primary">₹{booking.packagePrice}</p>
                                                         <Badge
                                                             variant="outline"
-                                                            className={`rounded-full px-3 py-1 font-black text-[10px] tracking-wide border-none ${booking.status === "COMPLETED" ? "bg-emerald-50 text-emerald-700" :
+                                                            className={`rounded-full px-2 sm:px-3 py-1 font-black text-[9px] sm:text-[10px] tracking-wide border-none ${booking.status === "COMPLETED" ? "bg-emerald-50 text-emerald-700" :
                                                                 booking.status === "CANCELLED" ? "bg-red-50 text-red-700" :
                                                                     "bg-blue-50 text-blue-700"
                                                                 }`}
@@ -441,31 +451,31 @@ export default function DevoteeDetailPage() {
                                         </Card>
                                     ))
                                 ) : (
-                                    <div className="text-center py-20 bg-slate-50/50 rounded-[2rem] border-2 border-dashed border-slate-200">
-                                        <p className="text-slate-400 font-serif italic text-lg">No matching bookings found.</p>
+                                    <div className="text-center py-12 sm:py-20 bg-slate-50/50 rounded-2xl sm:rounded-[2rem] border-2 border-dashed border-slate-200">
+                                        <p className="text-slate-400 font-serif italic text-sm sm:text-lg">No matching bookings found.</p>
                                     </div>
                                 )}
                             </div>
                         </TabsContent>
 
                         <TabsContent value="orders" className="mt-0 focus-visible:outline-none">
-                            <div className="bg-white rounded-3xl p-6 shadow-sm border border-slate-100 mb-6 flex flex-col md:flex-row gap-4">
-                                <div className="relative flex-1">
+                            <div className="bg-white rounded-2xl sm:rounded-3xl p-4 sm:p-6 shadow-sm border border-slate-100 mb-4 sm:mb-6 space-y-4">
+                                <div className="relative">
                                     <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-400" />
                                     <Input
                                         placeholder="Search by Order ID or Product..."
-                                        className="pl-10 h-11 border-slate-200 focus:ring-primary rounded-xl"
+                                        className="pl-10 h-10 sm:h-11 border-slate-200 focus:ring-primary rounded-xl text-sm"
                                         value={orderSearch}
                                         onChange={(e) => setOrderSearch(e.target.value)}
                                     />
                                 </div>
-                                <div className="flex gap-2 shrink-0 overflow-x-auto pb-2 md:pb-0">
+                                <div className="flex flex-wrap gap-2">
                                     {["all", "PENDING", "COMPLETED", "CANCELLED"].map((status) => (
                                         <Button
                                             key={status}
                                             variant={orderStatus === status ? "sacred" : "outline"}
                                             size="sm"
-                                            className="rounded-full h-11 px-5 capitalize font-bold"
+                                            className="rounded-full h-9 sm:h-11 px-3 sm:px-5 capitalize font-bold text-xs sm:text-sm"
                                             onClick={() => setOrderStatus(status)}
                                         >
                                             {status.toLowerCase()}

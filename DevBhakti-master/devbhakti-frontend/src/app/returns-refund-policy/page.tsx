@@ -87,27 +87,27 @@ export default function ReturnsRefundPolicyPage() {
     }));
 
     return (
-        <main className="min-h-screen bg-background">
+        <main className="min-h-screen bg-background" style={{ wordBreak: 'keep-all' }}>
             <Navbar />
 
             {/* Hero Header */}
-            <section className="relative pt-32 pb-16 overflow-hidden">
+            <section className="relative pt-24 sm:pt-32 pb-12 sm:pb-16 overflow-hidden">
                 <div className="absolute inset-0 z-0 bg-gradient-to-b from-primary/5 via-transparent to-background" />
-                <div className="container mx-auto px-4 relative z-10 text-center">
+                <div className="container mx-auto px-4 sm:px-6 relative z-10 text-center">
                     <motion.div
                         initial={{ opacity: 0, y: -20 }}
                         animate={{ opacity: 1, y: 0 }}
-                        className="flex justify-center mb-6"
+                        className="flex justify-center mb-4 sm:mb-6"
                     >
-                        <div className="p-4 bg-primary/10 backdrop-blur-md rounded-2xl">
-                            <RefreshCw className="w-12 h-12 text-primary" />
+                        <div className="p-3 sm:p-4 bg-primary/10 backdrop-blur-md rounded-xl sm:rounded-2xl">
+                            <RefreshCw className="w-8 h-8 sm:w-12 sm:h-12 text-primary" />
                         </div>
                     </motion.div>
                     <motion.h1
                         initial={{ opacity: 0, scale: 0.95 }}
                         animate={{ opacity: 1, scale: 1 }}
                         transition={{ duration: 0.8 }}
-                        className="text-5xl md:text-7xl font-serif font-bold mb-6 text-gradient-sacred pb-2"
+                        className="text-3xl sm:text-4xl md:text-5xl lg:text-7xl font-serif font-bold mb-4 sm:mb-6 text-gradient-sacred pb-2 break-normal"
                     >
                         {t('returns_policy.title')}
                     </motion.h1>
@@ -115,7 +115,7 @@ export default function ReturnsRefundPolicyPage() {
                         initial={{ opacity: 0 }}
                         animate={{ opacity: 1 }}
                         transition={{ delay: 0.2 }}
-                        className="text-sm font-bold text-primary mb-6 uppercase tracking-widest"
+                        className="text-xs sm:text-sm font-bold text-primary mb-4 sm:mb-6 uppercase tracking-widest break-words"
                     >
                         {t('returns_policy.effective_date')}
                     </motion.p>
@@ -123,7 +123,7 @@ export default function ReturnsRefundPolicyPage() {
                         initial={{ opacity: 0 }}
                         animate={{ opacity: 1 }}
                         transition={{ delay: 0.3 }}
-                        className="text-xl text-muted-foreground max-w-3xl mx-auto leading-relaxed"
+                        className="text-base sm:text-lg md:text-xl text-muted-foreground max-w-3xl mx-auto leading-relaxed break-words"
                     >
                         {t('returns_policy.intro')}
                     </motion.p>
@@ -131,8 +131,8 @@ export default function ReturnsRefundPolicyPage() {
             </section>
 
             {/* Clauses Section */}
-            <section className="py-20 container mx-auto px-4">
-                <div className="max-w-4xl mx-auto space-y-8">
+            <section className="py-16 sm:py-20 container mx-auto px-4 sm:px-6">
+                <div className="max-w-4xl mx-auto space-y-4 sm:space-y-6 lg:space-y-8">
                     {clausesMap.map((clause, idx) => (
                         <motion.div
                             key={idx}
@@ -140,24 +140,24 @@ export default function ReturnsRefundPolicyPage() {
                             whileInView={{ opacity: 1, y: 0 }}
                             viewport={{ once: true }}
                             transition={{ duration: 0.6 }}
-                            className={`p-8 md:p-10 rounded-[2.5rem] border shadow-soft transition-all ${clause.highlight
+                            className={`p-6 sm:p-8 lg:p-10 rounded-xl sm:rounded-[2.5rem] border shadow-soft transition-all overflow-hidden ${clause.highlight
                                     ? 'bg-primary/5 border-primary/20'
                                     : 'bg-white border-border hover:shadow-warm'
                                 }`}
                         >
-                            <h3 className={`text-2xl font-serif font-bold mb-4 flex items-center gap-3 ${clause.highlight ? 'text-primary' : 'text-foreground'}`}>
-                                {clause.icon && <clause.icon className="w-6 h-6" />}
-                                {clause.title}
+                            <h3 className={`text-lg sm:text-xl lg:text-2xl font-serif font-bold mb-3 sm:mb-4 flex items-center gap-2 sm:gap-3 ${clause.highlight ? 'text-primary' : 'text-foreground'} break-words leading-tight hyphens-none`}>
+                                {clause.icon && <clause.icon className="w-5 h-5 sm:w-6 sm:h-6" />}
+                                <span className="break-words">{clause.title}</span>
                             </h3>
 
-                            <p className="text-lg text-foreground/80 leading-relaxed mb-4">{clause.content}</p>
+                            <p className="text-base sm:text-lg text-foreground/80 leading-relaxed mb-3 sm:mb-4 break-words hyphens-none">{clause.content}</p>
 
                             {clause.points && (
-                                <ul className="space-y-2 mb-4">
+                                <ul className="space-y-1 sm:space-y-2 mb-3 sm:mb-4">
                                     {clause.points.map((point, pIdx) => (
-                                        <li key={pIdx} className="flex items-start gap-3 text-foreground/80">
-                                            <span className="w-2 h-2 rounded-full bg-primary/60 mt-2 flex-shrink-0" />
-                                            <span>{point}</span>
+                                        <li key={pIdx} className="flex items-start gap-2 sm:gap-3 text-foreground/80">
+                                            <span className="w-1.5 h-1.5 sm:w-2 sm:h-2 rounded-full bg-primary/60 mt-1.5 sm:mt-2 flex-shrink-0" />
+                                            <span className="text-sm sm:text-base break-words leading-tight">{point}</span>
                                         </li>
                                     ))}
                                 </ul>
@@ -165,13 +165,13 @@ export default function ReturnsRefundPolicyPage() {
 
                             {clause.secondaryContent && (
                                 <>
-                                    <p className="text-lg text-foreground/80 leading-relaxed mb-4 mt-6">{clause.secondaryContent || clause.secondary_content}</p>
+                                    <p className="text-base sm:text-lg text-foreground/80 leading-relaxed mb-3 sm:mb-4 mt-4 sm:mt-6 break-words hyphens-none">{clause.secondaryContent || clause.secondary_content}</p>
                                     {(clause.secondaryPoints || clause.secondary_points) && (
-                                        <ul className="space-y-2 mb-4">
+                                        <ul className="space-y-1 sm:space-y-2 mb-3 sm:mb-4">
                                             {(clause.secondaryPoints || clause.secondary_points).map((point: string, pIdx: number) => (
-                                                <li key={pIdx} className="flex items-start gap-3 text-foreground/80">
-                                                    <span className="w-2 h-2 rounded-full bg-primary/60 mt-2 flex-shrink-0" />
-                                                    <span>{point}</span>
+                                                <li key={pIdx} className="flex items-start gap-2 sm:gap-3 text-foreground/80">
+                                                    <span className="w-1.5 h-1.5 sm:w-2 sm:h-2 rounded-full bg-primary/60 mt-1.5 sm:mt-2 flex-shrink-0" />
+                                                    <span className="text-sm sm:text-base break-words leading-tight">{point}</span>
                                                 </li>
                                             ))}
                                         </ul>
@@ -180,7 +180,7 @@ export default function ReturnsRefundPolicyPage() {
                             )}
 
                             {clause.extra && (
-                                <p className="text-base text-muted-foreground italic border-l-4 border-secondary/30 pl-4 py-1 mt-4">
+                                <p className="text-sm sm:text-base text-muted-foreground italic border-l-2 sm:border-l-4 border-secondary/30 pl-3 sm:pl-4 py-1 mt-3 sm:mt-4 break-words hyphens-none leading-tight">
                                     {clause.extra}
                                 </p>
                             )}
@@ -193,40 +193,40 @@ export default function ReturnsRefundPolicyPage() {
                         whileInView={{ opacity: 1, y: 0 }}
                         viewport={{ once: true }}
                         transition={{ duration: 0.6 }}
-                        className="p-8 md:p-10 rounded-[2.5rem] border shadow-soft bg-white border-border"
+                        className="p-6 sm:p-8 lg:p-10 rounded-xl sm:rounded-[2.5rem] border shadow-soft bg-white border-border overflow-hidden"
                     >
-                        <h3 className="text-2xl font-serif font-bold mb-6 text-foreground flex items-center gap-3">
-                            <Mail className="w-6 h-6 text-primary" />
-                            {localizedClauses[7]?.title || "8. Customer Support & Grievance Redressal"}
+                        <h3 className="text-lg sm:text-xl lg:text-2xl font-serif font-bold mb-4 sm:mb-6 text-foreground flex items-center gap-2 sm:gap-3 break-words leading-tight hyphens-none">
+                            <Mail className="w-5 h-5 sm:w-6 sm:h-6 text-primary" />
+                            <span className="break-words">{localizedClauses[7]?.title || "8. Customer Support & Grievance Redressal"}</span>
                         </h3>
 
-                        <p className="text-lg text-foreground/80 leading-relaxed mb-4">{localizedClauses[7]?.content || "For support or assistance, users may contact:"}</p>
+                        <p className="text-base sm:text-lg text-foreground/80 leading-relaxed mb-3 sm:mb-4 break-words hyphens-none">{localizedClauses[7]?.content || "For support or assistance, users may contact:"}</p>
 
-                        <div className="bg-secondary/5 p-5 rounded-xl border border-border inline-block mb-6">
-                            <span className="font-semibold text-foreground">Email: </span>
-                            <a href={`mailto:${localizedClauses[7]?.email || "support@devbhakti.in"}`} className="text-primary font-bold hover:underline">{localizedClauses[7]?.email || "support@devbhakti.in"}</a>
+                        <div className="bg-secondary/5 p-4 sm:p-5 rounded-xl border border-border inline-block mb-4 sm:mb-6">
+                            <span className="font-semibold text-sm sm:text-base text-foreground">Email: </span>
+                            <a href={`mailto:${localizedClauses[7]?.email || "support@devbhakti.in"}`} className="text-primary font-bold hover:underline break-words">{localizedClauses[7]?.email || "support@devbhakti.in"}</a>
                         </div>
 
-                        <p className="text-lg text-foreground/80 leading-relaxed mb-6">
-                            {localizedClauses[7]?.p1 || "In accordance with the Consumer Protection (E-Commerce) Rules, 2020, the details of the Grievance Officer are as follows:"}
+                        <p className="text-base sm:text-lg text-foreground/80 leading-relaxed mb-4 sm:mb-6 break-words hyphens-none">
+                            {localizedClauses[7]?.p1 || "In accordance with the Consumer Protection (E-Commerce) Rules, 2020, details of Grievance Officer are as follows:"}
                         </p>
 
-                        <div className="bg-white p-6 rounded-2xl border border-border shadow-soft max-w-md mx-auto space-y-3">
-                            <div className="flex justify-between items-center border-b border-border pb-3">
-                                <span className="text-sm font-semibold text-primary uppercase tracking-wider">Name</span>
-                                <span className="font-bold text-foreground">{localizedClauses[7]?.officer_name || "Siddharth Pednekar"}</span>
+                        <div className="bg-white p-4 sm:p-6 rounded-xl sm:rounded-2xl border border-border shadow-soft max-w-md mx-auto space-y-2 sm:space-y-3">
+                            <div className="flex justify-between items-center border-b border-border pb-2 sm:pb-3">
+                                <span className="text-xs sm:text-sm font-semibold text-primary uppercase tracking-wider break-words">Name</span>
+                                <span className="font-bold text-sm sm:text-base text-foreground break-words">{localizedClauses[7]?.officer_name || "Siddharth Pednekar"}</span>
                             </div>
-                            <div className="flex justify-between items-center border-b border-border pb-3">
-                                <span className="text-sm font-semibold text-primary uppercase tracking-wider">Designation</span>
-                                <span className="font-bold text-foreground">{localizedClauses[7]?.designation || "Grievance Officer"}</span>
+                            <div className="flex justify-between items-center border-b border-border pb-2 sm:pb-3">
+                                <span className="text-xs sm:text-sm font-semibold text-primary uppercase tracking-wider break-words">Designation</span>
+                                <span className="font-bold text-sm sm:text-base text-foreground break-words">{localizedClauses[7]?.designation || "Grievance Officer"}</span>
                             </div>
                             <div className="flex justify-between items-center">
-                                <span className="text-sm font-semibold text-primary uppercase tracking-wider">Email</span>
-                                <a href={`mailto:${localizedClauses[7]?.email || "grievance.officer@devbhakti.in"}`} className="font-bold text-primary hover:underline">{localizedClauses[7]?.email || "grievance.officer@devbhakti.in"}</a>
+                                <span className="text-xs sm:text-sm font-semibold text-primary uppercase tracking-wider break-words">Email</span>
+                                <a href={`mailto:${localizedClauses[7]?.email || "grievance.officer@devbhakti.in"}`} className="font-bold text-sm sm:text-base text-primary hover:underline break-words">{localizedClauses[7]?.email || "grievance.officer@devbhakti.in"}</a>
                             </div>
                         </div>
 
-                        <p className="text-base text-muted-foreground italic border-l-4 border-secondary/30 pl-4 py-1 mt-6">
+                        <p className="text-sm sm:text-base text-muted-foreground italic border-l-2 sm:border-l-4 border-secondary/30 pl-3 sm:pl-4 py-1 mt-4 sm:mt-6 break-words hyphens-none leading-tight">
                             {localizedClauses[7]?.extra}
                         </p>
                     </motion.div>

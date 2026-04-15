@@ -371,9 +371,9 @@ export default function AdminDashboardPage() {
       </div>
 
       {/* Quick Navigation Cards - Fixed Bottom */}
-      <div className="fixed bottom-0 left-0 right-0 bg-[#FDFCF6]/95 backdrop-blur-sm border-t border-slate-200 py-4 px-6 z-40 md:pl-72 pl-24 shadow-[0_-4px_10px_-4px_rgba(0,0,0,0.05)] transition-all duration-300">
+      <div className="fixed bottom-0 left-0 right-0 bg-[#FDFCF6]/95 backdrop-blur-sm border-t border-slate-200 py-4 px-4 sm:px-6 z-40 lg:ml-20 lg:group-[.sidebar-open]:ml-64 shadow-[0_-4px_10px_-4px_rgba(0,0,0,0.05)] transition-all duration-300">
         <h3 className="text-[14px] font-serif font-bold text-slate-900 mb-2.5 tracking-tight flex items-center gap-2">System Quick Access</h3>
-        <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4">
+        <div className="flex overflow-x-auto snap-x snap-mandatory gap-3 pb-2 -mx-4 px-4 sm:mx-0 sm:px-0 sm:grid sm:grid-cols-2 lg:grid-cols-4 sm:overflow-visible sm:pb-0 premium-scrollbar hide-scrollbar">
           {[
             { label: "Pooja & Sev Booking", icon: Calendar, path: "/admin/pooja-bookings", color: "text-amber-600 bg-amber-50" },
             { label: "Withdrawal Requests", icon: Wallet, path: "/admin/finance/withdrawals", color: "text-emerald-600 bg-emerald-50" },
@@ -382,13 +382,13 @@ export default function AdminDashboardPage() {
           ].map((action, i) => (
             <div
               key={i}
-              className="flex items-center gap-4 p-3.5 rounded-[1rem] bg-white shadow-sm border border-slate-100 hover:shadow-md transition-all cursor-pointer select-none active:scale-[0.98]"
+              className="flex items-center gap-3 sm:gap-4 p-3 rounded-xl sm:rounded-[1rem] bg-white shadow-sm border border-slate-100 hover:shadow-md transition-all cursor-pointer select-none active:scale-[0.98] min-w-[240px] sm:min-w-0 snap-start shrink-0"
               onClick={() => router.push(action.path)}
             >
-              <div className={cn("w-9 h-9 rounded-md flex items-center justify-center shrink-0", action.color)}>
-                <action.icon className="w-5 h-5" />
+              <div className={cn("w-8 h-8 sm:w-9 sm:h-9 rounded-md flex items-center justify-center shrink-0", action.color)}>
+                <action.icon className="w-4 h-4 sm:w-5 sm:h-5" />
               </div>
-              <span className="text-[13px] font-extrabold text-slate-800 tracking-tight leading-tight">{action.label}</span>
+              <span className="text-[12px] sm:text-[13px] font-extrabold text-slate-800 tracking-tight leading-tight whitespace-nowrap sm:whitespace-normal">{action.label}</span>
             </div>
           ))}
         </div>

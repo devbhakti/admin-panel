@@ -90,33 +90,33 @@ export default function TermsOfServicePage() {
     }));
 
     return (
-        <main className="min-h-screen bg-background pattern-lotus">
+        <main className="min-h-screen bg-background pattern-lotus" style={{ wordBreak: 'keep-all' }}>
             <Navbar />
 
             {/* Hero Header */}
-            <section className="relative pt-32 pb-20 overflow-hidden">
+            <section className="relative pt-24 sm:pt-32 pb-16 sm:pb-20 overflow-hidden">
                 <div className="absolute inset-0 z-0 bg-gradient-to-b from-primary/10 via-transparent to-background" />
-                <div className="container mx-auto px-4 relative z-10">
+                <div className="container mx-auto px-4 sm:px-6 relative z-10">
                     <motion.div
                         initial={{ opacity: 0, y: -20 }}
                         animate={{ opacity: 1, y: 0 }}
                         className="text-center max-w-4xl mx-auto"
                     >
-                        <div className="inline-flex p-3 rounded-2xl bg-primary text-white mb-6 shadow-glow">
-                            <Scale className="w-8 h-8" />
+                        <div className="inline-flex p-2 sm:p-3 rounded-xl sm:rounded-2xl bg-primary text-white mb-4 sm:mb-6 shadow-glow">
+                            <Scale className="w-6 h-6 sm:w-8 sm:h-8" />
                         </div>
-                        <h1 className="text-5xl md:text-7xl font-serif font-bold mb-4 text-primary">
+                        <h1 className="text-3xl sm:text-4xl md:text-5xl lg:text-7xl font-serif font-bold mb-3 sm:mb-4 text-primary break-normal">
                             {t('terms.title')}
                         </h1>
-                        <p className="text-sm font-bold text-primary mb-6 uppercase tracking-widest">{t('terms.effective_date')}</p>
-                        <div className="text-xl text-muted-foreground leading-relaxed max-w-3xl mx-auto space-y-4">
-                            <p>
+                        <p className="text-xs sm:text-sm font-bold text-primary mb-4 sm:mb-6 uppercase tracking-widest break-words">{t('terms.effective_date')}</p>
+                        <div className="text-base sm:text-lg md:text-xl text-muted-foreground leading-relaxed max-w-3xl mx-auto space-y-3 sm:space-y-4">
+                            <p className="break-words">
                                 {t('terms.intro_p1')}
                             </p>
-                            <p>
+                            <p className="break-words">
                                 {t('terms.intro_p2')}
                             </p>
-                            <p>
+                            <p className="break-words">
                                 {t('terms.intro_p3')}
                             </p>
                         </div>
@@ -125,8 +125,8 @@ export default function TermsOfServicePage() {
             </section>
 
             {/* Terms List */}
-            <section className="pb-24 container mx-auto px-4">
-                <div className="max-w-4xl mx-auto space-y-8">
+            <section className="pb-16 sm:pb-20 lg:pb-24 container mx-auto px-4 sm:px-6">
+                <div className="max-w-4xl mx-auto space-y-4 sm:space-y-6 lg:space-y-8">
                     {clausesMap.map((clause, idx) => (
                         <motion.div
                             key={idx}
@@ -134,28 +134,28 @@ export default function TermsOfServicePage() {
                             whileInView={{ opacity: 1, y: 0 }}
                             viewport={{ once: true }}
                             transition={{ duration: 0.5, delay: idx * 0.05 }}
-                            className="bg-white p-8 md:p-10 rounded-[2rem] border border-border shadow-soft hover:shadow-warm transition-all"
+                            className="bg-white p-6 sm:p-8 lg:p-10 rounded-xl sm:rounded-[2rem] border border-border shadow-soft hover:shadow-warm transition-all overflow-hidden"
                         >
-                            <h3 className="text-2xl font-serif font-bold mb-4 text-primary">{clause.title}</h3>
-                            <p className="text-lg text-foreground/80 leading-relaxed mb-4">{clause.content}</p>
+                            <h3 className="text-lg sm:text-xl lg:text-2xl font-serif font-bold mb-3 sm:mb-4 text-primary break-words leading-tight hyphens-none">{clause.title}</h3>
+                            <p className="text-base sm:text-lg text-foreground/80 leading-relaxed mb-3 sm:mb-4 break-words hyphens-none">{clause.content}</p>
 
                             {clause.points && (
-                                <ul className="space-y-2 mb-4">
+                                <ul className="space-y-1 sm:space-y-2 mb-3 sm:mb-4">
                                     {clause.points.map((point, pIdx) => (
-                                        <li key={pIdx} className="flex items-start gap-3 text-foreground/80">
-                                            <span className="w-2 h-2 rounded-full bg-primary/60 mt-2 flex-shrink-0" />
-                                            <span>{point}</span>
+                                        <li key={pIdx} className="flex items-start gap-2 sm:gap-3 text-foreground/80">
+                                            <span className="w-1.5 h-1.5 sm:w-2 sm:h-2 rounded-full bg-primary/60 mt-1.5 sm:mt-2 flex-shrink-0" />
+                                            <span className="text-sm sm:text-base break-words leading-tight">{point}</span>
                                         </li>
                                     ))}
                                 </ul>
                             )}
 
                             {(clause.secondaryContent || clause.secondary_content) && (
-                                <p className="text-lg text-foreground/80 leading-relaxed mb-4">{clause.secondaryContent || clause.secondary_content}</p>
+                                <p className="text-base sm:text-lg text-foreground/80 leading-relaxed mb-3 sm:mb-4 break-words hyphens-none">{clause.secondaryContent || clause.secondary_content}</p>
                             )}
 
                             {clause.extra && (
-                                <p className="text-base text-muted-foreground italic border-l-4 border-secondary/30 pl-4 py-1">
+                                <p className="text-sm sm:text-base text-muted-foreground italic border-l-2 sm:border-l-4 border-secondary/30 pl-3 sm:pl-4 py-1 break-words hyphens-none leading-tight">
                                     {clause.extra}
                                 </p>
                             )}

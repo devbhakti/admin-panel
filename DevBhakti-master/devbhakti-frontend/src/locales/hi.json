@@ -589,10 +589,12 @@
       "subtitle": "नीचे दिए गए फ़ॉर्म को भरें",
       "name": "पूरा नाम",
       "email": "ईमेल पता",
+      "mobile": "मोबाइल नंबर",
       "subject": "विषय",
       "message": "संदेश",
       "placeholder_name": "आपका नाम",
       "placeholder_email": "email@example.com",
+      "placeholder_mobile": "10 अंकों का मोबाइल नंबर दर्ज करें",
       "placeholder_subject": "हम कैसे मदद कर सकते हैं?",
       "placeholder_message": "आपका संदेश...",
       "submit": "पूछताछ भेजें"

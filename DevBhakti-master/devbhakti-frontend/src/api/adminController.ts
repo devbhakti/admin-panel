@@ -67,7 +67,7 @@ export const fetchPoojaByIdAdmin = async (id: string) => {
             'lang': 'raw'
         }
     });
-    return response.data.data;
+    return response.data;
 };
 
 export const updatePoojaAdmin = async (id: string, formData: FormData) => {

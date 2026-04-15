@@ -349,7 +349,7 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
   }
 
   return (
-    <div className="min-h-screen bg-background flex">
+    <div className={cn("min-h-screen bg-background flex", sidebarOpen ? "sidebar-open" : "")}>
       {/* Mobile Sidebar Overlay */}
       {sidebarOpen && (
         <div
@@ -533,7 +533,7 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
       {/* Main content */}
       <div
         className={cn(
-          "flex-1 transition-all duration-300",
+          "flex-1 transition-all duration-300 flex flex-col min-w-0 min-h-screen",
           sidebarOpen ? "lg:ml-64" : "lg:ml-20"
         )}
       >
@@ -594,7 +594,7 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
         </header>
 
         {/* Page content */}
-        <main className="p-6">
+        <main className="flex-1 p-4 md:p-6 w-full min-w-0">
           {authorized ? children : <AccessDeniedPage />}
         </main>
       </div>

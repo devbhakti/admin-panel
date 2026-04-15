@@ -105,27 +105,30 @@ export default function ShippingPolicyPage() {
     }));
 
     return (
-        <main className="min-h-screen bg-background overflow-x-hidden">
+        // FIX 1: 'wordBreak' ko 'break-word' kar diya hai taaki long words break hon.
+        <main className="min-h-screen bg-background overflow-x-hidden" style={{ wordBreak: 'break-word' }}>
             <Navbar />
 
             {/* Hero Header */}
-            <section className="relative pt-32 pb-16 overflow-hidden">
+            {/* FIX 2: 'overflow-hidden' hata diya aur 'pt'/'pb' padding badha diya hai taaki text na kate. */}
+            <section className="relative pt-32 sm:pt-40 pb-20 sm:pb-24">
                 <div className="absolute inset-0 z-0 bg-gradient-to-b from-primary/5 via-transparent to-background" />
-                <div className="container mx-auto px-4 relative z-10 text-center">
+                <div className="container mx-auto px-4 sm:px-6 relative z-10 text-center">
                     <motion.div
                         initial={{ opacity: 0, y: -20 }}
                         animate={{ opacity: 1, y: 0 }}
-                        className="flex justify-center mb-6"
+                        className="flex justify-center mb-4 sm:mb-6"
                     >
-                        <div className="p-4 bg-primary/10 backdrop-blur-md rounded-2xl">
-                            <Truck className="w-12 h-12 text-primary" />
+                        <div className="p-3 sm:p-4 bg-primary/10 backdrop-blur-md rounded-xl sm:rounded-2xl">
+                            <Truck className="w-8 h-8 sm:w-12 sm:h-12 text-primary" />
                         </div>
                     </motion.div>
                     <motion.h1
                         initial={{ opacity: 0, scale: 0.95 }}
                         animate={{ opacity: 1, scale: 1 }}
                         transition={{ duration: 0.8 }}
-                        className="text-5xl md:text-7xl font-serif font-bold mb-6 text-gradient-sacred pb-4"
+                        // FIX 3: 'leading-[1.15]', 'py-2', aur 'break-words' add kiye hain. 'break-normal' ko hata diya.
+                        className="text-3xl sm:text-4xl md:text-5xl lg:text-7xl font-serif font-bold mb-4 sm:mb-6 text-gradient-sacred py-2 break-words leading-[1.15]"
                     >
                         {t('shipping_policy.title')}
                     </motion.h1>
@@ -133,7 +136,7 @@ export default function ShippingPolicyPage() {
                         initial={{ opacity: 0 }}
                         animate={{ opacity: 1 }}
                         transition={{ delay: 0.2 }}
-                        className="text-sm font-bold text-primary mb-6 uppercase tracking-widest"
+                        className="text-xs sm:text-sm font-bold text-primary mb-4 sm:mb-6 uppercase tracking-widest break-words"
                     >
                         {t('shipping_policy.effective_date')}
                     </motion.p>
@@ -141,7 +144,7 @@ export default function ShippingPolicyPage() {
                         initial={{ opacity: 0 }}
                         animate={{ opacity: 1 }}
                         transition={{ delay: 0.3 }}
-                        className="text-xl text-muted-foreground max-w-3xl mx-auto leading-relaxed"
+                        className="text-base sm:text-lg md:text-xl text-muted-foreground max-w-3xl mx-auto leading-relaxed break-words"
                     >
                         {t('shipping_policy.intro')}
                     </motion.p>
@@ -149,8 +152,8 @@ export default function ShippingPolicyPage() {
             </section>
 
             {/* Clauses Section */}
-            <section className="py-20 container mx-auto px-4">
-                <div className="max-w-4xl mx-auto space-y-8">
+            <section className="py-16 sm:py-20 container mx-auto px-4 sm:px-6">
+                <div className="max-w-4xl mx-auto space-y-4 sm:space-y-6 lg:space-y-8">
                     {clausesMap.map((clause, idx) => (
                         <motion.div
                             key={idx}
@@ -158,24 +161,24 @@ export default function ShippingPolicyPage() {
                             whileInView={{ opacity: 1, y: 0 }}
                             viewport={{ once: true }}
                             transition={{ duration: 0.6 }}
-                            className={`p-8 md:p-10 rounded-[2.5rem] border shadow-soft transition-all ${clause.highlight
+                            className={`p-6 sm:p-8 lg:p-10 rounded-xl sm:rounded-[2.5rem] border shadow-soft transition-all overflow-hidden ${clause.highlight
                                     ? 'bg-primary/5 border-primary/20'
                                     : 'bg-white border-border hover:shadow-warm'
                                 }`}
                         >
-                            <h3 className={`text-2xl font-serif font-bold mb-4 flex items-center gap-3 ${clause.highlight ? 'text-primary' : 'text-foreground'}`}>
-                                {clause.icon && <clause.icon className="w-6 h-6" />}
-                                {clause.title}
+                            <h3 className={`text-lg sm:text-xl lg:text-2xl font-serif font-bold mb-3 sm:mb-4 flex items-center gap-2 sm:gap-3 ${clause.highlight ? 'text-primary' : 'text-foreground'} break-words leading-snug py-1`}>
+                                {clause.icon && <clause.icon className="w-5 h-5 sm:w-6 sm:h-6 flex-shrink-0" />}
+                                <span className="break-words">{clause.title}</span>
                             </h3>
 
-                            <p className="text-lg text-foreground/80 leading-relaxed mb-4">{clause.content}</p>
+                            <p className="text-base sm:text-lg text-foreground/80 leading-relaxed mb-3 sm:mb-4 break-words">{clause.content}</p>
 
                             {clause.points && (
-                                <ul className="space-y-2 mb-4">
+                                <ul className="space-y-1 sm:space-y-2 mb-3 sm:mb-4">
                                     {clause.points.map((point, pIdx) => (
-                                        <li key={pIdx} className="flex items-start gap-3 text-foreground/80">
-                                            <span className="w-2 h-2 rounded-full bg-primary/60 mt-2 flex-shrink-0" />
-                                            <span>{point}</span>
+                                        <li key={pIdx} className="flex items-start gap-2 sm:gap-3 text-foreground/80">
+                                            <span className="w-1.5 h-1.5 sm:w-2 sm:h-2 rounded-full bg-primary/60 mt-1.5 sm:mt-2 flex-shrink-0" />
+                                            <span className="text-sm sm:text-base break-words leading-tight">{point}</span>
                                         </li>
                                     ))}
                                 </ul>
@@ -183,13 +186,13 @@ export default function ShippingPolicyPage() {
 
                             {clause.secondaryContent && (
                                 <>
-                                    <p className="text-lg text-foreground/80 leading-relaxed mb-4 mt-6">{clause.secondaryContent || clause.secondary_content}</p>
+                                    <p className="text-base sm:text-lg text-foreground/80 leading-relaxed mb-3 sm:mb-4 mt-4 sm:mt-6 break-words">{clause.secondaryContent || clause.secondary_content}</p>
                                     {(clause.secondaryPoints || clause.secondary_points) && (
-                                        <ul className="space-y-2 mb-4">
+                                        <ul className="space-y-1 sm:space-y-2 mb-3 sm:mb-4">
                                             {(clause.secondaryPoints || clause.secondary_points).map((point: string, pIdx: number) => (
-                                                <li key={pIdx} className="flex items-start gap-3 text-foreground/80">
-                                                    <span className="w-2 h-2 rounded-full bg-primary/60 mt-2 flex-shrink-0" />
-                                                    <span>{point}</span>
+                                                <li key={pIdx} className="flex items-start gap-2 sm:gap-3 text-foreground/80">
+                                                    <span className="w-1.5 h-1.5 sm:w-2 sm:h-2 rounded-full bg-primary/60 mt-1.5 sm:mt-2 flex-shrink-0" />
+                                                    <span className="text-sm sm:text-base break-words leading-tight">{point}</span>
                                                 </li>
                                             ))}
                                         </ul>
@@ -198,7 +201,7 @@ export default function ShippingPolicyPage() {
                             )}
 
                             {clause.extra && (
-                                <p className="text-base text-muted-foreground italic border-l-4 border-secondary/30 pl-4 py-1 mt-4">
+                                <p className="text-sm sm:text-base text-muted-foreground italic border-l-2 sm:border-l-4 border-secondary/30 pl-3 sm:pl-4 py-1 mt-3 sm:mt-4 break-words leading-tight">
                                     {clause.extra}
                                 </p>
                             )}

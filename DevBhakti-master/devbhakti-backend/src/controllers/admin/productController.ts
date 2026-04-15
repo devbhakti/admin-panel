@@ -48,6 +48,12 @@ export const createProduct = async (req: Request, res: Response) => {
 
       categoryId = req.body.categoryId || req.body.category || null;
       templeId = req.body.templeId || null;
+      
+      // Handle templeId if it's an array (take first element)
+      if (Array.isArray(templeId)) {
+        templeId = templeId[0];
+      }
+      
       status = req.body.status || "pending";
       rating = req.body.rating ? parseFloat(req.body.rating) : undefined;
 
@@ -107,6 +113,14 @@ export const createProduct = async (req: Request, res: Response) => {
 
       categoryId = productCategoryId || req.body.category || null;
       templeId = productTempleId || null;
+      
+      // Handle templeId if it's an array (take first element)
+      if (Array.isArray(templeId)) {
+        templeId = templeId[0];
+      } else if (templeId === "general") {
+        templeId = null;
+      }
+      
       status = productStatus;
       variants = productVariants || [];
       rating = productRating;

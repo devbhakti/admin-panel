@@ -210,85 +210,85 @@ export default function ContactClient() {
                 {/* Inquiry Form */}
                 <motion.div
                     {...fadeIn}
-                    className="max-w-4xl mx-auto bg-white p-12 rounded-[3rem] border border-border shadow-elevated"
+                    className="max-w-4xl mx-auto bg-white p-6 sm:p-8 lg:p-12 rounded-[2rem] sm:rounded-[3rem] border border-border shadow-elevated overflow-hidden"
                 >
                     <div className="text-center mb-12">
                         <h2 className="text-3xl font-serif font-bold mb-4 text-primary">{t('contact.form.title')}</h2>
                         <p className="text-lg text-muted-foreground">{t('contact.form.subtitle')}</p>
                     </div>
 
-                    <form onSubmit={handleSubmit} className="space-y-6">
-                        <div className="grid md:grid-cols-2 gap-6">
-                            <div className="space-y-2">
-                                <label className="text-sm font-semibold text-foreground/70 ml-1">{t('contact.form.name')}</label>
+                    <form onSubmit={handleSubmit} className="space-y-3 sm:space-y-4 lg:space-y-6">
+                        <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 sm:gap-4 lg:gap-6">
+                            <div className="space-y-1 sm:space-y-2">
+                                <label className="text-xs sm:text-sm font-semibold text-foreground/70 ml-1 break-words leading-tight">{t('contact.form.name')}</label>
                                 <input 
                                     type="text" 
                                     name="name"
                                     value={formData.name}
                                     onChange={handleChange}
                                     placeholder={t('contact.form.placeholder_name')} 
-                                    className={`w-full px-6 py-4 rounded-2xl bg-secondary/5 border ${errors.name ? 'border-red-500' : 'border-border'} focus:outline-none focus:ring-2 focus:ring-primary/20 transition-all`} 
+                                    className={`w-full px-3 sm:px-4 lg:px-6 py-2 sm:py-3 lg:py-4 rounded-lg sm:rounded-xl lg:rounded-2xl bg-secondary/5 border ${errors.name ? 'border-red-500' : 'border-border'} focus:outline-none focus:ring-2 focus:ring-primary/20 transition-all text-xs sm:text-sm lg:text-base overflow-hidden`} 
                                 />
-                                {errors.name && <p className="text-xs text-red-500 ml-1">{errors.name}</p>}
+                                {errors.name && <p className="text-xs text-red-500 ml-1 break-words leading-tight">{errors.name}</p>}
                             </div>
-                            <div className="space-y-2">
-                                <label className="text-sm font-semibold text-foreground/70 ml-1">{t('contact.form.email')}</label>
+                            <div className="space-y-1 sm:space-y-2">
+                                <label className="text-xs sm:text-sm font-semibold text-foreground/70 ml-1 break-words leading-tight">{t('contact.form.email')}</label>
                                 <input 
                                     type="email" 
                                     name="email"
                                     value={formData.email}
                                     onChange={handleChange}
                                     placeholder={t('contact.form.placeholder_email')} 
-                                    className={`w-full px-6 py-4 rounded-2xl bg-secondary/5 border ${errors.email ? 'border-red-500' : 'border-border'} focus:outline-none focus:ring-2 focus:ring-primary/20 transition-all`} 
+                                    className={`w-full px-3 sm:px-4 lg:px-6 py-2 sm:py-3 lg:py-4 rounded-lg sm:rounded-xl lg:rounded-2xl bg-secondary/5 border ${errors.email ? 'border-red-500' : 'border-border'} focus:outline-none focus:ring-2 focus:ring-primary/20 transition-all text-xs sm:text-sm lg:text-base overflow-hidden`} 
                                 />
-                                {errors.email && <p className="text-xs text-red-500 ml-1">{errors.email}</p>}
+                                {errors.email && <p className="text-xs text-red-500 ml-1 break-words leading-tight">{errors.email}</p>}
                             </div>
                         </div>
-                        <div className="grid md:grid-cols-2 gap-6">
-                            <div className="space-y-2">
-                                <label className="text-sm font-semibold text-foreground/70 ml-1">Mobile Number</label>
+                        <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 sm:gap-4 lg:gap-6">
+                            <div className="space-y-1 sm:space-y-2">
+                                <label className="text-xs sm:text-sm font-semibold text-foreground/70 ml-1 break-words leading-tight">{t('contact.form.mobile')}</label>
                                 <input 
                                     type="tel" 
                                     name="mobile"
                                     value={formData.mobile}
                                     onChange={handleChange}
                                     maxLength={10}
-                                    placeholder="Enter 10 digit mobile number" 
-                                    className={`w-full px-6 py-4 rounded-2xl bg-secondary/5 border ${errors.mobile ? 'border-red-500' : 'border-border'} focus:outline-none focus:ring-2 focus:ring-primary/20 transition-all`} 
+                                    placeholder={t('contact.form.placeholder_mobile')} 
+                                    className={`w-full px-3 sm:px-4 lg:px-6 py-2 sm:py-3 lg:py-4 rounded-lg sm:rounded-xl lg:rounded-2xl bg-secondary/5 border ${errors.mobile ? 'border-red-500' : 'border-border'} focus:outline-none focus:ring-2 focus:ring-primary/20 transition-all text-xs sm:text-sm lg:text-base overflow-hidden`} 
                                 />
-                                {errors.mobile && <p className="text-xs text-red-500 ml-1">{errors.mobile}</p>}
+                                {errors.mobile && <p className="text-xs text-red-500 ml-1 break-words leading-tight">{errors.mobile}</p>}
                             </div>
-                            <div className="space-y-2">
-                                <label className="text-sm font-semibold text-foreground/70 ml-1">{t('contact.form.subject')}</label>
+                            <div className="space-y-1 sm:space-y-2">
+                                <label className="text-xs sm:text-sm font-semibold text-foreground/70 ml-1 break-words leading-tight">{t('contact.form.subject')}</label>
                                 <input 
                                     type="text" 
                                     name="subject"
                                     value={formData.subject}
                                     onChange={handleChange}
                                     placeholder={t('contact.form.placeholder_subject')} 
-                                    className={`w-full px-6 py-4 rounded-2xl bg-secondary/5 border ${errors.subject ? 'border-red-500' : 'border-border'} focus:outline-none focus:ring-2 focus:ring-primary/20 transition-all`} 
+                                    className={`w-full px-3 sm:px-4 lg:px-6 py-2 sm:py-3 lg:py-4 rounded-lg sm:rounded-xl lg:rounded-2xl bg-secondary/5 border ${errors.subject ? 'border-red-500' : 'border-border'} focus:outline-none focus:ring-2 focus:ring-primary/20 transition-all text-xs sm:text-sm lg:text-base overflow-hidden`} 
                                 />
-                                {errors.subject && <p className="text-xs text-red-500 ml-1">{errors.subject}</p>}
+                                {errors.subject && <p className="text-xs text-red-500 ml-1 break-words leading-tight">{errors.subject}</p>}
                             </div>
                         </div>
-                        <div className="space-y-2">
-                            <label className="text-sm font-semibold text-foreground/70 ml-1">{t('contact.form.message')}</label>
+                        <div className="space-y-1 sm:space-y-2">
+                            <label className="text-xs sm:text-sm font-semibold text-foreground/70 ml-1 break-words leading-tight">{t('contact.form.message')}</label>
                             <textarea 
                                 name="message"
                                 value={formData.message}
                                 onChange={handleChange}
                                 rows={5} 
                                 placeholder={t('contact.form.placeholder_message')} 
-                                className={`w-full px-6 py-4 rounded-2xl bg-secondary/5 border ${errors.message ? 'border-red-500' : 'border-border'} focus:outline-none focus:ring-2 focus:ring-primary/20 transition-all resize-none`}
+                                className={`w-full px-3 sm:px-4 lg:px-6 py-2 sm:py-3 lg:py-4 rounded-lg sm:rounded-xl lg:rounded-2xl bg-secondary/5 border ${errors.message ? 'border-red-500' : 'border-border'} focus:outline-none focus:ring-2 focus:ring-primary/20 transition-all resize-none text-xs sm:text-sm lg:text-base overflow-hidden`}
                             ></textarea>
-                            {errors.message && <p className="text-xs text-red-500 ml-1">{errors.message}</p>}
+                            {errors.message && <p className="text-xs text-red-500 ml-1 break-words leading-tight">{errors.message}</p>}
                         </div>
                         <button 
                             disabled={isSubmitting}
-                            className="w-full bg-primary text-white py-4 rounded-2xl font-bold text-lg hover:shadow-glow transition-all flex items-center justify-center gap-3 disabled:opacity-70"
+                            className="w-full bg-primary text-white py-2 sm:py-3 lg:py-4 rounded-lg sm:rounded-xl lg:rounded-2xl font-bold text-xs sm:text-sm lg:text-base hover:shadow-glow transition-all flex items-center justify-center gap-2 sm:gap-3 disabled:opacity-70 break-words leading-tight"
                         >
-                            {isSubmitting ? <Loader2 className="w-5 h-5 animate-spin" /> : <Send className="w-5 h-5" />}
-                            {isSubmitting ? "Sending..." : t('contact.form.submit')}
+                            {isSubmitting ? <Loader2 className="w-3 h-3 sm:w-4 sm:h-4 lg:w-5 lg:h-5 animate-spin" /> : <Send className="w-3 h-3 sm:w-4 sm:h-4 lg:w-5 lg:h-5" />}
+                            <span className="break-words">{isSubmitting ? "Sending..." : t('contact.form.submit')}</span>
                         </button>
                     </form>
                 </motion.div>

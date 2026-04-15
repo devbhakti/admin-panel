@@ -596,10 +596,12 @@
       "subtitle": "खालील फॉर्म भरा आणि आम्ही लवकरच तुमच्याशी संपर्क साधू.",
       "name": "पूर्ण नाव",
       "email": "ईमेल पत्ता",
+      "mobile": "मोबाईल नंबर",
       "subject": "विषय",
       "message": "संदेश",
       "placeholder_name": "तुमचे नाव",
       "placeholder_email": "email@example.com",
+      "placeholder_mobile": "१० अंकांचा मोबाईल नंबर टाका",
       "placeholder_subject": "आम्ही कशी मदत करू शकतो?",
       "placeholder_message": "तुमचा संदेश...",
       "submit": "विचार पाठवा"
