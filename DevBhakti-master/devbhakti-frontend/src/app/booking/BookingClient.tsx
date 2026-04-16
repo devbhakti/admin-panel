@@ -174,7 +174,7 @@ function BookingForm() {
           setFormData(prev => ({
             ...prev,
             name: user.name || "",
-            phone: user.phone || "",
+            phone: (user.phone || "").replace(/\D/g, "").slice(-10),
             email: user.email || "",
             gothra: user.gothra || "",
             kuldevi: user.kuldevi || "",

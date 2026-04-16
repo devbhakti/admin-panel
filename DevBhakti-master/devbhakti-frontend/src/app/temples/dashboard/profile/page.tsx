@@ -52,12 +52,14 @@ import { useToast } from "@/hooks/use-toast";
 import { API_URL } from "@/config/apiConfig";
 import { ImageCropper } from "@/components/admin/ImageCropper";
 import { parseLocalizedValue } from "@/utils/textUtils";
+import { useLanguage } from "@/context/LanguageContext";
 
 export default function TempleProfilePage() {
     const [isLoading, setIsLoading] = useState(true);
     const [isSaving, setIsSaving] = useState(false);
     const [profile, setProfile] = useState<any>(null);
     const { toast } = useToast();
+    const { language, t } = useLanguage();
 
     // Cropping states
     const [showCropper, setShowCropper] = useState(false);
@@ -155,11 +157,11 @@ export default function TempleProfilePage() {
                     viewers: data.viewers || "",
                     isLive: data.isLive || false,
                     liveUrl: data.liveUrl || "",
-                    pickupLocation: data.pickupLocation || "",
+                    pickupLocation: parseLocalizedValue(data.pickupLocation, language),
                     // Admin Info
-                    adminName: data.user?.name || "",
+                    adminName: parseLocalizedValue(data.user?.name, language),
                     adminEmail: data.user?.email || "",
-                    adminPhone: data.user?.phone || "",
+                    adminPhone: (data.user?.phone || "").replace(/\D/g, "").slice(-10),
                     // Technical Info
                     slug: data.slug || "",
                     subdomain: data.subdomain || "",
@@ -335,10 +337,10 @@ export default function TempleProfilePage() {
 
         // 2. Hero Images Count Validation (Total)
         // Calculating total based on previews which include existing + newly added
-        if (heroPreviews.length > 5) {
+        if (heroPreviews.length > 10) {
             toast({
                 title: "Too Many Banners",
-                description: `Maximum 5 banners allowed. You have ${heroPreviews.length} selected.`,
+                description: `Maximum 10 banners allowed. You have ${heroPreviews.length} selected.`,
                 variant: "destructive"
             });
             return;
@@ -575,7 +577,7 @@ export default function TempleProfilePage() {
                                         </div>
                                         Banners
                                     </div>
-                                    <span className="text-[10px] font-black uppercase tracking-widest text-slate-400">{heroPreviews.length}/5</span>
+                                    <span className="text-[10px] font-black uppercase tracking-widest text-slate-400">{heroPreviews.length}/10</span>
                                 </CardTitle>
                             </CardHeader>
                             <CardContent className="p-6">
@@ -601,7 +603,7 @@ export default function TempleProfilePage() {
                                             </motion.div>
                                         ))}
                                     </AnimatePresence>
-                                    {heroPreviews.length < 5 && (
+                                    {heroPreviews.length < 10 && (
                                         <div
                                             onClick={() => heroImagesRef.current?.click()}
                                             className="aspect-video rounded-xl border-2 border-dashed border-slate-200 bg-white/40 flex flex-col items-center justify-center text-slate-400 hover:bg-white/80 hover:border-[#7b4623]/30 transition-all cursor-pointer group/add"
@@ -713,8 +715,8 @@ export default function TempleProfilePage() {
                                     </div>
                                     <div className="space-y-2">
                                         <Label className="text-xs uppercase font-bold tracking-widest text-slate-400 ml-1">Contact Phone</Label>
-                                        <div className="h-14 px-5 bg-slate-50/50 border border-slate-100 rounded-2xl flex items-center gap-3 text-slate-600 font-bold">
-                                            <Phone className="w-5 h-5 text-[#7b4623]/30" />
+                                        <div className="h-14 px-5 bg-slate-50/50 border border-slate-100 rounded-2xl flex items-center gap-3 text-slate-600 font-bold overflow-hidden">
+                                            <span className="text-slate-400 font-semibold border-r border-slate-200 pr-3">+91</span>
                                             {formData.adminPhone}
                                         </div>
                                     </div>
@@ -908,11 +910,16 @@ export default function TempleProfilePage() {
                                     </div>
                                     <div className="space-y-2">
                                         <Label className="text-xs uppercase font-bold tracking-widest text-[#7b4623]/60 ml-1">Official Phone</Label>
-                                        <Input
-                                            value={formData.phone}
-                                            onChange={e => setFormData({ ...formData, phone: e.target.value })}
-                                            className="h-14 px-5 border-white/40 bg-white/40 focus:bg-white rounded-2xl font-bold"
-                                        />
+                                        <div className="relative">
+                                            <span className="absolute left-4 top-1/2 -translate-y-1/2 text-slate-500 font-bold border-r border-slate-200 pr-3">+91</span>
+                                            <Input
+                                                maxLength={10}
+                                                value={formData.phone}
+                                                onChange={e => setFormData({ ...formData, phone: e.target.value.replace(/\D/g, '').slice(0, 10) })}
+                                                className="h-14 pl-16 pr-5 border-white/40 bg-white/40 focus:bg-white rounded-2xl font-bold"
+                                                placeholder="10-digit number"
+                                            />
+                                        </div>
                                     </div>
                                 </div>
                                 <div className="grid grid-cols-1 pt-4">

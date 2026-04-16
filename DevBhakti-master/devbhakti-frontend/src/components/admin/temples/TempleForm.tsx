@@ -641,11 +641,16 @@ export function TempleForm({
                                     
                                     <div className="space-y-2">
                                         <label className="text-sm font-semibold text-slate-700">Temple Phone</label>
-                                        <Input
-                                            value={formData.templePhone}
-                                            onChange={e => setFormData({ ...formData, templePhone: e.target.value })}
-                                            placeholder="Official Temple Mobile/Landline"
-                                        />
+                                        <div className="relative">
+                                            <span className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-500 font-semibold border-r border-slate-300 pr-2">+91</span>
+                                            <Input
+                                                maxLength={10}
+                                                value={formData.templePhone}
+                                                onChange={e => setFormData({ ...formData, templePhone: e.target.value.replace(/\D/g, '').slice(0, 10) })}
+                                                placeholder="10-digit number"
+                                                className="pl-14"
+                                            />
+                                        </div>
                                     </div>
                                     <div className="space-y-2">
                                         <label className="text-sm font-semibold text-slate-700">Website</label>
@@ -730,7 +735,7 @@ export function TempleForm({
                                     )}
                                 </div>
 
-                                {onAddMasterPooja && (
+                                {/* {onAddMasterPooja && (
                                     <div className="pt-4 mt-2 border-t">
                                         <Button
                                             type="button"
@@ -743,7 +748,7 @@ export function TempleForm({
                                         </Button>
                                         <p className="text-xs text-slate-500 mt-2">Click to navigate to Pooja Creation page.</p>
                                     </div>
-                                )}
+                                )} */}
                             </div>
                         </TabsContent>
                     ))}

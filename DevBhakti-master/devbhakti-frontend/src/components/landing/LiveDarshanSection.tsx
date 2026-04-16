@@ -134,7 +134,7 @@ const LiveDarshanSection: React.FC = () => {
                 {/* Viewer count */}
                 <div className="absolute bottom-4 left-4 flex items-center gap-2 bg-foreground/20 backdrop-blur-sm text-primary-foreground px-3 py-1.5 rounded-full">
                   <Users className="w-3 h-3" />
-                  <span className="text-xs font-medium">{primaryTemple?.viewers || "1.2K"} {t('landing.landing_live_darshan.watching')}</span>
+                  <span className="text-xs font-medium">{primaryTemple?.viewers } {t('landing.landing_live_darshan.watching')}</span>
                 </div>
               </div>
             </Link>
@@ -164,10 +164,10 @@ const LiveDarshanSection: React.FC = () => {
                         </p>
                       </div>
                     </div>
-                    <div className="flex items-center gap-1 text-sidebar-foreground/60">
+                    {/* <div className="flex items-center gap-1 text-sidebar-foreground/60">
                       <Users className="w-3 h-3" />
                       <span className="text-xs">{temple.viewers || "0"}</span>
-                    </div>
+                    </div> */}
                   </Link>
                 </motion.div>
               ))}

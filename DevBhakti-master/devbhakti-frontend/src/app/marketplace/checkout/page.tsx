@@ -1,7 +1,7 @@
 "use client";
 
-import React, { useState } from "react";
-import { useRouter } from "next/navigation";
+import React, { useState, Suspense } from "react";
+import { useRouter, useSearchParams } from "next/navigation";
 import { useCart } from "@/context/CartContext";
 import Navbar from "@/components/landing/Navbar";
 import Footer from "@/components/landing/Footer";
@@ -16,8 +16,39 @@ import { API_URL, BASE_URL } from "@/config/apiConfig";
 import { notifyFailedPayment } from "@/api/adminController";
 
 export default function CheckoutPage() {
+    return (
+        <Suspense fallback={<div className="min-h-screen bg-[#fdf6e9] flex items-center justify-center"><p className="animate-pulse text-[#794A05] font-bold">Loading checkout...</p></div>}>
+            <CheckoutContent />
+        </Suspense>
+    );
+}
+
+function CheckoutContent() {
     const router = useRouter();
-    const { cartItems, totalAmount, clearCart } = useCart();
+    const { cartItems: globalCartItems, totalAmount: globalTotalAmount, clearCart } = useCart();
+    const searchParams = useSearchParams();
+    const isBuyNow = searchParams.get('mode') === 'buy_now';
+
+    // Buy Now mode: use sessionStorage items instead of cart
+    const [buyNowItems, setBuyNowItems] = React.useState<any[]>([]);
+
+    React.useEffect(() => {
+        if (isBuyNow) {
+            try {
+                const stored = sessionStorage.getItem('devbhakti_buy_now');
+                if (stored) {
+                    setBuyNowItems(JSON.parse(stored));
+                }
+            } catch (e) {
+                console.error('Failed to parse buy_now data', e);
+            }
+        }
+    }, [isBuyNow]);
+
+    const cartItems = isBuyNow ? buyNowItems : globalCartItems;
+    const totalAmount = isBuyNow
+        ? buyNowItems.reduce((sum: number, item: any) => sum + item.price * item.quantity, 0)
+        : globalTotalAmount;
     const { toast } = useToast();
     const [isSubmitting, setIsSubmitting] = useState(false);
     const [paymentMethod, setPaymentMethod] = useState<"COD" | "RAZORPAY">("RAZORPAY");
@@ -41,7 +72,7 @@ export default function CheckoutPage() {
                 setAddress(prev => ({
                     ...prev,
                     fullName: user.name || prev.fullName,
-                    phone: user.phone || prev.phone,
+                    phone: (user.phone || "").replace(/\D/g, "").slice(-10) || prev.phone,
                 }));
             } catch (e) {
                 console.error("Failed to parse user data", e);
@@ -99,6 +130,13 @@ export default function CheckoutPage() {
         if (name === "pincode") {
             const numericValue = value.replace(/[^0-9]/g, "");
             if (numericValue.length <= 6) {
+                setAddress((prev) => ({ ...prev, [name]: numericValue }));
+            }
+            return;
+        }
+        if (name === "phone") {
+            const numericValue = value.replace(/\D/g, "");
+            if (numericValue.length <= 10) {
                 setAddress((prev) => ({ ...prev, [name]: numericValue }));
             }
             return;
@@ -216,7 +254,11 @@ export default function CheckoutPage() {
                                         description: "Your order is confirmed.",
                                         variant: "success"
                                     });
-                                    clearCart();
+                                    if (isBuyNow) {
+                                        sessionStorage.removeItem('devbhakti_buy_now');
+                                    } else {
+                                        clearCart();
+                                    }
                                     router.push("/marketplace/order-success");
                                 }
                             } catch (error) {
@@ -268,7 +310,11 @@ export default function CheckoutPage() {
                         description: "Your sacred items will be delivered soon.",
                         variant: "success"
                     });
-                    clearCart();
+                    if (isBuyNow) {
+                        sessionStorage.removeItem('devbhakti_buy_now');
+                    } else {
+                        clearCart();
+                    }
                     router.push("/marketplace/order-success");
                 }
             }
@@ -335,7 +381,17 @@ export default function CheckoutPage() {
                                     </div>
                                     <div className="space-y-2">
                                         <label className="text-sm font-medium text-slate-700">Phone Number *</label>
-                                        <Input name="phone" value={address.phone} onChange={handleInputChange} placeholder="Mobile number" className="focus:ring-[#794A05] border-[#794A05]/20" />
+                                        <div className="relative">
+                                            <span className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-400 font-medium border-r border-slate-200 pr-2 text-xs">+91</span>
+                                            <Input 
+                                                name="phone" 
+                                                value={address.phone} 
+                                                onChange={handleInputChange} 
+                                                placeholder="10-digit number" 
+                                                maxLength={10}
+                                                className="pl-12 focus:ring-[#794A05] border-[#794A05]/20" 
+                                            />
+                                        </div>
                                     </div>
                                 </div>
                                 <div className="space-y-2">
@@ -450,7 +506,7 @@ export default function CheckoutPage() {
                                     disabled={isSubmitting}
                                     className="w-full h-14 text-lg font-bold bg-[#794A05] hover:bg-[#5d3804] text-white rounded-2xl shadow-lg shadow-[#794A05]/20 transition-all hover:scale-[1.02] active:scale-[0.98]"
                                 >
-                                    {isSubmitting ? "Processing Sacred Order..." : "Place Order"}
+                                    {isSubmitting ? "Processing Payment..." : "Pay Now"}
                                 </Button>
                                 <div className="flex items-center justify-center gap-2 text-xs text-slate-400">
                                     <ShieldCheck className="w-4 h-4 text-tulsi" />

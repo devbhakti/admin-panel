@@ -39,26 +39,17 @@ export const calculateFees = async (req: Request, res: Response) => {
 
     for (const key in groups) {
       const group = groups[key];
-      // Skip commission for admin products
-      if (group.id === null) {
-        vendorBreakdown.push({
-          vendorId: "admin",
-          amount: group.amount,
-          fee: 0
-        });
-        continue;
-      }
 
       const commission = await getCommissionForAmount(
         group.amount,
         group.type,
-        group.id,
+        group.id ?? undefined,
         CommissionCategory.MARKETPLACE
       );
       totalPlatformFee += commission.totalCommission;
 
       vendorBreakdown.push({
-        vendorId: group.id,
+        vendorId: group.id || "admin",
         vendorType: group.type,
         amount: group.amount,
         fee: commission.totalCommission,

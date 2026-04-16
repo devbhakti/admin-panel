@@ -24,6 +24,7 @@ import {
   Share2,
   Clock,
   RotateCcw,
+  Zap,
   Check,
   ChevronRight,
 } from "lucide-react";
@@ -243,6 +244,29 @@ export default function ProductDetailsPage() {
       variant: "success"
     });
     setCartOpen(true);
+  };
+
+  const handleBuyNow = () => {
+    if (!product || !selectedVariant) return;
+
+    const variant = product.variants.find(v => v.id === selectedVariant);
+    if (!variant) return;
+
+    // Save the single item to sessionStorage for direct checkout
+    const buyNowItem = {
+      productId: product.id,
+      variantId: variant.id,
+      name: getLocalized(product, 'name', language),
+      variantName: getLocalized(variant, 'name', language),
+      price: variant.price,
+      image: variant.image || product.image || "",
+      quantity: quantity,
+      templeId: product.templeId,
+      sellerId: (product as any).seller?.id || null,
+    };
+
+    sessionStorage.setItem('devbhakti_buy_now', JSON.stringify([buyNowItem]));
+    router.push('/marketplace/checkout?mode=buy_now');
   };
 
   const formatPrice = (price: number) => {
@@ -585,15 +609,28 @@ export default function ProductDetailsPage() {
                   </div>
 
                   <div className="flex flex-col gap-3">
-                    <Button
-                      size="lg"
-                      className="w-full h-16 bg-[#794A05] hover:bg-[#5d3804] text-white rounded-2xl text-lg font-bold shadow-xl shadow-[#794A05]/20 transition-all hover:scale-[1.02]"
-                      onClick={addToCart}
-                      disabled={!currentVariant || currentVariant.stock === 0}
-                    >
-                      <ShoppingCart className="w-6 h-6 mr-3" />
-                      {t('marketplace.add_to_cart')} — {currentVariant ? formatPrice(totalPrice) : ""}
-                    </Button>
+                    <div className="grid grid-cols-2 gap-3">
+                      <Button
+                        size="lg"
+                        variant="outline"
+                        className="w-full h-16 border-2 border-[#794A05] text-[#794A05] hover:bg-[#794A05]/5 rounded-2xl text-base font-bold transition-all hover:scale-[1.02]"
+                        onClick={addToCart}
+                        disabled={!currentVariant || currentVariant.stock === 0}
+                      >
+                        <ShoppingCart className="w-5 h-5 mr-2" />
+                        {t('marketplace.add_to_cart')}
+                      </Button>
+
+                      <Button
+                        size="lg"
+                        className="w-full h-16 bg-[#794A05] hover:bg-[#5d3804] text-white rounded-2xl text-base font-bold shadow-xl shadow-[#794A05]/20 transition-all hover:scale-[1.02]"
+                        onClick={handleBuyNow}
+                        disabled={!currentVariant || currentVariant.stock === 0}
+                      >
+                        <Zap className="w-5 h-5 mr-2" />
+                        {t('marketplace.buy_now')} — {currentVariant ? formatPrice(totalPrice) : ""}
+                      </Button>
+                    </div>
 
                     <p className="text-xs text-center text-slate-400 font-medium">
                       {t('marketplace.maintenance_contribution')}
