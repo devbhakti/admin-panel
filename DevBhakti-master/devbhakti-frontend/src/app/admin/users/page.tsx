@@ -15,7 +15,15 @@ import {
     CheckSquare,
     Trash2,
     Send,
-    Download
+    Download,
+    Building2,
+    UserCheck,
+    RotateCcw,
+    Heart,
+    Sparkles,
+    ChevronDown,
+    MapPin,
+    ShieldCheck
 } from "lucide-react";
 import { Checkbox } from "@/components/ui/checkbox";
 import { Card, CardContent } from "@/components/ui/card";
@@ -231,7 +239,7 @@ export default function AdminUsersPage() {
     };
 
     const formatRoleLabel = (role: string) => {
-        if (role === 'INSTITUTION') return 'Temple Admin';
+        if (role === 'INSTITUTION') return 'Temple ';
         if (role === 'SELLER') return 'Seller';
         if (role === 'DEVOTEE') return 'Devotee';
         if (role === 'ADMIN') return 'Admin';
@@ -321,27 +329,25 @@ export default function AdminUsersPage() {
 
     return (
         <div className="space-y-6 relative">
-            {/* Removed Bulk Action Bar */}
             {/* Page header */}
-            <div className="flex flex-col gap-4">
-                <div>
-                    <h1 className="text-xl sm:text-2xl md:text-3xl font-serif font-bold text-foreground">
+            <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+                <div className="min-w-0 flex-1">
+                    <h1 className="text-xl sm:text-2xl lg:text-3xl font-serif font-bold text-foreground break-words">
                         User Management
                     </h1>
-                    <p className="text-muted-foreground mt-1 text-sm sm:text-base">
+                    <p className="text-sm sm:text-base text-muted-foreground mt-1 break-words">
                         Manage all users registered on DevBhakti
                     </p>
                 </div>
-                <div className="flex flex-wrap gap-2">
+                <div className="flex flex-wrap items-center gap-2">
                     <DropdownMenu>
                         <DropdownMenuTrigger asChild>
                             <Button
                                 variant="outline"
-                                className="border-primary text-primary hover:bg-primary/5 h-10 px-3 sm:px-4 rounded-xl font-bold text-sm"
+                                className="border-primary text-primary hover:bg-primary/5 h-10 px-4 rounded-xl font-bold text-sm shadow-sm"
                             >
-                                <Send className="w-4 h-4 mr-1 sm:mr-2" />
-                                <span className="hidden sm:inline">Send WhatsApp</span>
-                                <span className="sm:hidden">WhatsApp</span>
+                                <Send className="w-4 h-4 mr-2" />
+                                <span>WhatsApp</span>
                             </Button>
                         </DropdownMenuTrigger>
                         <DropdownMenuContent align="end" className="w-56 bg-white rounded-xl shadow-xl border-slate-200">
@@ -357,244 +363,254 @@ export default function AdminUsersPage() {
                             </DropdownMenuItem>
                         </DropdownMenuContent>
                     </DropdownMenu>
-                    <Button variant="outline" className="border-amber-200 text-amber-600 hover:bg-amber-50 h-10 px-3 sm:px-4 rounded-xl font-bold text-sm" onClick={handleExportAiSensy}>
-                        <Send className="w-4 h-4 mr-1 sm:mr-2" />
-                        <span className="hidden sm:inline">AiSensy CSV</span>
-                        <span className="sm:hidden">CSV</span>
+
+                    <Button 
+                        variant="outline" 
+                        className="border-amber-200 text-amber-600 hover:bg-amber-50 h-10 px-4 rounded-xl font-bold text-sm shadow-sm" 
+                        onClick={handleExportAiSensy}
+                    >
+                        <Send className="w-4 h-4 mr-2" />
+                        <span>AiSensy CSV</span>
                     </Button>
-                    <Button variant="sacred" onClick={handleExportExcel} className="h-10 px-3 sm:px-4 rounded-xl text-sm">
-                        <Users className="w-4 h-4 mr-1 sm:mr-2" />
-                        <span className="hidden sm:inline">Export Users</span>
-                        <span className="sm:hidden">Export</span>
+
+                    <Button 
+                        variant="sacred" 
+                        onClick={handleExportExcel} 
+                        className="h-10 px-4 rounded-xl shadow-md"
+                    >
+                        <Download className="w-4 h-4 mr-2" />
+                        <span>Export Users</span>
                     </Button>
-                        {/* Date Range Filters */}
-                <div className="space-y-4">
-                    <h3 className="text-sm font-semibold text-muted-foreground uppercase tracking-wider">Registration Period</h3>
-                    <div className="flex flex-wrap gap-2 items-center">
-                        <Button
-                            variant={dateRange === "all" ? "sacred" : "outline"}
-                            size="sm"
-                            onClick={() => {
-                                setDateRange("all");
-                                setPage(1);
-                            }}
-                            className="capitalize whitespace-nowrap h-9 px-3 rounded-lg text-sm"
-                        >
-                            All Time
-                        </Button>
-                        <div className="flex gap-2">
-                            {["week", "month", "year"].map((range) => (
-                                <Button
-                                    key={range}
-                                    variant={dateRange === range ? "sacred" : "outline"}
-                                    size="sm"
-                                    onClick={() => {
-                                        setDateRange(range as any);
-                                        setPage(1);
-                                    }}
-                                    className="capitalize whitespace-nowrap h-9 px-3 rounded-lg text-sm"
-                                >
-                                    {range === "week" ? "This Week" : range === "month" ? "This Month" : "This Year"}
-                                </Button>
-                            ))}
+                </div>
+            </div>
+
+            {/* Stats Overview */}
+            <div className="grid grid-cols-1 xs:grid-cols-2 sm:grid-cols-2 lg:grid-cols-4 gap-3 sm:gap-4">
+                <Card className="bg-white border-primary/10 shadow-sm hover:shadow-md transition-shadow">
+                    <CardContent className="p-4 sm:p-6">
+                        <div className="flex items-center gap-3 sm:gap-4">
+                            <div className="w-10 h-10 sm:w-12 sm:h-12 bg-primary/10 rounded-2xl flex items-center justify-center flex-shrink-0">
+                                <Users className="w-5 h-5 sm:w-6 sm:h-6 text-primary" />
+                            </div>
+                            <div className="min-w-0 flex-1">
+                                <p className="text-xs sm:text-sm font-medium text-muted-foreground truncate">Total Users</p>
+                                <h3 className="text-lg sm:text-2xl font-bold text-foreground truncate">{stats.filteredCount?.toLocaleString() || "0"}</h3>
+                            </div>
                         </div>
-                    </div>
-                </div>
-                </div>
+                    </CardContent>
+                </Card>
+
+                <Card className="bg-white border-blue-100 shadow-sm hover:shadow-md transition-shadow">
+                    <CardContent className="p-4 sm:p-6">
+                        <div className="flex items-center gap-3 sm:gap-4">
+                            <div className="w-10 h-10 sm:w-12 sm:h-12 bg-blue-100 rounded-2xl flex items-center justify-center flex-shrink-0">
+                                <Building2 className="w-5 h-5 sm:w-6 sm:h-6 text-blue-600" />
+                            </div>
+                            <div className="min-w-0 flex-1">
+                                <p className="text-xs sm:text-sm font-medium text-muted-foreground truncate">Temple Admins</p>
+                                <h3 className="text-lg sm:text-2xl font-bold text-foreground truncate">{stats.totalInstitutions.toLocaleString()}</h3>
+                            </div>
+                        </div>
+                    </CardContent>
+                </Card>
+
+                <Card className="bg-white border-amber-100 shadow-sm hover:shadow-md transition-shadow">
+                    <CardContent className="p-4 sm:p-6">
+                        <div className="flex items-center gap-3 sm:gap-4">
+                            <div className="w-10 h-10 sm:w-12 sm:h-12 bg-amber-100 rounded-2xl flex items-center justify-center flex-shrink-0">
+                                <UserCheck className="w-5 h-5 sm:w-6 sm:h-6 text-amber-600" />
+                            </div>
+                            <div className="min-w-0 flex-1">
+                                <p className="text-xs sm:text-sm font-medium text-muted-foreground truncate">Total Sellers</p>
+                                <h3 className="text-lg sm:text-2xl font-bold text-foreground truncate">{stats.totalSellers.toLocaleString()}</h3>
+                            </div>
+                        </div>
+                    </CardContent>
+                </Card>
+
+                <Card className="bg-white border-emerald-100 shadow-sm hover:shadow-md transition-shadow">
+                    <CardContent className="p-4 sm:p-6">
+                        <div className="flex items-center gap-3 sm:gap-4">
+                            <div className="w-10 h-10 sm:w-12 sm:h-12 bg-emerald-100 rounded-2xl flex items-center justify-center flex-shrink-0">
+                                <Heart className="w-5 h-5 sm:w-6 sm:h-6 text-emerald-600" />
+                            </div>
+                            <div className="min-w-0 flex-1">
+                                <p className="text-xs sm:text-sm font-medium text-muted-foreground truncate">New This Month</p>
+                                <h3 className="text-lg sm:text-2xl font-bold text-foreground truncate">{stats.newThisMonth.toLocaleString()}</h3>
+                            </div>
+                        </div>
+                    </CardContent>
+                </Card>
+            </div>
+
+            {/* Filter Command Center */}
+            <div className="flex flex-col gap-4 bg-white/70 backdrop-blur-md p-5 sm:p-6 rounded-2xl border border-primary/10 shadow-sacred relative overflow-hidden group">
+                {/* Subtle background glow */}
+                <div className="absolute -top-24 -right-24 w-48 h-48 bg-primary/5 rounded-full blur-3xl pointer-events-none" />
                 
-            </div>
+                <div className="flex flex-col lg:flex-row lg:items-center gap-4 relative z-10">
+                    {/* Search bar */}
+                    <div className="relative w-full lg:w-96 group/search">
+                        <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-primary/40 group-focus-within/search:text-primary transition-colors" />
+                        <Input
+                            placeholder="Search by name, email, or UID..."
+                            className="pl-10 h-11 bg-white border-primary/5 rounded-xl text-sm shadow-sm focus-visible:ring-primary/20 focus-visible:border-primary/30 transition-all font-medium"
+                            value={searchQuery}
+                            onChange={(e) => setSearchQuery(e.target.value)}
+                        />
+                    </div>
 
-            {/* Stats */}
-            <div className="grid grid-cols-2 sm:grid-cols-2 lg:grid-cols-4 gap-3 sm:gap-4">
-                {[
-                    { label: `Total Users`, value: stats.filteredCount?.toLocaleString() || "0", color: "text-primary" },
-                    { label: "Total Temple", value: stats.totalInstitutions.toLocaleString(), color: "text-blue-600" },
-                    { label: "Total Seller", value: stats.totalSellers.toLocaleString(), color: "text-amber-600" },
-                    { label: "New This Month", value: stats.newThisMonth.toLocaleString(), color: "text-emerald-600" },
-                ].map((stat) => (
-                    <Card key={stat.label} className="border-none shadow-sm bg-white/50 backdrop-blur-md">
-                        <CardContent className="p-3 sm:p-4">
-                            {loading ? (
-                                <div className="space-y-2">
-                                    <div className="h-6 sm:h-8 w-12 sm:w-16 bg-muted animate-pulse rounded" />
-                                    <div className="h-3 sm:h-4 w-20 sm:w-24 bg-muted animate-pulse rounded" />
-                                </div>
-                            ) : (
-                                <>
-                                    <p className={`text-lg sm:text-2xl font-bold ${stat.color}`}>{stat.value}</p>
-                                    <p className="text-[9px] sm:text-[10px] font-bold uppercase tracking-wider text-muted-foreground">{stat.label}</p>
-                                </>
-                            )}
-                        </CardContent>
-                    </Card>
-                ))}
-            </div>
-
-            {/* Filters */}
-            <div className="space-y-6">
-                {/* Search Bar */}
-                <div className="relative">
-                    <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-5 h-5 text-muted-foreground" />
-                    <Input
-                        placeholder="Search users by name or email..."
-                        value={searchQuery}
-                        onChange={(e) => setSearchQuery(e.target.value)}
-                        className="pl-10 h-11"
-                    />
-                    
-                </div>
-
-                {/* User Type Filters */}
-                <div className="space-y-3">
-                    <h3 className="text-sm font-semibold text-muted-foreground uppercase tracking-wider">User Type</h3>
-                    <div className="flex flex-wrap gap-2 items-center">
+                    {/* User Type Toggles */}
+                    <div className="flex flex-wrap items-center gap-1.5 p-1 bg-primary/5 rounded-xl border border-primary/10">
                         <Button
-                            variant={typeFilter === "all" ? "sacred" : "outline"}
+                            variant="ghost"
                             size="sm"
-                            onClick={() => {
-                                setTypeFilter("all");
-                                setPage(1);
-                            }}
-                            className="capitalize whitespace-nowrap h-9 px-3 rounded-lg text-sm"
+                            onClick={() => { setTypeFilter("all"); setPage(1); }}
+                            className={`h-9 px-4 rounded-lg text-xs font-black uppercase tracking-wider transition-all ${typeFilter === 'all' ? 'bg-primary text-white shadow-md scale-[1.02]' : 'text-primary/60 hover:bg-white/50'}`}
                         >
                             All Users
                         </Button>
-                        <div className="flex gap-2">
-                            {[
-                                { label: "Devotees", value: "devotee" },
-                                { label: "Temple Admins", value: "temple_admin" },
-                                { label: "Sellers", value: "seller" }
-                            ].map((type) => (
-                                <Button
-                                    key={type.value}
-                                    variant={typeFilter === type.value ? "sacred" : "outline"}
-                                    size="sm"
-                                    onClick={() => {
-                                        setTypeFilter(type.value);
-                                        setPage(1);
-                                    }}
-                                    className="capitalize whitespace-nowrap h-9 px-3 rounded-lg text-sm"
-                                >
-                                    {type.label}
-                                </Button>
-                            ))}
-                        </div>
                         <Button
-                            variant={filterType === 'pooja_last_year' ? "sacred" : "outline"}
+                            variant="ghost"
                             size="sm"
-                            onClick={() => {
-                                setFilterType(filterType === 'pooja_last_year' ? "" : "pooja_last_year");
-                                setPage(1);
-                            }}
-                            className="h-9 px-3 rounded-lg text-sm"
+                            onClick={() => { setTypeFilter("devotee"); setPage(1); }}
+                            className={`h-9 px-4 rounded-lg text-xs font-black uppercase tracking-wider transition-all ${typeFilter === 'devotee' ? 'bg-primary text-white shadow-md scale-[1.02]' : 'text-primary/60 hover:bg-white/50'}`}
                         >
-                            <span className="hidden sm:inline">Last Year Pooja</span>
-                            <span className="sm:hidden">Pooja</span>
+                            Devotees
+                        </Button>
+                        <Button
+                            variant="ghost"
+                            size="sm"
+                            onClick={() => { setTypeFilter("temple_admin"); setPage(1); }}
+                            className={`h-9 px-4 rounded-lg text-xs font-black uppercase tracking-wider transition-all ${typeFilter === 'temple_admin' ? 'bg-primary text-white shadow-md scale-[1.02]' : 'text-primary/60 hover:bg-white/50'}`}
+                        >
+                            Temples
+                        </Button>
+                        <Button
+                            variant="ghost"
+                            size="sm"
+                            onClick={() => { setTypeFilter("seller"); setPage(1); }}
+                            className={`h-9 px-4 rounded-lg text-xs font-black uppercase tracking-wider transition-all ${typeFilter === 'seller' ? 'bg-primary text-white shadow-md scale-[1.02]' : 'text-primary/60 hover:bg-white/50'}`}
+                        >
+                            Sellers
+                        </Button>
+                        <Button
+                            variant="ghost"
+                            size="sm"
+                            onClick={() => { setFilterType(filterType === 'pooja_last_year' ? "" : "pooja_last_year"); setPage(1); }}
+                            className={`h-9 px-4 rounded-lg text-xs font-black uppercase tracking-wider transition-all ${filterType === 'pooja_last_year' ? 'bg-primary text-white shadow-md scale-[1.02]' : 'text-primary/60 hover:bg-white/50'}`}
+                        >
+                            Last Year Pooja
                         </Button>
                     </div>
                 </div>
 
-            
+                <div className="grid grid-cols-1 lg:grid-cols-3 gap-6 border-t border-primary/5 pt-5 mt-1 relative z-10">
+                    {/* Time Range */}
+                    <div className="flex flex-col gap-2.5">
+                        <div className="flex items-center gap-2 mb-0.5">
+                            <div className="p-1 rounded-md bg-primary/10"><Calendar className="w-3 h-3 text-primary" /></div>
+                            <p className="text-[10px] font-black uppercase tracking-widest text-primary/70">Registration Period</p>
+                        </div>
+                        <div className="flex flex-wrap items-center gap-1.5">
+                            {["all", "week", "month", "year"].map((range) => (
+                                <Button
+                                    key={range}
+                                    variant="ghost"
+                                    size="sm"
+                                    onClick={() => { setDateRange(range as any); setPage(1); }}
+                                    className={`h-8 px-3 rounded-lg text-[11px] font-bold border transition-all ${dateRange === range ? 'bg-primary text-white border-primary shadow-sm' : 'bg-white border-primary/10 text-primary/60 hover:bg-primary/5'}`}
+                                >
+                                    {range === "all" ? "All Time" : range === "week" ? "This Week" : range === "month" ? "This Month" : "This Year"}
+                                </Button>
+                            ))}
+                        </div>
+                    </div>
 
-                {/* Special Date Filters */}
-                <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
                     {/* Birthday Range */}
-                    <div className="space-y-3">
-                        <h3 className="text-sm font-semibold text-muted-foreground uppercase tracking-wider">Birthday Range</h3>
-                        <div className="flex gap-2 items-center">
-                            <Input
-                                type="date"
-                                value={dobStart}
-                                onChange={(e) => {
-                                    setDobStart(e.target.value);
-                                    setPage(1);
-                                }}
-                                className="h-10 text-sm rounded-lg flex-1"
-                                disabled={dobFilter === 'upcoming'}
-                            />
-                            <span className="text-muted-foreground text-sm">-</span>
-                            <Input
-                                type="date"
-                                value={dobEnd}
-                                onChange={(e) => {
-                                    setDobEnd(e.target.value);
-                                    setPage(1);
-                                }}
-                                className="h-10 text-sm rounded-lg flex-1"
-                                disabled={dobFilter === 'upcoming'}
-                            />
+                    <div className="flex flex-col gap-2.5">
+                        <div className="flex items-center justify-between mb-0.5">
+                            <div className="flex items-center gap-2">
+                                <div className="p-1 rounded-md bg-emerald-100"><Heart className="w-3 h-3 text-emerald-600" /></div>
+                                <p className="text-[10px] font-black uppercase tracking-widest text-emerald-700/70">Birthday Range</p>
+                            </div>
                             <Button
+                                variant="ghost"
                                 size="sm"
-                                variant={dobFilter === 'upcoming' ? 'sacred' : 'outline'}
-                                className="h-10 px-3 text-xs whitespace-nowrap"
+                                className={`h-6 px-2 text-[9px] font-black uppercase tracking-tighter rounded-md transition-all ${dobFilter === 'upcoming' ? 'bg-emerald-600 text-white shadow-sm' : 'text-emerald-600 hover:bg-emerald-50 bg-emerald-50/50 border border-emerald-100'}`}
                                 onClick={() => {
-                                    if (dobFilter === 'upcoming') {
-                                        setDobFilter('');
-                                    } else {
-                                        setDobFilter('upcoming');
-                                        setDobStart('');
-                                        setDobEnd('');
-                                    }
+                                    if (dobFilter === 'upcoming') setDobFilter('');
+                                    else { setDobFilter('upcoming'); setDobStart(''); setDobEnd(''); }
                                     setPage(1);
                                 }}
                             >
-                                Upcoming
+                                {dobFilter === 'upcoming' ? 'Upcoming Active' : 'Show Upcoming'}
                             </Button>
+                        </div>
+                        <div className={`flex items-center gap-2 p-1.5 rounded-xl border transition-all ${dobFilter === 'upcoming' ? 'bg-emerald-50/50 border-emerald-100 opacity-50' : 'bg-white border-primary/10 hover:border-primary/30 shadow-sm'}`}>
+                            <Input
+                                type="date"
+                                value={dobStart}
+                                onChange={(e) => { setDobStart(e.target.value); setPage(1); }}
+                                className="h-8 bg-transparent border-none text-[11px] focus-visible:ring-0 p-1 w-full font-bold text-primary"
+                                disabled={dobFilter === 'upcoming'}
+                            />
+                            <div className="w-2 h-0.5 bg-primary/20 rounded-full" />
+                            <Input
+                                type="date"
+                                value={dobEnd}
+                                onChange={(e) => { setDobEnd(e.target.value); setPage(1); }}
+                                className="h-8 bg-transparent border-none text-[11px] focus-visible:ring-0 p-1 w-full font-bold text-primary"
+                                disabled={dobFilter === 'upcoming'}
+                            />
                         </div>
                     </div>
 
                     {/* Anniversary Range */}
-                    <div className="space-y-3">
-                        <h3 className="text-sm font-semibold text-muted-foreground uppercase tracking-wider">Anniversary Range</h3>
-                        <div className="flex gap-2 items-center">
-                            <Input
-                                type="date"
-                                value={anniversaryStart}
-                                onChange={(e) => {
-                                    setAnniversaryStart(e.target.value);
-                                    setPage(1);
-                                }}
-                                className="h-10 text-sm rounded-lg flex-1"
-                                disabled={anniversaryFilter === 'upcoming'}
-                            />
-                            <span className="text-muted-foreground text-sm">-</span>
-                            <Input
-                                type="date"
-                                value={anniversaryEnd}
-                                onChange={(e) => {
-                                    setAnniversaryEnd(e.target.value);
-                                    setPage(1);
-                                }}
-                                className="h-10 text-sm rounded-lg flex-1"
-                                disabled={anniversaryFilter === 'upcoming'}
-                            />
+                    <div className="flex flex-col gap-2.5">
+                        <div className="flex items-center justify-between mb-0.5">
+                            <div className="flex items-center gap-2">
+                                <div className="p-1 rounded-md bg-rose-100"><Sparkles className="w-3 h-3 text-rose-600" /></div>
+                                <p className="text-[10px] font-black uppercase tracking-widest text-rose-700/70">Anniversary Range</p>
+                            </div>
                             <Button
+                                variant="ghost"
                                 size="sm"
-                                variant={anniversaryFilter === 'upcoming' ? 'sacred' : 'outline'}
-                                className="h-10 px-3 text-xs whitespace-nowrap"
+                                className={`h-6 px-2 text-[9px] font-black uppercase tracking-tighter rounded-md transition-all ${anniversaryFilter === 'upcoming' ? 'bg-rose-600 text-white shadow-sm' : 'text-rose-600 hover:bg-rose-50 bg-rose-50/50 border border-rose-100'}`}
                                 onClick={() => {
-                                    if (anniversaryFilter === 'upcoming') {
-                                        setAnniversaryFilter('');
-                                    } else {
-                                        setAnniversaryFilter('upcoming');
-                                        setAnniversaryStart('');
-                                        setAnniversaryEnd('');
-                                    }
+                                    if (anniversaryFilter === 'upcoming') setAnniversaryFilter('');
+                                    else { setAnniversaryFilter('upcoming'); setAnniversaryStart(''); setAnniversaryEnd(''); }
                                     setPage(1);
                                 }}
                             >
-                                Upcoming
+                                {anniversaryFilter === 'upcoming' ? 'Upcoming Active' : 'Show Upcoming'}
                             </Button>
+                        </div>
+                        <div className={`flex items-center gap-2 p-1.5 rounded-xl border transition-all ${anniversaryFilter === 'upcoming' ? 'bg-rose-50/50 border-rose-100 opacity-50' : 'bg-white border-primary/10 hover:border-primary/30 shadow-sm'}`}>
+                            <Input
+                                type="date"
+                                value={anniversaryStart}
+                                onChange={(e) => { setAnniversaryStart(e.target.value); setPage(1); }}
+                                className="h-8 bg-transparent border-none text-[11px] focus-visible:ring-0 p-1 w-full font-bold text-primary"
+                                disabled={anniversaryFilter === 'upcoming'}
+                            />
+                            <div className="w-2 h-0.5 bg-primary/20 rounded-full" />
+                            <Input
+                                type="date"
+                                value={anniversaryEnd}
+                                onChange={(e) => { setAnniversaryEnd(e.target.value); setPage(1); }}
+                                className="h-8 bg-transparent border-none text-[11px] focus-visible:ring-0 p-1 w-full font-bold text-primary"
+                                disabled={anniversaryFilter === 'upcoming'}
+                            />
                         </div>
                     </div>
                 </div>
 
-                {/* Reset Button */}
-                <div className="flex justify-start">
+                <div className="flex justify-end border-t border-primary/5 pt-4 mt-2 relative z-10">
                     <Button
                         size="sm"
-                        variant={dateRange === 'all' && debouncedSearch === '' && typeFilter === 'all' && dobFilter === '' && anniversaryFilter === '' ? 'outline' : 'sacred'}
-                        className="h-10 px-6 rounded-lg"
+                        variant="ghost"
+                        className="h-9 px-5 text-xs font-black uppercase tracking-widest text-primary/40 hover:text-primary hover:bg-primary/5 transition-all flex items-center gap-2 rounded-xl"
                         onClick={() => {
                             setSearchQuery("");
                             setTypeFilter("all");
@@ -608,26 +624,25 @@ export default function AdminUsersPage() {
                             setPage(1);
                         }}
                     >
-                        Reset All Filters
+                        <RotateCcw className="w-3.5 h-3.5" />
+                        Reset Sacred Filters
                     </Button>
                 </div>
             </div>
 
             {/* Users Table */}
-            <Card className="border-0 shadow-sm">
+            <Card className="border-none shadow-sacred overflow-hidden bg-white/50 backdrop-blur-sm">
                 <CardContent className="p-0">
                     <div className="block sm:hidden">
                         {/* Mobile Card View */}
                         <div className="space-y-3 p-4">
                             {loading ? (
-                                <div className="flex flex-col items-center gap-2 py-8">
-                                    <Loader2 className="w-8 h-8 animate-spin text-primary" />
-                                    <p className="text-muted-foreground">Loading users...</p>
+                                <div className="flex flex-col items-center gap-2 py-12">
+                                    <Sparkles className="w-8 h-8 text-primary animate-pulse" />
+                                    <p className="text-muted-foreground font-medium italic">Loading sacred records...</p>
                                 </div>
                             ) : users.length === 0 ? (
-                                <div className="text-center py-8">
-                                    <p className="text-muted-foreground">No users found matching your criteria.</p>
-                                </div>
+                                <div className="text-center py-12 text-muted-foreground italic">No users found in this realm</div>
                             ) : (
                                 users.map((user, index) => (
                                     <motion.div
@@ -635,125 +650,86 @@ export default function AdminUsersPage() {
                                         initial={{ opacity: 0, y: 10 }}
                                         animate={{ opacity: 1, y: 0 }}
                                         transition={{ duration: 0.3, delay: index * 0.05 }}
-                                        className="border rounded-lg p-4 space-y-3 bg-white"
+                                        className="border-2 border-primary/5 rounded-2xl p-4 space-y-4 bg-white/80 backdrop-blur-md shadow-sm hover:shadow-md transition-all group"
                                     >
                                         <div className="flex items-start justify-between gap-3">
                                             <div className="flex items-center gap-3 flex-1 min-w-0">
                                                 <Checkbox
                                                     checked={selectedUserIds.includes(user.id)}
                                                     onCheckedChange={() => toggleSelectUser(user.id)}
-                                                    className="border-slate-300 data-[state=checked]:bg-primary data-[state=checked]:border-primary flex-shrink-0"
+                                                    className="border-primary/20 data-[state=checked]:bg-primary data-[state=checked]:border-primary flex-shrink-0"
                                                 />
-                                                {user.profileImage ? (
-                                                    <img
-                                                        src={user.profileImage}
-                                                        alt={parseLocalizedValue(user.name)}
-                                                        className="w-10 h-10 rounded-full object-cover shadow-sm border border-slate-100 flex-shrink-0"
-                                                    />
-                                                ) : (
-                                                    <div className="w-10 h-10 rounded-full bg-primary/10 flex items-center justify-center text-primary font-bold text-xs border border-primary/20 flex-shrink-0">
-                                                        {formatAvatar(parseLocalizedValue(user.name))}
-                                                    </div>
-                                                )}
+                                                <div className="relative flex-shrink-0">
+                                                    {user.profileImage ? (
+                                                        <img
+                                                            src={user.profileImage}
+                                                            alt={parseLocalizedValue(user.name)}
+                                                            className="w-12 h-12 rounded-2xl object-cover shadow-sm border border-primary/10"
+                                                        />
+                                                    ) : (
+                                                        <div className="w-12 h-12 rounded-2xl bg-primary/10 flex items-center justify-center text-primary font-bold text-sm border border-primary/20">
+                                                            {formatAvatar(parseLocalizedValue(user.name))}
+                                                        </div>
+                                                    )}
+                                                    <div className={`absolute -bottom-1 -right-1 w-4 h-4 rounded-full border-2 border-white ${user.isActive ? 'bg-emerald-500' : 'bg-slate-300'}`} />
+                                                </div>
                                                 <div className="min-w-0 flex-1">
-                                                    <p className="font-bold text-slate-900 leading-none truncate">{parseLocalizedValue(user.name)}</p>
-                                                    <p className="text-[10px] text-muted-foreground mt-1 uppercase tracking-tighter font-bold">UID: {user.id.substring(user.id.length - 6)}</p>
+                                                    <p className="font-bold text-foreground group-hover:text-primary transition-colors truncate">{parseLocalizedValue(user.name)}</p>
+                                                    <p className="text-[10px] text-primary/60 font-mono font-bold mt-0.5 uppercase">ID: #{user.id.substring(user.id.length - 6)}</p>
                                                 </div>
                                             </div>
-                                            <div className="flex items-center gap-1 flex-shrink-0">
-                                                {hasPermission("users.view") && (
-                                                    <Button variant="ghost" size="icon" className="rounded-full hover:bg-primary/10 hover:text-primary h-8 w-8" onClick={() => {
-                                                        window.location.href = `/admin/users/${user.id}`;
-                                                    }}>
-                                                        <Eye className="w-4 h-4" />
-                                                    </Button>
-                                                )}
-                                                {hasPermission("users.manage") && (
-                                                    <DropdownMenu>
-                                                        <DropdownMenuTrigger asChild>
-                                                            <Button variant="ghost" size="icon" className="h-8 w-8 rounded-full">
-                                                                <MoreVertical className="w-4 h-4" />
-                                                            </Button>
-                                                        </DropdownMenuTrigger>
-                                                        <DropdownMenuContent align="end" className="w-48 rounded-xl">
-                                                            <DropdownMenuLabel>User Actions</DropdownMenuLabel>
-                                                            <DropdownMenuSeparator />
-                                                            <DropdownMenuItem onClick={() => window.location.href = `/admin/users/${user.id}`}>
-                                                                <Eye className="mr-2 h-4 w-4" />
-                                                                View Profile
-                                                            </DropdownMenuItem>
-                                                            <DropdownMenuItem
-                                                                onClick={() => handleToggleStatus(user.id, user.isActive)}
-                                                                className={user.isActive ? "text-red-600" : "text-green-600"}
-                                                            >
-                                                                {user.isActive ? (
-                                                                    <>
-                                                                        <CheckSquare className="mr-2 h-4 w-4" />
-                                                                        Deactivate
-                                                                    </>
-                                                                ) : (
-                                                                    <>
-                                                                        <CheckSquare className="mr-2 h-4 w-4" />
-                                                                        Activate
-                                                                    </>
-                                                                )}
-                                                            </DropdownMenuItem>
-                                                        </DropdownMenuContent>
-                                                    </DropdownMenu>
-                                                )}
+                                            <div className="flex items-center gap-1">
+                                                <Button variant="ghost" size="icon" className="h-8 w-8 rounded-xl hover:bg-primary/10 hover:text-primary transition-all" onClick={() => window.location.href = `/admin/users/${user.id}`}>
+                                                    <Eye className="w-4 h-4" />
+                                                </Button>
+                                                <DropdownMenu>
+                                                    <DropdownMenuTrigger asChild>
+                                                        <Button variant="ghost" size="icon" className="h-8 w-8 rounded-xl">
+                                                            <MoreVertical className="w-4 h-4" />
+                                                        </Button>
+                                                    </DropdownMenuTrigger>
+                                                    <DropdownMenuContent align="end" className="w-48 rounded-xl">
+                                                        <DropdownMenuLabel>User Actions</DropdownMenuLabel>
+                                                        <DropdownMenuSeparator />
+                                                        <DropdownMenuItem onClick={() => window.location.href = `/admin/users/${user.id}`}>
+                                                            <Eye className="mr-2 h-4 w-4" /> View Profile
+                                                        </DropdownMenuItem>
+                                                        <DropdownMenuItem onClick={() => handleToggleStatus(user.id, user.isActive)} className={user.isActive ? "text-red-600" : "text-emerald-600"}>
+                                                            <CheckSquare className="mr-2 h-4 w-4" /> {user.isActive ? 'Deactivate' : 'Activate'}
+                                                        </DropdownMenuItem>
+                                                    </DropdownMenuContent>
+                                                </DropdownMenu>
                                             </div>
                                         </div>
                                         
-                                        <div className="grid grid-cols-2 gap-3 text-sm">
-                                            <div>
-                                                <p className="text-xs font-medium text-muted-foreground mb-1">Type</p>
-                                                <div className="flex flex-col gap-1">
-                                                    <Badge variant="outline" className={`font-bold text-[10px] ${getRoleBadgeClass(user.role)}`}>
+                                        <div className="grid grid-cols-2 gap-4">
+                                            <div className="space-y-3">
+                                                <div>
+                                                    <p className="text-[9px] font-black uppercase tracking-widest text-muted-foreground mb-1.5">User Type</p>
+                                                    <Badge variant="outline" className={`font-black text-[9px] uppercase tracking-widest border-2 py-0.5 ${getRoleBadgeClass(user.role)}`}>
                                                         {formatRoleLabel(user.role)}
                                                     </Badge>
-                                                    <Badge variant="outline" className={`w-fit text-[9px] font-bold ${user.isActive ? 'bg-emerald-50 text-emerald-600 border-emerald-200' : 'bg-slate-50 text-slate-500 border-slate-200'}`}>
-                                                        {user.isActive ? 'ACTIVE' : 'INACTIVE'}
-                                                    </Badge>
+                                                </div>
+                                                <div>
+                                                    <p className="text-[9px] font-black uppercase tracking-widest text-muted-foreground mb-1.5">IMP Dates</p>
+                                                    <div className="space-y-1">
+                                                        {user.dob && <div className="flex items-center gap-1.5 text-emerald-600 font-bold text-[10px]"><Calendar className="w-3 h-3" /> Bdy: {formatImpDate(user.dob)}</div>}
+                                                        {user.anniversary && <div className="flex items-center gap-1.5 text-rose-600 font-bold text-[10px]"><Calendar className="w-3 h-3" /> Ann: {formatImpDate(user.anniversary)}</div>}
+                                                        {!user.dob && !user.anniversary && <span className="text-muted-foreground text-[10px] italic">No dates set</span>}
+                                                    </div>
                                                 </div>
                                             </div>
-                                            <div>
-                                                <p className="text-xs font-medium text-muted-foreground mb-1">Contact</p>
-                                                <div className="space-y-1">
-                                                    <p className="text-xs text-foreground flex items-center gap-1">
-                                                        <Mail className="w-3 h-3 text-muted-foreground flex-shrink-0" />
-                                                        <span className="truncate">{user.email || "N/A"}</span>
-                                                    </p>
-                                                    <p className="text-xs text-muted-foreground flex items-center gap-1">
-                                                        <Phone className="w-3 h-3 flex-shrink-0" />
-                                                        <span className="truncate">{user.phone || "N/A"}</span>
-                                                    </p>
+                                            <div className="space-y-3">
+                                                <div>
+                                                    <p className="text-[9px] font-black uppercase tracking-widest text-muted-foreground mb-1.5">Contact</p>
+                                                    <div className="space-y-1.5 min-w-0">
+                                                        <div className="flex items-center gap-2 text-[11px] font-medium text-foreground"><Mail className="w-3 h-3 text-primary/60 flex-shrink-0" /><span className="truncate">{user.email || "N/A"}</span></div>
+                                                        <div className="flex items-center gap-2 text-[11px] font-medium text-foreground"><Phone className="w-3 h-3 text-primary/60 flex-shrink-0" /><span className="truncate">{user.phone || "N/A"}</span></div>
+                                                    </div>
                                                 </div>
-                                            </div>
-                                            <div>
-                                                <p className="text-xs font-medium text-muted-foreground mb-1">Important Dates</p>
-                                                <div className="space-y-1">
-                                                    {user.dob && (
-                                                        <div className="flex items-center gap-1 text-emerald-600 text-[10px] font-bold">
-                                                            <Calendar className="w-3 h-3 flex-shrink-0" />
-                                                            <span className="truncate">Bdy: {formatImpDate(user.dob)}</span>
-                                                        </div>
-                                                    )}
-                                                    {user.anniversary && (
-                                                        <div className="flex items-center gap-1 text-rose-600 text-[10px] font-bold">
-                                                            <Calendar className="w-3 h-3 flex-shrink-0" />
-                                                            <span className="truncate">Ann: {formatImpDate(user.anniversary)}</span>
-                                                        </div>
-                                                    )}
-                                                    {!user.dob && !user.anniversary && (
-                                                        <span className="text-muted-foreground text-[9px] italic">Not set</span>
-                                                    )}
-                                                </div>
-                                            </div>
-                                            <div>
-                                                <p className="text-xs font-medium text-muted-foreground mb-1">Joined</p>
-                                                <div className="flex items-center gap-1 text-muted-foreground text-xs">
-                                                    <Calendar className="w-3 h-3 flex-shrink-0" />
-                                                    <span className="truncate">{new Date(user.joinedDate).toLocaleDateString()}</span>
+                                                <div>
+                                                    <p className="text-[9px] font-black uppercase tracking-widest text-muted-foreground mb-1.5">Joined</p>
+                                                    <div className="flex items-center gap-1.5 text-[11px] font-bold text-foreground italic"><Calendar className="w-3 h-3 text-primary/60" /> {new Date(user.joinedDate).toLocaleDateString()}</div>
                                                 </div>
                                             </div>
                                         </div>
@@ -764,51 +740,39 @@ export default function AdminUsersPage() {
                     </div>
                     
                     {/* Desktop Table View */}
-                    <div className="hidden sm:block overflow-x-auto">
-                        <table className="w-full min-w-[800px]">
-                            <thead className="border-b border-border bg-muted/30 sticky top-0 z-10">
+                    <div className="hidden sm:block overflow-x-auto overflow-y-hidden">
+                        <table className="w-full min-w-[1000px]">
+                            <thead className="border-b border-primary/10 bg-primary/5">
                                 <tr>
-                                    <th className="p-3 sm:p-4 w-12">
+                                    <th className="p-4 w-12">
                                         <Checkbox
                                             checked={selectedUserIds.length === users.length && users.length > 0}
                                             onCheckedChange={toggleSelectAll}
-                                            className="border-slate-300 data-[state=checked]:bg-primary data-[state=checked]:border-primary"
+                                            className="border-primary/20 data-[state=checked]:bg-primary data-[state=checked]:border-primary"
                                         />
                                     </th>
-                                    <th className="text-left p-3 sm:p-4 text-xs sm:text-sm font-medium text-muted-foreground whitespace-nowrap">
-                                        User
-                                    </th>
-                                    <th className="text-left p-3 sm:p-4 text-xs sm:text-sm font-medium text-muted-foreground whitespace-nowrap">
-                                        Type
-                                    </th>
-                                    <th className="text-left p-3 sm:p-4 text-xs sm:text-sm font-medium text-muted-foreground whitespace-nowrap">
-                                        Contact
-                                    </th>
-                                    <th className="text-left p-3 sm:p-4 text-xs sm:text-sm font-medium text-muted-foreground whitespace-nowrap">
-                                        IMP Dates
-                                    </th>
-                                    <th className="text-left p-3 sm:p-4 text-xs sm:text-sm font-medium text-muted-foreground whitespace-nowrap">
-                                        Joined
-                                    </th>
-                                    <th className="text-right p-3 sm:p-4 text-xs sm:text-sm font-medium text-muted-foreground whitespace-nowrap">
-                                        Actions
-                                    </th>
+                                    <th className="text-left p-4 text-xs sm:text-sm font-bold text-primary/80 uppercase tracking-wider whitespace-nowrap">User</th>
+                                    <th className="text-left p-4 text-xs sm:text-sm font-bold text-primary/80 uppercase tracking-wider whitespace-nowrap">Type</th>
+                                    <th className="text-left p-4 text-xs sm:text-sm font-bold text-primary/80 uppercase tracking-wider whitespace-nowrap">Contact</th>
+                                    <th className="text-left p-4 text-xs sm:text-sm font-bold text-primary/80 uppercase tracking-wider whitespace-nowrap">IMP Dates</th>
+                                    <th className="text-left p-4 text-xs sm:text-sm font-bold text-primary/80 uppercase tracking-wider whitespace-nowrap">Joined</th>
+                                    <th className="text-right p-4 text-xs sm:text-sm font-bold text-primary/80 uppercase tracking-wider whitespace-nowrap">Actions</th>
                                 </tr>
                             </thead>
-                            <tbody className="divide-y divide-border">
+                            <tbody>
                                 {loading ? (
                                     <tr>
                                         <td colSpan={7} className="p-12 text-center">
                                             <div className="flex flex-col items-center gap-2">
                                                 <Loader2 className="w-8 h-8 animate-spin text-primary" />
-                                                <p className="text-muted-foreground">Loading users...</p>
+                                                <p className="text-muted-foreground font-medium italic">Searching sacred records...</p>
                                             </div>
                                         </td>
                                     </tr>
                                 ) : users.length === 0 ? (
                                     <tr>
                                         <td colSpan={7} className="p-12 text-center">
-                                            <p className="text-muted-foreground">No users found matching your criteria.</p>
+                                            <p className="text-muted-foreground font-medium italic">No users found in this realm</p>
                                         </td>
                                     </tr>
                                 ) : (
@@ -818,124 +782,122 @@ export default function AdminUsersPage() {
                                             initial={{ opacity: 0, y: 10 }}
                                             animate={{ opacity: 1, y: 0 }}
                                             transition={{ duration: 0.3, delay: index * 0.05 }}
-                                            className="hover:bg-muted/30 transition-colors"
+                                            className="border-b border-primary/5 hover:bg-primary/5 transition-colors group"
                                         >
-                                            <td className="p-3 sm:p-4">
+                                            <td className="p-4">
                                                 <Checkbox
                                                     checked={selectedUserIds.includes(user.id)}
                                                     onCheckedChange={() => toggleSelectUser(user.id)}
-                                                    className="border-slate-300 data-[state=checked]:bg-primary data-[state=checked]:border-primary"
+                                                    className="border-primary/20 data-[state=checked]:bg-primary data-[state=checked]:border-primary"
                                                 />
                                             </td>
-                                            <td className="p-3 sm:p-4">
-                                                <div className="flex items-center gap-2 sm:gap-3">
-                                                    {user.profileImage ? (
-                                                        <img
-                                                            src={user.profileImage}
-                                                            alt={parseLocalizedValue(user.name)}
-                                                            className="w-8 h-8 sm:w-10 sm:h-10 rounded-full object-cover shadow-sm border border-slate-100"
-                                                        />
-                                                    ) : (
-                                                        <div className="w-8 h-8 sm:w-10 sm:h-10 rounded-full bg-primary/10 flex items-center justify-center text-primary font-bold text-xs border border-primary/20">
-                                                            {formatAvatar(parseLocalizedValue(user.name))}
-                                                        </div>
-                                                    )}
-                                                    <div className="min-w-0 flex-1">
-                                                        <p className="font-bold text-slate-900 leading-none text-sm sm:text-base truncate">{parseLocalizedValue(user.name)}</p>
-                                                        <p className="text-[9px] sm:text-[10px] text-muted-foreground mt-1 uppercase tracking-tighter font-bold">UID: {user.id.substring(user.id.length - 6)}</p>
+                                            <td className="p-4">
+                                                <div className="flex items-center gap-3">
+                                                    <div className="relative">
+                                                        {user.profileImage ? (
+                                                            <img
+                                                                src={user.profileImage}
+                                                                alt={parseLocalizedValue(user.name)}
+                                                                className="w-10 h-10 rounded-xl object-cover shadow-sm border border-primary/10"
+                                                            />
+                                                        ) : (
+                                                            <div className="w-10 h-10 rounded-xl bg-primary/10 flex items-center justify-center text-primary font-bold text-xs border border-primary/20">
+                                                                {formatAvatar(parseLocalizedValue(user.name))}
+                                                            </div>
+                                                        )}
+                                                        <div className={`absolute -bottom-1 -right-1 w-3 h-3 rounded-full border-2 border-white ${user.isActive ? 'bg-emerald-500' : 'bg-slate-300'}`} />
+                                                    </div>
+                                                    <div className="min-w-0">
+                                                        <p className="font-bold text-foreground group-hover:text-primary transition-colors text-sm truncate">{parseLocalizedValue(user.name)}</p>
+                                                        <p className="text-[10px] text-primary/60 font-mono font-bold uppercase tracking-tighter">ID: #{user.id.substring(user.id.length - 6)}</p>
                                                     </div>
                                                 </div>
                                             </td>
-                                            <td className="p-3 sm:p-4">
+                                            <td className="p-4">
                                                 <div className="flex flex-col gap-1">
-                                                    <Badge variant="outline" className={`font-bold text-[9px] sm:text-[10px] ${getRoleBadgeClass(user.role)}`}>
+                                                    <Badge variant="outline" className={`w-fit font-black text-[9px] uppercase tracking-widest border-2 py-0.5 ${getRoleBadgeClass(user.role)}`}>
                                                         {formatRoleLabel(user.role)}
                                                     </Badge>
-                                                    <Badge variant="outline" className={`w-fit text-[8px] sm:text-[9px] font-bold ${user.isActive ? 'bg-emerald-50 text-emerald-600 border-emerald-200' : 'bg-slate-50 text-slate-500 border-slate-200'}`}>
-                                                        {user.isActive ? 'ACTIVE' : 'INACTIVE'}
-                                                    </Badge>
                                                 </div>
                                             </td>
-
-                                            <td className="p-3 sm:p-4">
+                                            <td className="p-4">
                                                 <div className="space-y-1">
-                                                    <p className="text-xs sm:text-sm text-foreground flex items-center gap-1">
-                                                        <Mail className="w-3 h-3 text-muted-foreground flex-shrink-0" />
-                                                        <span className="truncate max-w-[100px] sm:max-w-[150px]">{user.email || "N/A"}</span>
+                                                    <p className="text-[11px] font-medium text-foreground flex items-center gap-2">
+                                                        <Mail className="w-3 h-3 text-primary/60 flex-shrink-0" />
+                                                        <span className="truncate max-w-[150px]">{user.email || "N/A"}</span>
                                                     </p>
-                                                    <p className="text-xs sm:text-sm text-muted-foreground flex items-center gap-1">
-                                                        <Phone className="w-3 h-3 flex-shrink-0" />
-                                                        <span className="truncate">{user.phone || "N/A"}</span>
+                                                    <p className="text-[11px] font-medium text-foreground flex items-center gap-2">
+                                                        <Phone className="w-3 h-3 text-primary/60 flex-shrink-0" />
+                                                        <span>{user.phone || "N/A"}</span>
                                                     </p>
                                                 </div>
                                             </td>
-                                            <td className="p-3 sm:p-4">
+                                            <td className="p-4">
                                                 <div className="space-y-1">
                                                     {user.dob && (
-                                                        <div className="flex items-center gap-1 text-emerald-600 text-[10px] sm:text-[11px] font-bold">
-                                                            <Calendar className="w-3 h-3 flex-shrink-0" />
-                                                            <span className="truncate">Bdy: {formatImpDate(user.dob)}</span>
+                                                        <div className="flex items-center gap-1.5 text-emerald-600 font-bold text-[10px]">
+                                                            <Calendar className="w-3 h-3" />
+                                                            <span>Bdy: {formatImpDate(user.dob)}</span>
                                                         </div>
                                                     )}
                                                     {user.anniversary && (
-                                                        <div className="flex items-center gap-1 text-rose-600 text-[10px] sm:text-[11px] font-bold">
-                                                            <Calendar className="w-3 h-3 flex-shrink-0" />
-                                                            <span className="truncate">Ann: {formatImpDate(user.anniversary)}</span>
+                                                        <div className="flex items-center gap-1.5 text-rose-600 font-bold text-[10px]">
+                                                            <Calendar className="w-3 h-3" />
+                                                            <span>Ann: {formatImpDate(user.anniversary)}</span>
                                                         </div>
                                                     )}
                                                     {!user.dob && !user.anniversary && (
-                                                        <span className="text-muted-foreground text-[9px] sm:text-[10px] italic">Not set</span>
+                                                        <span className="text-muted-foreground text-[10px] italic">Not set</span>
                                                     )}
                                                 </div>
                                             </td>
-                                            <td className="p-3 sm:p-4">
-                                                <div className="flex items-center gap-1 text-muted-foreground text-xs sm:text-sm">
-                                                    <Calendar className="w-3 h-3 flex-shrink-0" />
-                                                    <span className="truncate">{new Date(user.joinedDate).toLocaleDateString()}</span>
+                                            <td className="p-4">
+                                                <div className="flex flex-col">
+                                                    <p className="text-[11px] font-bold text-foreground italic flex items-center gap-1.5">
+                                                        <Calendar className="w-3 h-3 text-primary/60" />
+                                                        {new Date(user.joinedDate).toLocaleDateString()}
+                                                    </p>
                                                 </div>
                                             </td>
-                                            <td className="p-3 sm:p-4 text-right">
-                                                <div className="flex items-center justify-end gap-1 sm:gap-2">
-                                                    {hasPermission("users.view") && (
-                                                        <Button variant="ghost" size="icon" className="rounded-full hover:bg-primary/10 hover:text-primary" onClick={() => {
-                                                            window.location.href = `/admin/users/${user.id}`;
-                                                        }}>
-                                                            <Eye className="w-4 h-4" />
-                                                        </Button>
-                                                    )}
-                                                    {hasPermission("users.manage") && (
-                                                        <DropdownMenu>
-                                                            <DropdownMenuTrigger asChild>
-                                                                <Button variant="ghost" size="icon" className="h-8 w-8 rounded-full">
-                                                                    <MoreVertical className="w-4 h-4" />
-                                                                </Button>
-                                                            </DropdownMenuTrigger>
-                                                            <DropdownMenuContent align="end" className="w-48 rounded-xl">
-                                                                <DropdownMenuLabel>User Actions</DropdownMenuLabel>
-                                                                <DropdownMenuSeparator />
-                                                                <DropdownMenuItem onClick={() => window.location.href = `/admin/users/${user.id}`}>
-                                                                    <Eye className="mr-2 h-4 w-4" />
-                                                                    View Profile
-                                                                </DropdownMenuItem>
-                                                                <DropdownMenuItem
-                                                                    onClick={() => handleToggleStatus(user.id, user.isActive)}
-                                                                    className={user.isActive ? "text-red-600" : "text-green-600"}
-                                                                >
-                                                                    {user.isActive ? (
-                                                                        <>
-                                                                            <CheckSquare className="mr-2 h-4 w-4" />
-                                                                            Deactivate
-                                                                        </>
-                                                                    ) : (
-                                                                        <>
-                                                                            <CheckSquare className="mr-2 h-4 w-4" />
-                                                                            Activate
-                                                                        </>
-                                                                    )}
-                                                                </DropdownMenuItem>
-                                                            </DropdownMenuContent>
-                                                        </DropdownMenu>
-                                                    )}
+                                            <td className="p-4 text-right">
+                                                <div className="flex items-center justify-end gap-1">
+                                                    <Button
+                                                        variant="ghost"
+                                                        size="icon"
+                                                        className="w-8 h-8 rounded-xl hover:bg-primary/10 hover:text-primary transition-all flex-shrink-0"
+                                                        onClick={() => window.location.href = `/admin/users/${user.id}`}
+                                                    >
+                                                        <Eye className="w-4 h-4" />
+                                                    </Button>
+                                                    <DropdownMenu>
+                                                        <DropdownMenuTrigger asChild>
+                                                            <Button
+                                                                variant="ghost"
+                                                                size="icon"
+                                                                className="w-8 h-8 rounded-xl hover:bg-muted transition-all"
+                                                            >
+                                                                <MoreVertical className="w-4 h-4" />
+                                                            </Button>
+                                                        </DropdownMenuTrigger>
+                                                        <DropdownMenuContent align="end" className="w-48 rounded-xl shadow-xl border-slate-200">
+                                                            <DropdownMenuLabel>User Actions</DropdownMenuLabel>
+                                                            <DropdownMenuSeparator />
+                                                            <DropdownMenuItem
+                                                                onClick={() => window.location.href = `/admin/users/${user.id}`}
+                                                                className="cursor-pointer"
+                                                            >
+                                                                <Eye className="mr-2 h-4 w-4" />
+                                                                View Profile
+                                                            </DropdownMenuItem>
+                                                            <DropdownMenuItem
+                                                                onClick={() => handleToggleStatus(user.id, user.isActive)}
+                                                                className={`cursor-pointer ${user.isActive ? "text-red-600" : "text-emerald-600"}`}
+                                                            >
+                                                                <CheckSquare className="mr-2 h-4 w-4" />
+                                                                {user.isActive ? 'Deactivate' : 'Activate'}
+                                                            </DropdownMenuItem>
+                                                        </DropdownMenuContent>
+                                                    </DropdownMenu>
                                                 </div>
                                             </td>
                                         </motion.tr>
@@ -947,39 +909,87 @@ export default function AdminUsersPage() {
                 </CardContent>
             </Card>
 
-            {/* Pagination */}
-            {!loading && totalPages > 1 && (
-                <Card className="border-0 shadow-sm">
-                    <CardContent className="p-4 border-t border-border">
-                        <Pagination>
-                            <PaginationContent>
-                                <PaginationItem>
-                                    <PaginationPrevious
-                                        onClick={() => setPage(p => Math.max(1, p - 1))}
-                                        className={page === 1 ? "pointer-events-none opacity-50" : "cursor-pointer"}
-                                    />
-                                </PaginationItem>
-                                {[...Array(totalPages)].map((_, i) => (
-                                    <PaginationItem key={i}>
+            {/* Pagination UI */}
+            {totalPages > 1 && (
+                <div className="flex flex-col sm:flex-row items-center justify-between px-4 py-4 gap-4 bg-white/50 backdrop-blur-sm rounded-2xl border border-primary/5 shadow-sm mt-4">
+                    <p className="text-[10px] font-black uppercase tracking-widest text-muted-foreground italic">
+                        Page <span className="text-primary">{page}</span> of <span className="text-primary">{totalPages}</span>
+                    </p>
+                    <Pagination className="justify-end w-auto mx-0">
+                        <PaginationContent>
+                            <PaginationItem>
+                                <PaginationPrevious
+                                    href="#"
+                                    onClick={(e) => { e.preventDefault(); if (page > 1) setPage(page - 1); }}
+                                    className={page === 1 ? "pointer-events-none opacity-50" : "cursor-pointer rounded-xl bg-white shadow-sm border-primary/10 hover:bg-primary/5"}
+                                />
+                            </PaginationItem>
+
+                            {totalPages <= 7 ? (
+                                Array.from({ length: totalPages }, (_, i) => i + 1).map((pageNum) => (
+                                    <PaginationItem key={pageNum}>
                                         <PaginationLink
-                                            onClick={() => setPage(i + 1)}
-                                            isActive={page === i + 1}
-                                            className="cursor-pointer"
+                                            href="#"
+                                            onClick={(e) => { e.preventDefault(); setPage(pageNum); }}
+                                            isActive={page === pageNum}
+                                            className={`cursor-pointer rounded-xl w-9 h-9 font-bold text-xs ${page === pageNum ? 'bg-primary text-white shadow-md' : 'bg-white border-primary/10 hover:bg-primary/5'}`}
                                         >
-                                            {i + 1}
+                                            {pageNum}
                                         </PaginationLink>
                                     </PaginationItem>
-                                ))}
-                                <PaginationItem>
-                                    <PaginationNext
-                                        onClick={() => setPage(p => Math.min(totalPages, p + 1))}
-                                        className={page === totalPages ? "pointer-events-none opacity-50" : "cursor-pointer"}
-                                    />
-                                </PaginationItem>
-                            </PaginationContent>
-                        </Pagination>
-                    </CardContent>
-                </Card>
+                                ))
+                            ) : (
+                                <>
+                                    {[1, 2].map((pageNum) => (
+                                        <PaginationItem key={pageNum}>
+                                            <PaginationLink
+                                                href="#"
+                                                onClick={(e) => { e.preventDefault(); setPage(pageNum); }}
+                                                isActive={page === pageNum}
+                                                className={`cursor-pointer rounded-xl w-9 h-9 font-bold text-xs ${page === pageNum ? 'bg-primary text-white shadow-md' : 'bg-white border-primary/10 hover:bg-primary/5'}`}
+                                            >
+                                                {pageNum}
+                                            </PaginationLink>
+                                        </PaginationItem>
+                                    ))}
+                                    {page > 3 && <PaginationItem><span className="text-muted-foreground px-2">...</span></PaginationItem>}
+                                    {page > 2 && page < totalPages - 1 && (
+                                        <PaginationItem>
+                                            <PaginationLink
+                                                href="#"
+                                                isActive={true}
+                                                className="cursor-pointer rounded-xl w-9 h-9 font-bold text-xs bg-primary text-white shadow-md"
+                                            >
+                                                {page}
+                                            </PaginationLink>
+                                        </PaginationItem>
+                                    )}
+                                    {page < totalPages - 2 && <PaginationItem><span className="text-muted-foreground px-2">...</span></PaginationItem>}
+                                    {[totalPages - 1, totalPages].map((pageNum) => (
+                                        <PaginationItem key={pageNum}>
+                                            <PaginationLink
+                                                href="#"
+                                                onClick={(e) => { e.preventDefault(); setPage(pageNum); }}
+                                                isActive={page === pageNum}
+                                                className={`cursor-pointer rounded-xl w-9 h-9 font-bold text-xs ${page === pageNum ? 'bg-primary text-white shadow-md' : 'bg-white border-primary/10 hover:bg-primary/5'}`}
+                                            >
+                                                {pageNum}
+                                            </PaginationLink>
+                                        </PaginationItem>
+                                    ))}
+                                </>
+                            )}
+
+                            <PaginationItem>
+                                <PaginationNext
+                                    href="#"
+                                    onClick={(e) => { e.preventDefault(); if (page < totalPages) setPage(page + 1); }}
+                                    className={page === totalPages ? "pointer-events-none opacity-50" : "cursor-pointer rounded-xl bg-white shadow-sm border-primary/10 hover:bg-primary/5"}
+                                />
+                            </PaginationItem>
+                        </PaginationContent>
+                    </Pagination>
+                </div>
             )}
         </div>
     );
