@@ -325,6 +325,21 @@ export const sendOTP = async (req: Request, res: Response) => {
                     isVerified: false
                 }
             });
+
+            // Notify Admins
+            try {
+                const { notifyAdmins } = require("../../services/firebaseService");
+                await notifyAdmins({
+                    title: 'New User Registration 👤',
+                    body: `A new ${checkRole} (${normalizedPhone}) has registered.`,
+                    data: {
+                        link: '/admin/users',
+                        type: 'NEW_USER_REGISTRATION'
+                    }
+                });
+            } catch (notifyErr) {
+                console.error("Failed to notify admins for new user:", notifyErr);
+            }
         }
 
         // Skip actual SMS/WA sending for the static test number

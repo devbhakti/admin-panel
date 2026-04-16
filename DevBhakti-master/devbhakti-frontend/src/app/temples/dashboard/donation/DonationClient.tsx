@@ -507,6 +507,22 @@ export default function DonationClient() {
                                         <p className="text-sm font-bold text-slate-800">{selectedDonation.paymentMethod}</p>
                                     </div>
 
+                                    {/* Commission Split Section */}
+                                    <div className="p-4 bg-orange-50/50 rounded-2xl border border-orange-100/50 space-y-2">
+                                        <div className="flex items-center justify-between">
+                                            <p className="text-[10px] font-bold text-orange-800/60 uppercase tracking-wider">Gross Amount</p>
+                                            <p className="text-sm font-bold text-orange-900">₹{selectedDonation.amount.toLocaleString()}</p>
+                                        </div>
+                                        <div className="flex items-center justify-between">
+                                            <p className="text-[10px] font-bold text-orange-800/60 uppercase tracking-wider">Platform Fee (Admin)</p>
+                                            <p className="text-sm font-bold text-rose-600">- ₹{(selectedDonation.commissionAmount || 0).toLocaleString()}</p>
+                                        </div>
+                                        <div className="pt-2 border-t border-orange-200/50 flex items-center justify-between">
+                                            <p className="text-[10px] font-bold text-orange-900 uppercase tracking-widest">Net Temple Earning</p>
+                                            <p className="text-base font-black text-emerald-600">₹{(selectedDonation.netEarning || selectedDonation.amount).toLocaleString()}</p>
+                                        </div>
+                                    </div>
+
 
 
                                     {selectedDonation.message && (

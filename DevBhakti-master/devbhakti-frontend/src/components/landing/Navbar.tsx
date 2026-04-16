@@ -14,6 +14,7 @@ import TempleLoginModal from "@/components/temples/TempleLoginModal";
 import { useCart } from "@/context/CartContext";
 import { clearAllTokens } from "@/lib/auth-utils";
 import CartDrawer from "@/components/marketplace/CartDrawer";
+import { NotificationBell } from "@/components/notifications/NotificationBell";
 import { useLanguage, type Language } from "@/context/LanguageContext";
 import {
   DropdownMenu,
@@ -234,21 +235,24 @@ const Navbar: React.FC<NavbarProps> = ({ variant = "default", isSolid = false })
                 </Button>
               )}
 
-              {/* Cart Icon (only for DEVOTEE accounts) */}
+              {/* Notifications and Cart (only for DEVOTEE accounts) */}
               {mounted && user && user.role === "DEVOTEE" && (
-                <Button
-                  variant="ghost"
-                  size="icon"
-                  className="relative rounded-full w-9 h-9 md:w-10 md:h-10 border-2 border-[#794A05]/20 hover:border-[#794A05] hover:bg-white text-[#794A05] transition-all"
-                  onClick={() => setIsCartOpen(true)}
-                >
-                  <ShoppingCart className="w-4 h-4 md:w-5 md:h-5" />
-                  {itemCount > 0 && (
-                    <span className="absolute -top-1 -right-1 bg-red-500 text-white text-[10px] font-black w-4 h-4 flex items-center justify-center rounded-full shadow-sm">
-                      {itemCount}
-                    </span>
-                  )}
-                </Button>
+                <div className="flex items-center gap-1 md:gap-2">
+                  <NotificationBell userId={user.id} userType="devotee" />
+                  <Button
+                    variant="ghost"
+                    size="icon"
+                    className="relative rounded-full w-9 h-9 md:w-10 md:h-10 border-2 border-[#794A05]/20 hover:border-[#794A05] hover:bg-white text-[#794A05] transition-all"
+                    onClick={() => setIsCartOpen(true)}
+                  >
+                    <ShoppingCart className="w-4 h-4 md:w-5 md:h-5" />
+                    {itemCount > 0 && (
+                      <span className="absolute -top-1 -right-1 bg-red-500 text-white text-[10px] font-black w-4 h-4 flex items-center justify-center rounded-full shadow-sm">
+                        {itemCount}
+                      </span>
+                    )}
+                  </Button>
+                </div>
               )}
 
               {/* Profile Dropdown */}

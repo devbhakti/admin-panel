@@ -118,7 +118,7 @@ export default function EarningsPage() {
         }
 
         // CSV Headers
-        const headers = ["Date", "Description", "Type", "Status", "Amount (₹)"];
+        const headers = ["Date", "Description", "Type", "Status", "Gross (₹)", "Commission (₹)", "Net (₹)"];
 
         // Map data to rows
         const rows = ledger.map(entry => [
@@ -126,6 +126,8 @@ export default function EarningsPage() {
             entry.description.replace(/,/g, " "), // Escape commas
             entry.type.replace('_', ' '),
             entry.status,
+            entry.grossAmount || entry.amount,
+            entry.commission || 0,
             entry.amount
         ]);
 
@@ -342,10 +344,8 @@ export default function EarningsPage() {
                                     <th className="py-5 pl-8 text-left text-[11px] font-extrabold text-slate-900 uppercase tracking-widest">Date / Description</th>
                                     <th className="py-5 text-left text-[11px] font-extrabold text-slate-900 uppercase tracking-widest">Type</th>
                                     <th className="py-5 text-center text-[11px] font-extrabold text-slate-900 uppercase tracking-widest">Status</th>
-                                    {/* Hiding Gross/Commission columns for cleaner look
                                     <th className="py-5 text-right text-[11px] font-extrabold text-slate-900 uppercase tracking-widest">Gross</th>
-                                    <th className="py-5 text-right text-[11px] font-extrabold text-slate-900 uppercase tracking-widest">Commission</th>
-                                    */}
+                                    <th className="py-5 text-right text-[11px] font-extrabold text-slate-900 uppercase tracking-widest">Comm.</th>
                                     <th className="py-5 pr-8 text-right text-[11px] font-extrabold text-slate-900 uppercase tracking-widest">Net Earning</th>
                                 </tr>
                             </thead>
@@ -385,18 +385,16 @@ export default function EarningsPage() {
                                                     {entry.status}
                                                 </Badge>
                                             </td>
-                                            {/* Hiding cells for Gross/Commission
                                             <td className="py-6 text-right">
-                                                <span className="text-xs font-bold text-slate-500 group-hover:text-slate-900">
-                                                    {entry.grossAmount > 0 ? `₹${entry.grossAmount.toLocaleString()}` : "-"}
+                                                <span className="text-xs font-bold text-slate-500">
+                                                    ₹{entry.grossAmount?.toLocaleString() || entry.amount.toLocaleString()}
                                                 </span>
                                             </td>
                                             <td className="py-6 text-right">
-                                                <span className="text-xs font-bold text-red-400">
-                                                    {entry.commission > 0 ? `-₹${entry.commission.toLocaleString()}` : "-"}
+                                                <span className="text-xs font-bold text-rose-500">
+                                                    {entry.commission > 0 ? `-₹${entry.commission.toLocaleString()}` : "0"}
                                                 </span>
                                             </td>
-                                            */}
                                             <td className="py-6 pr-8 text-right">
                                                 <span className={cn(
                                                     "text-base font-extrabold",

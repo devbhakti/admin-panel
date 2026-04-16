@@ -267,8 +267,8 @@ export const createTemple = async (req: Request, res: Response) => {
     // Image validations (2MB)
     const MAX_SIZE = 2 * 1024 * 1024;
     if (files) {
-      if (files.heroImages && files.heroImages.length > 5) {
-        return res.status(400).json({ error: 'Maximum 5 banner images allowed' });
+      if (files.heroImages && files.heroImages.length > 10) {
+        return res.status(400).json({ error: 'Maximum 10 banner images allowed' });
       }
 
       const allFiles = [...(files.image || []), ...(files.heroImages || [])];
@@ -347,6 +347,7 @@ export const createTemple = async (req: Request, res: Response) => {
               poojaCommissionRate: data.poojaCommissionRate && !isNaN(parseFloat(data.poojaCommissionRate)) ? parseFloat(data.poojaCommissionRate) : 5.0,
               image: getFilePath(files, 'image'),
               heroImages: getFilePath(files, 'heroImages') || [],
+              ...(data.youtubeLinks && { youtubeLinks: JSON.parse(data.youtubeLinks) } as any),
             }
           }
         },
@@ -474,8 +475,8 @@ export const updateTemple = async (req: Request, res: Response) => {
       const newHeroImagesCount = files.heroImages ? files.heroImages.length : 0;
       const totalHeroImages = existingHeroImages.length + newHeroImagesCount;
 
-      if (totalHeroImages > 5) {
-        return res.status(400).json({ error: `Maximum 5 banner images allowed. You already have ${existingHeroImages.length} and tried to add ${newHeroImagesCount}.` });
+      if (totalHeroImages > 10) {
+        return res.status(400).json({ error: `Maximum 10 banner images allowed. You already have ${existingHeroImages.length} and tried to add ${newHeroImagesCount}.` });
       }
 
       const allFiles = [...(files.image || []), ...(files.heroImages || [])];
@@ -539,7 +540,8 @@ export const updateTemple = async (req: Request, res: Response) => {
               heroImages: [
                 ...existingHeroImages,
                 ...(getFilePath(files, 'heroImages') || [])
-              ]
+              ],
+              ...(data.youtubeLinks !== undefined && { youtubeLinks: JSON.parse(data.youtubeLinks) } as any),
             }
           }
         },

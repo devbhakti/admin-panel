@@ -321,9 +321,17 @@ export const createVerifiedOrder = async (orderData: any, userId: string) => {
   // Notify Devotee via Push Notification
   try {
     await notifyUser(userId, 'devotee', {
-      title: 'Order Placed Successfully! 🎉',
-      body: `Your order #${order.id.slice(-6).toUpperCase()} has been placed. We'll update you when it's shipped!`,
-      data: { link: `/profile/orders/${order.id}`, orderId: order.id }
+      title: JSON.stringify({
+          en: 'Order Placed Successfully! 🎉',
+          hi: 'ऑर्डर सफलतापूर्वक प्राप्त हुआ! 🎉',
+          mr: 'ऑर्डर यशस्वीरित्या प्राप्त झाला! 🎉'
+      }),
+      body: JSON.stringify({
+          en: `Your order #${order.id.slice(-6).toUpperCase()} has been placed. We'll update you when it's shipped!`,
+          hi: `आपका ऑर्डर #${order.id.slice(-6).toUpperCase()} मिल गया है। डिस्पैच होने पर हम आपको अपडेट करेंगे!`,
+          mr: `तुमची ऑर्डर #${order.id.slice(-6).toUpperCase()} प्राप्त झाली आहे. ती डिस्पॅच झाल्यावर आम्ही तुम्हाला अपडेट करू!`
+      }),
+      data: { link: `/profile/orders`, orderId: order.id }
     });
   } catch (notifyErr) {
     console.error(`❌ Devotee Notification Failed for ${userId}:`, notifyErr);

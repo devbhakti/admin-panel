@@ -986,6 +986,7 @@ function TemplesContent() {
                                     <TableHead>Temple ID</TableHead>
                                     <TableHead>Temple Owner</TableHead>
                                     <TableHead>Status</TableHead>
+                                    <TableHead>Live</TableHead>
                                     <TableHead className="text-right">Actions</TableHead>
                                 </TableRow>
                             </TableHeader>
@@ -1036,6 +1037,70 @@ function TemplesContent() {
                                                 <div className="flex flex-col gap-1 text-[14px]">
                                                     <span className="text-slate-800">Poojas: {inst._count?.poojas || 0}</span>
                                                     <span className="text-slate-800">Events: {inst._count?.events || 0}</span>
+                                                </div>
+                                            </TableCell>
+                                            <TableCell>
+                                                <div className="flex flex-col gap-2">
+                                                    {/* Verification Status Dropdown */}
+                                                    <DropdownMenu>
+                                                        <DropdownMenuTrigger asChild>
+                                                            {inst.isVerified ? (
+                                                                <div className="cursor-pointer flex items-center gap-1.5 px-2.5 py-1.5 bg-emerald-50 text-emerald-700 rounded-lg border border-emerald-200 hover:bg-emerald-100 transition-colors">
+                                                                    <CheckCircle className="w-3.5 h-3.5" />
+                                                                    <span className="text-xs font-semibold">Verified</span>
+                                                                    <MoreVertical className="w-3 h-3 ml-auto" />
+                                                                </div>
+                                                            ) : (
+                                                                <div className="cursor-pointer flex items-center gap-1.5 px-2.5 py-1.5 bg-amber-50 text-amber-700 rounded-lg border border-amber-200 hover:bg-amber-100 transition-colors">
+                                                                    <Clock className="w-3.5 h-3.5" />
+                                                                    <span className="text-xs font-semibold">Pending</span>
+                                                                    <MoreVertical className="w-3 h-3 ml-auto" />
+                                                                </div>
+                                                            )}
+                                                        </DropdownMenuTrigger>
+                                                        <DropdownMenuContent align="end">
+                                                            {!inst.isVerified && hasPermission("temples.verify") && (
+                                                                <>
+                                                                    <DropdownMenuItem
+                                                                        onClick={() => handleToggleStatus(inst.userId, inst.templeId, inst.isVerified, inst.temple?.isActive || false, inst.templeName)}
+                                                                        className="text-emerald-600"
+                                                                    >
+                                                                        <CheckCircle className="w-4 h-4 mr-2" />
+                                                                        Approve Temple
+                                                                    </DropdownMenuItem>
+                                                                    <DropdownMenuSeparator />
+                                                                </>
+                                                            )}
+                                                            {inst.isVerified && hasPermission("temples.verify") && (
+                                                                <DropdownMenuItem
+                                                                    onClick={() => handleToggleStatus(inst.userId, inst.templeId, inst.isVerified, inst.temple?.isActive || false, inst.templeName)}
+                                                                    className="text-amber-600"
+                                                                >
+                                                                    <XCircle className="w-4 h-4 mr-2" />
+                                                                    Revoke Verification
+                                                                </DropdownMenuItem>
+                                                            )}
+                                                        </DropdownMenuContent>
+                                                    </DropdownMenu>
+
+                                                    {/* Active/Inactive Status */}
+                                                    <div className="flex items-center gap-2">
+                                                        <div className={`flex items-center gap-1.5 px-2.5 py-1 rounded-md text-xs font-medium ${inst.temple?.isActive
+                                                            ? 'bg-emerald-50 text-emerald-700 border border-emerald-200'
+                                                            : 'bg-slate-50 text-slate-500 border border-slate-200'
+                                                            }`}>
+                                                            {inst.temple?.isActive ? (
+                                                                <><Power className="w-3 h-3" /> Active</>
+                                                            ) : (
+                                                                <><PowerOff className="w-3 h-3" /> Inactive</>
+                                                            )}
+                                                        </div>
+                                                        <Switch
+                                                            checked={inst.temple?.isActive || false}
+                                                            onCheckedChange={() => handleToggleActive(inst.userId, inst.isVerified, inst.temple?.isActive || false)}
+                                                            disabled={!inst.isVerified || !hasPermission("temples.edit")}
+                                                        />
+                                                    </div>
                                                 </div>
                                             </TableCell>
                                             <TableCell className="text-right">

@@ -137,9 +137,17 @@ type Toast = Omit<ToasterToast, "id">;
 function toast({ ...props }: Toast) {
   const id = genId();
 
-  // Automatically set variant to success if title is "Success" and no variant is provided
-  if (props.title === "Success" && !props.variant) {
-    props.variant = "success";
+  // Automatically set variant based on title keywords if no variant is provided
+  if (!props.variant && props.title && typeof props.title === "string") {
+    const title = props.title.toLowerCase();
+    const successKeywords = ["success", "saved", "updated", "deleted", "sent", "verified", "enabled", "disabled", "removed", "matched", "added"];
+    const errorKeywords = ["error", "failed", "invalid", "denied", "forbidden", "unauthorized", "wrong", "missing", "required"];
+
+    if (successKeywords.some(key => title.includes(key))) {
+      props.variant = "success";
+    } else if (errorKeywords.some(key => title.includes(key))) {
+      props.variant = "destructive";
+    }
   }
 
   const update = (props: ToasterToast) =>

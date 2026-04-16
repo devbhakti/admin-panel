@@ -15,7 +15,10 @@ import {
     Trash2,
     Loader2,
     AlertCircle,
-    CheckCircle2
+    CheckCircle2,
+    Youtube,
+    Play,
+    Link as LinkIcon
 } from "lucide-react";
 import axios from "axios";
 import { checkPhoneGlobal, checkEmailExists } from "@/api/authController";
@@ -122,6 +125,11 @@ export function TempleForm({
     const [heroPreviews, setHeroPreviews] = useState<string[]>([]);
     const [existingHeroImages, setExistingHeroImages] = useState<string[]>([]);
 
+    // YouTube Links State
+    const [youtubeLinks, setYoutubeLinks] = useState<string[]>([]);
+    const [existingYoutubeLinks, setExistingYoutubeLinks] = useState<string[]>([]);
+    const [newYoutubeUrl, setNewYoutubeUrl] = useState("");
+
     // Cropping State
     const [showCropper, setShowCropper] = useState(false);
     const [tempImage, setTempImage] = useState<string | null>(null);
@@ -210,6 +218,7 @@ export function TempleForm({
 
             setExistingMainImage(tData.image || "");
             setExistingHeroImages(tData.heroImages || []);
+            setExistingYoutubeLinks(tData.youtubeLinks || []);
 
             if (tData.poojas) {
                 setSelectedPoojaIds(tData.poojas.map((p: any) => p.masterPoojaId || p.id));
@@ -396,6 +405,37 @@ export function TempleForm({
         }
     };
 
+    // YouTube helpers
+    const extractYoutubeId = (url: string): string | null => {
+        const match = url.match(/(?:youtube\.com\/watch\?v=|youtu\.be\/)([^&\s?]+)/);
+        return match ? match[1] : null;
+    };
+
+    const addYoutubeLink = () => {
+        const trimmed = newYoutubeUrl.trim();
+        if (!trimmed) return;
+        const id = extractYoutubeId(trimmed);
+        if (!id) {
+            toast({ title: "Invalid YouTube URL", description: "Please enter a valid YouTube watch or share link.", variant: "destructive" });
+            return;
+        }
+        const allLinks = [...existingYoutubeLinks, ...youtubeLinks];
+        if (allLinks.some(l => extractYoutubeId(l) === id)) {
+            toast({ title: "Already Added", description: "This video is already in the list.", variant: "destructive" });
+            return;
+        }
+        setYoutubeLinks(prev => [...prev, trimmed]);
+        setNewYoutubeUrl("");
+    };
+
+    const removeYoutubeLink = (index: number, isExisting: boolean) => {
+        if (isExisting) {
+            setExistingYoutubeLinks(prev => prev.filter((_, i) => i !== index));
+        } else {
+            setYoutubeLinks(prev => prev.filter((_, i) => i !== index));
+        }
+    };
+
     const togglePooja = (id: string) => {
         setSelectedPoojaIds(prev =>
             prev.includes(id) ? prev.filter(pid => pid !== id) : [...prev, id]
@@ -434,6 +474,10 @@ export function TempleForm({
         if (mainImage) fd.append("image", mainImage);
         heroImages.forEach(file => fd.append("heroImages", file));
         
+        // YouTube links — merge existing + new
+        const allYoutubeLinks = [...existingYoutubeLinks, ...youtubeLinks];
+        fd.append("youtubeLinks", JSON.stringify(allYoutubeLinks));
+
         if (mode === "edit") {
             fd.append("existingHeroImages", JSON.stringify(existingHeroImages));
         }
@@ -747,7 +791,7 @@ export function TempleForm({
 
                             {/* Hero Banners */}
                             <div className="space-y-4">
-                                <label className="text-sm font-semibold text-slate-700">Hero Banners (Max 5)</label>
+                                <label className="text-sm font-semibold text-slate-700">Hero Gallery Images (Max 10)</label>
                                 <div className="grid grid-cols-3 gap-2">
                                     {/* Existing Hero Images */}
                                     {existingHeroImages.map((url, i) => (
@@ -767,7 +811,7 @@ export function TempleForm({
                                             </button>
                                         </div>
                                     ))}
-                                    {(existingHeroImages.length + heroImages.length) < 5 && (
+                                    {(existingHeroImages.length + heroImages.length) < 10 && (
                                         <label className="border-2 border-dashed rounded-lg flex items-center justify-center aspect-square hover:bg-slate-50 cursor-pointer transition-colors">
                                             <input type="file" multiple accept="image/*" className="hidden" onChange={handleHeroImagesChange} />
                                             <Plus className="w-6 h-6 text-muted-foreground" />
@@ -775,6 +819,122 @@ export function TempleForm({
                                     )}
                                 </div>
                             </div>
+                        </div>
+
+                        {/* YouTube Video Links */}
+                        <div className="space-y-4 pt-2 border-t">
+                            <div className="flex items-center gap-2">
+                                <Youtube className="w-4 h-4 text-red-500" />
+                                <label className="text-sm font-semibold text-slate-700">YouTube Videos (Gallery)</label>
+                            </div>
+                            <p className="text-xs text-slate-500">Add YouTube video links — they will appear in the temple gallery alongside images.</p>
+
+                            {/* Input row */}
+                            <div className="flex gap-2">
+                                <div className="relative flex-1">
+                                    <LinkIcon className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-400" />
+                                    <Input
+                                        value={newYoutubeUrl}
+                                        onChange={e => setNewYoutubeUrl(e.target.value)}
+                                        onKeyDown={e => e.key === 'Enter' && (e.preventDefault(), addYoutubeLink())}
+                                        placeholder="https://www.youtube.com/watch?v=..."
+                                        className="pl-9 text-sm font-mono"
+                                    />
+                                </div>
+                                <Button
+                                    type="button"
+                                    onClick={addYoutubeLink}
+                                    disabled={!newYoutubeUrl.trim()}
+                                    className="gap-1.5 shrink-0 bg-red-500 hover:bg-red-600 text-white"
+                                >
+                                    <Plus className="w-4 h-4" />
+                                    Add
+                                </Button>
+                            </div>
+
+                            {/* Video list */}
+                            {[...existingYoutubeLinks.map((url, i) => ({ url, i, isExisting: true })), ...youtubeLinks.map((url, i) => ({ url, i, isExisting: false }))].length > 0 && (
+                                <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-3">
+                                    {existingYoutubeLinks.map((url, i) => {
+                                        const ytId = extractYoutubeId(url);
+                                        return (
+                                            <div key={`existing-yt-${i}`} className="relative group rounded-xl overflow-hidden border border-slate-200 shadow-sm bg-black">
+                                                <div className="aspect-video relative">
+                                                    {ytId ? (
+                                                        <img
+                                                            src={`https://img.youtube.com/vi/${ytId}/hqdefault.jpg`}
+                                                            alt="YouTube thumbnail"
+                                                            className="w-full h-full object-cover opacity-80"
+                                                        />
+                                                    ) : (
+                                                        <div className="w-full h-full bg-slate-800 flex items-center justify-center">
+                                                            <Play className="w-6 h-6 text-white" />
+                                                        </div>
+                                                    )}
+                                                    <div className="absolute inset-0 flex items-center justify-center">
+                                                        <div className="w-8 h-8 bg-red-600 rounded-full flex items-center justify-center shadow-md">
+                                                            <Play className="w-4 h-4 text-white fill-white" />
+                                                        </div>
+                                                    </div>
+                                                </div>
+                                                <button
+                                                    type="button"
+                                                    onClick={() => removeYoutubeLink(i, true)}
+                                                    className="absolute top-1.5 right-1.5 bg-black/70 rounded-full p-1 opacity-0 group-hover:opacity-100 transition-opacity"
+                                                >
+                                                    <X className="w-3 h-3 text-white" />
+                                                </button>
+                                                <div className="absolute bottom-0 left-0 right-0 bg-gradient-to-t from-black/80 px-2 py-1">
+                                                    <p className="text-[10px] text-white/80 truncate font-mono">Saved</p>
+                                                </div>
+                                            </div>
+                                        );
+                                    })}
+                                    {youtubeLinks.map((url, i) => {
+                                        const ytId = extractYoutubeId(url);
+                                        return (
+                                            <div key={`new-yt-${i}`} className="relative group rounded-xl overflow-hidden border border-red-200 shadow-sm bg-black">
+                                                <div className="aspect-video relative">
+                                                    {ytId ? (
+                                                        <img
+                                                            src={`https://img.youtube.com/vi/${ytId}/hqdefault.jpg`}
+                                                            alt="YouTube thumbnail"
+                                                            className="w-full h-full object-cover opacity-80"
+                                                        />
+                                                    ) : (
+                                                        <div className="w-full h-full bg-slate-800 flex items-center justify-center">
+                                                            <Play className="w-6 h-6 text-white" />
+                                                        </div>
+                                                    )}
+                                                    <div className="absolute inset-0 flex items-center justify-center">
+                                                        <div className="w-8 h-8 bg-red-600 rounded-full flex items-center justify-center shadow-md">
+                                                            <Play className="w-4 h-4 text-white fill-white" />
+                                                        </div>
+                                                    </div>
+                                                </div>
+                                                <button
+                                                    type="button"
+                                                    onClick={() => removeYoutubeLink(i, false)}
+                                                    className="absolute top-1.5 right-1.5 bg-black/70 rounded-full p-1 opacity-0 group-hover:opacity-100 transition-opacity"
+                                                >
+                                                    <X className="w-3 h-3 text-white" />
+                                                </button>
+                                                <div className="absolute bottom-0 left-0 right-0 bg-gradient-to-t from-black/80 px-2 py-1">
+                                                    <span className="text-[10px] bg-red-500 text-white px-1.5 py-0.5 rounded-full font-bold">New</span>
+                                                </div>
+                                            </div>
+                                        );
+                                    })}
+                                </div>
+                            )}
+
+                            {([...existingYoutubeLinks, ...youtubeLinks].length === 0) && (
+                                <div className="border-2 border-dashed rounded-xl p-6 text-center text-muted-foreground">
+                                    <Youtube className="w-8 h-8 mx-auto mb-2 opacity-30" />
+                                    <p className="text-sm">No YouTube videos added yet</p>
+                                    <p className="text-xs mt-0.5 opacity-60">Paste a YouTube URL above and click Add</p>
+                                </div>
+                            )}
                         </div>
                     </div>
 

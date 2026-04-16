@@ -187,6 +187,20 @@ export const requestSellerWithdrawal = async (req: Request, res: Response) => {
             });
         });
 
+        try {
+            const { notifyAdmins } = require("../../services/firebaseService");
+            await notifyAdmins({
+                title: 'New Seller Withdrawal Request 🏪',
+                body: `A seller has requested a withdrawal of ₹${amount}.`,
+                data: {
+                    link: '/admin/finance',
+                    type: 'SELLER_WITHDRAWAL_REQUEST'
+                }
+            });
+        } catch (notifyErr) {
+            console.error("Failed to notify admins for withdrawal:", notifyErr);
+        }
+
         return res.status(201).json({ success: true, message: "Withdrawal request submitted successfully" });
 
     } catch (error: any) {

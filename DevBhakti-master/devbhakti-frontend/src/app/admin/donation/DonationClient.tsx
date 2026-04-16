@@ -177,7 +177,7 @@ export default function DonationClient() {
             const data = response.data;
             if (data.success) {
                 setDonations(donations.filter(d => d.id !== id));
-                toast({ title: "Success", description: "Donation record removed" });
+                toast({ title: "Success", description: "Donation record removed", variant: "success" });
                 fetchStats(); // Update stats
             } else {
                 toast({ title: "Error", description: data.message, variant: "destructive" });
@@ -215,7 +215,7 @@ export default function DonationClient() {
                 link.click();
                 link.parentNode?.removeChild(link);
 
-                toast({ title: "Success", description: "Excel file downloaded!" });
+                toast({ title: "Success", description: "Excel file downloaded!", variant: "success" });
             } else {
                 throw new Error("Download failed");
             }
@@ -230,7 +230,7 @@ export default function DonationClient() {
             const response = await axios.post(`${API_URL}/admin/donations/send-email/${id}`, {}, { validateStatus: () => true });
             const data = response.data;
             if (data.success) {
-                toast({ title: "Success", description: "Receipt sent successfully via email!" });
+                toast({ title: "Success", description: "Receipt sent successfully via email!", variant: "success" });
             } else {
                 toast({ title: "Error", description: data.message || "Failed to send email", variant: "destructive" });
             }
@@ -589,98 +589,102 @@ export default function DonationClient() {
                             initial={{ scale: 0.95, opacity: 0, y: 20 }}
                             animate={{ scale: 1, opacity: 1, y: 0 }}
                             exit={{ scale: 0.95, opacity: 0, y: 20 }}
-                            className="bg-white rounded-[20px] sm:rounded-[32px] w-full max-w-[95vw] sm:max-w-2xl max-h-[90vh] sm:max-h-[75vh] overflow-hidden shadow-2xl relative z-10"
+                            className="bg-white rounded-[20px] sm:rounded-[32px] w-full max-w-[95vw] sm:max-w-2xl max-h-[95vh] overflow-hidden shadow-2xl relative z-10 flex flex-col"
                         >
-                            <div className="bg-[#7c4624] p-4 sm:p-8 text-white relative">
+                            <div className="bg-[#7c4624] p-4 sm:p-8 text-white relative flex-shrink-0">
                                 <button
                                     onClick={() => setSelectedDonation(null)}
-                                    className="absolute right-3 sm:right-6 top-3 sm:top-6 w-8 h-8 sm:w-10 sm:h-10 rounded-full bg-white/10 flex items-center justify-center hover:bg-white/20 transition-colors"
+                                    className="absolute right-3 sm:right-6 top-3 sm:top-1/2 sm:-translate-y-1/2 w-8 h-8 sm:w-10 sm:h-10 rounded-full bg-white/10 flex items-center justify-center hover:bg-white/20 transition-colors z-20"
                                 >
                                     <X className="w-4 h-4 sm:w-5 sm:h-5" />
                                 </button>
-                                <div className="flex items-center gap-3 sm:gap-4 mb-2">
-                                    <div className="w-10 h-10 sm:w-12 sm:h-12 bg-white/20 rounded-2xl flex items-center justify-center backdrop-blur-md flex-shrink-0">
-                                        <Heart className="w-5 h-5 sm:w-7 sm:h-7" />
+                                <div className="flex items-center gap-3 sm:gap-4 pr-10 sm:pr-0">
+                                    <div className="w-8 h-8 sm:w-12 sm:h-12 bg-white/20 rounded-xl sm:rounded-2xl flex items-center justify-center backdrop-blur-md flex-shrink-0">
+                                        <Heart className="w-4 h-4 sm:w-7 sm:h-7" />
                                     </div>
                                     <div className="min-w-0">
-                                        <h3 className="text-lg sm:text-2xl font-serif font-bold truncate">Donation Details</h3>
-                                        <p className="text-white/80 text-xs sm:text-sm truncate">Sacred Contribution Ref: {selectedDonation.id}</p>
+                                        <h3 className="text-sm sm:text-2xl font-serif font-bold truncate">Donation Details</h3>
+                                        <p className="text-white/80 text-[10px] sm:text-sm truncate">Ref: {selectedDonation.id}</p>
                                     </div>
                                 </div>
                             </div>
 
-                            <div className="p-4 sm:p-8 space-y-4 sm:space-y-8 max-h-[60vh] sm:max-h-[75vh] overflow-y-auto">
+                            <div className="p-4 sm:p-8 space-y-5 sm:space-y-8 overflow-y-auto flex-1 custom-scrollbar">
                                 {/* Status & ID */}
-                                <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between p-3 sm:p-4 bg-slate-50 rounded-2xl border border-slate-100 gap-3">
-                                    <div className="flex items-center gap-3">
-                                        <div className={`p-2 rounded-xl flex-shrink-0 ${(statusConfig[selectedDonation.status as keyof typeof statusConfig] || statusConfig.SUCCESS).color}`}>
-                                            {React.createElement((statusConfig[selectedDonation.status as keyof typeof statusConfig] || statusConfig.SUCCESS).icon, { className: "w-4 h-4 sm:w-5 sm:h-5" })}
+                                <div className="grid grid-cols-2 gap-3 p-3 sm:p-4 bg-slate-50 rounded-2xl border border-slate-100">
+                                    <div className="flex items-center gap-2 sm:gap-3 border-r border-slate-200 pr-2">
+                                        <div className={`p-1.5 sm:p-2 rounded-lg flex-shrink-0 shadow-sm ${(statusConfig[selectedDonation.status as keyof typeof statusConfig] || statusConfig.SUCCESS).color}`}>
+                                            {React.createElement((statusConfig[selectedDonation.status as keyof typeof statusConfig] || statusConfig.SUCCESS).icon, { className: "w-3.5 h-3.5 sm:w-5 sm:h-5" })}
                                         </div>
                                         <div className="min-w-0">
-                                            <p className="text-[8px] sm:text-[10px] text-slate-400 font-bold uppercase tracking-widest">Payment Status</p>
-                                            <p className="font-bold text-slate-700 text-sm sm:text-base truncate">{selectedDonation.status}</p>
+                                            <p className="text-[7px] sm:text-[10px] text-slate-400 font-bold uppercase tracking-widest">Status</p>
+                                            <p className="font-bold text-slate-700 text-[10px] sm:text-sm truncate uppercase">{selectedDonation.status}</p>
                                         </div>
                                     </div>
-                                    <div className="text-right sm:text-left">
-                                        <p className="text-[8px] sm:text-[10px] text-slate-400 font-bold uppercase tracking-widest">Method</p>
-                                        <p className="font-bold text-slate-700 text-sm sm:text-base truncate">{selectedDonation.paymentMethod}</p>
+                                    <div className="pl-2">
+                                        <p className="text-[7px] sm:text-[10px] text-slate-400 font-bold uppercase tracking-widest">Method</p>
+                                        <p className="font-bold text-slate-700 text-[10px] sm:text-sm truncate uppercase">{selectedDonation.paymentMethod || 'ONLINE'}</p>
                                     </div>
                                 </div>
 
                                 {/* Main Info Grid */}
-                                <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 sm:gap-8">
-                                    <div className="space-y-4 sm:space-y-6">
+                                <div className="grid grid-cols-1 sm:grid-cols-2 gap-6 sm:gap-8">
+                                    <div className="space-y-5">
                                         <div>
-                                            <p className="text-[8px] sm:text-[10px] text-slate-400 font-bold uppercase tracking-widest mb-1">Donor Information</p>
-                                            <div className="space-y-2">
-                                                <p className="text-slate-800 font-bold flex items-center gap-2 text-sm sm:text-base">
+                                            <p className="text-[7px] sm:text-[10px] text-slate-400 font-bold uppercase tracking-widest mb-1 shadow-sm inline-block px-1.5 py-0.5 bg-slate-100 rounded">Donor Info</p>
+                                            <div className="space-y-2 mt-2">
+                                                <p className="text-slate-800 font-bold flex items-center gap-2 text-xs sm:text-base">
                                                     <User className="w-3.5 h-3.5 sm:w-4 sm:h-4 text-[#7c4624] flex-shrink-0" />
                                                     <span className="truncate">{parseLocalizedValue(selectedDonation.donorName)}</span>
                                                 </p>
                                                 {!selectedDonation.isAnonymous && (
-                                                    <>
-                                                        <p className="text-xs sm:text-sm text-slate-600 flex items-center gap-2">
-                                                            <Phone className="w-3 h-3 sm:w-3.5 sm:h-3.5 flex-shrink-0" />
+                                                    <div className="flex flex-col gap-1.5 pl-5 border-l border-slate-100">
+                                                        <p className="text-[10px] sm:text-sm text-slate-600 flex items-center gap-2">
+                                                            <Phone className="w-3 h-3 sm:w-3.5 sm:h-3.5 flex-shrink-0 text-slate-400" />
                                                             <span className="truncate">{selectedDonation.donorPhone}</span>
                                                         </p>
-                                                        <p className="text-xs sm:text-sm text-slate-600 flex items-center gap-2">
-                                                            <Mail className="w-3 h-3 sm:w-3.5 sm:h-3.5 flex-shrink-0" />
-                                                            <span className="truncate">{selectedDonation.donorEmail}</span>
+                                                        <p className="text-[10px] sm:text-sm text-slate-600 flex items-center gap-2">
+                                                            <Mail className="w-3 h-3 sm:w-3.5 sm:h-3.5 flex-shrink-0 text-slate-400" />
+                                                            <span className="truncate break-all">{selectedDonation.donorEmail}</span>
                                                         </p>
-                                                    </>
+                                                    </div>
                                                 )}
                                             </div>
                                         </div>
-
+ 
                                         <div>
-                                            <p className="text-[8px] sm:text-[10px] text-slate-400 font-bold uppercase tracking-widest mb-1">Temple</p>
-                                            <p className="text-slate-800 font-bold flex items-center gap-2 mb-1 text-sm sm:text-base">
+                                            <p className="text-[7px] sm:text-[10px] text-slate-400 font-bold uppercase tracking-widest mb-1 shadow-sm inline-block px-1.5 py-0.5 bg-slate-100 rounded">Temple</p>
+                                            <p className="text-slate-800 font-bold flex items-center gap-2 mt-2 text-xs sm:text-base">
                                                 <Building2 className="w-3.5 h-3.5 sm:w-4 sm:h-4 text-[#7c4624] flex-shrink-0" />
                                                 <span className="truncate">{selectedDonation.templeName}</span>
                                             </p>
                                         </div>
                                     </div>
-
-                                    <div className="space-y-4 sm:space-y-6">
+ 
+                                    <div className="space-y-4">
                                         <div>
-                                            <p className="text-[8px] sm:text-[10px] text-slate-400 font-bold uppercase tracking-widest mb-1">Amount Details</p>
-                                            <p className="text-xl sm:text-3xl font-display font-bold text-[#7c4624] break-words">
-                                                ₹ {selectedDonation.amount.toLocaleString()}
-                                            </p>
-                                            <p className="text-xs text-muted-foreground mt-1 break-words">
-                                                Received on {new Date(selectedDonation.createdAt).toLocaleString()}
-                                            </p>
-                                        </div>
-
-                                        {selectedDonation.is80GRequired && (
-                                            <div className="p-2 sm:p-3 bg-blue-50 border border-blue-100 rounded-xl">
-                                                <div className="flex items-center gap-2 text-blue-700 font-bold text-xs uppercase tracking-tight mb-1">
-                                                    <ShieldCheck className="w-3 h-3 sm:w-3.5 sm:h-3.5 flex-shrink-0" />
-                                                    80G Tax Exemption Requested
+                                            <p className="text-[7px] sm:text-[10px] text-slate-400 font-bold uppercase tracking-widest mb-1 shadow-sm inline-block px-1.5 py-0.5 bg-slate-100 rounded">Amount Details</p>
+                                            <div className="bg-[#7c4624]/5 p-3 sm:p-4 rounded-xl border border-[#7c4624]/10 mt-2 relative overflow-hidden group">
+                                                <div className="absolute right-0 top-0 opacity-5 -rotate-12 transform group-hover:rotate-0 transition-transform duration-500">
+                                                     <IndianRupee className="w-16 h-16 text-[#7c4624]" />
                                                 </div>
-                                                <p className="text-xs sm:text-sm text-blue-900 font-mono font-bold truncate">PAN: {selectedDonation.panNumber}</p>
+                                                <div className="mb-3">
+                                                    <span className="text-[10px] sm:text-xs text-slate-500 font-medium">Sacred Contribution:</span>
+                                                    <p className="text-xl sm:text-3xl font-black text-[#7c4624]">₹{selectedDonation.amount.toLocaleString()}</p>
+                                                </div>
+                                                <div className="space-y-1.5 border-t border-[#7c4624]/10 pt-3">
+                                                    <div className="flex justify-between items-center text-[10px] sm:text-xs">
+                                                        <span className="text-slate-500">Platform Fee:</span>
+                                                        <span className="font-bold text-rose-500">- ₹{(selectedDonation.commissionAmount || 0).toLocaleString()}</span>
+                                                    </div>
+                                                    <div className="flex justify-between items-center text-xs sm:text-sm">
+                                                        <span className="font-bold text-slate-700">Temple Earning:</span>
+                                                        <span className="font-black text-emerald-600">₹{(selectedDonation.netEarning || selectedDonation.amount).toLocaleString()}</span>
+                                                    </div>
+                                                </div>
                                             </div>
-                                        )}
+                                            <p className="text-[9px] sm:text-[11px] text-slate-400 italic mt-2 text-center">Received on {new Date(selectedDonation.createdAt).toLocaleString('en-GB', { day: '2-digit', month: '2-digit', year: 'numeric', hour: '2-digit', minute: '2-digit' })}</p>
+                                        </div>
                                     </div>
                                 </div>
 
@@ -706,40 +710,40 @@ export default function DonationClient() {
                                     )}
                                 </div>
 
-                                <div className="pt-4 sm:pt-6 border-t border-slate-100 flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">
+                                <div className="pt-4 sm:pt-10 border-t border-slate-100 flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 mt-auto">
                                     <div className="flex flex-col sm:flex-row gap-2 w-full sm:w-auto">
                                         <Button
                                             variant="outline"
-                                            className="rounded-xl border-slate-200 text-slate-600 h-9 sm:h-10 px-3 sm:px-4 w-full sm:w-auto flex items-center justify-center"
+                                            className="rounded-xl border-slate-200 text-slate-600 h-10 sm:h-11 px-4 w-full sm:w-auto flex items-center justify-center font-bold"
                                             onClick={() => handlePrintReceipt(selectedDonation)}
                                         >
-                                            <Download className="w-3.5 h-3.5 sm:w-4 sm:h-4 mr-2" /> 
-                                            <span className="text-xs sm:text-sm">Print Receipt</span>
+                                            <Download className="w-4 h-4 mr-2" /> 
+                                            <span className="text-xs sm:text-sm">Receipt</span>
                                         </Button>
                                         <Button
                                             variant="outline"
-                                            className="rounded-xl border-slate-200 text-slate-600 h-9 sm:h-10 px-3 sm:px-4 w-full sm:w-auto flex items-center justify-center"
+                                            className="rounded-xl border-slate-200 text-slate-600 h-10 sm:h-11 px-4 w-full sm:w-auto flex items-center justify-center font-bold"
                                             onClick={() => handleSendEmail(selectedDonation.id)}
                                             disabled={sendingEmail}
                                         >
                                             {sendingEmail ? (
                                                 <>
-                                                    <Sparkles className="w-3.5 h-3.5 sm:w-4 sm:h-4 mr-2 animate-spin" /> 
+                                                    <Sparkles className="w-4 h-4 mr-2 animate-spin" /> 
                                                     <span className="text-xs sm:text-sm">Sending...</span>
                                                 </>
                                             ) : (
                                                 <>
-                                                    <Mail className="w-3.5 h-3.5 sm:w-4 sm:h-4 mr-2" /> 
-                                                    <span className="text-xs sm:text-sm">Send Email</span>
+                                                    <Mail className="w-4 h-4 mr-2" /> 
+                                                    <span className="text-xs sm:text-sm">Email</span>
                                                 </>
                                             )}
                                         </Button>
                                     </div>
                                     <Button
                                         onClick={() => setSelectedDonation(null)}
-                                        className="bg-[#7c4624] hover:bg-[#63361c] rounded-xl px-4 sm:px-8 h-9 sm:h-10 w-full sm:w-auto"
+                                        className="bg-[#7c4624] hover:bg-[#63361c] rounded-xl px-10 h-10 sm:h-11 w-full sm:w-auto font-black shadow-sacred"
                                     >
-                                        Close
+                                        CLOSE
                                     </Button>
                                 </div>
                             </div>

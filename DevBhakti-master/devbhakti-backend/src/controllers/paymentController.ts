@@ -122,12 +122,22 @@ export const verifyPayment = async (req: Request, res: Response) => {
             // Notify Devotee via Push Notification
             try {
                 const { notifyUser } = require("../services/firebaseService");
-                const poojaName = getEnglish(updatedBooking.pooja.name);
+                const poojaEn = getEnglish(updatedBooking.pooja.name);
+                const poojaHi = "पूजा"; // Generic fallback or we can use poojaEn if translation parsing is complex here
+                const dateStr = new Date(updatedBooking.bookingDate as string).toLocaleDateString();
                 await notifyUser(updatedBooking.userId, 'devotee', {
-                    title: 'Pooja Booking Confirmed! 🙏',
-                    body: `Your booking for "${poojaName}" has been confirmed for ${new Date(updatedBooking.bookingDate as string).toLocaleDateString()}.`,
+                    title: JSON.stringify({
+                        en: 'Pooja Booking Confirmed! 🙏',
+                        hi: 'पूजा बुकिंग पक्की हो गई है! 🙏',
+                        mr: 'पूजा बुकिंग निश्चित झाली! 🙏'
+                    }),
+                    body: JSON.stringify({
+                        en: `Your booking for "${poojaEn}" has been confirmed for ${dateStr}.`,
+                        hi: `आपकी "${poojaEn}" की बुकिंग ${dateStr} के लिए पक्की हो गई है।`,
+                        mr: `तुमची "${poojaEn}" ची बुकिंग ${dateStr} साठी निश्चित झाली आहे.`
+                    }),
                     data: { 
-                        link: `/profile/bookings/${updatedBooking.id}`, 
+                        link: `/profile/bookings`, 
                         type: 'POOJA_BOOKING',
                         bookingId: updatedBooking.id 
                     }
@@ -172,9 +182,9 @@ export const verifyPayment = async (req: Request, res: Response) => {
                 await prisma.templeLedger.create({
                     data: {
                         templeId: donation.templeId,
-                        amount: donation.amount,
+                        amount: donation.netEarning || donation.amount,
                         grossAmount: donation.amount,
-                        commission: 0,
+                        commission: donation.commissionAmount || 0,
                         type: "DONATION_EARNING",
                         sourceId: donation.id,
                         description: `Donation: ${donation.donorName}${donation.isAnonymous ? ' (Anonymous)' : ''}`,
@@ -196,6 +206,56 @@ export const verifyPayment = async (req: Request, res: Response) => {
                     );
                 } catch (waError) {
                     console.error("Failed to send donation WhatsApp:", waError);
+                }
+
+                // Notify Devotee, Temple Admin, and Platform Admins via Push Notification
+                try {
+                    const { notifyUser, notifyAdmins } = require("../services/firebaseService");
+                    
+                    if (donation.userId) {
+                        await notifyUser(donation.userId, 'devotee', {
+                            title: JSON.stringify({
+                                en: 'Donation Successful! 🙏',
+                                hi: 'दान सफल रहा! 🙏',
+                                mr: 'देणगी यशस्वी! 🙏'
+                            }),
+                            body: JSON.stringify({
+                                en: `Thank you for your generous donation of ₹${donation.amount} to ${getEnglish(donation.temple?.name) || "Dev Bhakti"}.`,
+                                hi: `${getEnglish(donation.temple?.name) || "Dev Bhakti"} को ₹${donation.amount} के आपके उदार दान के लिए धन्यवाद।`,
+                                mr: `${getEnglish(donation.temple?.name) || "Dev Bhakti"} ला ₹${donation.amount} च्या तुमच्या उदार देणगीबद्दल धन्यवाद.`
+                            }),
+                            data: {
+                                link: `/profile`,
+                                type: 'DONATION_SUCCESS',
+                                donationId: donation.id
+                            }
+                        });
+                    }
+
+                    if (donation.temple && donation.temple.userId) {
+                        await notifyUser(donation.temple.userId, 'temple_admin', {
+                            title: 'New Donation Received! 💰',
+                            body: `${donation.isAnonymous ? 'An anonymous devotee' : donation.donorName} donated ₹${donation.amount} to your temple.`,
+                            data: {
+                                link: `/temples/dashboard`,
+                                type: 'NEW_DONATION',
+                                donationId: donation.id
+                            }
+                        });
+                    }
+                    
+                    await notifyAdmins({
+                        title: 'New Platform Donation! 🎉',
+                        body: `₹${donation.amount} donated by ${donation.isAnonymous ? 'Anonymous' : donation.donorName} to ${getEnglish(donation.temple?.name) || "Dev Bhakti"}.`,
+                        data: {
+                            link: `/admin/donations`,
+                            type: 'NEW_DONATION_ADMIN',
+                            donationId: donation.id
+                        }
+                    });
+
+                } catch (notifyErr) {
+                    console.error("Failed to send donation push notifications:", notifyErr);
                 }
             }
         }

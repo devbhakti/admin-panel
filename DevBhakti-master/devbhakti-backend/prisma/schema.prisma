@@ -68,6 +68,7 @@ model Temple {
   liveUrl               String?
   channelId             String?
   heroImages            String[]
+  youtubeLinks          String[]
   gallery               String[]
   rating                Float                 @default(0)
   reviewsCount          Int                   @default(0)
@@ -599,6 +600,8 @@ model Donation {
   panNumber       String?
   address         String?
   message         String?
+  commissionAmount Float    @default(0)
+  netEarning       Float    @default(0)
   createdAt       DateTime @default(now())
   updatedAt       DateTime @updatedAt
   displayId       String?  @unique
@@ -633,6 +636,7 @@ enum SlabType {
 enum CommissionCategory {
   MARKETPLACE
   POOJA
+  DONATION
 }
 
 enum UserRole {

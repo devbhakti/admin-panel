@@ -60,6 +60,7 @@ export default function AdminLiveDarshanPage() {
   const [loading, setLoading] = useState(true);
   const [temples, setTemples] = useState<any[]>([]);
   const [allTemples, setAllTemples] = useState<any[]>([]);
+  const [recentTemples, setRecentTemples] = useState<any[]>([]);
 
   const [selectedTemple, setSelectedTemple] = useState<any | null>(null);
   const [editLiveUrl, setEditLiveUrl] = useState("");
@@ -68,12 +69,17 @@ export default function AdminLiveDarshanPage() {
   const [isEditMode, setIsEditMode] = useState(false);
   const [isViewOnly, setIsViewOnly] = useState(false);
   const [templeSearchQuery, setTempleSearchQuery] = useState("");
+  const [mainSearchQuery, setMainSearchQuery] = useState("");
+  const [isSearchingTemples, setIsSearchingTemples] = useState(false);
+  const [isPopoverOpen, setIsPopoverOpen] = useState(false);
 
   useEffect(() => {
     const load = async () => {
       setLoading(true);
       try {
-        const data = await fetchAllTemplesAdmin();
+        const res = await fetchAllTemplesAdmin({ limit: 10 }); // Load initial 10 for quick selection
+        const data = Array.isArray(res) ? res : (res.data || []);
+        
         const actualTemples = data
           .filter((user: any) => user.temple)
           .map((user: any) => ({
@@ -86,6 +92,7 @@ export default function AdminLiveDarshanPage() {
           }));
 
         setAllTemples(actualTemples);
+        setRecentTemples(actualTemples);
 
         const liveCandidates = actualTemples.filter((t: any) => {
           const temple = t.temple;
@@ -98,11 +105,6 @@ export default function AdminLiveDarshanPage() {
         setTemples(liveCandidates);
       } catch (error) {
         console.error("Failed to load live temples", error);
-        toast({
-          title: "Error",
-          description: "Failed to load live darshan temples",
-          variant: "destructive",
-        });
       } finally {
         setLoading(false);
       }
@@ -110,6 +112,44 @@ export default function AdminLiveDarshanPage() {
 
     load();
   }, [toast, language]);
+
+  // API Based Search for Temples
+  useEffect(() => {
+    if (!isAddMode) return;
+    
+    const delayDebounceFn = setTimeout(async () => {
+      if (!templeSearchQuery.trim()) {
+        setAllTemples(recentTemples);
+        setIsSearchingTemples(false);
+        return;
+      }
+      
+      setIsSearchingTemples(true);
+      try {
+        const res = await fetchAllTemplesAdmin({ search: templeSearchQuery, limit: 10 });
+        const data = Array.isArray(res) ? res : (res.data || []);
+        
+        const searchResults = data
+          .filter((user: any) => user.temple)
+          .map((user: any) => ({
+            userId: user.id,
+            userName: user.name,
+            userEmail: user.email,
+            userPhone: user.phone,
+            isVerified: user.isVerified,
+            temple: user.temple,
+          }));
+        
+        setAllTemples(searchResults);
+      } catch (error) {
+        console.error("Temple search error:", error);
+      } finally {
+        setIsSearchingTemples(false);
+      }
+    }, 500);
+
+    return () => clearTimeout(delayDebounceFn);
+  }, [templeSearchQuery, isAddMode]);
 
   const handleToggleAdminLive = async (entry: any) => {
     try {
@@ -216,6 +256,8 @@ export default function AdminLiveDarshanPage() {
     setIsAddMode(true);
     setIsEditMode(true);
     setIsViewOnly(false);
+    setTempleSearchQuery("");
+    setAllTemples(recentTemples);
     setSelectedTemple(entry);
     setEditLiveUrl(entry.temple?.liveUrl || "");
   };
@@ -297,6 +339,15 @@ export default function AdminLiveDarshanPage() {
               Control the visibility of temples on the website that have enabled Live Darshan and provided a URL from their panel.
             </p>
           </div>
+          <div className="flex-1 max-w-sm relative">
+             <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-400" />
+             <Input 
+                placeholder="Search live temples..." 
+                className="pl-10 h-9"
+                value={mainSearchQuery}
+                onChange={(e) => setMainSearchQuery(e.target.value)}
+             />
+          </div>
           <div className="flex gap-2">
             <Button size="sm" onClick={openAddModal}>
               Add Live Darshan
@@ -320,9 +371,14 @@ export default function AdminLiveDarshanPage() {
                 <Loader2 className="w-5 h-5 animate-spin" />
                 <span>Loading live temples...</span>
               </div>
-            ) : temples.length === 0 ? (
+            ) : temples.filter(t => {
+                const query = mainSearchQuery.toLowerCase();
+                const name = getLocalized(t.temple, 'name', language).toLowerCase();
+                const location = getLocalized(t.temple, 'location', language).toLowerCase();
+                return name.includes(query) || location.includes(query);
+              }).length === 0 ? (
               <div className="text-center py-10 text-sm text-muted-foreground">
-                Currently, no temple has enabled Live from their panel or provided a URL.
+                {mainSearchQuery ? "No live temples match your search." : "Currently, no temple has enabled Live from their panel or provided a URL."}
               </div>
             ) : (
               <Table>
@@ -336,7 +392,14 @@ export default function AdminLiveDarshanPage() {
                   </TableRow>
                 </TableHeader>
                 <TableBody>
-                  {temples.map((entry) => (
+                  {temples
+                    .filter(t => {
+                      const query = mainSearchQuery.toLowerCase();
+                      const name = getLocalized(t.temple, 'name', language).toLowerCase();
+                      const location = getLocalized(t.temple, 'location', language).toLowerCase();
+                      return name.includes(query) || location.includes(query);
+                    })
+                    .map((entry) => (
                     <TableRow key={entry.userId}>
                       <TableCell>
                         <div className="flex flex-col gap-0.5">
@@ -466,7 +529,7 @@ export default function AdminLiveDarshanPage() {
                   {isAddMode && (
                     <div className="space-y-2">
                       <Label className="text-slate-700 text-xs">Temple</Label>
-                      <Popover>
+                      <Popover open={isPopoverOpen} onOpenChange={setIsPopoverOpen}>
                         <PopoverTrigger asChild>
                           <Button
                             variant="outline"
@@ -480,7 +543,7 @@ export default function AdminLiveDarshanPage() {
                           </Button>
                         </PopoverTrigger>
                         <PopoverContent className="w-full p-0">
-                          <Command>
+                          <Command shouldFilter={false}>
                             <CommandInput
                               placeholder="Search temples..."
                               value={templeSearchQuery}
@@ -488,18 +551,16 @@ export default function AdminLiveDarshanPage() {
                               className="h-9"
                             />
                             <CommandList>
-                              <CommandEmpty>No temple found.</CommandEmpty>
+                              {isSearchingTemples ? (
+                                <div className="flex items-center justify-center py-6 gap-2 text-xs text-muted-foreground">
+                                    <Loader2 className="h-3 w-3 animate-spin" />
+                                    <span>Searching API...</span>
+                                </div>
+                              ) : (
+                                <CommandEmpty>No temple found.</CommandEmpty>
+                              )}
                               <CommandGroup>
                                 {allTemples
-                                  .filter((temple) => {
-                                    const searchLower = templeSearchQuery.toLowerCase();
-                                    const templeName = getLocalized(temple.temple, 'name', language) || "";
-                                    const templeLocation = getLocalized(temple.temple, 'location', language) || "";
-                                    return (
-                                      templeName.toLowerCase().includes(searchLower) ||
-                                      templeLocation.toLowerCase().includes(searchLower)
-                                    );
-                                  })
                                   .map((entry) => (
                                     <CommandItem
                                       key={entry.userId}
@@ -508,6 +569,7 @@ export default function AdminLiveDarshanPage() {
                                         setSelectedTemple(entry);
                                         setEditLiveUrl(entry.temple?.liveUrl || "");
                                         setTempleSearchQuery("");
+                                        setIsPopoverOpen(false);
                                       }}
                                     >
                                       <div className="flex flex-col">

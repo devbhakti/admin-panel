@@ -59,6 +59,7 @@ export default function TempleDetail() {
     const [selectedPurposes, setSelectedPurposes] = useState<string[]>([]);
     const [showRatings, setShowRatings] = useState(false);
     const [selectedEvent, setSelectedEvent] = useState<any>(null);
+    const [videoPlayUrl, setVideoPlayUrl] = useState<string | null>(null);
 
     const purposes = React.useMemo(() => {
         if (!temple?.poojas) return [];
@@ -135,9 +136,10 @@ export default function TempleDetail() {
         return `${API_URL.replace('/api', '')}${path}`;
     };
 
-    // Auto-scroll hero banner
+    // Auto-scroll hero banner — pause when lightbox is open
     useEffect(() => {
         if (!temple) return;
+        if (isFullViewOpen) return; // Video interrupt na ho
         const images = [temple.image, ...(temple.heroImages || [])].filter((img, idx, self) => img && self.indexOf(img) === idx);
         const heroImagesCount = images.length;
 
@@ -148,7 +150,7 @@ export default function TempleDetail() {
         }, 3000);
 
         return () => clearInterval(interval);
-    }, [temple, isAutoScrolling]);
+    }, [temple, isAutoScrolling, isFullViewOpen]);
 
     // Unified media for gallery (Images + YouTube)
     const galleryMedia = React.useMemo(() => {
@@ -157,10 +159,19 @@ export default function TempleDetail() {
             .filter((img, idx, self) => img && self.indexOf(img) === idx)
             .map((img: any) => ({ type: 'image', url: img }));
         
-        const videos = [];
+        const videos: { type: string; url: string }[] = [];
+
+        // liveUrl (live channel)
         if (temple.liveUrl && (temple.liveUrl.includes('youtube.com') || temple.liveUrl.includes('youtu.be'))) {
             videos.push({ type: 'video', url: temple.liveUrl });
         }
+
+        // youtubeLinks array from gallery
+        (temple.youtubeLinks || []).forEach((url: string) => {
+            if (url && !videos.some(v => v.url === url)) {
+                videos.push({ type: 'video', url });
+            }
+        });
         
         return [...images, ...videos];
     }, [temple]);
@@ -554,45 +565,46 @@ export default function TempleDetail() {
 
 
 
-                            <TabsContent value="gallery" className="mt-6">
-                                <div className="columns-1 sm:columns-2 md:columns-3 gap-4 space-y-4">
-                                    {galleryMedia.map((item, index) => (
-                                        <div 
-                                            key={index} 
-                                            className="break-inside-avoid rounded-xl overflow-hidden cursor-pointer group relative shadow-md hover:shadow-xl transition-all duration-300"
-                                            onClick={() => {
-                                                setActiveImageIndex(index);
-                                                setIsFullViewOpen(true);
-                                            }}
-                                        >
-                                            {item.type === 'image' ? (
-                                                <img
-                                                    src={getFullImageUrl(item.url)}
-                                                    alt={`${getLocalized(temple, 'name', language)} gallery ${index + 1}`}
-                                                    className="w-full h-auto object-cover group-hover:scale-105 transition-transform duration-500"
-                                                />
-                                            ) : (
-                                                <div className="relative aspect-video bg-black flex items-center justify-center">
-                                                    <img 
-                                                        src={`https://img.youtube.com/vi/${getYouTubeId(item.url)}/hqdefault.jpg`} 
-                                                        className="w-full h-full object-cover opacity-60"
-                                                        alt="Video thumbnail"
+                            <TabsContent value="gallery" className="mt-6 space-y-8">
+                                {/* Images Section */}
+                                {galleryMedia.filter(m => m.type === 'image').length > 0 && (
+                                    <div className="space-y-3">
+                                        {galleryMedia.some(m => m.type === 'video') && (
+                                            <p className="text-xs font-black uppercase tracking-widest text-muted-foreground px-1">
+                                                📸 Photos ({galleryMedia.filter(m => m.type === 'image').length})
+                                            </p>
+                                        )}
+                                        <div className="columns-1 sm:columns-2 md:columns-3 gap-4 space-y-4">
+                                            {galleryMedia.map((item, index) => item.type !== 'image' ? null : (
+                                                <div 
+                                                    key={index} 
+                                                    className="break-inside-avoid rounded-xl overflow-hidden cursor-pointer group relative shadow-md hover:shadow-xl transition-all duration-300"
+                                                    onClick={() => {
+                                                        setActiveImageIndex(index);
+                                                        setIsFullViewOpen(true);
+                                                    }}
+                                                >
+                                                    <img
+                                                        src={getFullImageUrl(item.url)}
+                                                        alt={`${getLocalized(temple, 'name', language)} gallery ${index + 1}`}
+                                                        className="w-full h-auto object-cover group-hover:scale-105 transition-transform duration-500"
                                                     />
-                                                    <div className="absolute inset-0 flex items-center justify-center">
-                                                        <div className="h-12 w-12 bg-primary/90 rounded-full flex items-center justify-center shadow-lg group-hover:scale-110 transition-transform">
-                                                            <Play className="h-6 w-6 text-white fill-white" />
+                                                    <div className="absolute inset-0 bg-black/20 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center">
+                                                        <div className="bg-white/20 backdrop-blur-md p-2 rounded-full">
+                                                            <Maximize2 className="h-5 w-5 text-white" />
                                                         </div>
                                                     </div>
                                                 </div>
-                                            )}
-                                            <div className="absolute inset-0 bg-black/20 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center">
-                                                <div className="bg-white/20 backdrop-blur-md p-2 rounded-full">
-                                                    <Maximize2 className="h-5 w-5 text-white" />
-                                                </div>
-                                            </div>
+                                            ))}
                                         </div>
-                                    ))}
-                                </div>
+                                    </div>
+                                )}
+
+                                {galleryMedia.filter(m => m.type === 'image').length === 0 && (
+                                    <div className="py-16 text-center text-muted-foreground">
+                                        <p className="text-sm italic">No photos available yet.</p>
+                                    </div>
+                                )}
                             </TabsContent>
                         </Tabs>
                     </div>
@@ -724,51 +736,47 @@ export default function TempleDetail() {
                                     </div>
                                 )}
 
-                                {/* Premium Sidebar Gallery Widget */}
+                                {/* Sidebar: Images + Videos in same 3-col thumbnail grid */}
                                 {galleryMedia.length > 0 && (
-                                    <div className="pt-4 space-y-4">
+                                    <div className="pt-4 space-y-3">
                                         <div className="flex items-center justify-between px-1">
                                             <div className="flex items-center gap-2">
                                                 <div className="h-1 w-8 bg-primary/20 rounded-full" />
-                                                <h3 className="text-[11px] font-black uppercase tracking-[0.2em] text-muted-foreground">{t('common.gallery') || 'GALLERY'}</h3>
+                                                <h3 className="text-[11px] font-black uppercase tracking-[0.2em] text-muted-foreground">GALLERY</h3>
                                             </div>
-                                            <button 
-                                                onClick={() => {
-                                                    const element = document.querySelector('[value="gallery"]');
-                                                    if (element) {
-                                                        (element as HTMLElement).click();
-                                                        element.scrollIntoView({ behavior: 'smooth', block: 'center' });
-                                                    }
-                                                }}
-                                                className="text-[10px] font-bold text-primary hover:underline uppercase tracking-wider"
-                                            >
-                                                {t('common.view_all')}
-                                            </button>
                                         </div>
                                         <div className="grid grid-cols-3 gap-2">
                                             {galleryMedia.slice(0, 6).map((item, idx) => (
-                                                <div 
-                                                    key={idx} 
+                                                <div
+                                                    key={idx}
                                                     className="aspect-square rounded-lg overflow-hidden cursor-pointer group relative shadow-sm hover:shadow-md transition-all border border-primary/5"
                                                     onClick={() => {
-                                                        setActiveImageIndex(idx);
-                                                        setIsFullViewOpen(true);
+                                                        if (item.type === 'video') {
+                                                            setVideoPlayUrl(item.url);
+                                                        } else {
+                                                            setActiveImageIndex(idx);
+                                                            setIsFullViewOpen(true);
+                                                        }
                                                     }}
                                                 >
                                                     {item.type === 'image' ? (
-                                                        <img 
-                                                            src={getFullImageUrl(item.url)} 
+                                                        <img
+                                                            src={getFullImageUrl(item.url)}
                                                             className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-500"
                                                             alt="Gallery thumbnail"
                                                         />
                                                     ) : (
-                                                        <div className="w-full h-full bg-black/80 flex items-center justify-center relative">
-                                                            <img 
-                                                                src={`https://img.youtube.com/vi/${getYouTubeId(item.url)}/default.jpg`} 
-                                                                className="w-full h-full object-cover opacity-40"
+                                                        <div className="w-full h-full bg-black flex items-center justify-center relative">
+                                                            <img
+                                                                src={`https://img.youtube.com/vi/${getYouTubeId(item.url)}/default.jpg`}
+                                                                className="w-full h-full object-cover opacity-50"
                                                                 alt="Video thumbnail"
                                                             />
-                                                            <Play className="absolute h-5 w-5 text-white fill-white group-hover:scale-125 transition-transform" />
+                                                            <div className="absolute inset-0 flex items-center justify-center">
+                                                                <div className="w-7 h-7 bg-red-600 rounded-full flex items-center justify-center shadow-md group-hover:scale-110 transition-transform">
+                                                                    <Play className="w-3.5 h-3.5 text-white fill-white" />
+                                                                </div>
+                                                            </div>
                                                         </div>
                                                     )}
                                                 </div>
@@ -783,6 +791,26 @@ export default function TempleDetail() {
             </section>
 
             <Footer />
+
+            {/* Video Play Modal */}
+            <Dialog open={!!videoPlayUrl} onOpenChange={(open) => !open && setVideoPlayUrl(null)}>
+                <DialogContent className="max-w-2xl w-full p-0 border-none bg-black overflow-hidden rounded-2xl">
+                    <DialogTitle className="sr-only">YouTube Video</DialogTitle>
+                    {videoPlayUrl && (
+                        <div className="aspect-video w-full">
+                            <iframe
+                                width="100%"
+                                height="100%"
+                                src={`https://www.youtube.com/embed/${getYouTubeId(videoPlayUrl)}?autoplay=1`}
+                                title="Temple Video"
+                                frameBorder="0"
+                                allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
+                                allowFullScreen
+                            />
+                        </div>
+                    )}
+                </DialogContent>
+            </Dialog>
 
             {/* Full View Modal */}
             <Dialog open={isFullViewOpen} onOpenChange={setIsFullViewOpen}>

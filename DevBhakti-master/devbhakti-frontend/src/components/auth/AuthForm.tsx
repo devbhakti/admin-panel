@@ -72,7 +72,11 @@ const AuthForm: React.FC = () => {
         mode
       });
       setResendTimer(60);
-      toast({ title: t('auth.otp_sent_title'), description: t('auth.otp_sent_desc') });
+      toast({ 
+        title: t('auth.otp_sent_title'), 
+        description: t('auth.otp_sent_desc'),
+        variant: "success"
+      });
     } catch (error: any) {
       toast({
         title: t('auth.otp_failed_title'),
@@ -99,6 +103,7 @@ const AuthForm: React.FC = () => {
         toast({
           title: t('auth.welcome_title'),
           description: t('auth.welcome_desc'),
+          variant: "success"
         });
         setLoading(false);
         return;
@@ -153,6 +158,7 @@ const AuthForm: React.FC = () => {
       toast({
         title: t('auth.login_success'),
         description: t('auth.login_success_desc'),
+        variant: "success"
       });
 
       const redirect = searchParams.get("redirect");

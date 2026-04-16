@@ -91,9 +91,12 @@ router.get('/', async (req: Request, res: Response) => {
       }
     });
 
+    const { getLang, localize } = require('../utils/localization');
+    const lang = getLang(req);
+
     return res.json({ 
       success: true, 
-      data: notifications,
+      data: localize(notifications, lang),
       unreadCount
     });
   } catch (error: any) {

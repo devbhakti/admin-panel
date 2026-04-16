@@ -22,23 +22,25 @@ interface LanguageContextType {
 const LanguageContext = createContext<LanguageContextType | undefined>(undefined);
 
 export const LanguageProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
-  // Load initial language from localStorage for instant switch on refresh
-  const [language, setLanguageState] = useState<Language>(() => {
-    if (typeof window !== 'undefined') {
-      const savedLang = localStorage.getItem('devbhakti_lang') as Language;
-      if (savedLang && ['en', 'hi', 'mr'].includes(savedLang)) {
-        // Set axios header immediately
-        axios.defaults.headers.common['lang'] = savedLang;
-        return savedLang;
-      }
+  const [language, setLanguageState] = useState<Language>('en');
+  const [isMounted, setIsMounted] = useState(false);
+
+  useEffect(() => {
+    const savedLang = localStorage.getItem('devbhakti_lang') as Language;
+    if (savedLang && ['en', 'hi', 'mr'].includes(savedLang)) {
+      setLanguageState(savedLang);
+      axios.defaults.headers.common['lang'] = savedLang;
+      document.documentElement.lang = savedLang;
     }
-    return 'en';
-  });
+    setIsMounted(true);
+  }, []);
 
   // Keep axios header in sync when language changed
   useEffect(() => {
-    axios.defaults.headers.common['lang'] = language;
-  }, [language]);
+    if (isMounted) {
+      axios.defaults.headers.common['lang'] = language;
+    }
+  }, [language, isMounted]);
 
   const setLanguage = (lang: Language) => {
     setLanguageState(lang);

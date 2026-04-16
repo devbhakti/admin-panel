@@ -163,6 +163,20 @@ export const requestWithdrawal = async (req: Request, res: Response) => {
       });
     });
 
+    try {
+        const { notifyAdmins } = require("../../services/firebaseService");
+        await notifyAdmins({
+            title: 'New Temple Withdrawal Request 🏛️',
+            body: `A temple has requested a withdrawal of ₹${amount}.`,
+            data: {
+                link: '/admin/finance',
+                type: 'TEMPLE_WITHDRAWAL_REQUEST'
+            }
+        });
+    } catch (notifyErr) {
+        console.error("Failed to notify admins for withdrawal:", notifyErr);
+    }
+
     return res.status(201).json({ success: true, message: "Withdrawal request submitted successfully" });
 
   } catch (error: any) {

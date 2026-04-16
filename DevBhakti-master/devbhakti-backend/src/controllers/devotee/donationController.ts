@@ -3,6 +3,8 @@ import { prisma } from "../../lib/prisma";
 import razorpay from "../../lib/razorpay";
 import { generateDonationDisplayId } from "../../utils/idGenerator";
 import { getLang, localize, getEnglish } from "../../utils/localization";
+import { getCommissionForAmount } from "../admin/commissionSlabController";
+import { CommissionCategory, SlabType } from "@prisma/client";
 import PDFDocument from 'pdfkit';
 
 import path from 'path';
@@ -47,13 +49,25 @@ export const initiateDonation = async (req: Request, res: Response) => {
         // Generate Custom Display ID
         const displayId = generateDonationDisplayId();
 
+        // Calculate Commission
+        const commissionData = await getCommissionForAmount(
+            amount,
+            SlabType.GLOBAL,
+            undefined,
+            CommissionCategory.DONATION
+        );
+
+        const commissionAmount = commissionData.totalCommission || 0;
+        const netEarning = amount - commissionAmount;
+
         // Save Pending Donation Record
         const donation = await prisma.donation.create({
             data: {
                 displayId,
                 templeId,
-
                 amount,
+                commissionAmount,
+                netEarning,
                 donorName,
                 donorPhone,
                 donorEmail,

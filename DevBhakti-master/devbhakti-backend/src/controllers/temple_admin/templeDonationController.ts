@@ -136,10 +136,10 @@ export const downloadDonationsPdf = async (req: Request, res: Response) => {
 
         doc.fontSize(10).font('Helvetica-Bold');
         doc.text('Donor Name', colPositions[0], tableTop);
-        doc.text('Amount', colPositions[1], tableTop);
-        doc.text('Method', colPositions[2], tableTop);
-        doc.text('Date', colPositions[3], tableTop);
-        doc.text('Ref ID', colPositions[4], tableTop);
+        doc.text('Gross', colPositions[1], tableTop);
+        doc.text('Comm.', colPositions[2], tableTop);
+        doc.text('Net', colPositions[3], tableTop);
+        doc.text('Date', colPositions[4], tableTop);
 
         doc.moveTo(50, tableTop + 15).lineTo(550, tableTop + 15).stroke();
 
@@ -152,10 +152,10 @@ export const downloadDonationsPdf = async (req: Request, res: Response) => {
                 y = 50;
             }
             doc.text(d.isAnonymous ? 'Anonymous' : d.donorName, colPositions[0], y, { width: 110 });
-            doc.text(`Rs. ${d.amount}`, colPositions[1], y);
-            doc.text(d.paymentMethod || 'N/A', colPositions[2], y);
-            doc.text(new Date(d.createdAt).toLocaleDateString(), colPositions[3], y);
-            doc.text(d.id.slice(-6).toUpperCase(), colPositions[4], y);
+            doc.text(`${d.amount}`, colPositions[1], y);
+            doc.text(`${d.commissionAmount || 0}`, colPositions[2], y);
+            doc.text(`${d.netEarning || d.amount}`, colPositions[3], y);
+            doc.text(new Date(d.createdAt).toLocaleDateString(), colPositions[4], y);
             y += 20;
         });
 
@@ -192,7 +192,9 @@ export const downloadDonationsExcel = async (req: Request, res: Response) => {
             { header: 'Donor Name', key: 'donorName', width: 25 },
             { header: 'Email', key: 'donorEmail', width: 25 },
             { header: 'Phone', key: 'donorPhone', width: 15 },
-            { header: 'Amount (₹)', key: 'amount', width: 15 },
+            { header: 'Gross Amount (₹)', key: 'amount', width: 15 },
+            { header: 'Commission (₹)', key: 'commissionAmount', width: 15 },
+            { header: 'Net Earning (₹)', key: 'netEarning', width: 15 },
             { header: 'Status', key: 'status', width: 15 },
             { header: 'Payment Method', key: 'paymentMethod', width: 20 },
             { header: 'Is Anonymous', key: 'isAnonymous', width: 15 },
@@ -211,6 +213,8 @@ export const downloadDonationsExcel = async (req: Request, res: Response) => {
                 donorEmail: d.donorEmail || "N/A",
                 donorPhone: d.donorPhone || "N/A",
                 amount: d.amount,
+                commissionAmount: d.commissionAmount || 0,
+                netEarning: d.netEarning || d.amount,
                 status: d.status,
                 paymentMethod: d.paymentMethod || "N/A",
                 isAnonymous: d.isAnonymous ? "Yes" : "No",
