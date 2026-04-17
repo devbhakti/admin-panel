@@ -1100,7 +1100,7 @@ export function TempleForm({
                                 <div className="flex items-center justify-between">
                                     <Label className="text-sm font-bold flex items-center gap-2">
                                         Marketplace Commission
-                                        <Badge variant={marketplaceRateType === 'CUSTOM' ? 'warning' : 'info'} className="text-[10px] px-2 py-0.5 rounded-full">
+                                        <Badge variant={marketplaceRateType === 'CUSTOM' ? 'default' : 'secondary'} className="text-[10px] px-2 py-0.5 rounded-full">
                                             {marketplaceRateType === 'CUSTOM' ? 'CUSTOM RATE' : 'GLOBAL DEFAULT'}
                                         </Badge>
                                     </Label>
@@ -1211,7 +1211,7 @@ export function TempleForm({
                                 <div className="flex items-center justify-between">
                                     <Label className="text-sm font-bold flex items-center gap-2">
                                         Pooja Commission
-                                        <Badge variant={poojaRateType === 'CUSTOM' ? 'warning' : 'info'} className="text-[10px] px-2 py-0.5 rounded-full">
+                                        <Badge variant={poojaRateType === 'CUSTOM' ? 'default' : 'secondary'} className="text-[10px] px-2 py-0.5 rounded-full">
                                             {poojaRateType === 'CUSTOM' ? 'CUSTOM RATE' : 'GLOBAL DEFAULT'}
                                         </Badge>
                                     </Label>
