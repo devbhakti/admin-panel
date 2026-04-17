@@ -114,10 +114,10 @@ const LiveDarshanSection: React.FC = () => {
                 <div className="absolute inset-0 bg-foreground/20" />
 
                 {/* Play button overlay */}
-                <div className="absolute inset-0 flex items-center justify-center pointer-events-none">
-                  <div className="text-center">
-                    <div className="w-20 h-20 rounded-full bg-primary/80 backdrop-blur-sm flex items-center justify-center mx-auto mb-4 group-hover:bg-primary transition-colors shadow-lg">
-                      <Play className="w-8 h-8 text-primary-foreground fill-primary-foreground group-hover:scale-110 transition-transform" />
+                <div className="absolute inset-0 flex items-center justify-end pointer-events-none">
+                  <div className="text-right m-4">
+                    <div className="w-16 h-16 rounded-full bg-primary/80 backdrop-blur-sm flex items-center justify-center ml-auto mb-2 group-hover:bg-primary transition-colors shadow-lg">
+                      <Play className="w-6 h-6 text-primary-foreground fill-primary-foreground group-hover:scale-110 transition-transform" />
                     </div>
                     <p className="text-primary-foreground font-medium text-sm drop-shadow-lg">
                       {t('landing.landing_live_darshan.click_to_watch')}

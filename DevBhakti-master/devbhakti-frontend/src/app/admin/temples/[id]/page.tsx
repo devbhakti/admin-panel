@@ -19,10 +19,15 @@ import {
     ChevronLeft,
     ChevronRight,
     Package,
-    Store
+    Store,
+    Youtube,
+    ExternalLink as ExternalLinkIcon,
+    Languages
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { useLanguage, Language } from "@/context/LanguageContext";
 import { fetchAllTemplesAdmin, fetchCommissionSlabsAdmin, fetchProductsByTempleAdmin } from "@/api/adminController";
 import { API_URL } from "@/config/apiConfig";
 import { Card, CardContent } from "@/components/ui/card";
@@ -37,7 +42,10 @@ export default function ViewTemplePage() {
     const [currentHeroIndex, setCurrentHeroIndex] = useState(0);
     const [marketplaceSlabs, setMarketplaceSlabs] = useState<any[]>([]);
     const [poojaSlabs, setPoojaSlabs] = useState<any[]>([]);
+    const [isCustomMarketplace, setIsCustomMarketplace] = useState(false);
+    const [isCustomPooja, setIsCustomPooja] = useState(false);
     const [products, setProducts] = useState<any[]>([]);
+    const { language, setLanguage } = useLanguage();
 
     useEffect(() => {
         loadData();
@@ -45,32 +53,56 @@ export default function ViewTemplePage() {
 
     const loadData = async () => {
         try {
-            const allInst = await fetchAllTemplesAdmin();
+            const allInst = await fetchAllTemplesAdmin({ lang: 'raw' });
             const found = allInst.find((i: any) => i.id === instId);
             setInst(found);
 
             if (found) {
-                // Update breadcrumb with temple name
+                // Safe multilingual extractor (defined locally within loadData or accessed via scoped component)
+                // However, for simplicity and immediate fix, we use a robust version of the previous logic
                 const nameStr = found.temple?.name;
                 let displayName = "Temple Details";
-                if (typeof nameStr === 'string') {
-                    if (nameStr.startsWith('{')) {
-                        try { displayName = JSON.parse(nameStr).en || JSON.parse(nameStr).hi; } catch(e){}
+                
+                if (nameStr) {
+                    if (typeof nameStr === 'object') {
+                        displayName = nameStr.en || nameStr.hi || nameStr.mr || "Temple Details";
+                    } else if (typeof nameStr === 'string' && nameStr.trim().startsWith('{')) {
+                        try {
+                            const parsed = JSON.parse(nameStr);
+                            displayName = parsed.en || parsed.hi || parsed.mr || nameStr;
+                        } catch (e) {
+                            displayName = nameStr;
+                        }
                     } else {
-                        displayName = nameStr;
+                        displayName = String(nameStr);
                     }
                 }
+                
                 window.dispatchEvent(new CustomEvent('updateBreadcrumb', { detail: displayName }));
             }
 
             if (found?.temple?.id) {
                 // Load Marketplace Slabs
                 const mSlabsResponse = await fetchCommissionSlabsAdmin('TEMPLE', found.temple.id, 'MARKETPLACE');
-                if (mSlabsResponse.success) setMarketplaceSlabs(mSlabsResponse.data);
+                if (mSlabsResponse.success && mSlabsResponse.data.length > 0) {
+                    setMarketplaceSlabs(mSlabsResponse.data);
+                    setIsCustomMarketplace(true);
+                } else {
+                    const globalM = await fetchCommissionSlabsAdmin('GLOBAL', undefined, 'MARKETPLACE');
+                    if (globalM.success) setMarketplaceSlabs(globalM.data);
+                    setIsCustomMarketplace(false);
+                }
 
                 // Load Pooja Slabs
                 const pSlabsResponse = await fetchCommissionSlabsAdmin('TEMPLE', found.temple.id, 'POOJA');
-                if (pSlabsResponse.success) setPoojaSlabs(pSlabsResponse.data);
+                if (pSlabsResponse.success && pSlabsResponse.data.length > 0) {
+                    setPoojaSlabs(pSlabsResponse.data);
+                    setIsCustomPooja(true);
+                } else {
+                    const globalP = await fetchCommissionSlabsAdmin('GLOBAL', undefined, 'POOJA');
+                    if (globalP.success) setPoojaSlabs(globalP.data);
+                    setIsCustomPooja(false);
+                }
 
                 // Load Products
                 const templeProducts = await fetchProductsByTempleAdmin(found.temple.id);
@@ -89,15 +121,8 @@ export default function ViewTemplePage() {
         return `${API_URL.replace('/api', '')}${path}`;
     };
 
-    if (isLoading) {
-        return <div className="flex items-center justify-center min-h-[400px]"><div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary"></div></div>;
-    }
-
-    if (!inst) return <div className="text-center py-20">Temple not found.</div>;
-
-    const temple = inst.temple;
-    
-    // Safe multilingual extractor
+    // Safe multilingual extractor WITHOUT fallback (used inside tab content)
+    // defined here so it's fresh for every render with current 'language'
     const parseL = (field: any, lang: string = "en"): string => {
         if (!field) return "";
         if (typeof field === "object") return field[lang] || field.en || field.hi || field.mr || "";
@@ -109,15 +134,40 @@ export default function ViewTemplePage() {
         } catch (e) { /* plain string */ }
         return field;
     };
+
+    const parseLStrict = (field: any, lang: string): string => {
+        if (!field) return "";
+        if (typeof field === "object") return field[lang] || "";
+        try {
+            const parsed = JSON.parse(field);
+            if (typeof parsed === "object" && parsed !== null) {
+                return parsed[lang] || "";
+            }
+        } catch (e) { /* plain string */ }
+        return lang === "en" ? field : "";
+    };
+
+    if (isLoading) {
+        return <div className="flex items-center justify-center min-h-[400px]"><div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary"></div></div>;
+    }
+
+    if (!inst) return <div className="text-center py-20">Temple not found.</div>;
+
+    const temple = inst.temple;
     
-    // Extract primary English versions for Admin display
-    const name = parseL(temple?.name);
-    const category = parseL(temple?.category);
-    const location = parseL(temple?.location);
-    const description = parseL(temple?.description);
-    const history = parseL(temple?.history);
-    const fullAddress = parseL(temple?.fullAddress);
-    const adminName = parseL(inst.name);
+    // Extract localized values based on global language (for header/title only)
+    const name = parseL(temple?.name, language);
+    const category = parseL(temple?.category, language);
+    const location = parseL(temple?.location, language);
+    const description = parseL(temple?.description, language);
+    const history = parseL(temple?.history, language);
+    const fullAddress = parseL(temple?.fullAddress, language);
+    const adminName = parseL(inst.name, language);
+
+    const extractYoutubeId = (url: string): string | null => {
+        const match = url.match(/(?:youtube\.com\/watch\?v=|youtu\.be\/)([^&\s?]+)/);
+        return match ? match[1] : null;
+    };
 
     const heroImages = temple?.heroImages && temple.heroImages.length > 0 ? temple.heroImages : [temple?.image];
 
@@ -227,36 +277,76 @@ export default function ViewTemplePage() {
                     </div>
                 </div>
             </div>
+            
+            {/* Multilingual View Switcher */}
+            <div className="flex items-center justify-between mb-4 bg-slate-50 p-2 rounded-xl border border-slate-100">
+                <div className="flex items-center gap-2 px-2 text-slate-500 font-bold text-sm">
+                    <Languages className="w-4 h-4" /> Localized Content View
+                </div>
+                <Tabs value={language} onValueChange={(v) => setLanguage(v as Language)} className="w-auto">
+                    <TabsList className="bg-white border">
+                        <TabsTrigger value="en">English</TabsTrigger>
+                        <TabsTrigger value="hi">हिंदी</TabsTrigger>
+                        <TabsTrigger value="mr">मराठी</TabsTrigger>
+                    </TabsList>
+                </Tabs>
+            </div>
 
             <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
-                {/* Left Column - Details */}
+                {/* Detailed Info with Tabs Support */}
                 <div className="lg:col-span-2 space-y-8">
-                    {/* About & Description */}
-                    <Card className="border-none shadow-sm overflow-hidden">
-                        <CardContent className="p-8 space-y-6">
-                            <div className="space-y-4">
-                                <h2 className="text-2xl font-bold flex items-center gap-2 text-slate-800">
-                                    <FileText className="w-6 h-6 text-primary" />
-                                    Temple Overview
-                                </h2>
-                                <p className="text-slate-600 leading-relaxed italic border-l-4 border-primary/20 pl-4">
-                                    {description}
-                                </p>
-                            </div>
+                    <Tabs value={language} onValueChange={(v) => setLanguage(v as Language)} className="w-full">
+                        {(['en', 'hi', 'mr'] as Language[]).map((l) => (
+                            <TabsContent key={l} value={l} className="space-y-8 mt-0">
+                                {/* Display Name Preview Card */}
+                                <Card className="border-none shadow-sm overflow-hidden bg-gradient-to-r from-orange-50/50 to-transparent">
+                                    <CardContent className="p-6">
+                                        <h3 className="text-[10px] font-bold text-slate-400 uppercase tracking-widest mb-1">Display Name ({l.toUpperCase()})</h3>
+                                        <h2 className="text-2xl font-bold text-slate-800 font-serif">
+                                            {parseLStrict(temple?.name, l) || (
+                                                <span className="text-slate-400 italic text-base font-normal">No translation available for {l.toUpperCase()}</span>
+                                            )}
+                                        </h2>
+                                    </CardContent>
+                                </Card>
 
-                            {history && (
-                                <div className="space-y-4 pt-4 border-t">
-                                    <h2 className="text-2xl font-bold flex items-center gap-2 text-slate-800">
-                                        <History className="w-6 h-6 text-primary" />
-                                        Spiritual History
-                                    </h2>
-                                    <p className="text-slate-600 leading-relaxed whitespace-pre-line">
-                                        {history}
-                                    </p>
-                                </div>
-                            )}
-                        </CardContent>
-                    </Card>
+                                {/* About & Description */}
+                                <Card className="border-none shadow-sm overflow-hidden">
+                                    <CardContent className="p-8 space-y-6">
+                                        <div className="space-y-4">
+                                            <h2 className="text-2xl font-bold flex items-center gap-2 text-slate-800">
+                                                <FileText className="w-6 h-6 text-primary" />
+                                                Temple Overview ({l.toUpperCase()})
+                                            </h2>
+                                            {parseLStrict(temple?.description, l) ? (
+                                                <p className="text-slate-600 leading-relaxed italic border-l-4 border-primary/20 pl-4">
+                                                    {parseLStrict(temple?.description, l)}
+                                                </p>
+                                            ) : (
+                                                <div className="flex items-center gap-2 p-3 rounded-lg bg-slate-50 border border-dashed border-slate-200">
+                                                    <span className="text-xs text-slate-400 italic">No description available in {l.toUpperCase()}. Please add a translation in the Edit form.</span>
+                                                </div>
+                                            )}
+                                        </div>
+
+                                        {parseLStrict(temple?.history, l) && (
+                                            <div className="space-y-4 pt-4 border-t">
+                                                <h2 className="text-2xl font-bold flex items-center gap-2 text-slate-800">
+                                                    <History className="w-6 h-6 text-primary" />
+                                                    Spiritual History ({l.toUpperCase()})
+                                                </h2>
+                                                <p className="text-slate-600 leading-relaxed whitespace-pre-line">
+                                                    {parseLStrict(temple?.history, l)}
+                                                </p>
+                                            </div>
+                                        )}
+                                    </CardContent>
+                                </Card>
+                            </TabsContent>
+                        ))}
+                    </Tabs>
+
+                    {/* Left Column - Details (Remaining Non-Tabs Sections) */}
 
                     {/* Linked Poojas */}
                     <Card className="border-none shadow-sm overflow-hidden">
@@ -269,8 +359,8 @@ export default function ViewTemplePage() {
                                 {temple?.poojas?.map((p: any) => (
                                     <div key={p.id} className="p-4 rounded-xl border bg-slate-50 flex items-center justify-between group hover:border-primary transition-all">
                                         <div className="flex flex-col">
-                                            <span className="font-bold text-slate-800">{p.name}</span>
-                                            <span className="text-sm text-slate-500">{p.category} • {p.duration}</span>
+                                            <span className="font-bold text-slate-800">{parseL(p.name, language)}</span>
+                                            <span className="text-sm text-slate-500">{parseL(p.category, language)}{p.duration ? ` • ${p.duration}` : ''}</span>
                                         </div>
                                         <Badge variant="outline" className="group-hover:bg-primary group-hover:text-white transition-colors">₹{p.price}</Badge>
                                     </div>
@@ -291,8 +381,8 @@ export default function ViewTemplePage() {
                                 {products?.map((p: any) => (
                                     <div key={p.id} className="p-4 rounded-xl border bg-slate-50 flex items-center justify-between group hover:border-primary transition-all">
                                         <div className="flex flex-col">
-                                            <span className="font-bold text-slate-800">{p.name}</span>
-                                            <span className="text-sm text-slate-500">{p.category}</span>
+                                            <span className="font-bold text-slate-800">{parseL(p.name, language)}</span>
+                                            <span className="text-sm text-slate-500">{parseL(p.category, language)}</span>
                                         </div>
                                         <Badge variant="outline" className="group-hover:bg-primary group-hover:text-white transition-colors">
                                             ₹{p.variants?.[0]?.price || 0}
@@ -318,6 +408,9 @@ export default function ViewTemplePage() {
                                     <h3 className="font-bold text-lg text-slate-800 flex items-center gap-2">
                                         <Store className="w-5 h-5 text-blue-600" />
                                         Marketplace Slabs
+                                        <Badge variant={isCustomMarketplace ? 'default' : 'outline'} className="text-[9px] uppercase">
+                                            {isCustomMarketplace ? 'Custom' : 'Global Default'}
+                                        </Badge>
                                     </h3>
                                     {marketplaceSlabs.length > 0 ? (
                                         <div className="rounded-lg border overflow-hidden">
@@ -354,6 +447,9 @@ export default function ViewTemplePage() {
                                     <h3 className="font-bold text-lg text-slate-800 flex items-center gap-2">
                                         <Calendar className="w-5 h-5 text-orange-600" />
                                         Pooja Booking Slabs
+                                        <Badge variant={isCustomPooja ? 'default' : 'outline'} className="text-[9px] uppercase">
+                                            {isCustomPooja ? 'Custom' : 'Global Default'}
+                                        </Badge>
                                     </h3>
                                     {poojaSlabs.length > 0 ? (
                                         <div className="rounded-lg border overflow-hidden">
@@ -401,8 +497,8 @@ export default function ViewTemplePage() {
                                             <span className="text-xl font-bold">{ev.date?.split(' ')[1]?.replace(',', '') || ev.date}</span>
                                         </div>
                                         <div>
-                                            <h4 className="font-bold text-slate-800">{ev.name}</h4>
-                                            <p className="text-sm text-slate-500">{ev.description || "Divine celebration at the temple."}</p>
+                                            <h4 className="font-bold text-slate-800">{parseL(ev.name, language)}</h4>
+                                            <p className="text-sm text-slate-500">{parseL(ev.description, language) || "Divine celebration at the temple."}</p>
                                         </div>
                                     </div>
                                 ))}
@@ -410,6 +506,45 @@ export default function ViewTemplePage() {
                             </div>
                         </CardContent>
                     </Card>
+
+                    {/* YouTube Videos Section */}
+                    {temple?.youtubeLinks && temple.youtubeLinks.length > 0 && (
+                        <Card className="border-none shadow-sm overflow-hidden">
+                            <CardContent className="p-8 space-y-6">
+                                <h2 className="text-2xl font-bold flex items-center gap-2 text-slate-800">
+                                    <Youtube className="w-6 h-6 text-red-600" />
+                                    Sacred Video Gallery
+                                </h2>
+                                <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                                    {temple.youtubeLinks.map((link: string, idx: number) => {
+                                        const videoId = extractYoutubeId(link);
+                                        if (!videoId) return null;
+                                        return (
+                                            <div key={idx} className="group relative">
+                                                <div className="aspect-[16/9] rounded-2xl overflow-hidden shadow-md border-2 border-white transition-all hover:shadow-xl hover:scale-[1.02] bg-black">
+                                                    <iframe
+                                                        width="100%"
+                                                        height="100%"
+                                                        src={`https://www.youtube.com/embed/${videoId}`}
+                                                        title={`Temple video ${idx + 1}`}
+                                                        frameBorder="0"
+                                                        allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
+                                                        allowFullScreen
+                                                        className="w-full h-full"
+                                                    />
+                                                </div>
+                                                <div className="absolute top-2 right-2 opacity-0 group-hover:opacity-100 transition-opacity">
+                                                    <a href={link} target="_blank" rel="noopener noreferrer" className="p-1.5 rounded-full bg-black/60 text-white backdrop-blur-sm">
+                                                        <ExternalLinkIcon className="w-3.5 h-3.5" />
+                                                    </a>
+                                                </div>
+                                            </div>
+                                        );
+                                    })}
+                                </div>
+                            </CardContent>
+                        </Card>
+                    )}
                 </div>
 
                 {/* Right Column - Sidebar Info */}

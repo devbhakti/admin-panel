@@ -80,7 +80,9 @@ import {
     toggleTempleStatusAdmin,
     fetchTempleUpdateRequests,
     fetchCommissionSlabsAdmin,
-    fetchTempleCategories
+    fetchTempleCategories,
+    fetchTempleLocations,
+    fetchAllPoojasAdmin
 } from "@/api/adminController";
 import { useToast } from "@/hooks/use-toast";
 import { Suspense } from "react";
@@ -157,16 +159,36 @@ function TemplesContent() {
 
         fetchTempleCategories().then(res => {
             if (res.success && Array.isArray(res.data)) {
-                setDynamicDeities(res.data);
+                setDynamicCategories(res.data);
+            }
+        });
+
+        fetchTempleLocations().then(res => {
+            if (res.success && Array.isArray(res.data)) {
+                setDynamicLocations(res.data);
+            }
+        });
+
+        // Fetch Poojas (Rituals) for filter
+        fetchAllPoojasAdmin({ isMaster: true }).then(res => {
+            const poojaData = Array.isArray(res) ? res : res.data;
+            if (Array.isArray(poojaData)) {
+                // Deduplicate master poojas by name
+                const uniquePoojas = poojaData.filter((p: any, index: number, self: any[]) =>
+                    index === self.findIndex((t: any) => parseLocalizedValue(t.name) === parseLocalizedValue(p.name))
+                );
+                setRitualTypes(uniquePoojas);
             }
         });
     }, []);
 
-    const [selectedDeity, setSelectedDeity] = useState<string>("all");
+    const [selectedCategory, setSelectedCategory] = useState<string>("all");
     const [transactionRange, setTransactionRange] = useState<string>("all");
-    const [stateFilter, setStateFilter] = useState<string>("");
-    const [districtFilter, setDistrictFilter] = useState<string>("");
-    const [dynamicDeities, setDynamicDeities] = useState<string[]>([]);
+    const [selectedLocation, setSelectedLocation] = useState<string>("all");
+    const [selectedRitual, setSelectedRitual] = useState<string>("all");
+    const [dynamicCategories, setDynamicCategories] = useState<string[]>([]);
+    const [dynamicLocations, setDynamicLocations] = useState<string[]>([]);
+    const [ritualTypes, setRitualTypes] = useState<any[]>([]);
 
     useEffect(() => {
         if (currentPage === 1) {
@@ -175,7 +197,7 @@ function TemplesContent() {
             setCurrentPage(1);
         }
         loadUpdateRequestsCount();
-    }, [debouncedSearch, activeTab, selectedTempleFilter, date, selectedDeity, transactionRange, stateFilter, districtFilter]);
+    }, [debouncedSearch, activeTab, selectedTempleFilter, date, selectedCategory, transactionRange, selectedLocation, selectedRitual]);
 
     useEffect(() => {
         if (currentPage !== 1) {
@@ -202,10 +224,10 @@ function TemplesContent() {
                 isVerified: activeTab === "verified",
                 templeId: idParam || (selectedTempleFilter === "all" ? undefined : selectedTempleFilter),
                 date: date ? date.toISOString() : undefined,
-                deity: selectedDeity === "all" ? undefined : selectedDeity,
+                category: selectedCategory === "all" ? undefined : selectedCategory,
                 transactionRange: transactionRange === "all" ? undefined : transactionRange,
-                state: stateFilter || undefined,
-                district: districtFilter || undefined
+                location: selectedLocation === "all" ? undefined : selectedLocation,
+                ritual: selectedRitual === "all" ? undefined : selectedRitual
             });
 
             const data = Array.isArray(res) ? res : res.data;
@@ -502,21 +524,55 @@ function TemplesContent() {
                     />
                 </div>
 
-                <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-5 gap-2">
+                <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-6 gap-2">
+                    {/* Divine Category Filter */}
                     <div className="w-full">
-                        <Select value={selectedDeity} onValueChange={setSelectedDeity}>
+                        <Select value={selectedCategory} onValueChange={setSelectedCategory}>
                             <SelectTrigger className="h-10 w-full">
-                                <SelectValue placeholder="Deity/God" />
+                                <SelectValue placeholder="Divine Category" />
                             </SelectTrigger>
                             <SelectContent>
-                                <SelectItem value="all">All Deities</SelectItem>
-                                {dynamicDeities.map(deity => (
-                                    <SelectItem key={deity} value={deity}>{deity}</SelectItem>
+                                <SelectItem value="all">All Categories</SelectItem>
+                                {dynamicCategories.map(cat => (
+                                    <SelectItem key={cat} value={cat}>{cat}</SelectItem>
                                 ))}
                             </SelectContent>
                         </Select>
                     </div>
 
+                    {/* Sanctum Location Filter */}
+                    <div className="w-full">
+                        <Select value={selectedLocation} onValueChange={setSelectedLocation}>
+                            <SelectTrigger className="h-10 w-full">
+                                <SelectValue placeholder="Sanctum Location" />
+                            </SelectTrigger>
+                            <SelectContent>
+                                <SelectItem value="all">All Locations</SelectItem>
+                                {dynamicLocations.map(loc => (
+                                    <SelectItem key={loc} value={loc}>{loc}</SelectItem>
+                                ))}
+                            </SelectContent>
+                        </Select>
+                    </div>
+
+                    {/* Ritual Type Filter */}
+                    <div className="w-full">
+                        <Select value={selectedRitual} onValueChange={setSelectedRitual}>
+                            <SelectTrigger className="h-10 w-full">
+                                <SelectValue placeholder="Ritual Type" />
+                            </SelectTrigger>
+                            <SelectContent>
+                                <SelectItem value="all">All Poojas</SelectItem>
+                                {ritualTypes.map(ritual => (
+                                    <SelectItem key={ritual.id} value={parseLocalizedValue(ritual.name)}>
+                                        {parseLocalizedValue(ritual.name)}
+                                    </SelectItem>
+                                ))}
+                            </SelectContent>
+                        </Select>
+                    </div>
+
+                    {/* Transactions Filter - KEPT */}
                     <div className="w-full">
                         <Select value={transactionRange} onValueChange={setTransactionRange}>
                             <SelectTrigger className="h-10 w-full">
@@ -533,36 +589,18 @@ function TemplesContent() {
                         </Select>
                     </div>
 
-                    <div className="w-full">
-                        <Input
-                            placeholder="State..."
-                            className="h-10 w-full"
-                            value={stateFilter}
-                            onChange={(e) => setStateFilter(e.target.value)}
-                        />
-                    </div>
-
-                    <div className="w-full">
-                        <Input
-                            placeholder="District..."
-                            className="h-10 w-full"
-                            value={districtFilter}
-                            onChange={(e) => setDistrictFilter(e.target.value)}
-                        />
-                    </div>
-
                     <div className="flex flex-col sm:flex-row gap-2 sm:col-span-2 lg:col-span-2 xl:col-span-1">
                         <Popover>
                             <PopoverTrigger asChild>
                                 <Button
                                     variant="outline"
                                     className={cn(
-                                        "w-full sm:w-[180px] h-10 justify-start text-left font-normal",
+                                        "w-full sm:w-[190px] h-10 justify-start text-left font-normal",
                                         !date && "text-muted-foreground"
                                     )}
                                 >
-                                    <CalendarIcon className="mr-2 h-4 w-4" />
-                                    {date ? format(date, "PPP") : <span>Filter by date</span>}
+                                    <CalendarIcon className=" h-4 w-4" />
+                                    {date ? format(date, "PPP") : <span>Filter by Created Date</span>}
                                 </Button>
                             </PopoverTrigger>
                             <PopoverContent className="w-auto p-0" align="end">
@@ -574,7 +612,7 @@ function TemplesContent() {
                                 />
                             </PopoverContent>
                         </Popover>
-                        {(date || selectedTempleFilter !== "all" || searchTerm || selectedDeity !== "all" || transactionRange !== "all" || stateFilter || districtFilter) && (
+                        {(date || selectedTempleFilter !== "all" || searchTerm || selectedCategory !== "all" || transactionRange !== "all" || selectedLocation !== "all" || selectedRitual !== "all") && (
                             <Button
                                 variant="ghost"
                                 size="icon"
@@ -582,10 +620,10 @@ function TemplesContent() {
                                     setDate(undefined);
                                     setSelectedTempleFilter("all");
                                     setSearchTerm("");
-                                    setSelectedDeity("all");
+                                    setSelectedCategory("all");
                                     setTransactionRange("all");
-                                    setStateFilter("");
-                                    setDistrictFilter("");
+                                    setSelectedLocation("all");
+                                    setSelectedRitual("all");
                                 }}
                                 className="h-10 w-10 text-muted-foreground"
                                 title="Clear all filters"

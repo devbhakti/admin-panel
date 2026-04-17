@@ -282,7 +282,7 @@ export function TemplesList() {
                   </div>
                   <div className="flex flex-col">
                     <span className="text-[9px] uppercase tracking-[0.1em] font-medium text-amber-200/80 leading-snug">{t('temples.filter_experience')}</span>
-                    <span className="text-lg font-serif font-bold text-white leading-none">{t('temples.refine_discovery')}</span>
+                    <span className="text-lg font-serif font-bold text-white leading-none mt-2">{t('temples.refine_discovery')}</span>
                   </div>
                 </div>
                 {(selectedCategory !== "All" || selectedLocation !== "All" || selectedPooja !== "All" || searchQuery !== "") && (

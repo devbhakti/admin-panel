@@ -206,7 +206,22 @@ export const fetchEventByIdAdmin = async (id: string) => {
 
 
 // Admin Temple Management
-export const fetchAllTemplesAdmin = async (params?: { page?: number; limit?: number; search?: string; isVerified?: boolean; templeId?: string; date?: string; deity?: string; state?: string; district?: string; transactionRange?: string; lang?: string }) => {
+export const fetchAllTemplesAdmin = async (params?: { 
+    page?: number; 
+    limit?: number; 
+    search?: string; 
+    isVerified?: boolean; 
+    templeId?: string; 
+    date?: string; 
+    deity?: string; 
+    category?: string;
+    state?: string; 
+    district?: string; 
+    location?: string;
+    transactionRange?: string; 
+    ritual?: string;
+    lang?: string 
+}) => {
     const token = getAdminToken();
     let url = `${API_URL}/admin/temples`;
     if (params) {
@@ -218,9 +233,12 @@ export const fetchAllTemplesAdmin = async (params?: { page?: number; limit?: num
         if (params.templeId) query.append('templeId', params.templeId);
         if (params.date) query.append('date', params.date);
         if (params.deity) query.append('deity', params.deity);
+        if (params.category) query.append('category', params.category);
         if (params.state) query.append('state', params.state);
         if (params.district) query.append('district', params.district);
+        if (params.location) query.append('location', params.location);
         if (params.transactionRange) query.append('transactionRange', params.transactionRange);
+        if (params.ritual) query.append('ritual', params.ritual);
         if (params.lang) query.append('lang', params.lang);
         url += `?${query.toString()}`;
     }
@@ -244,6 +262,14 @@ export const fetchTempleByIdAdmin = async (id: string | number) => {
 export const fetchTempleCategories = async () => {
     const token = getAdminToken();
     const response = await axios.get(`${API_URL}/admin/temples/categories`, {
+        headers: { Authorization: `Bearer ${token}` }
+    });
+    return response.data;
+};
+
+export const fetchTempleLocations = async () => {
+    const token = getAdminToken();
+    const response = await axios.get(`${API_URL}/admin/temples/locations`, {
         headers: { Authorization: `Bearer ${token}` }
     });
     return response.data;
@@ -640,10 +666,11 @@ export const deleteProductAdmin = async (id: string) => {
 };
 
 // Admin Category Management
-export const fetchAllCategoriesAdmin = async () => {
+export const fetchAllCategoriesAdmin = async (params?: { isActive?: string, search?: string }) => {
     const token = getAdminToken();
     const response = await axios.get(`${API_URL}/admin/categories`, {
-        headers: { Authorization: `Bearer ${token}` }
+        headers: { Authorization: `Bearer ${token}` },
+        params: { ...params, lang: 'raw' }
     });
     return response.data.data.categories;
 };

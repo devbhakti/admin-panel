@@ -349,7 +349,7 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
   }
 
   return (
-    <div className={cn("min-h-screen bg-background flex", sidebarOpen ? "sidebar-open" : "")}>
+    <div className={cn("min-h-screen bg-background flex group", sidebarOpen ? "sidebar-open" : "")}>
       {/* Mobile Sidebar Overlay */}
       {sidebarOpen && (
         <div

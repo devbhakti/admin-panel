@@ -142,7 +142,7 @@ export default function AdminDashboardPage() {
   ];
 
   return (
-    <div className="space-y-8 pb-32">
+    <div className="space-y-8 pb-40 md:pb-48">
       {/* Page Header */}
       <div className="flex flex-col md:flex-row md:items-center justify-between gap-6">
         <div>
@@ -371,7 +371,7 @@ export default function AdminDashboardPage() {
       </div>
 
       {/* Quick Navigation Cards - Fixed Bottom */}
-      <div className="fixed bottom-0 left-0 right-0 bg-[#FDFCF6]/95 backdrop-blur-sm border-t border-slate-200 py-4 px-4 sm:px-6 z-40 lg:ml-20 lg:group-[.sidebar-open]:ml-64 shadow-[0_-4px_10px_-4px_rgba(0,0,0,0.05)] transition-all duration-300">
+      <div className="fixed bottom-0 left-0 right-0 lg:left-20 lg:group-[.sidebar-open]:left-64 bg-[#FDFCF6]/95 backdrop-blur-md border-t border-slate-200 py-4 px-4 sm:px-6 z-40 shadow-[0_-4px_10px_-4px_rgba(0,0,0,0.05)] transition-all duration-300">
         <h3 className="text-[14px] font-serif font-bold text-slate-900 mb-2.5 tracking-tight flex items-center gap-2">System Quick Access</h3>
         <div className="flex overflow-x-auto snap-x snap-mandatory gap-3 pb-2 -mx-4 px-4 sm:mx-0 sm:px-0 sm:grid sm:grid-cols-2 lg:grid-cols-4 sm:overflow-visible sm:pb-0 premium-scrollbar hide-scrollbar">
           {[

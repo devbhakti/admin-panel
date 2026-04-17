@@ -116,7 +116,8 @@ const VideoTestimonialsSection = () => {
                         initial={{ opacity: 0, y: 20 }}
                         whileInView={{ opacity: 1, y: 0 }}
                         viewport={{ once: true }}
-                        className="text-3xl md:text-5xl font-serif font-bold text-zinc-900 dark:text-zinc-50 leading-tight mb-6"
+                        className="text-3xl md:text-5xl font-serif font-bold text-zinc-900 dark:text-zinc-50 mb-6"
+                        style={{ lineHeight: 1.2 }}
                     >
                         {t('landing.video_testimonials.title')}
                     </motion.h2>

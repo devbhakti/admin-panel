@@ -67,12 +67,12 @@ export const PoojaForm: React.FC<PoojaFormProps> = ({
     const [activeTab, setActiveTab] = useState<Language>("en");
     const [isMaster, setIsMaster] = useState(false);
 
-    // Core State
     const [formData, setFormData] = useState({
         price: 0,
         time: "",
         templeId: "",
         categoryId: "",
+        categoryIds: [] as string[],
         category_en: "",
         category_hi: "",
         category_mr: "",
@@ -82,7 +82,8 @@ export const PoojaForm: React.FC<PoojaFormProps> = ({
         duration: { en: "", hi: "", mr: "" },
         // Localized Arrays
         description: { en: [] as string[], hi: [] as string[], mr: [] as string[] },
-        bullets: { en: [] as string[], hi: [] as string[], mr: [] as string[] }
+        bullets: { en: [] as string[], hi: [] as string[], mr: [] as string[] },
+        slug: ""
     });
 
     const [packages, setPackages] = useState<any[]>([]);
@@ -137,6 +138,7 @@ export const PoojaForm: React.FC<PoojaFormProps> = ({
                 time: initialData.time || "",
                 templeId: initialData.templeId || "",
                 categoryId: initialData.categoryId || "",
+                categoryIds: initialData.categoryIds || (initialData.categoryId ? [initialData.categoryId] : []),
                 category_en: getL(initialData.category, "en"),
                 category_hi: getL(initialData.category, "hi"),
                 category_mr: getL(initialData.category, "mr"),
@@ -156,15 +158,16 @@ export const PoojaForm: React.FC<PoojaFormProps> = ({
                     mr: getL(initialData.duration, "mr")
                 },
                 description: {
-                    en: parseArray(getL(initialData.description, "en")),
-                    hi: parseArray(getL(initialData.description, "hi")),
-                    mr: parseArray(getL(initialData.description, "mr"))
+                    en: parseArray(getL(initialData.description, "en", [])),
+                    hi: parseArray(getL(initialData.description, "hi", [])),
+                    mr: parseArray(getL(initialData.description, "mr", []))
                 },
                 bullets: {
-                    en: parseArray(getL(initialData.bullets, "en")),
-                    hi: parseArray(getL(initialData.bullets, "hi")),
-                    mr: parseArray(getL(initialData.bullets, "mr"))
-                }
+                    en: parseArray(getL(initialData.bullets, "en", [])),
+                    hi: parseArray(getL(initialData.bullets, "hi", [])),
+                    mr: parseArray(getL(initialData.bullets, "mr", []))
+                },
+                slug: initialData.slug || ""
             });
 
             const parseLocalizedJson = (val: any) => {
@@ -323,6 +326,7 @@ export const PoojaForm: React.FC<PoojaFormProps> = ({
 
         // Categories
         fd.append("categoryId", formData.categoryId);
+        fd.append("categoryIds", JSON.stringify(formData.categoryIds));
         fd.append("category_en", formData.category_en);
         fd.append("category_hi", formData.category_hi);
         fd.append("category_mr", formData.category_mr);
@@ -339,7 +343,7 @@ export const PoojaForm: React.FC<PoojaFormProps> = ({
         // JSON Fields
         fd.append("packages", JSON.stringify({ en: packages, hi: packages, mr: packages }));
         fd.append("faqs", JSON.stringify(faqs));
-
+        fd.append("slug", formData.slug);
         if (imageFile) fd.append("image", imageFile);
 
         await onSubmit(fd);
@@ -425,6 +429,17 @@ export const PoojaForm: React.FC<PoojaFormProps> = ({
                                 </div>
 
                                 <div className="space-y-2.5">
+                                    <Label className="text-sm font-bold text-slate-700">URL Slug (Optional)</Label>
+                                    <Input
+                                        placeholder="e.g. maha-mrityunjaya-pooja (leave empty for auto-generate)"
+                                        value={formData.slug}
+                                        onChange={e => handleInputChange("slug", e.target.value)}
+                                        className="h-12 rounded-xl focus:ring-primary/20 border-slate-200 bg-white font-medium"
+                                    />
+                                    <p className="text-[10px] text-slate-400 font-medium">Use lowercase letters, numbers, and hyphens only.</p>
+                                </div>
+
+                                <div className="space-y-2.5">
                                     <Label className="text-sm font-bold text-slate-700">{t('admin_pooja_form.labels.category')} <span className="text-destructive">*</span></Label>
                                     <Popover>
                                         <PopoverTrigger asChild>     
@@ -436,11 +451,13 @@ export const PoojaForm: React.FC<PoojaFormProps> = ({
                                                     !formData.category_en && "text-muted-foreground"
                                                 )}
                                             >
-                                                <div className="flex flex-wrap gap-1">
+                                                <div className="flex flex-wrap gap-1 max-w-[280px] overflow-hidden whitespace-nowrap text-ellipsis">
                                                     {formData.category_en ? (
-                                                        <Badge variant="secondary" className="mr-1">
-                                                            {formData.category_en}
-                                                        </Badge>
+                                                        formData.category_en.split(",").map((cat, i) => (
+                                                            <Badge key={i} variant="secondary" className="mr-1 mb-1">
+                                                                {cat.trim()}
+                                                            </Badge>
+                                                        ))
                                                     ) : (
                                                         t('admin_pooja_form.placeholders.category')
                                                     )}
@@ -460,24 +477,31 @@ export const PoojaForm: React.FC<PoojaFormProps> = ({
                                                                 hi: parseLocalizedValue(category.name_hi || category.name_en || category.name, 'hi'),
                                                                 mr: parseLocalizedValue(category.name_mr || category.name_en || category.name, 'mr')
                                                             };
-                                                            const isSelected = formData.categoryId === category.id;
+                                                            const isSelected = formData.categoryIds.includes(category.id);
 
                                                             return (
                                                                 <CommandItem
                                                                     key={category.id}
                                                                     value={catNames.en}
                                                                     onSelect={() => {
+                                                                        const currentIds = formData.categoryIds;
+                                                                        let newIds;
                                                                         if (isSelected) {
-                                                                            handleInputChange("categoryId", "");
-                                                                            handleInputChange("category_en", "");
-                                                                            handleInputChange("category_hi", "");
-                                                                            handleInputChange("category_mr", "");
+                                                                            newIds = currentIds.filter(id => id !== category.id);
                                                                         } else {
-                                                                            handleInputChange("categoryId", category.id);
-                                                                            handleInputChange("category_en", catNames.en);
-                                                                            handleInputChange("category_hi", catNames.hi);
-                                                                            handleInputChange("category_mr", catNames.mr);
+                                                                            newIds = [...currentIds, category.id];
                                                                         }
+                                                                        
+                                                                        const selectedCats = availableCategories.filter(c => newIds.includes(c.id));
+                                                                        const enStr = selectedCats.map(c => parseLocalizedValue(c.name_en || c.name, 'en')).join(', ');
+                                                                        const hiStr = selectedCats.map(c => parseLocalizedValue(c.name_hi || c.name_en || c.name, 'hi')).join(', ');
+                                                                        const mrStr = selectedCats.map(c => parseLocalizedValue(c.name_mr || c.name_en || c.name, 'mr')).join(', ');
+
+                                                                        handleInputChange("categoryIds", newIds);
+                                                                        handleInputChange("categoryId", newIds[0] || "");
+                                                                        handleInputChange("category_en", enStr);
+                                                                        handleInputChange("category_hi", hiStr);
+                                                                        handleInputChange("category_mr", mrStr);
                                                                     }}
                                                                 >
                                                                     <Check className={cn("mr-2 h-4 w-4", isSelected ? "opacity-100" : "opacity-0")} />

@@ -164,7 +164,10 @@ const FeaturesSection: React.FC = () => {
           <span className="text-primary font-medium text-sm uppercase tracking-wider">
             {t('landing.features.tagline')}
           </span>
-          <h2 className="text-3xl md:text-4xl lg:text-5xl font-serif font-bold text-foreground mt-3 mb-4">
+          <h2 
+            className="text-3xl md:text-4xl lg:text-5xl font-serif font-bold text-foreground mt-3 mb-6"
+            style={{ lineHeight: 1.2}}
+          >
             {t('landing.features.title1')}
             <span className="text-gradient-sacred"> {t('landing.features.title2')}</span>
           </h2>

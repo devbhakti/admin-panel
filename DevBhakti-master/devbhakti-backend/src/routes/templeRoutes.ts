@@ -7,8 +7,8 @@ const router = Router();
 router.get('/filters', getTempleFilters);
 router.get('/', getAllTemples);
 router.get('/poojas', getAllPoojas);
-router.get('/:id', getTempleById);
 router.get('/poojas/:id', getPoojaById);
+router.get('/:id', getTempleById);
 router.post('/register', registerTemple);
 
 

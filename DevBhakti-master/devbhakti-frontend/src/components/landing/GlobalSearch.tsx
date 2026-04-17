@@ -14,6 +14,7 @@ interface SearchResult {
     location?: string;
     image?: string;
     type?: string;
+    slug?: string;
 }
 
 export const GlobalSearch = ({ isOpen, onClose }: { isOpen: boolean; onClose: () => void }) => {
@@ -117,9 +118,9 @@ export const GlobalSearch = ({ isOpen, onClose }: { isOpen: boolean; onClose: ()
     const handleItemClick = (item: SearchResult) => {
         onClose();
         if (item.category === "Temple") {
-            router.push(`/temples/${item.id}`);
+            router.push(`/temples/${item.slug || item.id}`);
         } else if (item.category === "Pooja") {
-            router.push(`/poojas/${item.id}`);
+            router.push(`/poojas/${item.slug || item.id}`);
         } else if (item.category === "Product") {
             router.push(`/marketplace/product/${item.id}`);
         }

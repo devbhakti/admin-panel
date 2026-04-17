@@ -1,6 +1,7 @@
 {
   "common": {
     "book_now": "Book Now",
+    "login_required": "Please login as a devotee to continue booking",
     "book_pooja": "Book Pooja",
     "view_all": "View All",
     "search": "Search",

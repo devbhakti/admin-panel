@@ -188,7 +188,7 @@ function BookingForm() {
         // If a pooja is selected via URL, try to auto-select its temple
         const poojaId = searchParams.get("pooja");
         if (poojaId) {
-          const pooja = poojasData.find((p: any) => p.id === poojaId);
+          const pooja = poojasData.find((p: any) => p.id === poojaId || p.slug === poojaId);
           if (pooja && pooja.templeId) {
             setSelectedTemple(pooja.templeId);
           }
@@ -232,7 +232,7 @@ function BookingForm() {
     ? allPoojas.filter(p => p.templeId === selectedTemple)
     : allPoojas.filter(p => p.isMaster);
 
-  const selectedPoojaData = allPoojas.find(p => p.id === selectedPooja);
+  const selectedPoojaData = allPoojas.find(p => p.id === selectedPooja || p.slug === selectedPooja);
 
   // Extract packages from pooja data if available, or use defaults
   const poojaPackages = selectedPoojaData?.packages ?

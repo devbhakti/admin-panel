@@ -66,7 +66,9 @@ export const getCart = async (req: Request, res: Response) => {
 
         const lang = getLang(req);
         // Transform data to match frontend structure and localize
-        const formattedItems = (cart as any).items?.map((item: any) => {
+        const formattedItems = (cart as any).items
+            ?.filter((item: any) => item.product && item.variant)
+            .map((item: any) => {
             const localizedProduct = localize(item.product, lang);
             const localizedVariant = localize(item.variant, lang);
             

@@ -199,7 +199,7 @@ const PoojaDetailClient = ({ id }: PoojaDetailClientProps) => {
                                                 : `/booking?pooja=${id}`;
 
                                             if (!token || !parsedUser || parsedUser.role !== "DEVOTEE") {
-                                                toast({ title: "Please login as devotee to book pooja", variant: "destructive" });
+                                                toast({ title: t('common.login_required'), variant: "destructive" });
                                                 router.push(`/auth?redirect=${encodeURIComponent(bookingUrl)}`);
                                                 return;
                                             }
@@ -310,7 +310,7 @@ const PoojaDetailClient = ({ id }: PoojaDetailClientProps) => {
                                                                     const savedUser = localStorage.getItem("user");
                                                                     const parsedUser = savedUser ? JSON.parse(savedUser) : null;
                                                                     if (!token || !parsedUser || parsedUser.role !== "DEVOTEE") {
-                                                                        toast({ title: t('common.login_required') || "Please login as devotee to book pooja", variant: "destructive" });
+                                                                        toast({ title: t('common.login_required'), variant: "destructive" });
                                                                         router.push(`/auth?redirect=${encodeURIComponent(bookingUrl)}`);
                                                                         return;
                                                                     }
@@ -348,14 +348,14 @@ const PoojaDetailClient = ({ id }: PoojaDetailClientProps) => {
                                                                     const savedUser = localStorage.getItem("user");
                                                                     const parsedUser = savedUser ? JSON.parse(savedUser) : null;
                                                                     if (!token || !parsedUser || parsedUser.role !== "DEVOTEE") {
-                                                                        toast({ title: "Please login as devotee to book pooja", variant: "destructive" });
+                                                                        toast({ title: t('common.login_required'), variant: "destructive" });
                                                                         router.push(`/auth?redirect=${encodeURIComponent(bookingUrl)}`);
                                                                         return;
                                                                     }
                                                                     router.push(bookingUrl);
                                                                 }}
                                                             >
-                                                                Book Pooja <ArrowRight className="w-4 h-4 group-hover/btn:translate-x-1 transition-transform" />
+                                                                    {t('common.book_pooja')} <ArrowRight className="w-4 h-4 group-hover/btn:translate-x-1 transition-transform" />
                                                             </Button>
                                                             <Button variant="outline" className="w-full border-primary/5 text-[#5d4037] bg-[#FFF8F0]/30 hover:bg-[#FFF8F0]/50 rounded-full py-6 font-bold transition-all" asChild>
                                                                 <Link href={getTempleUrl(pooja.temple)}>{t('pooja_detail.explore_temple')}</Link>
@@ -390,17 +390,17 @@ const PoojaDetailClient = ({ id }: PoojaDetailClientProps) => {
                                                                         const savedUser = localStorage.getItem("user");
                                                                         const parsedUser = savedUser ? JSON.parse(savedUser) : null;
                                                                         if (!token || !parsedUser || parsedUser.role !== "DEVOTEE") {
-                                                                            toast({ title: "Please login as devotee to book pooja", variant: "destructive" });
+                                                                            toast({ title: t('common.login_required'), variant: "destructive" });
                                                                             router.push(`/auth?redirect=${encodeURIComponent(bookingUrl)}`);
                                                                             return;
                                                                         }
                                                                         router.push(bookingUrl);
                                                                     }}
                                                                 >
-                                                                    Book Pooja <ArrowRight className="w-4 h-4 group-hover/btn:translate-x-1 transition-transform" />
+                                                                    {t('common.book_pooja')} <ArrowRight className="w-4 h-4 group-hover/btn:translate-x-1 transition-transform" />
                                                                 </Button>
                                                                 <Button variant="outline" className="w-full border-primary/5 text-[#5d4037] bg-[#FFF8F0]/30 hover:bg-[#FFF8F0]/50 rounded-full py-6 font-bold transition-all" asChild>
-                                                                    <Link href={getTempleUrl(copy.temple)}>Explore Temple</Link>
+                                                                    <Link href={getTempleUrl(copy.temple)}>{t('pooja_detail.explore_temple')}</Link>
                                                                 </Button>
                                                             </div>
                                                         </div>

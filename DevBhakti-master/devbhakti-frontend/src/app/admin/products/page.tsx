@@ -657,6 +657,7 @@ function ProductsContent() {
                   <p className="text-slate-900">{selectedProduct.id}</p>
                 </div>
                 <div>
+                  
                   <label className="text-sm font-medium text-slate-700">{t("admin.products.list.table_category")}</label>
                   <p className="text-slate-900">{selectedProduct.categoryObj ? getLocalizedName(selectedProduct.categoryObj) : selectedProduct.category}</p>
                 </div>

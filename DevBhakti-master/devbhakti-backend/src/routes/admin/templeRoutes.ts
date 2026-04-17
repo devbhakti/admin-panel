@@ -12,7 +12,8 @@ import {
     rejectUpdateRequest,
     updateTempleLiveConfig,
     setPrimaryLive,
-    getTempleCategories
+    getTempleCategories,
+    getTempleLocations
 } from '../../controllers/admin/templeController';
 import { authenticate, authorize, checkPermission } from '../../middleware/authMiddleware';
 
@@ -45,6 +46,7 @@ router.post('/update-requests/:id/approve', checkPermission('temples.verify'), a
 router.post('/update-requests/:id/reject', checkPermission('temples.verify'), rejectUpdateRequest);
 
 router.get('/categories', checkPermission('temples.view', 'poojas.view', 'poojas.create', 'poojas.edit'), getTempleCategories);
+router.get('/locations', checkPermission('temples.view', 'poojas.view', 'poojas.create', 'poojas.edit'), getTempleLocations);
 router.get('/', checkPermission('temples.view', 'poojas.view', 'poojas.create', 'poojas.edit'), getAllTemples);
 router.get('/:id', checkPermission('temples.view', 'poojas.view', 'poojas.create', 'poojas.edit'), getTempleById);
 router.post('/', checkPermission('temples.create'), templeUpload, createTemple);

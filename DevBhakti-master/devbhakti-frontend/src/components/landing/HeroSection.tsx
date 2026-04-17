@@ -52,10 +52,11 @@ const HeroSection: React.FC = () => {
             initial={{ opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ duration: 0.5, delay: 0.1 }}
-            className="text-4xl sm:text-5xl md:text-6xl lg:text-7xl font-serif font-bold text-foreground leading-tight mb-6"
+            className="text-4xl sm:text-5xl md:text-6xl lg:text-7xl font-serif font-bold text-foreground mb-6"
+            style={{ lineHeight: 1.1 }}
           >
             {t('landing.hero.title1')}
-            <span className="text-[#88542B]">{t('landing.hero.title2')}</span>
+            <span className="text-[#88542B] ml-2 lg:ml-0">{t('landing.hero.title2')}</span>
           </motion.h1>
 
           {/* Subtitle */}

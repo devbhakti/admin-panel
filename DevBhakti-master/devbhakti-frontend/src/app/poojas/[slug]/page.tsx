@@ -4,17 +4,17 @@ import PoojaDetailClient from "./PoojaDetailClient";
 
 export function generateStaticParams() {
     return poojas.map((pooja) => ({
-        id: pooja.id,
+        slug: pooja.id, // Or use slug if available in static data
     }));
 }
 
 interface PageProps {
-    params: Promise<{ id: string }>;
+    params: Promise<{ slug: string }>;
 }
 
 const PoojaDetailPage = async ({ params }: PageProps) => {
-    const { id } = await params;
-    return <PoojaDetailClient id={id} />;
+    const { slug } = await params;
+    return <PoojaDetailClient id={slug} />;
 };
 
 export default PoojaDetailPage;

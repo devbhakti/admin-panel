@@ -216,7 +216,7 @@ const PoojasSection: React.FC = () => {
                 className="flex-shrink-0 w-[300px] md:w-[340px]"
               >
                 <div className="relative group/card h-[400px]">
-                  <Link href={`/poojas/${pooja.id}`}>
+                  <Link href={`/poojas/${pooja.slug || pooja.id}`}>
                     <div className="bg-card rounded-[2rem] overflow-hidden border-2 border-white/10 shadow-md hover:shadow-xl transition-all duration-300 hover:-translate-y-2 h-full flex flex-col isolate">
                       {/* Background Image with bottom gradient for text readability */}
                       <div className="absolute inset-0 z-0 rounded-[2rem] overflow-hidden">

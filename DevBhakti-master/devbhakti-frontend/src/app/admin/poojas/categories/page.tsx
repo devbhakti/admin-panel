@@ -42,6 +42,84 @@ const LANGUAGES: { key: LangKey; label: string; flag: string; shortLabel: string
 
 const emptyNames = (): Record<LangKey, string> => ({ en: "", hi: "", mr: "" });
 
+// ── TABS INPUT (shared between Add & Edit dialogs) ──
+const LangTabsInput = ({
+    values,
+    onChange,
+    savingLabel,
+    onSave,
+    onCancel,
+    saving,
+}: {
+    values: Record<LangKey, string>;
+    onChange: (v: Record<LangKey, string>) => void;
+    savingLabel: string;
+    onSave: () => void;
+    onCancel: () => void;
+    saving: boolean;
+}) => {
+    const { language, setLanguage } = useLanguage();
+    return (
+        <>
+            <Tabs value={language} onValueChange={(v) => setLanguage(v as Language)} className="w-full">
+                <TabsList className="w-full grid grid-cols-3 mb-3 h-9">
+                    {LANGUAGES.map(l => (
+                        <TabsTrigger key={l.key} value={l.key} className="text-xs sm:text-sm gap-0.5 sm:gap-1">
+                            <span>{l.flag}</span>
+                            <span className="hidden xs:inline">{l.label}</span>
+                            <span className="xs:hidden">{l.shortLabel}</span>
+                        </TabsTrigger>
+                    ))}
+                </TabsList>
+                {LANGUAGES.map(l => (
+                    <TabsContent key={l.key} value={l.key} className="mt-0">
+                        <div className="space-y-1.5 py-1">
+                            <Label className="text-xs sm:text-sm">
+                                {l.label}
+                                {l.key === "en" && <span className="text-red-500 ml-1">*</span>}
+                            </Label>
+                            <Input
+                                placeholder={
+                                    l.key === "en"
+                                        ? "e.g. Vehicle Puja"
+                                        : l.key === "hi"
+                                        ? "e.g. वाहन पूजा"
+                                        : "e.g. वाहन पूजा"
+                                }
+                                className="text-sm h-9 sm:h-10"
+                                value={values[l.key]}
+                                onChange={e => onChange({ ...values, [l.key]: e.target.value })}
+                            />
+                            {l.key !== "en" && (
+                                <p className="text-[11px] text-muted-foreground leading-tight">
+                                    Optional – English name used as fallback if blank.
+                                </p>
+                            )}
+                        </div>
+                    </TabsContent>
+                ))}
+            </Tabs>
+            <DialogFooter className="flex-col gap-2 sm:flex-row sm:gap-0 pt-2">
+                <Button
+                    variant="outline"
+                    onClick={onCancel}
+                    className="w-full sm:w-auto h-9 sm:h-10 text-sm"
+                >
+                    Cancel
+                </Button>
+                <Button
+                    onClick={onSave}
+                    disabled={saving}
+                    className="w-full sm:w-auto bg-[#7b4623] hover:bg-[#5d351a] h-9 sm:h-10 text-sm"
+                >
+                    {saving && <Loader2 className="w-3.5 h-3.5 mr-1.5 animate-spin" />}
+                    {savingLabel}
+                </Button>
+            </DialogFooter>
+        </>
+    );
+};
+
 export default function AdminPoojaCategoriesPage() {
     const { language, setLanguage } = useLanguage();
     const { toast } = useToast();
@@ -278,80 +356,7 @@ export default function AdminPoojaCategoriesPage() {
         </div>
     );
 
-    // ── TABS INPUT (shared between Add & Edit dialogs) ──
-    const LangTabsInput = ({
-        values,
-        onChange,
-        savingLabel,
-        onSave,
-        onCancel,
-        saving,
-    }: {
-        values: Record<LangKey, string>;
-        onChange: (v: Record<LangKey, string>) => void;
-        savingLabel: string;
-        onSave: () => void;
-        onCancel: () => void;
-        saving: boolean;
-    }) => (
-        <>
-            <Tabs value={language} onValueChange={(v) => setLanguage(v as Language)} className="w-full">
-                <TabsList className="w-full grid grid-cols-3 mb-3 h-9">
-                    {LANGUAGES.map(l => (
-                        <TabsTrigger key={l.key} value={l.key} className="text-xs sm:text-sm gap-0.5 sm:gap-1">
-                            <span>{l.flag}</span>
-                            <span className="hidden xs:inline">{l.label}</span>
-                            <span className="xs:hidden">{l.shortLabel}</span>
-                        </TabsTrigger>
-                    ))}
-                </TabsList>
-                {LANGUAGES.map(l => (
-                    <TabsContent key={l.key} value={l.key} className="mt-0">
-                        <div className="space-y-1.5 py-1">
-                            <Label className="text-xs sm:text-sm">
-                                {l.label}
-                                {l.key === "en" && <span className="text-red-500 ml-1">*</span>}
-                            </Label>
-                            <Input
-                                placeholder={
-                                    l.key === "en"
-                                        ? "e.g. Vehicle Puja"
-                                        : l.key === "hi"
-                                        ? "e.g. वाहन पूजा"
-                                        : "e.g. वाहन पूजा"
-                                }
-                                className="text-sm h-9 sm:h-10"
-                                value={values[l.key]}
-                                onChange={e => onChange({ ...values, [l.key]: e.target.value })}
-                            />
-                            {l.key !== "en" && (
-                                <p className="text-[11px] text-muted-foreground leading-tight">
-                                    Optional – English name used as fallback if blank.
-                                </p>
-                            )}
-                        </div>
-                    </TabsContent>
-                ))}
-            </Tabs>
-            <DialogFooter className="flex-col gap-2 sm:flex-row sm:gap-0 pt-2">
-                <Button
-                    variant="outline"
-                    onClick={onCancel}
-                    className="w-full sm:w-auto h-9 sm:h-10 text-sm"
-                >
-                    Cancel
-                </Button>
-                <Button
-                    onClick={onSave}
-                    disabled={saving}
-                    className="w-full sm:w-auto bg-[#7b4623] hover:bg-[#5d351a] h-9 sm:h-10 text-sm"
-                >
-                    {saving && <Loader2 className="w-3.5 h-3.5 mr-1.5 animate-spin" />}
-                    {savingLabel}
-                </Button>
-            </DialogFooter>
-        </>
-    );
+
 
     return (
         <div className="space-y-4 sm:space-y-6 px-3 sm:px-0">
@@ -416,7 +421,7 @@ export default function AdminPoojaCategoriesPage() {
                     />
                 </div>
                 <select
-                    className="h-9 sm:h-10 rounded-md border border-input bg-background px-2.5 sm:px-3 py-1 sm:py-2 text-xs sm:text-sm ring-offset-background focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring w-full xs:w-auto xs:min-w-[140px]"
+                    className="h-9 sm:h-10 rounded-md border border-input bg-background px-2.5 sm:px-3 py-1 sm:py-2 text-xs sm:text-sm ring-offset-background focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring w-25 sm:w-40 xs:min-w-[140px]"
                     value={filterStatus}
                     onChange={(e) => setFilterStatus(e.target.value)}
                 >

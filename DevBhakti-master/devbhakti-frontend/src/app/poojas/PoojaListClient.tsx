@@ -419,7 +419,7 @@ const PoojaListClient: React.FC = () => {
                                     transition={{ delay: index * 0.05 }}
                                 >
                                     <div className="relative group/card bg-white rounded-[2rem] p-3 shadow-md hover:shadow-2xl transition-all duration-500 border border-orange-100 h-full flex flex-col hover:-translate-y-2">
-                                        <Link href={`/poojas/${pooja.id}`}>
+                                        <Link href={`/poojas/${pooja.slug || pooja.id}`}>
                                             <div className="relative aspect-video overflow-hidden rounded-[2rem] mb-4">
                                                 <img
                                                     src={getFullImageUrl(pooja.image)}

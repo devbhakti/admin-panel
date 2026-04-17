@@ -29,7 +29,8 @@ export const searchGlobal = async (req: Request, res: Response) => {
                     name: true,
                     location: true,
                     image: true,
-                    category: true
+                    category: true,
+                    slug: true
                 },
                 take: searchQuery ? 20 : 6,
                 orderBy: { createdAt: "desc" }
@@ -53,6 +54,7 @@ export const searchGlobal = async (req: Request, res: Response) => {
                     category: true,
                     isMaster: true,
                     masterPoojaId: true,
+                    slug: true,
                     temple: {
                         select: { name: true }
                     }
@@ -108,7 +110,8 @@ export const searchGlobal = async (req: Request, res: Response) => {
                 category: "Temple" as const,
                 location: t.location,
                 image: t.image,
-                type: t.category
+                type: t.category,
+                slug: t.slug
             })),
             ...(deduplicatedPoojas as any[]).map((p: any) => ({
                 id: p.id,
@@ -116,7 +119,8 @@ export const searchGlobal = async (req: Request, res: Response) => {
                 category: "Pooja" as const,
                 location: p.temple?.name,
                 image: p.image,
-                type: p.category
+                type: p.category,
+                slug: p.slug
             })),
             ...(locProducts as any[]).map((p: any) => ({
                 id: p.id,

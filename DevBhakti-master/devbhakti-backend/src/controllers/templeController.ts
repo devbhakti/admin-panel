@@ -334,18 +334,29 @@ export const getPoojaById = async (req: Request, res: Response) => {
     const lang = getLang(req);
     const userId = getUserIdFromRequest(req);
 
+    console.log(`[DEBUG] getPoojaById called with ID: ${id}`);
+
     const pooja = await prisma.pooja.findFirst({
       where: {
-        id: String(id),
-        OR: [
-          { isMaster: true },
+        AND: [
           {
-            temple: {
-              user: {
-                isVerified: true,
-                role: 'INSTITUTION'
+            OR: [
+              { id: String(id) },
+              { slug: String(id) }
+            ]
+          },
+          {
+            OR: [
+              { isMaster: true },
+              {
+                temple: {
+                  user: {
+                    isVerified: true,
+                    role: 'INSTITUTION'
+                  }
+                }
               }
-            }
+            ]
           }
         ]
       },

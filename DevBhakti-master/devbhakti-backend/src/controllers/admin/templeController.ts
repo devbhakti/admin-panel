@@ -35,7 +35,7 @@ export const getTempleById = async (req: Request, res: Response) => {
         temple: {
           include: {
             poojas: {
-              select: { id: true, name: true, category: true, price: true }
+              select: { id: true, name: true, category: true, price: true, masterPoojaId: true, isMaster: true }
             },
             events: true,
           }
@@ -78,7 +78,13 @@ export const getTempleById = async (req: Request, res: Response) => {
 // Get all Temples (via User accounts)
 export const getAllTemples = async (req: Request, res: Response) => {
   try {
-    const { page, limit, search, isVerified, templeId, date, deity, state, district, transactionRange } = req.query;
+    const { 
+      page, limit, search, isVerified, templeId, date, 
+      deity, category, 
+      state, district, location, 
+      transactionRange, 
+      ritual 
+    } = req.query;
     const lang = (req.query.lang as string) || getLang(req);
 
     const where: any = {
@@ -93,16 +99,34 @@ export const getAllTemples = async (req: Request, res: Response) => {
       where.temple = { ...where.temple, id: String(templeId) };
     }
 
-    if (deity && deity !== 'all') {
-      where.temple = { ...where.temple, category: { path: ['en'], string_contains: String(deity) } };
+    // Category Filter (supported via category or legacy deity param)
+    const categoryToFilter = category || deity;
+    if (categoryToFilter && categoryToFilter !== 'all') {
+      where.temple = { ...where.temple, category: { path: ['en'], string_contains: String(categoryToFilter) } };
     }
 
-    if (state) {
-      where.temple = { ...where.temple, location: { path: ['en'], string_contains: String(state) } };
+    // Location Filter (supported via location or legacy state/district params)
+    const locToFilter = location || state || district;
+    if (locToFilter) {
+      where.temple = { ...where.temple, location: { path: ['en'], string_contains: String(locToFilter) } };
     }
 
-    if (district) {
-      where.temple = { ...where.temple, location: { path: ['en'], string_contains: String(district) } };
+    // Ritual (Pooja) Filter
+    if (ritual && ritual !== 'all') {
+      where.temple = { 
+        ...where.temple, 
+        poojas: { 
+          some: { 
+            OR: [
+              { name: { path: ['en'], string_contains: String(ritual) } },
+              { name: { path: ['hi'], string_contains: String(ritual) } },
+              { name: { path: ['mr'], string_contains: String(ritual) } },
+              { id: String(ritual) },
+              { masterPoojaId: String(ritual) }
+            ]
+          } 
+        } 
+      };
     }
 
     if (transactionRange && transactionRange !== 'all') {
@@ -190,7 +214,7 @@ export const getAllTemples = async (req: Request, res: Response) => {
                 select: { poojas: true, events: true },
               },
               poojas: {
-                select: { id: true, name: true, category: true, price: true }
+                select: { id: true, name: true, category: true, price: true, masterPoojaId: true, isMaster: true }
               },
               events: true
             }
@@ -217,7 +241,7 @@ export const getAllTemples = async (req: Request, res: Response) => {
                 select: { poojas: true, events: true },
               },
               poojas: {
-                select: { id: true, name: true, category: true, price: true }
+                select: { id: true, name: true, category: true, price: true, masterPoojaId: true, isMaster: true }
               },
               events: true
             }
@@ -578,10 +602,12 @@ export const updateTemple = async (req: Request, res: Response) => {
                 data: { templeId: templeId }
               });
             } else {
-              await tx.pooja.create({
+                await tx.pooja.create({
                 data: {
                   name: (poojaRecord as any).name,
                   category: (poojaRecord as any).category,
+                  categoryId: poojaRecord.categoryId,
+                  categoryIds: poojaRecord.categoryIds,
                   price: poojaRecord.price,
                   duration: (poojaRecord as any).duration,
                   description: (poojaRecord as any).description,
@@ -592,6 +618,7 @@ export const updateTemple = async (req: Request, res: Response) => {
                   bullets: (poojaRecord as any).bullets,
                   process: (poojaRecord as any).process,
                   processSteps: poojaRecord.processSteps || undefined,
+                  templeDetails: (poojaRecord as any).templeDetails,
                   templeId: templeId,
                   isMaster: false,
                   masterPoojaId: poojaRecord.id,
@@ -1055,10 +1082,6 @@ export const rejectUpdateRequest = async (req: Request, res: Response) => {
 export const getTempleCategories = async (req: Request, res: Response) => {
   try {
     const categories = await prisma.temple.findMany({
-      where: {
-        liveStatus: true,
-        isActive: true
-      },
       select: {
         category: true
       } as any
@@ -1068,7 +1091,7 @@ export const getTempleCategories = async (req: Request, res: Response) => {
     const locCategories = localize(categories, lang);
     const activeCategories = locCategories
       .map((t: any) => t.category)
-      .filter((c: any): c is string => !!c && c.trim() !== "");
+      .filter((c: any): c is string => !!c && typeof c === 'string' && c.trim() !== "");
 
     res.json({ success: true, data: Array.from(new Set(activeCategories)).sort() });
   } catch (error: any) {
@@ -1076,4 +1099,25 @@ export const getTempleCategories = async (req: Request, res: Response) => {
     res.status(500).json({ error: 'Failed to fetch temple categories' });
   }
 };
+
+export const getTempleLocations = async (req: Request, res: Response) => {
+    try {
+      const locations = await prisma.temple.findMany({
+        select: {
+          location: true
+        } as any
+      });
+  
+      const lang = getLang(req);
+      const locData = localize(locations, lang);
+      const activeLocations = locData
+        .map((t: any) => t.location)
+        .filter((c: any): c is string => !!c && typeof c === 'string' && c.trim() !== "");
+  
+      res.json({ success: true, data: Array.from(new Set(activeLocations)).sort() });
+    } catch (error: any) {
+      console.error('Fetch locations error:', error);
+      res.status(500).json({ error: 'Failed to fetch temple locations' });
+    }
+  };
 

@@ -18,6 +18,7 @@ import { onMessage } from "firebase/messaging";
 import { getFirebaseMessaging } from "@/lib/firebase";
 import { parseLocalizedValue } from "@/utils/textUtils";
 import { useLanguage } from "@/context/LanguageContext";
+import { useRouter } from "next/navigation";
 
 interface Notification {
     id: string;
@@ -38,6 +39,7 @@ export function NotificationBell({ userId, userType }: NotificationBellProps) {
     const [unreadCount, setUnreadCount] = useState(0);
     const [loading, setLoading] = useState(false);
     const { language } = useLanguage();
+    const router = useRouter();
 
     const loadNotifications = useCallback(async () => {
         if (!userId) return;
@@ -153,11 +155,15 @@ export function NotificationBell({ userId, userType }: NotificationBellProps) {
                     ) : (
                         <div className="p-1">
                             {notifications.map((n) => (
-                                <Link
+                                <div
                                     key={n.id}
-                                    href={n.data?.link || "#"}
+                                    onClick={() => {
+                                        if (n.data?.link) {
+                                            router.push(n.data.link);
+                                        }
+                                    }}
                                     className={cn(
-                                        "flex gap-3 p-3 rounded-lg transition-all hover:bg-primary/5 group relative mb-1 mx-1",
+                                        "flex gap-3 p-3 rounded-lg transition-all hover:bg-primary/5 group relative mb-1 mx-1 cursor-pointer",
                                         !n.isRead && "bg-secondary/10 border-l-2 border-secondary rounded-l-none"
                                     )}
                                 >
@@ -191,18 +197,23 @@ export function NotificationBell({ userId, userType }: NotificationBellProps) {
                                             <CheckCheck className="w-3 h-3" />
                                         </button>
                                     )}
-                                </Link>
+                                </div>
                             ))}
                         </div>
                     )}
                 </ScrollArea>
                 {notifications.length > 0 && (
-                    <div className="p-3 border-t border-primary/5 bg-primary/5">
-                        <Link href={userType === 'admin' ? '/admin/notifications' : userType === 'temple_admin' ? '/temples/dashboard/notifications' : userType === 'devotee' ? '/profile/notifications' : '/seller/dashboard/notifications'}>
-                            <Button className="w-full text-xs h-10 font-bold bg-white hover:bg-primary/5 text-primary border border-primary/10 rounded-xl shadow-sm hover:shadow transition-all">
-                                View All Notifications
-                            </Button>
-                        </Link>
+                    <div className="p-3 border-t border-primary/5 bg-primary/5 relative">
+                        <Button
+                            onClick={(e) => {
+                                e.preventDefault();
+                                const targetUrl = userType === 'admin' ? '/admin/notifications' : userType === 'temple_admin' ? '/temples/dashboard/notifications' : userType === 'devotee' ? '/profile/notifications' : '/seller/dashboard/notifications';
+                                router.push(targetUrl);
+                            }}
+                            className="w-full text-xs h-10 font-bold bg-white hover:bg-primary/5 text-primary border border-primary/10 rounded-xl shadow-sm hover:shadow transition-all"
+                        >
+                            View All Notifications
+                        </Button>
                     </div>
                 )}
             </DropdownMenuContent>

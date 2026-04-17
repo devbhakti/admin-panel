@@ -30,6 +30,7 @@ import { useToast } from "@/hooks/use-toast";
 import { ImageCropper } from "@/components/admin/ImageCropper";
 import { Switch } from "@/components/ui/switch";
 import { Label } from "@/components/ui/label";
+import { Badge } from "@/components/ui/badge";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { useLanguage, Language } from "@/context/LanguageContext";
 import { parseLocalizedValue } from "@/utils/textUtils";
@@ -1099,36 +1100,109 @@ export function TempleForm({
                                 <div className="flex items-center justify-between">
                                     <Label className="text-sm font-bold flex items-center gap-2">
                                         Marketplace Commission
-                                        <span className={`text-[10px] px-2 py-0.5 rounded-full ${marketplaceRateType === 'CUSTOM' ? 'bg-orange-100 text-orange-600' : 'bg-blue-100 text-blue-600'}`}>
-                                            {marketplaceRateType}
-                                        </span>
+                                        <Badge variant={marketplaceRateType === 'CUSTOM' ? 'warning' : 'info'} className="text-[10px] px-2 py-0.5 rounded-full">
+                                            {marketplaceRateType === 'CUSTOM' ? 'CUSTOM RATE' : 'GLOBAL DEFAULT'}
+                                        </Badge>
                                     </Label>
-                                    <div className="flex items-center gap-2">
-                                        <span className="text-xs text-muted-foreground">Custom Rates</span>
+                                    <div className="flex items-center gap-3 bg-slate-100/50 p-1.5 rounded-lg border border-slate-200 shadow-sm">
+                                        <span className={`text-[10px] font-bold tracking-tight transition-colors ${marketplaceRateType === "DEFAULT" ? "text-primary" : "text-muted-foreground/60"}`}>DEFAULT</span>
                                         <Switch
                                             checked={marketplaceRateType === "CUSTOM"}
                                             onCheckedChange={handleMarketplaceRateTypeChange}
                                         />
+                                        <span className={`text-[10px] font-bold tracking-tight transition-colors ${marketplaceRateType === "CUSTOM" ? "text-orange-600" : "text-muted-foreground/60"}`}>CUSTOM</span>
                                     </div>
                                 </div>
-                                <div className="space-y-2">
+                                <div className="space-y-3">
+                                    <div className="grid grid-cols-12 gap-2 px-2 text-[9px] font-bold text-slate-500 uppercase tracking-wider">
+                                        <div className="col-span-5">Amount Range (₹)</div>
+                                        <div className="col-span-3">P. Fee (₹)</div>
+                                        <div className="col-span-3">Comm (%)</div>
+                                        <div className="col-span-1"></div>
+                                    </div>
                                     {marketplaceSlabs.map((slab, i) => (
-                                        <div key={i} className="flex items-center gap-2 p-2 bg-slate-50 rounded-lg border">
-                                            <span className="text-xs font-mono text-slate-500 w-24">Starts at ₹{slab.minAmount}</span>
-                                            <input
-                                                type="number"
-                                                value={slab.percentage}
-                                                onChange={e => {
-                                                    const newSlabs = [...marketplaceSlabs];
-                                                    newSlabs[i].percentage = parseFloat(e.target.value);
-                                                    setMarketplaceSlabs(newSlabs);
-                                                }}
-                                                className="h-8 w-16 text-xs border rounded px-1"
-                                                disabled={marketplaceRateType === "DEFAULT"}
-                                            />
-                                            <span className="text-xs text-slate-500">%</span>
+                                        <div key={i} className="group relative flex items-center gap-2 p-2 bg-slate-50/50 rounded-lg border border-slate-200 transition-all hover:border-primary/30">
+                                            <div className="grid grid-cols-12 gap-2 flex-1 items-center">
+                                                <div className="col-span-5 flex items-center gap-1">
+                                                    <Input 
+                                                        type="number" 
+                                                        value={slab.minAmount} 
+                                                        onChange={e => {
+                                                            const newSlabs = [...marketplaceSlabs];
+                                                            newSlabs[i].minAmount = parseFloat(e.target.value) || 0;
+                                                            setMarketplaceSlabs(newSlabs);
+                                                        }}
+                                                        className="h-8 text-[11px] px-1.5"
+                                                        placeholder="Min"
+                                                        disabled={marketplaceRateType === "DEFAULT"}
+                                                    />
+                                                    <span className="text-slate-400 font-bold">-</span>
+                                                    <Input 
+                                                        type="number" 
+                                                        value={slab.maxAmount || ""} 
+                                                        onChange={e => {
+                                                            const newSlabs = [...marketplaceSlabs];
+                                                            newSlabs[i].maxAmount = e.target.value ? parseFloat(e.target.value) : null;
+                                                            setMarketplaceSlabs(newSlabs);
+                                                        }}
+                                                        placeholder="Max"
+                                                        className="h-8 text-[11px] px-1.5"
+                                                        disabled={marketplaceRateType === "DEFAULT"}
+                                                    />
+                                                </div>
+                                                <div className="col-span-3">
+                                                    <Input 
+                                                        type="number" 
+                                                        value={slab.platformFee} 
+                                                        onChange={e => {
+                                                            const newSlabs = [...marketplaceSlabs];
+                                                            newSlabs[i].platformFee = parseFloat(e.target.value) || 0;
+                                                            setMarketplaceSlabs(newSlabs);
+                                                        }}
+                                                        className="h-8 text-[11px] px-1.5"
+                                                        disabled={marketplaceRateType === "DEFAULT"}
+                                                    />
+                                                </div>
+                                                <div className="col-span-4 flex items-center gap-1">
+                                                    <Input 
+                                                        type="number" 
+                                                        value={slab.percentage} 
+                                                        onChange={e => {
+                                                            const newSlabs = [...marketplaceSlabs];
+                                                            const val = parseFloat(e.target.value);
+                                                            newSlabs[i].percentage = isNaN(val) ? 0 : val;
+                                                            setMarketplaceSlabs(newSlabs);
+                                                        }}
+                                                        className="h-8 text-[11px] px-1.5"
+                                                        disabled={marketplaceRateType === "DEFAULT"}
+                                                    />
+                                                    <span className="text-[10px] text-slate-500 font-bold">%</span>
+                                                </div>
+                                            </div>
+                                            {marketplaceRateType === 'CUSTOM' && (
+                                                <Button 
+                                                    type="button" 
+                                                    variant="ghost" 
+                                                    size="icon" 
+                                                    className="h-6 w-6 text-destructive opacity-0 group-hover:opacity-100 transition-opacity" 
+                                                    onClick={() => setMarketplaceSlabs(prev => prev.filter((_, idx) => idx !== i))}
+                                                >
+                                                    <Trash2 className="w-3.5 h-3.5" />
+                                                </Button>
+                                            )}
                                         </div>
                                     ))}
+                                    {marketplaceRateType === 'CUSTOM' && (
+                                        <Button 
+                                            type="button" 
+                                            variant="outline" 
+                                            size="sm" 
+                                            className="w-full border-dashed text-[10px] h-8 bg-orange-50/30 hover:bg-orange-50 border-orange-200 text-orange-600"
+                                            onClick={() => setMarketplaceSlabs([...marketplaceSlabs, { minAmount: 0, maxAmount: null, platformFee: 0, percentage: 0 }])}
+                                        >
+                                            <Plus className="w-3 h-3 mr-1" /> Add Custom Slab
+                                        </Button>
+                                    )}
                                 </div>
                             </div>
 
@@ -1137,36 +1211,109 @@ export function TempleForm({
                                 <div className="flex items-center justify-between">
                                     <Label className="text-sm font-bold flex items-center gap-2">
                                         Pooja Commission
-                                        <span className={`text-[10px] px-2 py-0.5 rounded-full ${poojaRateType === 'CUSTOM' ? 'bg-orange-100 text-orange-600' : 'bg-blue-100 text-blue-600'}`}>
-                                            {poojaRateType}
-                                        </span>
+                                        <Badge variant={poojaRateType === 'CUSTOM' ? 'warning' : 'info'} className="text-[10px] px-2 py-0.5 rounded-full">
+                                            {poojaRateType === 'CUSTOM' ? 'CUSTOM RATE' : 'GLOBAL DEFAULT'}
+                                        </Badge>
                                     </Label>
-                                    <div className="flex items-center gap-2">
-                                        <span className="text-xs text-muted-foreground">Custom Rates</span>
+                                    <div className="flex items-center gap-3 bg-slate-100/50 p-1.5 rounded-lg border border-slate-200 shadow-sm">
+                                        <span className={`text-[10px] font-bold tracking-tight transition-colors ${poojaRateType === "DEFAULT" ? "text-primary" : "text-muted-foreground/60"}`}>DEFAULT</span>
                                         <Switch
                                             checked={poojaRateType === "CUSTOM"}
                                             onCheckedChange={handlePoojaRateTypeChange}
                                         />
+                                        <span className={`text-[10px] font-bold tracking-tight transition-colors ${poojaRateType === "CUSTOM" ? "text-orange-600" : "text-muted-foreground/60"}`}>CUSTOM</span>
                                     </div>
                                 </div>
-                                <div className="space-y-2">
+                                <div className="space-y-3">
+                                    <div className="grid grid-cols-12 gap-2 px-2 text-[9px] font-bold text-slate-500 uppercase tracking-wider">
+                                        <div className="col-span-5">Amount Range (₹)</div>
+                                        <div className="col-span-3">P. Fee (₹)</div>
+                                        <div className="col-span-3">Comm (%)</div>
+                                        <div className="col-span-1"></div>
+                                    </div>
                                     {poojaSlabs.map((slab, i) => (
-                                        <div key={i} className="flex items-center gap-2 p-2 bg-slate-50 rounded-lg border">
-                                            <span className="text-xs font-mono text-slate-500 w-24">Starts at ₹{slab.minAmount}</span>
-                                            <input
-                                                type="number"
-                                                value={slab.percentage}
-                                                onChange={e => {
-                                                    const newSlabs = [...poojaSlabs];
-                                                    newSlabs[i].percentage = parseFloat(e.target.value);
-                                                    setPoojaSlabs(newSlabs);
-                                                }}
-                                                className="h-8 w-16 text-xs border rounded px-1"
-                                                disabled={poojaRateType === "DEFAULT"}
-                                            />
-                                            <span className="text-xs text-slate-500">%</span>
+                                        <div key={i} className="group relative flex items-center gap-2 p-2 bg-slate-50/50 rounded-lg border border-slate-200 transition-all hover:border-primary/30">
+                                            <div className="grid grid-cols-12 gap-2 flex-1 items-center">
+                                                <div className="col-span-5 flex items-center gap-1">
+                                                    <Input 
+                                                        type="number" 
+                                                        value={slab.minAmount} 
+                                                        onChange={e => {
+                                                            const newSlabs = [...poojaSlabs];
+                                                            newSlabs[i].minAmount = parseFloat(e.target.value) || 0;
+                                                            setPoojaSlabs(newSlabs);
+                                                        }}
+                                                        className="h-8 text-[11px] px-1.5"
+                                                        placeholder="Min"
+                                                        disabled={poojaRateType === "DEFAULT"}
+                                                    />
+                                                    <span className="text-slate-400 font-bold">-</span>
+                                                    <Input 
+                                                        type="number" 
+                                                        value={slab.maxAmount || ""} 
+                                                        onChange={e => {
+                                                            const newSlabs = [...poojaSlabs];
+                                                            newSlabs[i].maxAmount = e.target.value ? parseFloat(e.target.value) : null;
+                                                            setPoojaSlabs(newSlabs);
+                                                        }}
+                                                        placeholder="Max"
+                                                        className="h-8 text-[11px] px-1.5"
+                                                        disabled={poojaRateType === "DEFAULT"}
+                                                    />
+                                                </div>
+                                                <div className="col-span-3">
+                                                    <Input 
+                                                        type="number" 
+                                                        value={slab.platformFee} 
+                                                        onChange={e => {
+                                                            const newSlabs = [...poojaSlabs];
+                                                            newSlabs[i].platformFee = parseFloat(e.target.value) || 0;
+                                                            setPoojaSlabs(newSlabs);
+                                                        }}
+                                                        className="h-8 text-[11px] px-1.5"
+                                                        disabled={poojaRateType === "DEFAULT"}
+                                                    />
+                                                </div>
+                                                <div className="col-span-4 flex items-center gap-1">
+                                                    <Input 
+                                                        type="number" 
+                                                        value={slab.percentage} 
+                                                        onChange={e => {
+                                                            const newSlabs = [...poojaSlabs];
+                                                            const val = parseFloat(e.target.value);
+                                                            newSlabs[i].percentage = isNaN(val) ? 0 : val;
+                                                            setPoojaSlabs(newSlabs);
+                                                        }}
+                                                        className="h-8 text-[11px] px-1.5"
+                                                        disabled={poojaRateType === "DEFAULT"}
+                                                    />
+                                                    <span className="text-[10px] text-slate-500 font-bold">%</span>
+                                                </div>
+                                            </div>
+                                            {poojaRateType === 'CUSTOM' && (
+                                                <Button 
+                                                    type="button" 
+                                                    variant="ghost" 
+                                                    size="icon" 
+                                                    className="h-6 w-6 text-destructive opacity-0 group-hover:opacity-100 transition-opacity" 
+                                                    onClick={() => setPoojaSlabs(prev => prev.filter((_, idx) => idx !== i))}
+                                                >
+                                                    <Trash2 className="w-3.5 h-3.5" />
+                                                </Button>
+                                            )}
                                         </div>
                                     ))}
+                                    {poojaRateType === 'CUSTOM' && (
+                                        <Button 
+                                            type="button" 
+                                            variant="outline" 
+                                            size="sm" 
+                                            className="w-full border-dashed text-[10px] h-8 bg-orange-50/30 hover:bg-orange-50 border-orange-200 text-orange-600"
+                                            onClick={() => setPoojaSlabs([...poojaSlabs, { minAmount: 0, maxAmount: null, platformFee: 0, percentage: 0 }])}
+                                        >
+                                            <Plus className="w-3 h-3 mr-1" /> Add Custom Slab
+                                        </Button>
+                                    )}
                                 </div>
                             </div>
                         </div>

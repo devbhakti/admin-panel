@@ -147,6 +147,7 @@ export default function CommissionSlabsPage() {
             platformFee: slab.platformFee.toString(),
             percentage: slab.percentage.toString(),
         });
+        setIsCreating(true);
     };
 
     const cancelEdit = () => {
@@ -255,7 +256,7 @@ export default function CommissionSlabsPage() {
             {/* Marketplace/Pooja Slabs Form */}
             {activeCategory !== 'DONATION' && isCreating && (
                 <div className="bg-white rounded-2xl shadow-lg p-6 mb-8 border-2 border-orange-500 animate-in fade-in slide-in-from-top-4 duration-300">
-                    <h3 className="text-xl font-bold mb-6">Create New {activeCategory} Slab</h3>
+                    <h3 className="text-xl font-bold mb-6">{editingId ? 'Edit' : 'Create New'} {activeCategory} Slab</h3>
                     <div className="grid grid-cols-1 md:grid-cols-4 gap-6">
                         <div>
                             <label className="block text-sm font-bold text-gray-700 mb-2">Min Amount (₹)</label>
@@ -297,7 +298,9 @@ export default function CommissionSlabsPage() {
                         </div>
                     </div>
                     <div className="flex gap-4 mt-8">
-                        <button onClick={handleCreate} className="bg-green-600 text-white px-8 py-3 rounded-xl font-bold hover:bg-green-700 transition shadow-lg shadow-green-100">Save Slab</button>
+                        <button onClick={editingId ? () => handleUpdate(editingId) : handleCreate} className="bg-green-600 text-white px-8 py-3 rounded-xl font-bold hover:bg-green-700 transition shadow-lg shadow-green-100">
+                            {editingId ? 'Update Slab' : 'Save Slab'}
+                        </button>
                         <button onClick={cancelEdit} className="bg-gray-100 text-gray-600 px-8 py-3 rounded-xl font-bold hover:bg-gray-200 transition">Cancel</button>
                     </div>
                 </div>

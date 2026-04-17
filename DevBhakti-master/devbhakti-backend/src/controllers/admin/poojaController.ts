@@ -1,12 +1,34 @@
 import { Request, Response } from 'express';
 import { prisma } from '../../lib/prisma';
 import { buildLangJson, buildLangArray, getLang, localize } from '../../utils/localization';
+import slugify from 'slugify';
 
 // Helper: safely parse JSON string or return default
 const safeParse = (val: any, fallback: any = null) => {
     if (!val) return fallback;
     if (typeof val === 'object') return val;
     try { return JSON.parse(val); } catch { return fallback; }
+};
+
+const generateUniqueSlug = async (baseSlug: string, model: any, excludeId?: string): Promise<string> => {
+    let slug = baseSlug;
+    let counter = 1;
+    
+    while (true) {
+        const existing = await model.findFirst({
+            where: {
+                slug,
+                NOT: excludeId ? { id: excludeId } : undefined
+            }
+        });
+        
+        if (!existing) return slug;
+        
+        // If exists, append counter or random string
+        slug = `${baseSlug}-${Math.random().toString(36).substring(2, 6)}`;
+        // Alternatively: slug = `${baseSlug}-${counter++}`;
+        // Random string is safer for high concurrency or many duplicates
+    }
 };
 
 export const getAllPoojas = async (req: Request, res: Response) => {
@@ -100,7 +122,7 @@ export const createPooja = async (req: Request, res: Response) => {
             isMaster,
             masterPoojaId,
             templeDetails_en, templeDetails_hi, templeDetails_mr,
-            categoryId
+            categoryId, categoryIds
         } = req.body;
 
         // Validate temple exists if provided
@@ -116,6 +138,9 @@ export const createPooja = async (req: Request, res: Response) => {
         if (req.file) {
             imagePath = `/uploads/poojas/${req.file.filename}`;
         }
+
+        const baseSlug = req.body.slug || slugify(name_en || req.body.name, { lower: true, strict: true });
+        const uniqueSlug = await generateUniqueSlug(baseSlug, prisma.pooja);
 
         const pooja = await prisma.pooja.create({
             data: {
@@ -143,6 +168,7 @@ export const createPooja = async (req: Request, res: Response) => {
                     safeParse(bullets_hi, []),
                     safeParse(bullets_mr, [])
                 ),
+                slug: uniqueSlug,
 
                 // Non-multilingual fields
                 price: parseFloat(price),
@@ -157,6 +183,7 @@ export const createPooja = async (req: Request, res: Response) => {
                 isMaster: isMaster === 'true' || isMaster === true,
                 masterPoojaId: masterPoojaId || null,
                 categoryId: (categoryId && categoryId !== 'null') ? String(categoryId) : null,
+                categoryIds: safeParse(categoryIds, []),
                 packages: safeParse(packages),
                 faqs: safeParse(faqs)
             }
@@ -188,11 +215,11 @@ export const updatePooja = async (req: Request, res: Response) => {
             packages,
             faqs,
             templeDetails_en, templeDetails_hi, templeDetails_mr,
-            categoryId
+            categoryId, categoryIds
         } = req.body;
 
         // Validate temple exists if templeId is provided
-        if (templeId) {
+        if (templeId && templeId !== 'null' && templeId !== 'undefined') {
             const temple = await prisma.temple.findUnique({ where: { id: String(templeId) } });
             if (!temple) {
                 return res.status(400).json({ error: 'Invalid templeId: Temple does not exist' });
@@ -207,7 +234,7 @@ export const updatePooja = async (req: Request, res: Response) => {
             about: buildLangJson(about_en || req.body.about, about_hi, about_mr),
             process: buildLangJson(process_en || req.body.process, process_hi, process_mr),
             templeDetails: buildLangJson(templeDetails_en || req.body.templeDetails, templeDetails_hi, templeDetails_mr),
-
+            
             // Array multilingual fields
             description: buildLangArray(
                 safeParse(description_en || req.body.description, []),
@@ -235,9 +262,15 @@ export const updatePooja = async (req: Request, res: Response) => {
             ),
             templeId: (templeId && templeId !== 'null') ? String(templeId) : undefined,
             categoryId: (categoryId && categoryId !== 'null') ? String(categoryId) : undefined,
+            categoryIds: categoryIds !== undefined ? safeParse(categoryIds, []) : undefined,
             packages: safeParse(packages),
             faqs: safeParse(faqs)
         };
+
+        if (req.body.slug !== undefined) {
+             const baseSlug = req.body.slug || slugify(name_en || req.body.name, { lower: true, strict: true });
+             updateData.slug = await generateUniqueSlug(baseSlug, prisma.pooja, String(id));
+        }
 
         if (req.body.isMaster !== undefined) {
             updateData.isMaster = req.body.isMaster === 'true' || req.body.isMaster === true;

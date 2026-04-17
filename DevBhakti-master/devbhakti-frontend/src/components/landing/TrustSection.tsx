@@ -71,7 +71,10 @@ const TrustSection: React.FC = () => {
                                 <CheckCircle2 size={14} />
                                 {t('landing.trust.tagline')}
                             </span>
-                            <h2 className="text-4xl md:text-5xl font-serif font-bold text-zinc-900 mb-6 leading-tight">
+                            <h2 
+                                className="text-4xl md:text-5xl font-serif font-bold text-zinc-900 mb-6"
+                                style={{ lineHeight: 1.2}}
+                            >
                                 {t('landing.trust.title1')}
                                 <span className="text-gradient-sacred">{t('landing.trust.title2')}</span>
                             </h2>
