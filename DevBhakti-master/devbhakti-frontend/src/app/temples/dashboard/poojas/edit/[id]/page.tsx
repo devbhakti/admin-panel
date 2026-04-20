@@ -112,11 +112,15 @@ export default function TempleEditPoojaPage() {
         try {
             const response = await fetchMyPoojas();
             // The API returns { success: true, data: [...] }
-            const pooja = (response.data || []).find((p: any) => p.id === poojaId);
+            const poojasList = response.data || response || [];
+            const pooja = Array.isArray(poojasList) ? poojasList.find((p: any) => p.id === poojaId) : null;
 
             if (pooja) {
+                // Ensure packages is an array
+                const rawPackages = Array.isArray(pooja.packages) ? pooja.packages : [];
+
                 // Only keep packages that match our fixed types
-                const validPackages = (pooja.packages || []).filter((p: any) =>
+                const validPackages = rawPackages.filter((p: any) =>
                     STATIC_PACKAGE_TYPES.some(st => st.name === p.name)
                 );
 
@@ -125,22 +129,24 @@ export default function TempleEditPoojaPage() {
                     return result === "N/A" ? fallback : result;
                 };
 
+                const ensureArray = (val: any) => Array.isArray(val) ? val : [];
+
                 setFormData({
                     name_en: getL(pooja.name, 'en'),
                     name_hi: getL(pooja.name, 'hi'),
                     name_mr: getL(pooja.name, 'mr'),
-                    price: pooja.price,
-                    category: pooja.category || "",
+                    price: pooja.price || 0,
+                    category: typeof pooja.category === 'string' ? pooja.category : getL(pooja.category, 'en'),
                     time: pooja.time || "",
                     about_en: getL(pooja.about, 'en'),
                     about_hi: getL(pooja.about, 'hi'),
                     about_mr: getL(pooja.about, 'mr'),
-                    description: pooja.description || [],
-                    benefits: pooja.benefits || [],
-                    bullets: pooja.bullets || [],
+                    description: ensureArray(pooja.description),
+                    benefits: ensureArray(pooja.benefits),
+                    bullets: ensureArray(pooja.bullets),
                     packages: validPackages,
-                    processSteps: pooja.processSteps || [],
-                    faqs: pooja.faqs || [],
+                    processSteps: ensureArray(pooja.processSteps),
+                    faqs: ensureArray(pooja.faqs),
                     status: pooja.status ?? true
                 });
 
@@ -160,8 +166,13 @@ export default function TempleEditPoojaPage() {
                 toast({ title: "Error", description: "Pooja not found", variant: "destructive" });
                 router.push('/temples/dashboard/poojas');
             }
-        } catch (error) {
-            toast({ title: "Error", description: "Failed to load pooja", variant: "destructive" });
+        } catch (error: any) {
+            console.error("Failed to load pooja:", error);
+            toast({ 
+                title: "Error", 
+                description: error.response?.data?.message || "Failed to load pooja details", 
+                variant: "destructive" 
+            });
         } finally {
             setIsLoading(false);
         }
@@ -329,12 +340,17 @@ export default function TempleEditPoojaPage() {
                                             onChange={(e) => {
                                                 const newPrice = e.target.value === "" ? 0 : parseInt(e.target.value);
                                                 setFormData(prev => {
-                                                    const newPackages = prev.packages.map(pkg => {
-                                                        if (pkg.name === "Single") {
-                                                            return { ...pkg, price: newPrice };
-                                                        }
-                                                        return pkg;
-                                                    });
+                                                    let newPackages = [...prev.packages];
+                                                    const singlePkgIndex = newPackages.findIndex(p => p.name === "Single");
+                                                    
+                                                    if (singlePkgIndex > -1) {
+                                                        // Update existing single package
+                                                        newPackages[singlePkgIndex] = { ...newPackages[singlePkgIndex], price: newPrice };
+                                                    } else if (newPrice > 0) {
+                                                        // Auto-add Single package if it doesn't exist
+                                                        newPackages.push({ name: "Single", description: "For 1 person", price: newPrice });
+                                                    }
+                                                    
                                                     return { ...prev, price: newPrice, packages: newPackages };
                                                 });
                                             }}

@@ -602,7 +602,7 @@ const PoojaListClient: React.FC = () => {
                             </Badge>
                             <h2 className="text-4xl md:text-5xl font-bold text-black mb-8 leading-tight">
                                 {t('poojas_list.why_book_through')}
-                                <span className="text-primary italic">DevBhakti</span>
+                                <span className="text-primary italic mr-2 ">DevBhakti</span>
                                 {t('poojas_list.why_book_suffix')}
                             </h2>
 

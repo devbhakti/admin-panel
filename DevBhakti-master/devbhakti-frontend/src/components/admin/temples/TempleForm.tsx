@@ -16,7 +16,7 @@ import {
     Loader2,
     AlertCircle,
     CheckCircle2,
-    Youtube,
+    Video,
     Play,
     Link as LinkIcon
 } from "lucide-react";
@@ -830,7 +830,7 @@ export function TempleForm({
                         {/* YouTube Video Links */}
                         <div className="space-y-4 pt-2 border-t">
                             <div className="flex items-center gap-2">
-                                <Youtube className="w-4 h-4 text-red-500" />
+                                <Video className="w-4 h-4 text-red-500" />
                                 <label className="text-sm font-semibold text-slate-700">YouTube Videos (Gallery)</label>
                             </div>
                             <p className="text-xs text-slate-500">Add YouTube video links — they will appear in the temple gallery alongside images.</p>
@@ -936,7 +936,7 @@ export function TempleForm({
 
                             {([...existingYoutubeLinks, ...youtubeLinks].length === 0) && (
                                 <div className="border-2 border-dashed rounded-xl p-6 text-center text-muted-foreground">
-                                    <Youtube className="w-8 h-8 mx-auto mb-2 opacity-30" />
+                                    <Video className="w-8 h-8 mx-auto mb-2 opacity-30" />
                                     <p className="text-sm">No YouTube videos added yet</p>
                                     <p className="text-xs mt-0.5 opacity-60">Paste a YouTube URL above and click Add</p>
                                 </div>

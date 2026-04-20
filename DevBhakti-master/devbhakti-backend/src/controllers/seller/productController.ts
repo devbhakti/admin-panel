@@ -19,7 +19,13 @@ export const getMyProducts = async (req: Request, res: Response) => {
             ];
         }
 
-        if (status) {
+        if (status === "out_of_stock") {
+            where.variants = {
+                every: {
+                    stock: 0
+                }
+            };
+        } else if (status) {
             where.status = status as string;
         }
 
@@ -120,6 +126,11 @@ export const createProduct = async (req: Request, res: Response) => {
                 sellerId,
                 status: "pending",
                 image,
+                rating: data.rating ? parseFloat(data.rating) : 4.5,
+                weight: data.weight ? parseFloat(data.weight) : 0.5,
+                length: data.length ? parseFloat(data.length) : 10,
+                width: data.width ? parseFloat(data.width) : 10,
+                height: data.height ? parseFloat(data.height) : 10,
                 variants: {
                     create: variants.map((v: any) => ({
                         name: buildLangJson(v.name_en || v.name, v.name_hi, v.name_mr),
@@ -159,11 +170,21 @@ export const updateProduct = async (req: Request, res: Response) => {
         // Multilingual fields
         if (body.name_en || body.name) updateData.name = buildLangJson(body.name_en || body.name, body.name_hi, body.name_mr);
         if (body.description_en || body.description) updateData.description = buildLangJson(body.description_en || body.description, body.description_hi, body.description_mr);
-        if (body.category_en || body.category) updateData.category = buildLangJson(body.category_en || body.category, body.category_hi, body.category_mr);
+        
+        // Category update
+        if (body.category) updateData.categoryId = body.category;
+        
         if (body.highlights_en) updateData.highlights = buildLangArray(body.highlights_en, body.highlights_hi, body.highlights_mr);
         if (body.longDescription_en !== undefined) updateData.longDescription = buildLangJson(body.longDescription_en, body.longDescription_hi, body.longDescription_mr);
         if (body.shippingInfo_en !== undefined) updateData.shippingInfo = buildLangJson(body.shippingInfo_en, body.shippingInfo_hi, body.shippingInfo_mr);
         if (body.origin_en !== undefined) updateData.origin = buildLangJson(body.origin_en, body.origin_hi, body.origin_mr);
+
+        // Shiprocket Dimensions & Rating
+        if (body.rating !== undefined) updateData.rating = parseFloat(body.rating);
+        if (body.weight !== undefined) updateData.weight = parseFloat(body.weight);
+        if (body.length !== undefined) updateData.length = parseFloat(body.length);
+        if (body.width !== undefined) updateData.width = parseFloat(body.width);
+        if (body.height !== undefined) updateData.height = parseFloat(body.height);
 
         if (req.is('multipart/form-data')) {
             variants = body.variants ? JSON.parse(body.variants) : [];
@@ -184,14 +205,32 @@ export const updateProduct = async (req: Request, res: Response) => {
         if (image) updateData.image = image;
         else if (removeImage) updateData.image = null;
 
-        if (variants && variants.length > 0) {
-            await prisma.productVariant.deleteMany({ where: { productId: id as string } });
+        if (variants && Array.isArray(variants)) {
+            const existingVariants = variants.filter((v: any) => v.id && String(v.id).length > 20);
+            const newVariants = variants.filter((v: any) => !v.id || String(v.id).length <= 20);
+            const existingIds = existingVariants.map((v: any) => v.id);
+
             updateData.variants = {
-                create: variants.map((v: any) => ({
-                    name: buildLangJson(v.name_en || v.name, v.name_hi, v.name_mr),
-                    price: parseFloat(v.price),
-                    stock: parseInt(v.stock) || 0,
-                    image: v.image || null
+                updateMany: {
+                    where: { id: { notIn: existingIds } },
+                    data: { isActive: false }
+                },
+                update: existingVariants.map((variant: any) => ({
+                    where: { id: variant.id },
+                    data: {
+                        name: buildLangJson(variant.name_en || variant.name, variant.name_hi, variant.name_mr),
+                        price: parseFloat(variant.price),
+                        stock: parseInt(variant.stock) || 0,
+                        ...(variant.hasOwnProperty('image') && { image: variant.image }),
+                        isActive: true
+                    }
+                })),
+                create: newVariants.map((variant: any) => ({
+                    name: buildLangJson(variant.name_en || variant.name, variant.name_hi, variant.name_mr),
+                    price: parseFloat(variant.price),
+                    stock: parseInt(variant.stock) || 0,
+                    image: variant.image || null,
+                    isActive: true
                 }))
             };
         }

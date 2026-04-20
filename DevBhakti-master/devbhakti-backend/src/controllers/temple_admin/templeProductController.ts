@@ -94,7 +94,11 @@ export const createProduct = async (req: Request, res: Response) => {
     let variants = [];
 
     if (req.is('multipart/form-data')) {
-      variants = data.variants ? JSON.parse(data.variants) : [];
+      const tryParseVariants = (val: any) => {
+        if (typeof val !== 'string') return val;
+        try { return JSON.parse(val); } catch (e) { return []; }
+      };
+      variants = data.variants ? tryParseVariants(data.variants) : [];
       const files = req.files as Express.Multer.File[];
       if (files) {
         const productFile = files.find(f => f.fieldname === 'image');
@@ -113,7 +117,7 @@ export const createProduct = async (req: Request, res: Response) => {
     const { 
         name_en, name_hi, name_mr,
         description_en, description_hi, description_mr,
-        category, // This is categoryId or category name? In original it was used for both.
+        category, 
         category_en, category_hi, category_mr,
         highlights_en, highlights_hi, highlights_mr,
         longDescription_en, longDescription_hi, longDescription_mr,
@@ -121,27 +125,33 @@ export const createProduct = async (req: Request, res: Response) => {
         origin_en, origin_hi, origin_mr
     } = data;
 
+    const tryParse = (val: any) => {
+        if (typeof val !== 'string') return val;
+        if (!val || (!val.trim().startsWith('[') && !val.trim().startsWith('{'))) return val;
+        try { return JSON.parse(val); } catch (e) { return val; }
+    };
+
     const product = await prisma.product.create({
       data: {
         name: buildLangJson(name_en || data.name, name_hi, name_mr),
         description: buildLangJson(description_en || data.description, description_hi, description_mr),
         category: buildLangJson(category_en || category, category_hi, category_mr),
         highlights: buildLangJson(
-            typeof highlights_en === 'string' ? JSON.parse(highlights_en) : (highlights_en || []),
-            typeof highlights_hi === 'string' ? JSON.parse(highlights_hi) : (highlights_hi || []),
-            typeof highlights_mr === 'string' ? JSON.parse(highlights_mr) : (highlights_mr || [])
+            tryParse(highlights_en),
+            tryParse(highlights_hi),
+            tryParse(highlights_mr)
         ),
         longDescription: buildLangJson(longDescription_en, longDescription_hi, longDescription_mr),
         shippingInfo: buildLangJson(shippingInfo_en, shippingInfo_hi, shippingInfo_mr),
         origin: buildLangJson(origin_en, origin_hi, origin_mr),
-        categoryId: category, // assuming 'category' field in req.body might be the ID
+        categoryId: category,
         templeId: templeId,
         status: "pending",
         image,
         variants: {
           create: variants.map((v: any) => ({
-            name: buildLangJson(v.name_en || v.name, v.name_hi, v.name_mr),
-            price: parseFloat(v.price),
+            name: buildLangJson(v.name_en || v.name || v.name_en, v.name_hi, v.name_mr),
+            price: parseFloat(v.price) || 0,
             stock: parseInt(v.stock) || 0,
             image: v.image || null
           }))
@@ -175,7 +185,11 @@ export const updateProduct = async (req: Request, res: Response) => {
     const updateData: any = {};
 
     if (req.is('multipart/form-data')) {
-        variants = data.variants ? JSON.parse(data.variants) : [];
+        const tryParseVariants = (val: any) => {
+            if (typeof val !== 'string') return val;
+            try { return JSON.parse(val); } catch (e) { return []; }
+        };
+        variants = data.variants ? tryParseVariants(data.variants) : [];
         const files = req.files as Express.Multer.File[];
         if (files) {
             const productFile = files.find(f => f.fieldname === 'image');
@@ -208,10 +222,15 @@ export const updateProduct = async (req: Request, res: Response) => {
     if (categoryId !== undefined) updateData.categoryId = categoryId;
     
     if (highlights_en !== undefined) {
+        const tryParse = (val: any) => {
+            if (typeof val !== 'string') return val;
+            if (!val.trim().startsWith('[') && !val.trim().startsWith('{')) return val;
+            try { return JSON.parse(val); } catch (e) { return val; }
+        };
         updateData.highlights = buildLangJson(
-            typeof highlights_en === 'string' ? JSON.parse(highlights_en) : highlights_en,
-            typeof highlights_hi === 'string' ? JSON.parse(highlights_hi) : highlights_hi,
-            typeof highlights_mr === 'string' ? JSON.parse(highlights_mr) : highlights_mr
+            tryParse(highlights_en),
+            tryParse(highlights_hi),
+            tryParse(highlights_mr)
         );
     }
 
@@ -223,14 +242,32 @@ export const updateProduct = async (req: Request, res: Response) => {
     else if (removeImage === 'true') updateData.image = null;
 
     // Handle Variants
-    if (variants && variants.length > 0) {
-      await prisma.productVariant.deleteMany({ where: { productId: id as string } });
+    if (variants && Array.isArray(variants)) {
+      const existingVariants = variants.filter((v: any) => v.id && String(v.id).length > 20);
+      const newVariants = variants.filter((v: any) => !v.id || String(v.id).length <= 20);
+      const existingIds = existingVariants.map((v: any) => v.id);
+
       updateData.variants = {
-        create: variants.map((v: any) => ({
-          name: buildLangJson(v.name_en || v.name, v.name_hi, v.name_mr),
-          price: parseFloat(v.price),
-          stock: parseInt(v.stock) || 0,
-          image: v.image || null
+        updateMany: {
+          where: { id: { notIn: existingIds } },
+          data: { isActive: false }
+        },
+        update: existingVariants.map((variant: any) => ({
+          where: { id: variant.id },
+          data: {
+            name: buildLangJson(variant.name_en || variant.name || variant.name_en, variant.name_hi, variant.name_mr),
+            price: parseFloat(variant.price) || 0,
+            stock: parseInt(variant.stock) || 0,
+            ...(variant.hasOwnProperty('image') && { image: variant.image }),
+            isActive: true
+          }
+        })),
+        create: newVariants.map((variant: any) => ({
+          name: buildLangJson(variant.name_en || variant.name || variant.name_en, variant.name_hi, variant.name_mr),
+          price: parseFloat(variant.price) || 0,
+          stock: parseInt(variant.stock) || 0,
+          image: variant.image || null,
+          isActive: true
         }))
       };
     }

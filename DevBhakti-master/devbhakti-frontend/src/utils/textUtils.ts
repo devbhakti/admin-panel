@@ -10,14 +10,16 @@ export const parseLocalizedValue = (value: any, lang: string = 'en'): string => 
     
     // If it's already an object
     if (typeof value === "object") {
-        return value[lang] || value.en || value.hi || value.mr || "N/A";
+        const getValue = (val: any) => (val !== undefined && val !== null && val !== '') ? val : null;
+        return getValue(value[lang]) || getValue(value.en) || getValue(value.hi) || getValue(value.mr) || "N/A";
     }
     
     // If it's a string, try to parse it as JSON
     try {
         const parsed = JSON.parse(value);
         if (typeof parsed === "object" && parsed !== null) {
-            return parsed[lang] || parsed.en || parsed.hi || parsed.mr || "N/A";
+            const getValue = (val: any) => (val !== undefined && val !== null && val !== '') ? val : null;
+            return getValue(parsed[lang]) || getValue(parsed.en) || getValue(parsed.hi) || getValue(parsed.mr) || "N/A";
         }
     } catch (e) {
         // Not a JSON string, return as is

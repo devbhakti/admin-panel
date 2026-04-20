@@ -24,7 +24,7 @@ import { Switch } from "@/components/ui/switch";
 import { fetchAllCTACardsAdmin, createCTACardAdmin, updateCTACardAdmin } from "@/api/adminController";
 import { BASE_URL } from "@/config/apiConfig";
 import { useLanguage } from "@/context/LanguageContext";
-import { getLocalized, Language } from "@/utils/localization";
+import { getLocalized, getLocalizedArray, Language } from "@/utils/localization";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { useToast } from "@/hooks/use-toast";
 
@@ -125,6 +125,7 @@ export default function CTACardsPage() {
 
             // Sort by order
             data = data.sort((a: any, b: any) => a.order - b.order);
+            console.log("Fetched CTA Cards Data:", data); // Log the data to inspect its structure
             setCTACards(data);
         } catch (error) {
             console.error("Error loading CTA cards:", error);
@@ -205,11 +206,17 @@ export default function CTACardsPage() {
             data.append('active', (!card.active).toString());
             data.append('order', card.order.toString());
 
-            await updateCTACardAdmin(card.id, data);
+            const res = await updateCTACardAdmin(card.id, data);
             loadCTACards();
-        } catch (error) {
+            toast({ 
+                title: card.active ? "Card Deactivated" : "Card Activated", 
+                description: res.message || `Successfully ${card.active ? 'deactivated' : 'activated'} the ${card.cardType} card.`,
+                variant: "success" 
+            });
+        } catch (error: any) {
             console.error("Error toggling status:", error);
-            toast({ title: "Error", description: "Error toggling status", variant: "destructive" });
+            const errorMsg = error.response?.data?.message || "Error toggling status";
+            toast({ title: "Error", description: errorMsg, variant: "destructive" });
         }
     };
 
@@ -235,22 +242,28 @@ export default function CTACardsPage() {
             data.append('active', formData.active.toString());
             data.append('order', (fixedData.order || 1).toString());
 
+            let res;
             if (editingCard.id) {
-                await updateCTACardAdmin(editingCard.id, data);
+                res = await updateCTACardAdmin(editingCard.id, data);
             } else {
                 if (!iconFile) {
                     toast({ title: "Icon Required", description: "Please upload an icon", variant: "destructive" });
                     return;
                 }
-                await createCTACardAdmin(data);
+                res = await createCTACardAdmin(data);
             }
 
             setIsDialogOpen(false);
             loadCTACards();
-            toast({ title: "Success", description: editingCard.id ? "Card updated" : "Card created" });
-        } catch (error) {
+            toast({ 
+                title: "Success", 
+                description: res.message || (editingCard.id ? "Card updated successfully" : "Card created successfully"),
+                variant: "success"
+            });
+        } catch (error: any) {
             console.error("Error saving CTA card:", error);
-            toast({ title: "Error", description: "Error saving CTA card", variant: "destructive" });
+            const errorMsg = error.response?.data?.message || "Error saving CTA card";
+            toast({ title: "Error", description: errorMsg, variant: "destructive" });
         }
     };
 
@@ -319,19 +332,31 @@ export default function CTACardsPage() {
                                     )}
                                 </div>
 
-                                {/* Content Preview */}
-                                <div>
-                                    <h3 className="text-xl font-bold text-gray-900 mb-4">
-                                        {getLocalized(card, 'title', language as Language)}
-                                    </h3>
-                                    <ul className="space-y-3">
-                                        {(card[`points_${language}`] || card.points_en || card.points || []).map((point: string, i: number) => (
-                                            <li key={i} className="flex items-start gap-3 text-sm text-gray-600">
-                                                <div className={`w-1.5 h-1.5 rounded-full mt-1.5 shrink-0 ${card.cardType === 'primary' ? 'bg-orange-500' : 'bg-gray-400'}`} />
-                                                <span>{point || "..."}</span>
-                                            </li>
+                                {/* Content Preview with Tabs */}
+                                <div className="space-y-4">
+                                    <Tabs defaultValue="en" className="w-full">
+                                        <TabsList className="grid grid-cols-3 w-full h-8 mb-4">
+                                            <TabsTrigger value="en" className="text-[10px] uppercase font-bold tracking-wider">English</TabsTrigger>
+                                            <TabsTrigger value="hi" className="text-[10px] uppercase font-bold tracking-wider">Hindi</TabsTrigger>
+                                            <TabsTrigger value="mr" className="text-[10px] uppercase font-bold tracking-wider">Marathi</TabsTrigger>
+                                        </TabsList>
+
+                                        {["en", "hi", "mr"].map((l) => (
+                                            <TabsContent key={l} value={l} className="animate-in fade-in slide-in-from-bottom-2 duration-300">
+                                                <h3 className="text-xl font-bold text-gray-900 mb-4">
+                                                    {getLocalized(card, 'title', l as Language)}
+                                                </h3>
+                                                <ul className="space-y-3">
+                                                    {getLocalizedArray(card, 'points', l as Language).map((point: string, i: number) => (
+                                                        <li key={i} className="flex items-start gap-3 text-sm text-gray-600">
+                                                            <div className={`w-1.5 h-1.5 rounded-full mt-1.5 shrink-0 ${card.cardType === 'primary' ? 'bg-orange-500' : 'bg-gray-400'}`} />
+                                                            <span>{point || "..."}</span>
+                                                        </li>
+                                                    ))}
+                                                </ul>
+                                            </TabsContent>
                                         ))}
-                                    </ul>
+                                    </Tabs>
                                 </div>
 
                                 {/* Fixed Button Preview */}
@@ -378,6 +403,34 @@ export default function CTACardsPage() {
                             Update the title, icon, and 5 key points. Buttons and links are fixed.
                         </DialogDescription>
                     </DialogHeader>
+   
+                     
+                    {/* ADD THIS ICON UPLOAD SECTION */}
+                    <div className="space-y-4 mb-6">
+                        <Label className="text-base font-semibold">Card Icon</Label>
+                        <div className="flex items-center gap-4">
+                            <div className="w-16 h-16 rounded-xl bg-white shadow-sm border flex items-center justify-center p-2">
+                                {iconPreview ? (
+                                    <img src={iconPreview} alt="Icon Preview" className="w-full h-full object-contain" />
+                                ) : (
+                                    <div className="text-xs text-muted-foreground text-center">No Icon</div>
+                                )}
+                            </div>
+                            <div className="flex-1">
+                                <Input
+                                    type="file"
+                                    accept="image/*"
+                                    onChange={handleIconChange}
+                                    className="cursor-pointer"
+                                />
+                                <p className="text-xs text-muted-foreground mt-1">
+                                    Upload new icon (optional for updates)
+                                </p>
+                            </div>
+                        </div>
+                    </div>
+
+            
 
                     <div className="mt-4">
                         <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full">

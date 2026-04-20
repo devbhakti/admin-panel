@@ -64,6 +64,10 @@ interface Product {
   seller?: {
     name: string;
   } | null;
+  categoryObj?: {
+    id: string;
+    name: any;
+  } | null;
   variants: Array<{
     id: string;
     name?: string;
@@ -352,7 +356,7 @@ export default function MarketplaceClient() {
                         onClick={() => { setSelectedCategory("All"); setPriceRange([0, 5000]); setCurrentPage(1); setSearchQuery(""); }}
                         className="ml-auto text-xs font-medium text-primary hover:underline"
                       >
-                        {t('common.reset')}
+                        {t('reset')}
                       </button>
                     )}
                 </h3>
@@ -459,14 +463,40 @@ export default function MarketplaceClient() {
                   <Link href={`/marketplace/product/${product.id}`}>
                     <div className="relative aspect-[5/4] overflow-hidden bg-muted">
                       {product.image ? <img src={`${BASE_URL}${product.image}`} alt={getLocalized(product, 'name', language)} className="w-full h-full object-cover" /> : <div className="w-full h-full flex items-center justify-center"><Package className="w-12 h-12 text-muted-foreground" /></div>}
+                      
+                      {/* Out of Stock Label */}
+                      {product.variants?.every(v => v.stock === 0) && (
+                        <div className="absolute inset-0 bg-black/40 backdrop-blur-[2px] z-10 flex items-center justify-center pointer-events-none">
+                          <span className="px-4 py-1.5 bg-red-600 text-white text-xs font-bold uppercase tracking-widest rounded-full shadow-lg">
+                            {t('marketplace.out_of_stock')}
+                          </span>
+                        </div>
+                      )}
+
                       <Button variant="secondary" size="icon" className="absolute top-3 right-3 rounded-full transition-opacity" onClick={(e) => { e.preventDefault(); e.stopPropagation(); toggleFavorite(product.id); }}><Heart className={`h-4 w-4 ${favorites.includes(product.id) ? "fill-red-500 text-red-500" : ""}`} /></Button>
                     </div>
                   </Link>
                   <CardContent className="p-4">
+                    <div className="flex items-center justify-between mb-1.5">
+                       <span className="text-[10px] font-bold text-[#794A05]/60 uppercase tracking-widest truncate">
+                          {getLocalized(product.categoryObj, 'name', language) || product.category || t('marketplace.exclusive')}
+                        </span>
+                        {showRatings && (
+                          <div className="flex items-center gap-1 bg-[#794A05]/5 px-2 py-0.5 rounded-full">
+                            <Star className="w-2.5 h-2.5 fill-amber-500 text-amber-500" />
+                            <span className="text-[9px] font-bold text-[#794A05]">{product.rating || "4.5"}</span>
+                          </div>
+                        )}
+                    </div>
                     <h3 className="font-semibold text-[#2a1b01] mb-1 line-clamp-1 truncate block"><Link href={`/marketplace/product/${product.id}`}>{getLocalized(product, 'name', language)}</Link></h3>
                     <div className="flex items-center justify-between mt-4">
                       <span className="font-bold text-[#794A05]">{getPriceRange(product)}</span>
-                      <Button size="sm" onClick={() => addToCart(product)} className="bg-[#794A05] text-white rounded-full">
+                      <Button 
+                        size="sm" 
+                        onClick={() => addToCart(product)} 
+                        className="bg-[#794A05] text-white rounded-full"
+                        disabled={product.variants?.every(v => v.stock === 0)}
+                      >
                         {t('marketplace.add_to_cart')}
                       </Button>
                     </div>

@@ -26,7 +26,8 @@ export const getCart = async (req: Request, res: Response) => {
                                 id: true,
                                 name: true,
                                 price: true,
-                                stock: true
+                                stock: true,
+                                isActive: true
                             }
                         }
                     },
@@ -55,7 +56,8 @@ export const getCart = async (req: Request, res: Response) => {
                                     id: true,
                                     name: true,
                                     price: true,
-                                    stock: true
+                                    stock: true,
+                                    isActive: true
                                 }
                             }
                         }
@@ -83,7 +85,8 @@ export const getCart = async (req: Request, res: Response) => {
                 quantity: item.quantity,
                 templeId: item.product.templeId,
                 sellerId: item.product.sellerId,
-                stock: item.variant.stock
+                stock: item.variant.stock,
+                isActive: item.variant.isActive
             };
         }) || [];
 

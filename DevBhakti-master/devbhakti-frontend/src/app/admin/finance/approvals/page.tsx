@@ -95,7 +95,42 @@ export default function ApprovalsPage() {
         // Handle complex objects like images array if necessary, otherwise stringify
         const formatVal = (val: any) => {
             if (val === undefined || val === null) return <span className="text-muted-foreground italic">None</span>;
-            if (typeof val === 'object') return <pre className="text-xs max-w-[200px] overflow-auto whitespace-pre-wrap">{JSON.stringify(val, null, 2)}</pre>;
+            
+            if (typeof val === 'object' && !Array.isArray(val)) {
+                // Determine if it's a localized object
+                const isLocalized = 'en' in val || 'hi' in val || 'mr' in val || 
+                                   'En' in val || 'Hi' in val || 'Mr' in val;
+                
+                if (isLocalized) {
+                    return (
+                        <div className="flex flex-col gap-1.5 py-1">
+                            {['en', 'hi', 'mr'].map(l => {
+                                const v = val[l] || val[l.charAt(0).toUpperCase() + l.slice(1)];
+                                if (!v) return null;
+                                return (
+                                    <div key={l} className="flex items-center gap-2">
+                                        <span className="text-[9px] font-bold bg-slate-100 text-slate-500 px-1 rounded border uppercase w-6 text-center">{l}</span>
+                                        <span className="text-sm font-medium">{v}</span>
+                                    </div>
+                                );
+                            })}
+                        </div>
+                    );
+                }
+
+                return <pre className="text-xs max-w-[200px] overflow-auto whitespace-pre-wrap p-2 bg-slate-50 rounded border">{JSON.stringify(val, null, 2)}</pre>;
+            }
+            
+            if (Array.isArray(val)) {
+                return (
+                    <div className="flex flex-wrap gap-1">
+                        {val.map((item, i) => (
+                            <Badge key={i} variant="outline" className="text-[10px] font-normal">{String(item)}</Badge>
+                        ))}
+                    </div>
+                );
+            }
+
             return String(val);
         };
 

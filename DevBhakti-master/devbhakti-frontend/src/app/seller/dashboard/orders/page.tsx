@@ -51,6 +51,7 @@ import { format } from "date-fns";
 import { cn } from "@/lib/utils";
 import { fetchSellerOrders, updateSellerSubOrderStatus, fetchSellerProfile } from "@/api/sellerController";
 import { BASE_URL } from "@/config/apiConfig";
+import { useAdminAuth } from "@/hooks/use-admin-auth";
 
 import { useSearchParams } from "next/navigation";
 export default function SellerOrdersPage() {
@@ -61,6 +62,8 @@ export default function SellerOrdersPage() {
     const { toast } = useToast();
     const searchParams = useSearchParams();
     const statusFilter = searchParams.get("status")?.toUpperCase();
+    const { hasPermission } = useAdminAuth();
+    const canManageOrders = hasPermission('products.orders.manage');
 
     useEffect(() => {
         loadOrders();
@@ -100,10 +103,11 @@ export default function SellerOrdersPage() {
                     }
                 }
             }
-        } catch (error) {
+        } catch (error: any) {
+            const isForbidden = error.response?.status === 403;
             toast({
-                title: "Update Failed",
-                description: "Could not update order status",
+                title: isForbidden ? "Permission Denied" : "Update Failed",
+                description: isForbidden ? "You do not have permission to manage orders." : "Could not update order status",
                 variant: "destructive",
             });
         }
@@ -290,25 +294,31 @@ export default function SellerOrdersPage() {
                                         </p>
                                     </div>
                                     <div className="flex items-center gap-4">
-                                        <Select
-                                            defaultValue={selectedOrder.status}
-                                            onValueChange={(val) => handleStatusUpdate(selectedOrder.id, val)}
-                                        >
-                                            <SelectTrigger className="w-full sm:w-[180px] h-11 font-extrabold border-slate-200 rounded-2xl bg-white shadow-sm ring-offset-orange-50 focus:ring-[#794A05]">
-                                                <SelectValue />
-                                            </SelectTrigger>
-                                            <SelectContent className="rounded-2xl border-orange-50 shadow-xl">
-                                                <SelectItem value="PENDING" className="font-bold py-3">⏳ Pending</SelectItem>
-                                                <SelectItem value="ACCEPTED" className="font-bold py-3">✅ Accepted</SelectItem>
-                                                <SelectItem value="PICKED_UP" className="font-bold py-3">📦 Picked Up</SelectItem>
-                                                <SelectItem value="SHIPPED" className="font-bold py-3">🚚 Shipped</SelectItem>
-                                                <SelectItem value="OUT_FOR_DELIVERY" className="font-bold py-3">🛵 Out for Delivery</SelectItem>
-                                                <SelectItem value="DELIVERED" className="font-bold py-3">✨ Delivered</SelectItem>
-                                                <SelectItem value="CANCELLED" className="font-bold py-3 text-red-600">❌ Cancelled</SelectItem>
-                                                <SelectItem value="RTO_INITIATED" className="font-bold py-3">🔄 RTO Initiated</SelectItem>
-                                                <SelectItem value="RTO_DELIVERED" className="font-bold py-3">🚩 RTO Delivered</SelectItem>
-                                            </SelectContent>
-                                        </Select>
+                                        {canManageOrders ? (
+                                            <Select
+                                                defaultValue={selectedOrder.status}
+                                                onValueChange={(val) => handleStatusUpdate(selectedOrder.id, val)}
+                                            >
+                                                <SelectTrigger className="w-full sm:w-[180px] h-11 font-extrabold border-slate-200 rounded-2xl bg-white shadow-sm ring-offset-orange-50 focus:ring-[#794A05]">
+                                                    <SelectValue />
+                                                </SelectTrigger>
+                                                <SelectContent className="rounded-2xl border-orange-50 shadow-xl">
+                                                    <SelectItem value="PENDING" className="font-bold py-3">⏳ Pending</SelectItem>
+                                                    <SelectItem value="ACCEPTED" className="font-bold py-3">✅ Accepted</SelectItem>
+                                                    <SelectItem value="PICKED_UP" className="font-bold py-3">📦 Picked Up</SelectItem>
+                                                    <SelectItem value="SHIPPED" className="font-bold py-3">🚚 Shipped</SelectItem>
+                                                    <SelectItem value="OUT_FOR_DELIVERY" className="font-bold py-3">🛵 Out for Delivery</SelectItem>
+                                                    <SelectItem value="DELIVERED" className="font-bold py-3">✨ Delivered</SelectItem>
+                                                    <SelectItem value="CANCELLED" className="font-bold py-3 text-red-600">❌ Cancelled</SelectItem>
+                                                    <SelectItem value="RTO_INITIATED" className="font-bold py-3">🔄 RTO Initiated</SelectItem>
+                                                    <SelectItem value="RTO_DELIVERED" className="font-bold py-3">🚩 RTO Delivered</SelectItem>
+                                                </SelectContent>
+                                            </Select>
+                                        ) : (
+                                            <Badge variant="outline" className={cn("rounded-full px-4 py-2 font-bold text-xs border", getStatusStyle(selectedOrder.status))}>
+                                                {selectedOrder.status}
+                                            </Badge>
+                                        )}
                                     </div>
                                 </div>
                             </DialogHeader>
@@ -403,9 +413,19 @@ export default function SellerOrdersPage() {
                                                 </TableBody>
                                             </Table>
                                         </div>
-                                        <div className="bg-[#794A05]/5 p-6 flex justify-between items-center px-8 border-t border-slate-100">
-                                            <span className="text-[10px] font-extrabold text-slate-400 uppercase tracking-widest">Consignment Total Earnings</span>
-                                            <span className="text-2xl font-extrabold text-[#794A05]">₹{selectedOrder.totalAmount.toLocaleString()}</span>
+                                        <div className="bg-slate-50 p-6 space-y-3 px-8 border-t border-slate-100">
+                                            <div className="flex justify-between items-center text-sm">
+                                                <span className="text-[10px] font-extrabold text-slate-400 uppercase tracking-widest">Gross Subtotal</span>
+                                                <span className="font-bold text-slate-700">₹{selectedOrder.totalAmount.toLocaleString()}</span>
+                                            </div>
+                                            <div className="flex justify-between items-center text-sm">
+                                                <span className="text-[10px] font-extrabold text-slate-400 uppercase tracking-widest">Marketplace Fee (Paid by Customer)</span>
+                                                <span className="font-bold text-orange-600">+ ₹{(selectedOrder.commissionAmount || 0).toLocaleString()}</span>
+                                            </div>
+                                            <div className="flex justify-between items-center pt-3 border-t border-slate-200">
+                                                <span className="text-xs font-bold text-slate-900 uppercase tracking-widest">Net Your Earning</span>
+                                                <span className="text-2xl font-extrabold text-[#794A05]">₹{selectedOrder.totalAmount.toLocaleString()}</span>
+                                            </div>
                                         </div>
                                     </div>
                                 </div>

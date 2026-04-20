@@ -491,6 +491,39 @@ export const updateTemple = async (req: Request, res: Response) => {
         return res.status(400).json({ error: 'Invalid phone number. Use 10 digits or include 91 prefix.' });
       }
       data.phone = normalizePhone(data.phone);
+
+      // Check for phone uniqueness specifically for INSTITUTION role
+      const conflictingPhone = await prisma.user.findFirst({
+        where: {
+          phone: data.phone,
+          role: 'INSTITUTION',
+          id: { not: String(id) }
+        }
+      });
+
+      if (conflictingPhone) {
+        return res.status(400).json({
+          success: false,
+          error: `Access Denied: The phone number ${data.phone} is already linked to another temple account.`
+        });
+      }
+    }
+
+    if (data.email) {
+      const conflictingEmail = await prisma.user.findFirst({
+        where: {
+          email: data.email,
+          role: 'INSTITUTION',
+          id: { not: String(id) }
+        }
+      });
+
+      if (conflictingEmail) {
+        return res.status(400).json({
+          success: false,
+          error: `Access Denied: The email ${data.email} is already linked to another temple account.`
+        });
+      }
     }
 
     // Image validations (2MB)

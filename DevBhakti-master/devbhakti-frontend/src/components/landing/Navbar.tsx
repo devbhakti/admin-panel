@@ -16,6 +16,7 @@ import { clearAllTokens } from "@/lib/auth-utils";
 import CartDrawer from "@/components/marketplace/CartDrawer";
 import { NotificationBell } from "@/components/notifications/NotificationBell";
 import { useLanguage, type Language } from "@/context/LanguageContext";
+import { parseLocalizedValue } from "@/utils/textUtils";
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -132,7 +133,7 @@ const Navbar: React.FC<NavbarProps> = ({ variant = "default", isSolid = false })
               ) : (
                 <div className="flex-1 flex justify-center">
                   <Link href="/" className="text-sm font-medium text-slate-800 hover:text-primary transition-colors">
-                    {t('navbar.go_to_devotee_home')}
+                    {/* {t('navbar.go_to_devotee_home')} */}
                   </Link>
                 </div>
               )}
@@ -276,7 +277,7 @@ const Navbar: React.FC<NavbarProps> = ({ variant = "default", isSolid = false })
                   <DropdownMenuContent align="end" className="w-64 mt-3 p-2 rounded-[1.8rem] shadow-2xl border-orange-100/50 dark:border-zinc-800 bg-white/95 dark:bg-zinc-950/95 backdrop-blur-md animate-in fade-in zoom-in-95 duration-200">
                     <DropdownMenuLabel className="font-sans text-primary px-4 py-3 text-xs uppercase tracking-[0.2em] opacity-70">
                       {user
-                        ? `${t('common.hari_om')}, ${user.name.split(' ')[0]}`
+                        ? `${t('common.hari_om')}, ${parseLocalizedValue(user.name, language).split(' ')[0]}`
                         : t('navbar.accounts_bookings')}
                     </DropdownMenuLabel>
 
@@ -509,7 +510,7 @@ const Navbar: React.FC<NavbarProps> = ({ variant = "default", isSolid = false })
                             )}
                           </div>
                           <div className="flex flex-col items-start translate-y-[-2px]">
-                            <span className="font-bold text-slate-900">{user.name}</span>
+                            <span className="font-bold text-slate-900">{parseLocalizedValue(user.name, language)}</span>
                             <span className="text-xs text-slate-500 font-medium tracking-tight">
                               {t('navbar.view_sacred_profile')}
                             </span>

@@ -13,6 +13,7 @@ export interface CartItem {
     image: string;
     quantity: number;
     templeId: string | null;
+    isActive?: boolean;
 }
 
 interface CartContextType {

@@ -9,11 +9,13 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Card, CardContent, CardHeader, CardTitle, CardFooter } from "@/components/ui/card";
 import { Separator } from "@/components/ui/separator";
-import { IndianRupee, MapPin, Truck, ShieldCheck, ArrowLeft } from "lucide-react";
+import { IndianRupee, MapPin, ShieldCheck, ArrowLeft } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 import axios from "axios";
 import { API_URL, BASE_URL } from "@/config/apiConfig";
 import { notifyFailedPayment } from "@/api/adminController";
+import { parseLocalizedValue } from "@/utils/textUtils";
+import { useLanguage } from "@/context/LanguageContext";
 
 export default function CheckoutPage() {
     return (
@@ -26,6 +28,7 @@ export default function CheckoutPage() {
 function CheckoutContent() {
     const router = useRouter();
     const { cartItems: globalCartItems, totalAmount: globalTotalAmount, clearCart } = useCart();
+    const { language, t } = useLanguage();
     const searchParams = useSearchParams();
     const isBuyNow = searchParams.get('mode') === 'buy_now';
 
@@ -71,7 +74,7 @@ function CheckoutContent() {
                 const user = JSON.parse(userData);
                 setAddress(prev => ({
                     ...prev,
-                    fullName: user.name || prev.fullName,
+                    fullName: parseLocalizedValue(user.name, language) || prev.fullName,
                     phone: (user.phone || "").replace(/\D/g, "").slice(-10) || prev.phone,
                 }));
             } catch (e) {
@@ -85,14 +88,7 @@ function CheckoutContent() {
 
     React.useEffect(() => {
         const fetchFees = async () => {
-            console.log('🛒 Cart Items:', cartItems.length, cartItems);
-            console.log('🔗 API_URL:', API_URL);
-            
-            if (cartItems.length === 0) {
-                console.log('❌ Cart is empty, skipping fee calculation');
-                return;
-            }
-            
+            if (cartItems.length === 0) return;
             setIsCalculatingFees(true);
             try {
                 const requestData = {
@@ -104,20 +100,12 @@ function CheckoutContent() {
                         sellerId: (item as any).sellerId
                     }))
                 };
-                
-                console.log('📤 Sending request:', requestData);
-                
                 const response = await axios.post(`${API_URL}/orders/calculate-fees`, requestData);
-                
-                console.log('📥 API Response:', response.data);
-                
                 if (response.data.success) {
                     setPlatformFee(response.data.totalPlatformFee);
-                    console.log('✅ Platform fee set to:', response.data.totalPlatformFee);
                 }
             } catch (error) {
-                console.error("❌ Fee calculation error:", error);
-                console.error("Error details:", error.response?.data || error.message);
+                console.error("Fee calculation error:", error);
             } finally {
                 setIsCalculatingFees(false);
             }
@@ -144,7 +132,19 @@ function CheckoutContent() {
         setAddress((prev) => ({ ...prev, [name]: value }));
     };
 
+    const hasInactiveItems = cartItems.some(item => item.isActive === false);
+
     const handlePlaceOrder = async () => {
+        // Block checkout if any items are discontinued/soft-deleted
+        if (hasInactiveItems) {
+            toast({
+                title: "Items Unavailable",
+                description: "Some items in your order are no longer available. Please remove them from your cart before proceeding.",
+                variant: "destructive",
+            });
+            return;
+        }
+
         // Basic validation
         if (!address.fullName || !address.phone || !address.street || !address.pincode) {
             toast({
@@ -214,12 +214,11 @@ function CheckoutContent() {
                     templeId: item.templeId,
                     sellerId: (item as any).sellerId
                 })),
-                // totalAmount,
                 totalAmount: totalAmount + platformFee,
                 paymentMethod,
                 shippingAddress: address,
                 platformFee,
-                shippingCost: 0, // Currently Free as per UI
+                shippingCost: 0,
             };
 
             const response = await axios.post(`${API_URL}/orders`, orderData, {
@@ -261,11 +260,28 @@ function CheckoutContent() {
                                     }
                                     router.push("/marketplace/order-success");
                                 }
-                            } catch (error) {
+                             } catch (error: any) {
                                 console.error("Verification error:", error);
+                                const errorCode = error?.response?.data?.code;
+                                const count = error?.response?.data?.count;
+                                const backendMsg = error?.response?.data?.message;
+
+                                let errorTitle = t("marketplace.checkout.order_failed");
+                                let errorDescription = backendMsg || t("marketplace.checkout.contact_support");
+
+                                if (errorCode === "OUT_OF_STOCK") {
+                                    errorTitle = t("marketplace.checkout.out_of_stock_title");
+                                    errorDescription = count !== undefined && count > 0
+                                        ? t("marketplace.checkout.out_of_stock_limited", { count })
+                                        : t("marketplace.checkout.out_of_stock_msg");
+                                } else if (errorCode === "PRODUCT_UNAVAILABLE") {
+                                    errorTitle = t("marketplace.checkout.product_unavailable_title");
+                                    errorDescription = t("marketplace.checkout.product_unavailable_msg");
+                                }
+
                                 toast({
-                                    title: "Verification Failed",
-                                    description: "Please contact support if amount was deducted.",
+                                    title: errorTitle,
+                                    description: errorDescription,
                                     variant: "destructive",
                                 });
                             }
@@ -293,7 +309,6 @@ function CheckoutContent() {
                     });
 
                     rzp.on('modal.dismiss', function () {
-                        console.log("Payment modal dismissed");
                         notifyFailedPayment({
                             orderType: "MARKETPLACE",
                             orderData: orderData,
@@ -340,7 +355,7 @@ function CheckoutContent() {
                             <CardTitle className="font-display text-2xl text-[#2a1b01]">Your cart is empty</CardTitle>
                         </CardHeader>
                         <CardContent>
-                            <p className="text-slate-600 mb-6">Looks like you haven't added any sacred items yet.</p>
+                            <p className="text-slate-600 mb-6">Looks like you haven&apos;t added any sacred items yet.</p>
                             <Button onClick={() => router.push("/marketplace")} className="bg-[#794A05] hover:bg-[#5d3804] text-white rounded-full px-8">
                                 Explore Marketplace
                             </Button>
@@ -363,6 +378,16 @@ function CheckoutContent() {
                     <h1 className="text-3xl font-display font-bold text-[#2a1b01]">Checkout</h1>
                 </div>
 
+                {hasInactiveItems && (
+                    <div className="mb-6 p-4 bg-red-50 border border-red-200 rounded-2xl flex items-start gap-3">
+                        <span className="text-red-500 text-xl">⚠️</span>
+                        <div>
+                            <p className="text-red-700 font-bold text-sm">Some items are no longer available</p>
+                            <p className="text-red-600 text-xs mt-1">Please remove the unavailable items from your cart to proceed with checkout.</p>
+                        </div>
+                    </div>
+                )}
+
                 <div className="grid grid-cols-1 lg:grid-cols-12 gap-8">
                     {/* Left Column: Delivery Form */}
                     <div className="lg:col-span-7 space-y-6">
@@ -383,13 +408,13 @@ function CheckoutContent() {
                                         <label className="text-sm font-medium text-slate-700">Phone Number *</label>
                                         <div className="relative">
                                             <span className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-400 font-medium border-r border-slate-200 pr-2 text-xs">+91</span>
-                                            <Input 
-                                                name="phone" 
-                                                value={address.phone} 
-                                                onChange={handleInputChange} 
-                                                placeholder="10-digit number" 
+                                            <Input
+                                                name="phone"
+                                                value={address.phone}
+                                                onChange={handleInputChange}
+                                                placeholder="10-digit number"
                                                 maxLength={10}
-                                                className="pl-12 focus:ring-[#794A05] border-[#794A05]/20" 
+                                                className="pl-12 focus:ring-[#794A05] border-[#794A05]/20"
                                             />
                                         </div>
                                     </div>
@@ -415,39 +440,19 @@ function CheckoutContent() {
                             </CardContent>
                         </Card>
 
-                        <Card className="bg-white border-[#794A05]/10">
-                            <CardHeader className="bg-[#794A05]/5 border-b border-[#794A05]/10">
-                                <CardTitle className="text-[#794A05]">Payment Method</CardTitle>
-                            </CardHeader>
-                            <CardContent className="p-6 space-y-4">
-                                <div
-                                    className={`flex items-center gap-3 p-4 border-2 transition-all cursor-pointer ${paymentMethod === "RAZORPAY" ? "border-[#794A05] bg-[#794A05]/5" : "border-slate-100 bg-white"}`}
-                                    onClick={() => setPaymentMethod("RAZORPAY")}
-                                >
-                                    <div className={`w-5 h-5 rounded-full border-4 ${paymentMethod === "RAZORPAY" ? "border-[#794A05]" : "border-slate-200"}`}></div>
-                                    <div className="flex-1">
-                                        <div className="flex items-center justify-between">
-                                            <p className={`font-bold ${paymentMethod === "RAZORPAY" ? "text-[#794A05]" : "text-slate-700"}`}>Online Payment</p>
-                                            <div className="flex gap-1">
-                                                <img src="https://razorpay.com/favicon.png" alt="Razorpay" className="w-4 h-4 grayscale opacity-70" />
-                                            </div>
-                                        </div>
-                                        <p className="text-xs text-slate-500">UPI, Cards, NetBanking via Razorpay</p>
-                                    </div>
+                        {/* Payment Mode Info */}
+                        <div className="p-5 bg-[#794A05]/5 border border-[#794A05]/10 rounded-2xl flex items-center justify-between">
+                            <div className="flex items-center gap-3">
+                                <div className="w-10 h-10 rounded-full bg-white flex items-center justify-center shadow-sm">
+                                    <ShieldCheck className="w-6 h-6 text-[#794A05]" />
                                 </div>
-
-                                {/* <div
-                                    className={`flex items-center gap-3 p-4 border-2 transition-all cursor-pointer ${paymentMethod === "COD" ? "border-[#794A05] bg-[#794A05]/5" : "border-slate-100 bg-white"}`}
-                                    onClick={() => setPaymentMethod("COD")}
-                                >
-                                    <div className={`w-5 h-5 rounded-full border-4 ${paymentMethod === "COD" ? "border-[#794A05]" : "border-slate-200"}`}></div>
-                                    <div>
-                                        <p className={`font-bold ${paymentMethod === "COD" ? "text-[#794A05]" : "text-slate-700"}`}>Cash on Delivery</p>
-                                        <p className="text-xs text-slate-500">Pay when you receive your sacred items</p>
-                                    </div>
-                                </div> */}
-                            </CardContent>
-                        </Card>
+                                <div>
+                                    <p className="text-sm font-bold text-[#794A05]">Secure Online Payment</p>
+                                    <p className="text-xs text-slate-500">UPI, Cards, NetBanking available</p>
+                                </div>
+                            </div>
+                            <img src="https://razorpay.com/favicon.png" alt="Razorpay" className="w-5 h-5 opacity-60" />
+                        </div>
                     </div>
 
                     {/* Right Column: Order Summary */}
@@ -459,14 +464,27 @@ function CheckoutContent() {
                             <CardContent className="space-y-4">
                                 <div className="max-h-[300px] overflow-y-auto pr-2 space-y-4 scrollbar-thin scrollbar-thumb-[#794A05]/20">
                                     {cartItems.map((item) => (
-                                        <div key={item.variantId} className="flex gap-4">
-                                            <div className="w-16 h-16 rounded-lg overflow-hidden flex-shrink-0 bg-slate-100">
-                                                <img src={item.image.startsWith('http') ? item.image : `${BASE_URL}${item.image}`} alt={item.name} className="w-full h-full object-cover" />
+                                        <div key={item.variantId} className={`flex gap-4 ${item.isActive === false ? 'opacity-50' : ''}`}>
+                                            <div className="w-16 h-16 rounded-lg overflow-hidden flex-shrink-0 bg-slate-100 relative">
+                                                <img
+                                                    src={item.image.startsWith('http') ? item.image : `${BASE_URL}${item.image}`}
+                                                    alt={item.name}
+                                                    className={`w-full h-full object-cover ${item.isActive === false ? 'grayscale' : ''}`}
+                                                />
+                                                {item.isActive === false && (
+                                                    <div className="absolute inset-0 bg-black/40 flex items-center justify-center">
+                                                        <span className="text-[8px] text-white font-bold uppercase">Unavailable</span>
+                                                    </div>
+                                                )}
                                             </div>
                                             <div className="flex-1">
                                                 <p className="font-bold text-sm text-[#2a1b01] line-clamp-1">{item.name}</p>
                                                 <p className="text-xs text-slate-500">{item.variantName} x {item.quantity}</p>
-                                                <p className="text-sm font-bold text-[#794A05]">₹{(item.price * item.quantity).toLocaleString()}</p>
+                                                {item.isActive === false ? (
+                                                    <p className="text-[10px] text-red-500 font-bold italic mt-0.5">Currently Unavailable — Please remove</p>
+                                                ) : (
+                                                    <p className="text-sm font-bold text-[#794A05]">₹{(item.price * item.quantity).toLocaleString()}</p>
+                                                )}
                                             </div>
                                         </div>
                                     ))}
@@ -503,10 +521,10 @@ function CheckoutContent() {
                             <CardFooter className="p-6 pt-0 flex-col gap-4">
                                 <Button
                                     onClick={handlePlaceOrder}
-                                    disabled={isSubmitting}
-                                    className="w-full h-14 text-lg font-bold bg-[#794A05] hover:bg-[#5d3804] text-white rounded-2xl shadow-lg shadow-[#794A05]/20 transition-all hover:scale-[1.02] active:scale-[0.98]"
+                                    disabled={isSubmitting || hasInactiveItems}
+                                    className="w-full h-14 text-lg font-bold bg-[#794A05] hover:bg-[#5d3804] text-white rounded-2xl shadow-lg shadow-[#794A05]/20 transition-all hover:scale-[1.02] active:scale-[0.98] disabled:opacity-50 disabled:cursor-not-allowed disabled:scale-100"
                                 >
-                                    {isSubmitting ? "Processing Payment..." : "Pay Now"}
+                                    {isSubmitting ? "Processing Payment..." : hasInactiveItems ? "Remove Unavailable Items First" : "Pay Now"}
                                 </Button>
                                 <div className="flex items-center justify-center gap-2 text-xs text-slate-400">
                                     <ShieldCheck className="w-4 h-4 text-tulsi" />

@@ -253,12 +253,17 @@ export default function TempleCreatePoojaPage() {
                                             onChange={(e) => {
                                                 const newPrice = e.target.value === "" ? 0 : parseInt(e.target.value);
                                                 setFormData((prev) => {
-                                                    const newPackages = prev.packages.map((pkg) => {
-                                                        if (pkg.name === "Single") {
-                                                            return { ...pkg, price: newPrice };
-                                                        }
-                                                        return pkg;
-                                                    });
+                                                    let newPackages = [...prev.packages];
+                                                    const singlePkgIndex = newPackages.findIndex(p => p.name === "Single");
+                                                    
+                                                    if (singlePkgIndex > -1) {
+                                                        // Update existing single package
+                                                        newPackages[singlePkgIndex] = { ...newPackages[singlePkgIndex], price: newPrice };
+                                                    } else if (newPrice > 0) {
+                                                        // Auto-add Single package if it doesn't exist
+                                                        newPackages.push({ name: "Single", description: "For 1 person", price: newPrice });
+                                                    }
+                                                    
                                                     return { ...prev, price: newPrice, packages: newPackages };
                                                 });
                                             }}

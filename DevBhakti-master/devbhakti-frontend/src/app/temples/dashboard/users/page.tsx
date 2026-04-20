@@ -25,6 +25,8 @@ import { fetchMyTempleDevotees } from "@/api/templeAdminController";
 import { useToast } from "@/hooks/use-toast";
 import { API_URL } from "@/config/apiConfig";
 import { useDebounce } from "@/hooks/use-debounce";
+import { useLanguage } from "@/context/LanguageContext";
+import { parseLocalizedValue } from "@/utils/textUtils";
 import axios from "axios";
 
 interface Devotee {
@@ -47,6 +49,7 @@ interface Stats {
 
 export default function TempleUsersPage() {
     const router = useRouter();
+    const { language } = useLanguage();
     const { toast } = useToast();
     const [isLoading, setIsLoading] = useState(true);
     const [searchQuery, setSearchQuery] = useState("");
@@ -169,7 +172,7 @@ export default function TempleUsersPage() {
                                                 )}
                                             </div>
                                             <div>
-                                                <p className="font-medium text-foreground">{user.name || "Anonymous User"}</p>
+                                                <p className="font-medium text-foreground">{parseLocalizedValue(user.name, language) || "Anonymous User"}</p>
                                                 <p className="text-xs text-muted-foreground">UID: {user.id.substring(user.id.length - 6)}</p>
                                             </div>
                                         </div>

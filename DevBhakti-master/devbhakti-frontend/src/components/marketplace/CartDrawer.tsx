@@ -31,6 +31,8 @@ const CartDrawer: React.FC<CartDrawerProps> = ({
 
 
   const subtotal = items.reduce((sum, item) => sum + item.price * item.quantity, 0);
+  const hasInactiveItems = items.some(item => item.isActive === false);
+
 
   React.useEffect(() => {
     const fetchFees = async () => {
@@ -106,23 +108,31 @@ const CartDrawer: React.FC<CartDrawerProps> = ({
                     <img
                       src={item.image.startsWith('http') ? item.image : `${BASE_URL}${item.image}`}
                       alt={item.name}
-                      className="w-full h-full object-cover"
+                      className={`w-full h-full object-cover ${item.isActive === false ? 'grayscale opacity-50' : ''}`}
                     />
+                    {item.isActive === false && (
+                      <div className="absolute inset-0 bg-black/40 flex items-center justify-center">
+                        <span className="text-[8px] text-white font-bold text-center px-1 uppercase tracking-tighter">Unavailable</span>
+                      </div>
+                    )}
                   </div>
                   <div className="flex-1 min-w-0 flex flex-col justify-between">
                     <div>
-                      <h4 className="font-bold text-[#2a1b01] truncate text-sm">{item.name}</h4>
+                      <h4 className={`font-bold text-[#2a1b01] truncate text-sm ${item.isActive === false ? 'text-slate-400' : ''}`}>{item.name}</h4>
                       <p className="text-[10px] text-slate-500 line-clamp-1">{item.variantName}</p>
+                      {item.isActive === false && (
+                        <p className="text-[9px] text-red-500 font-bold mt-0.5 uppercase tracking-wider italic">Item Discontinued / Unlisted</p>
+                      )}
                     </div>
                     <div className="flex items-center justify-between mt-2">
                       <p className="flex items-center text-[#794A05] font-bold">
                         <IndianRupee className="h-3.5 w-3.5" />
                         {item.price}
                       </p>
-                      <div className="flex items-center gap-3 bg-slate-50 rounded-full px-2 py-1 border border-slate-100">
+                      <div className={`flex items-center gap-3 bg-slate-50 rounded-full px-2 py-1 border border-slate-100 ${item.isActive === false ? 'opacity-30' : ''}`}>
                         <button
                           onClick={() => onUpdateQuantity(item.variantId, item.quantity - 1)}
-                          disabled={item.quantity <= 1}
+                          disabled={item.quantity <= 1 || item.isActive === false}
                           className="w-6 h-6 flex items-center justify-center rounded-full text-slate-400 hover:text-[#794A05] disabled:opacity-30"
                         >
                           <Minus className="h-3.5 w-3.5" />
@@ -130,7 +140,8 @@ const CartDrawer: React.FC<CartDrawerProps> = ({
                         <span className="w-4 text-center text-xs font-bold text-[#2a1b01]">{item.quantity}</span>
                         <button
                           onClick={() => onUpdateQuantity(item.variantId, item.quantity + 1)}
-                          className="w-6 h-6 flex items-center justify-center rounded-full text-slate-400 hover:text-[#794A05]"
+                          disabled={item.isActive === false}
+                          className="w-6 h-6 flex items-center justify-center rounded-full text-slate-400 hover:text-[#794A05] disabled:opacity-30"
                         >
                           <Plus className="h-3.5 w-3.5" />
                         </button>
@@ -183,11 +194,12 @@ const CartDrawer: React.FC<CartDrawerProps> = ({
               </div>
             </div>
             <Button
-              className="w-full h-14 rounded-2xl bg-[#794A05] hover:bg-[#5d3804] text-white font-bold text-lg shadow-lg shadow-[#794A05]/20 group"
+              className="w-full h-14 rounded-2xl bg-[#794A05] hover:bg-[#5d3804] text-white font-bold text-lg shadow-lg shadow-[#794A05]/20 group disabled:opacity-50 disabled:cursor-not-allowed"
               onClick={onCheckout}
+              disabled={hasInactiveItems}
             >
-              {t('marketplace.cart.checkout_now')}
-              <Plus className="ml-2 h-5 w-5 rotate-45 group-hover:rotate-0 transition-transform" />
+              {hasInactiveItems ? "Remove unavailable items" : t('marketplace.cart.checkout_now')}
+              {!hasInactiveItems && <Plus className="ml-2 h-5 w-5 rotate-45 group-hover:rotate-0 transition-transform" />}
             </Button>
             <p className="text-[10px] text-center text-slate-400">{t('marketplace.cart.secure_payments')}</p>
           </SheetFooter>

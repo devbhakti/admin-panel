@@ -123,7 +123,7 @@ export default function EditTempleProductPage() {
                         origin: getL(p.origin, 'en'),
                         rating: p.rating ? p.rating.toString() : "4.5",
                     });
-                    setVariants(p.variants.map((v: any) => ({
+                    setVariants(p.variants.filter((v: any) => v.isActive !== false).map((v: any) => ({
                         id: v.id,
                         name_en: getL(v.name, 'en'),
                         name_hi: getL(v.name, 'hi'),

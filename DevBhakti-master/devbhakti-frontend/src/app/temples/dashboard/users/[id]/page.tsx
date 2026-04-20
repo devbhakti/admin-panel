@@ -22,9 +22,12 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Input } from "@/components/ui/input";
 import { fetchDevoteeDetailMyTemple } from "@/api/templeAdminController";
 import { format } from "date-fns";
+import { useLanguage } from "@/context/LanguageContext";
+import { parseLocalizedValue } from "@/utils/textUtils";
 
 export default function TempleDevoteeDetailPage() {
     const { id } = useParams();
+    const { language } = useLanguage();
     const router = useRouter();
     const [user, setUser] = useState<any>(null);
     const [loading, setLoading] = useState(true);
@@ -173,7 +176,7 @@ export default function TempleDevoteeDetailPage() {
                             <div className="absolute -inset-1 bg-gradient-to-r from-primary to-orange-400 rounded-full blur opacity-25 group-hover:opacity-50 transition duration-1000 group-hover:duration-200"></div>
                             <div className="w-28 h-28 rounded-full bg-white p-1 relative">
                                 {user.profileImage ? (
-                                    <img src={user.profileImage} alt={user.name} className="w-full h-full rounded-full object-cover shadow-inner" />
+                                    <img src={user.profileImage} alt={parseLocalizedValue(user.name, language)} className="w-full h-full rounded-full object-cover shadow-inner" />
                                 ) : (
                                     <div className="w-full h-full rounded-full bg-slate-50 flex items-center justify-center border-2 border-slate-100">
                                         <User className="w-12 h-12 text-slate-300" />
@@ -183,7 +186,7 @@ export default function TempleDevoteeDetailPage() {
                         </div>
                         <div className="mt-6 text-center">
                             <CardTitle className="text-2xl font-serif font-bold text-slate-900">
-                                {user.name || "Blessed Soul"}
+                                {parseLocalizedValue(user.name, language) || "Blessed Soul"}
                             </CardTitle>
                             <div className="flex items-center justify-center gap-2 mt-2">
                                 <Badge className="bg-emerald-50 text-emerald-700 hover:bg-emerald-100 border-none px-3 font-bold">

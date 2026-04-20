@@ -80,13 +80,12 @@ function ProductsContent() {
   const [products, setProducts] = useState<any[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [searchTerm, setSearchTerm] = useState("");
-  const [stats, setStats] = useState({ total: 0, pending: 0, approved: 0 });
+  const [stats, setStats] = useState({ total: 0, pending: 0, approved: 0, outOfStock: 0 });
+  const [selectedStatus, setSelectedStatus] = useState<string>("all");
   const [currentPage, setCurrentPage] = useState(pageParam ? parseInt(pageParam) : 1);
   const [isReturningFromEdit, setIsReturningFromEdit] = useState(false);
   const [totalPages, setTotalPages] = useState(1);
   const [itemsPerPage] = useState(10);
-  const [selectedProduct, setSelectedProduct] = useState<any>(null);
-  const [isPreviewOpen, setIsPreviewOpen] = useState(false);
   const [date, setDate] = useState<Date | undefined>(undefined);
   const [selectedOwner, setSelectedOwner] = useState<string>("all");
   const [owners, setOwners] = useState<any[]>([]);
@@ -108,9 +107,9 @@ function ProductsContent() {
   useEffect(() => {
     loadProducts();
     // Update URL without reloading
-    const newPath = `/admin/products?page=${currentPage}${selectedOwner !== 'all' ? `&owner=${selectedOwner}` : ''}${searchTerm ? `&q=${searchTerm}` : ''}`;
+    const newPath = `/admin/products?page=${currentPage}${selectedOwner !== 'all' ? `&owner=${selectedOwner}` : ''}${selectedStatus !== 'all' ? `&status=${selectedStatus}` : ''}${searchTerm ? `&q=${searchTerm}` : ''}`;
     window.history.replaceState({ ...window.history.state, as: newPath, url: newPath }, '', newPath);
-  }, [currentPage, selectedOwner, date]);
+  }, [currentPage, selectedOwner, selectedStatus, date]);
 
   useEffect(() => {
     if (qParam) setSearchTerm(qParam);
@@ -163,6 +162,7 @@ function ProductsContent() {
         page: currentPage,
         limit: itemsPerPage,
         search: searchTerm,
+        status: selectedStatus === "all" ? undefined : selectedStatus,
         productId: idParam || undefined,
         templeId: selectedOwner === "all" ? undefined : selectedOwner,
         date: date ? date.toISOString() : undefined
@@ -170,7 +170,7 @@ function ProductsContent() {
 
       if (res.success) {
         setProducts(res.data.products);
-        setStats(res.data.stats || { total: 0, pending: 0, approved: 0 });
+        setStats(res.data.stats || { total: 0, pending: 0, approved: 0, outOfStock: 0 });
         setTotalPages(res.data.pagination.pages);
       }
     } catch (error: any) {
@@ -279,46 +279,37 @@ function ProductsContent() {
       </div>
 
       {/* Stats Cards */}
-      <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-        <Card className="bg-white border-slate-200">
-          <CardContent className="p-6">
-            <div className="flex items-center gap-4">
-              <div className="p-3 bg-blue-50 text-blue-600 rounded-xl">
-                <Package className="w-6 h-6" />
+      <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
+        {[
+          { label: t("admin.products.list.stat_total") || "Total Products", value: stats.total, icon: Package, color: "text-blue-600", bg: "bg-blue-50", filter: "all" },
+          { label: t("admin.products.list.stat_pending") || "Pending", value: stats.pending, icon: Clock, color: "text-amber-600", bg: "bg-amber-50", filter: "pending" },
+          { label: t("admin.products.list.stat_approved") || "Approved", value: stats.approved, icon: CheckCircle, color: "text-emerald-600", bg: "bg-emerald-50", filter: "approved" },
+          { label: "Out of Stock", value: stats.outOfStock, icon: XCircle, color: "text-red-600", bg: "bg-red-50", filter: "out_of_stock" },
+        ].map((stat) => (
+          <Card 
+            key={stat.label} 
+            className={cn(
+              "bg-white border-slate-200 cursor-pointer transition-all hover:shadow-md",
+              selectedStatus === stat.filter && "ring-2 ring-primary border-transparent"
+            )}
+            onClick={() => {
+              setSelectedStatus(stat.filter);
+              setCurrentPage(1);
+            }}
+          >
+            <CardContent className="p-6">
+              <div className="flex items-center gap-4">
+                <div className={cn("p-3 rounded-xl", stat.bg, stat.color)}>
+                  <stat.icon className="w-6 h-6" />
+                </div>
+                <div>
+                  <p className="text-sm font-medium text-slate-500">{stat.label}</p>
+                  <h3 className="text-2xl font-bold text-slate-900">{stat.value}</h3>
+                </div>
               </div>
-              <div>
-                <p className="text-sm font-medium text-slate-500">{t("admin.products.list.stat_total")}</p>
-                <h3 className="text-2xl font-bold text-slate-900">{stats.total}</h3>
-              </div>
-            </div>
-          </CardContent>
-        </Card>
-        <Card className="bg-white border-slate-200">
-          <CardContent className="p-6">
-            <div className="flex items-center gap-4">
-              <div className="p-3 bg-amber-50 text-amber-600 rounded-xl">
-                <Clock className="w-6 h-6" />
-              </div>
-              <div>
-                <p className="text-sm font-medium text-slate-500">{t("admin.products.list.stat_pending")}</p>
-                <h3 className="text-2xl font-bold text-slate-900">{stats.pending}</h3>
-              </div>
-            </div>
-          </CardContent>
-        </Card>
-        <Card className="bg-white border-slate-200">
-          <CardContent className="p-6">
-            <div className="flex items-center gap-4">
-              <div className="p-3 bg-emerald-50 text-emerald-600 rounded-xl">
-                <CheckCircle className="w-6 h-6" />
-              </div>
-              <div>
-                <p className="text-sm font-medium text-slate-500">{t("admin.products.list.stat_approved")}</p>
-                <h3 className="text-2xl font-bold text-slate-900">{stats.approved}</h3>
-              </div>
-            </div>
-          </CardContent>
-        </Card>
+            </CardContent>
+          </Card>
+        ))}
       </div>
 
       <div className="flex flex-col md:flex-row gap-4 items-end">
@@ -333,8 +324,22 @@ function ProductsContent() {
         </div>
 
         <div className="flex gap-2 w-full md:w-auto">
+          <div className="w-full md:w-[160px]">
+            <Select value={selectedStatus} onValueChange={(val) => { setSelectedStatus(val); setCurrentPage(1); }}>
+              <SelectTrigger className="h-10">
+                <SelectValue placeholder="Status" />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="all">All Status</SelectItem>
+                <SelectItem value="approved">Approved</SelectItem>
+                <SelectItem value="pending">Pending</SelectItem>
+                <SelectItem value="out_of_stock">Out of Stock</SelectItem>
+              </SelectContent>
+            </Select>
+          </div>
+
           <div className="w-full md:w-[200px]">
-            <Select value={selectedOwner} onValueChange={setSelectedOwner}>
+            <Select value={selectedOwner} onValueChange={(val) => { setSelectedOwner(val); setCurrentPage(1); }}>
               <SelectTrigger className="h-10">
                 <SelectValue placeholder={t("admin.products.list.filter_owner")} />
               </SelectTrigger>
@@ -389,6 +394,7 @@ function ProductsContent() {
                   setDate(undefined);
                   setSelectedOwner("all");
                   setSearchTerm("");
+                  setSelectedStatus("all");
                 }}
                 className="h-10 w-10 text-muted-foreground"
                 title={t("admin.products.list.clear_filters")}
@@ -447,13 +453,10 @@ function ProductsContent() {
                       <div className="flex flex-col min-w-0">
                         <span className="font-semibold text-slate-900 truncate">{getLocalizedName(product)}</span>
                         <p className="text-sm text-muted-foreground mt-0.5 break-all max-w-[300px]">
-                          {truncateText(product.description, 60)}
-                          {product.description?.length > 60 && (
+                          {truncateText(parseLocalizedValue(product.description, language), 60)}
+                          {(parseLocalizedValue(product.description, language))?.length > 60 && (
                             <button
-                              onClick={() => {
-                                setSelectedProduct(product);
-                                setIsPreviewOpen(true);
-                              }}
+                              onClick={() => router.push(`/admin/products/${product.id}/view`)}
                               className="ml-1 text-primary hover:underline font-medium"
                             >
                               {t("admin.products.list.more")}
@@ -465,7 +468,7 @@ function ProductsContent() {
                   </TableCell>
                   <TableCell>
                     <Badge variant="outline" className="font-medium">
-                      {parseLocalizedValue(product.categoryObj?.name) || (product.category === "general" ? "General Products" : `Category: ${product.category?.slice(0, 8)}...`)}
+                      {parseLocalizedValue(product.categoryObj?.name, language) || parseLocalizedValue(product.category, language) || "General"}
                     </Badge>
                   </TableCell>
                   <TableCell>
@@ -529,10 +532,7 @@ function ProductsContent() {
                         variant="ghost"
                         size="icon"
                         className="h-8 w-8 text-slate-600"
-                        onClick={() => {
-                          setSelectedProduct(product);
-                          setIsPreviewOpen(true);
-                        }}
+                        onClick={() => router.push(`/admin/products/${product.id}/view`)}
                         title={t("admin.products.list.view_details")}
                       >
                         <Eye className="w-4 h-4" />
@@ -625,100 +625,6 @@ function ProductsContent() {
         </div>
       </div>
 
-      <Dialog open={isPreviewOpen} onOpenChange={setIsPreviewOpen}>
-        <DialogContent className="max-w-2xl">
-          <DialogHeader>
-            <DialogTitle>{t("admin.products.list.details_title")}</DialogTitle>
-          </DialogHeader>
-          {selectedProduct && (
-            <div className="space-y-4">
-              <div className="flex items-center gap-4">
-                <div className="w-32 aspect-[5/4] rounded-lg bg-slate-100 flex items-center justify-center overflow-hidden flex-shrink-0">
-                  {selectedProduct.image ? (
-                    <img
-                      src={`${BASE_URL}${selectedProduct.image}`}
-                      alt={getLocalizedName(selectedProduct)}
-                      className="w-full h-full object-cover"
-                    />
-                  ) : (
-                    <Package className="w-12 h-12 text-slate-600" />
-                  )}
-                </div>
-                <div className="flex-1">
-                  <h3 className="text-lg font-semibold text-slate-900">{getLocalizedName(selectedProduct)}</h3>
-                  <Badge variant="outline" className="w-fit mt-1">
-                    {selectedProduct.categoryObj ? getLocalizedName(selectedProduct.categoryObj) : selectedProduct.category}
-                  </Badge>
-                </div>
-              </div>
-              <div className="grid grid-cols-2 gap-4">
-                <div>
-                  <label className="text-sm font-medium text-slate-700">{t("admin.products.list.product_id")}</label>
-                  <p className="text-slate-900">{selectedProduct.id}</p>
-                </div>
-                <div>
-                  
-                  <label className="text-sm font-medium text-slate-700">{t("admin.products.list.table_category")}</label>
-                  <p className="text-slate-900">{selectedProduct.categoryObj ? getLocalizedName(selectedProduct.categoryObj) : selectedProduct.category}</p>
-                </div>
-                <div>
-                  <label className="text-sm font-medium text-slate-700">{t("admin.products.list.table_owner")}</label>
-                  <p className="text-slate-900">
-                    {selectedProduct.temple
-                      ? `Temple: ${getLocalizedName(selectedProduct.temple)}`
-                      : selectedProduct.seller
-                        ? `Seller: ${selectedProduct.seller.storeName || selectedProduct.seller.name}`
-                        : "DevBhakti Exclusive (Admin)"}
-                  </p>
-                </div>
-                <div>
-                  <label className="text-sm font-medium text-slate-700 mb-2 block">{t("admin.products.list.table_status")}</label>
-                  <div className="mt-1">{getStatusBadge(selectedProduct.status)}</div>
-                </div>
-              </div>
-              <div>
-                <label className="text-sm font-medium text-slate-700 mb-2 block">{t("admin.products.description")}</label>
-                <p className="text-slate-900 mt-1 break-words break-all whitespace-pre-wrap">{getLocalizedName({
-                  name_en: selectedProduct.description_en || selectedProduct.description,
-                  name_hi: selectedProduct.description_hi,
-                  name_mr: selectedProduct.description_mr
-                })}</p>
-              </div>
-              <div>
-                <label className="text-sm font-medium text-slate-700 mb-2 block">Variants & Pricing</label>
-                <div className="space-y-2">
-                  {selectedProduct.variants.map((variant: any) => (
-                    <div key={variant.id} className="flex items-center gap-3 p-3 bg-slate-50 rounded-lg">
-                      <div className="w-12 h-12 rounded border bg-white flex-shrink-0 flex items-center justify-center overflow-hidden">
-                        {variant.image ? (
-                          <img
-                            src={`${BASE_URL}${variant.image}`}
-                            alt={variant.name}
-                            className="w-full h-full object-cover"
-                          />
-                        ) : (
-                          <ImageIcon className="w-6 h-6 text-slate-300" />
-                        )}
-                      </div>
-                      <div className="flex-1">
-                        <div className="flex justify-between items-start">
-                          <div>
-                            <p className="font-medium text-slate-900">{getLocalizedName(variant)}</p>
-                            <p className="text-xs text-slate-500">{t("admin.products.list.stock")}: {variant.stock}</p>
-                          </div>
-                          <div className="text-right">
-                            <p className="font-semibold text-slate-900">₹{variant.price}</p>
-                          </div>
-                        </div>
-                      </div>
-                    </div>
-                  ))}
-                </div>
-              </div>
-            </div>
-          )}
-        </DialogContent>
-      </Dialog>
     </div>
   );
 }

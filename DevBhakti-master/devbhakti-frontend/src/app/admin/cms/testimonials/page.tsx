@@ -9,7 +9,9 @@ import {
     Upload,
     X,
     Video,
-    Image as ImageIcon
+    Image as ImageIcon,
+    Eye,
+    Languages
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -66,6 +68,16 @@ export default function TestimonialsPage() {
 
     const [videoFile, setVideoFile] = useState<File | null>(null);
     const [videoPreview, setVideoPreview] = useState<string>("");
+
+    const [isViewDialogOpen, setIsViewDialogOpen] = useState(false);
+    const [viewingTestimonial, setViewingTestimonial] = useState<any>(null);
+    const [viewTab, setViewTab] = useState<Language>("en");
+
+    const handleViewTestimonial = (testimonial: any) => {
+        setViewingTestimonial(testimonial);
+        setViewTab(language as Language);
+        setIsViewDialogOpen(true);
+    };
 
     useEffect(() => {
         loadTestimonials();
@@ -299,6 +311,14 @@ export default function TestimonialsPage() {
                                             <Button
                                                 variant="ghost"
                                                 size="icon"
+                                                onClick={() => handleViewTestimonial(testimonial)}
+                                                title="View Testimonial"
+                                            >
+                                                <Eye className="w-4 h-4 text-green-600" />
+                                            </Button>
+                                            <Button
+                                                variant="ghost"
+                                                size="icon"
                                                 onClick={() => handleOpenDialog(testimonial)}
                                             >
                                                 <Edit2 className="w-4 h-4 text-blue-600" />
@@ -453,7 +473,6 @@ export default function TestimonialsPage() {
                                         className="absolute inset-0 opacity-0 cursor-pointer z-10"
                                         onChange={handleVideoChange}
                                     />
-
                                 </div>
                             </div>
                         </div>
@@ -467,6 +486,108 @@ export default function TestimonialsPage() {
                             </Button>
                         </DialogFooter>
                     </form>
+                </DialogContent>
+            </Dialog>
+
+            {/* Preview Dialog */}
+            <Dialog open={isViewDialogOpen} onOpenChange={setIsViewDialogOpen}>
+                <DialogContent className="sm:max-w-[800px] p-0 overflow-hidden bg-background border-none shadow-2xl rounded-2xl">
+                    {viewingTestimonial && (
+                        <div className="flex flex-col h-full">
+                            {/* Modal Header */}
+                            <div className="flex items-center justify-between px-6 py-4 bg-background border-b border-orange-100">
+                                <div className="flex items-center gap-3">
+                                    <div className="p-2 bg-orange-100/50 rounded-lg">
+                                        <Eye className="w-5 h-5 text-orange-600" />
+                                    </div>
+                                    <div>
+                                        <h2 className="text-xl font-bold text-slate-900">Testimonial Details</h2>
+                                        <p className="text-xs text-slate-500 font-medium">Stories & Feedback Preview</p>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <div className="grid grid-cols-1 lg:grid-cols-3 gap-0 bg-background">
+                                {/* Left Column - Visuals */}
+                                <div className="lg:col-span-1 p-6 space-y-6 bg-background border-r border-orange-100 min-h-[400px]">
+                                    <div className="space-y-4">
+                                        <h3 className="text-[10px] font-bold text-slate-400 uppercase tracking-widest">Video Story</h3>
+                                        <div className="aspect-[4/5] rounded-2xl overflow-hidden border border-orange-100/50 bg-black shadow-2xl relative group">
+                                            <video 
+                                                src={viewingTestimonial.videoSrc?.startsWith('http') ? viewingTestimonial.videoSrc : `${BASE_URL}${viewingTestimonial.videoSrc}`}
+                                                poster={viewingTestimonial.thumbnail?.startsWith('http') ? viewingTestimonial.thumbnail : `${BASE_URL}${viewingTestimonial.thumbnail}`}
+                                                controls
+                                                className="w-full h-full object-cover"
+                                                playsInline
+                                            />
+                                        </div>
+                                    </div>
+
+                                    <div className="space-y-3 pt-4 border-t border-orange-100">
+                                        <div className="flex items-center justify-between text-xs">
+                                            <span className="text-slate-500 font-medium">Status:</span>
+                                            <Badge variant={viewingTestimonial.active ? "default" : "secondary"} className={viewingTestimonial.active ? "bg-green-100 text-green-700" : ""}>
+                                                {viewingTestimonial.active ? "Active" : "Inactive"}
+                                            </Badge>
+                                        </div>
+                                        <div className="flex items-center justify-between text-xs">
+                                            <span className="text-slate-500 font-medium">Sort Order:</span>
+                                            <Badge variant="outline" className="font-bold border-orange-200 text-orange-700 bg-orange-100/30">{viewingTestimonial.order}</Badge>
+                                        </div>
+                                    </div>
+                                    
+                                    <div className="pt-2">
+                                        <p className="text-[10px] text-zinc-400 text-center italic">Video will play directly in the player above</p>
+                                    </div>
+                                </div>
+
+                                {/* Right Column - Localized Tabs */}
+                                <div className="lg:col-span-2 p-6 bg-orange-50/20">
+                                    <Tabs value={viewTab} onValueChange={(v) => setViewTab(v as Language)} className="w-full h-full">
+                                        <div className="flex items-center justify-between mb-6 bg-white p-2 rounded-xl border border-orange-100 shadow-sm">
+                                            <div className="flex items-center gap-2 px-3 text-slate-500 font-bold text-xs uppercase tracking-widest">
+                                                <Languages className="w-4 h-4" /> Multi-Language
+                                            </div>
+                                            <TabsList className="bg-background border border-orange-100">
+                                                <TabsTrigger value="en" className="data-[state=active]:bg-white data-[state=active]:shadow-sm text-xs font-bold px-4">English</TabsTrigger>
+                                                <TabsTrigger value="hi" className="data-[state=active]:bg-white data-[state=active]:shadow-sm text-xs font-bold px-4">हिंदी</TabsTrigger>
+                                                <TabsTrigger value="mr" className="data-[state=active]:bg-white data-[state=active]:shadow-sm text-xs font-bold px-4">मराठी</TabsTrigger>
+                                            </TabsList>
+                                        </div>
+
+                                        {["en", "hi", "mr"].map((l) => (
+                                            <TabsContent key={l} value={l} className="space-y-6 mt-0 animate-in fade-in-50 duration-300">
+                                                {/* Category Badge localized */}
+                                                <div className="flex justify-start">
+                                                    <Badge className="bg-orange-500 hover:bg-orange-600 text-white border-none px-4 py-1 text-xs font-bold rounded-full">
+                                                        {getLocalized(viewingTestimonial, 'category', l as Language) || 'TESTIMONIAL'}
+                                                    </Badge>
+                                                </div>
+
+                                                {/* Localized Title */}
+                                                <div className="bg-white border border-orange-100 rounded-2xl p-6 shadow-sm border-l-4 border-l-orange-500">
+                                                    <h3 className="text-[10px] font-bold text-slate-400 uppercase tracking-widest mb-1">Speaker Name / Title ({l.toUpperCase()})</h3>
+                                                    <h2 className="text-2xl font-black text-slate-800 leading-tight">
+                                                        {getLocalized(viewingTestimonial, 'title', l as Language)}
+                                                    </h2>
+                                                </div>
+
+                                                {/* Localized Subtitle */}
+                                                <div className="bg-white border border-orange-100 rounded-2xl p-6 shadow-sm">
+                                                    <h3 className="text-[10px] font-bold text-slate-400 uppercase tracking-widest mb-1">Role / Subtitle ({l.toUpperCase()})</h3>
+                                                    <p className="text-lg font-semibold text-slate-600">
+                                                        {getLocalized(viewingTestimonial, 'subtitle', l as Language) || (
+                                                            <span className="italic text-slate-400">Not provided.</span>
+                                                        )}
+                                                    </p>
+                                                </div>
+                                            </TabsContent>
+                                        ))}
+                                    </Tabs>
+                                </div>
+                            </div>
+                        </div>
+                    )}
                 </DialogContent>
             </Dialog>
         </div>

@@ -140,7 +140,13 @@ export const deletePoojaCategoryAdmin = async (id: string) => {
 };
 
 // Admin Event Management
-export const fetchAllEventsAdmin = async (params?: { page?: number; limit?: number; search?: string }) => {
+export const fetchAllEventsAdmin = async (params?: { 
+    page?: number; 
+    limit?: number; 
+    search?: string;
+    templeId?: string;
+    date?: string;
+}) => {
     const token = getAdminToken();
     let url = `${API_URL}/admin/events`;
     if (params) {
@@ -148,6 +154,8 @@ export const fetchAllEventsAdmin = async (params?: { page?: number; limit?: numb
         if (params.page !== undefined) query.append('page', params.page.toString());
         if (params.limit !== undefined) query.append('limit', params.limit.toString());
         if (params.search) query.append('search', params.search);
+        if (params.templeId) query.append('templeId', params.templeId);
+        if (params.date) query.append('date', params.date);
         url += `?${query.toString()}`;
     }
     const response = await axios.get(url, {

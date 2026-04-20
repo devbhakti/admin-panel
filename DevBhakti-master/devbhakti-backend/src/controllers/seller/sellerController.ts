@@ -44,7 +44,7 @@ export const getSellerProfile = async (req: Request, res: Response) => {
 
         const store = await prisma.sellerProfile.findUnique({
             where: { id: sellerId },
-            include: { user: { select: { name: true, phone: true } } }
+            include: { user: { select: { name: true, phone: true, email: true } } }
         });
 
         if (!store) {
@@ -99,10 +99,11 @@ export const updateSellerProfile = async (req: Request, res: Response) => {
             }
             data.phone = normalizePhone(data.phone);
 
-            // Check if phone number is already taken by another user
+            // Check if phone number is already taken by another SELLER
             const conflictingUser = await prisma.user.findFirst({
                 where: {
                     phone: data.phone,
+                    role: 'SELLER',
                     id: { not: store.userId }
                 }
             });
@@ -110,7 +111,7 @@ export const updateSellerProfile = async (req: Request, res: Response) => {
             if (conflictingUser) {
                 return res.status(400).json({ 
                     success: false, 
-                    message: `The user with number ${data.phone} is already with us (Registered as ${conflictingUser.role}). Please use a different number.` 
+                    message: `The phone number ${data.phone} is already registered with another seller account. Please use a different number.` 
                 });
             }
 
@@ -123,10 +124,9 @@ export const updateSellerProfile = async (req: Request, res: Response) => {
             }
         }
 
-        // Define sensitive fields that require admin approval
+        // Define sensitive fields that require admin approval (mainly financial)
         const sensitiveFields = [
-            'name', 'category', 'openTime', 'description',
-            'location', 'fullAddress', 'phone', 'website',
+            'phone',
             'bankName', 'accountNumber', 'accountHolderName', 'ifscCode', 'upiId'
         ];
 
@@ -138,8 +138,10 @@ export const updateSellerProfile = async (req: Request, res: Response) => {
 
         // Map of fields to check
         const fieldsToCheck = [
-            ...sensitiveFields,
-            'pickupLocation' // Non-sensitive
+            'name', 'category', 'openTime', 'description',
+            'location', 'fullAddress', 'phone', 'website',
+            'bankName', 'accountNumber', 'accountHolderName', 'ifscCode', 'upiId',
+            'pickupLocation'
         ];
 
         // Check textual fields
@@ -163,19 +165,29 @@ export const updateSellerProfile = async (req: Request, res: Response) => {
             }
         });
 
-        // Handle files - Images are considered sensitive
+        // Handle files - Now updating images directly
         const newImage = getFilePath(files, 'image');
         if (newImage) {
-            sensitiveChanges['image'] = newImage;
-            oldSensitiveData['image'] = store.image;
-            hasSensitiveChanges = true;
+            updateData['image'] = newImage;
         }
 
-        const newHeroImages = files && files['heroImages'] ? getFilePaths(files, 'heroImages') : null;
-        if (newHeroImages && newHeroImages.length > 0) {
-            sensitiveChanges['heroImages'] = newHeroImages;
-            oldSensitiveData['heroImages'] = store.heroImages;
-            hasSensitiveChanges = true;
+        // Handle Hero Images (support additions and deletions)
+        let finalHeroImages = store.heroImages || [];
+        if (data.existingHeroImages) {
+            try {
+                finalHeroImages = JSON.parse(data.existingHeroImages);
+            } catch (err) {
+                console.error("Error parsing existingHeroImages:", err);
+            }
+        }
+
+        const newHeroFiles = files && files['heroImages'] ? getFilePaths(files, 'heroImages') : [];
+        if (newHeroFiles.length > 0) {
+            finalHeroImages = [...finalHeroImages, ...newHeroFiles];
+        }
+
+        if (JSON.stringify(finalHeroImages) !== JSON.stringify(store.heroImages)) {
+            updateData['heroImages'] = finalHeroImages;
         }
 
         if (hasSensitiveChanges) {

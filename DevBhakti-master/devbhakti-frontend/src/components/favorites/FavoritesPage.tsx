@@ -210,17 +210,17 @@ const FavoritesPage: React.FC = () => {
                                                             className="object-cover group-hover:scale-110 transition-transform duration-700"
                                                         />
                                                         <Badge variant="secondary" className="absolute top-3 left-3 bg-white/90 backdrop-blur-md text-zinc-900 border-none text-[10px]">
-                                                            {temple.category}
+                                                            {parseLocalizedValue(temple.category)}
                                                         </Badge>
                                                     </div>
 
                                                     <div className="px-2 pb-3">
                                                         <h3 className="text-xl font-bold text-zinc-900 mb-1 group-hover:text-primary transition-colors line-clamp-1">
-                                                            {temple.name}
+                                                            {parseLocalizedValue(temple.name)}
                                                         </h3>
                                                         <div className="flex items-center gap-2 text-zinc-500 mb-3">
                                                             <MapPin className="w-3.5 h-3.5 text-primary" />
-                                                            <span className="text-[11px] font-medium truncate">{temple.location}</span>
+                                                            <span className="text-[11px] font-medium truncate">{parseLocalizedValue(temple.location)}</span>
                                                         </div>
                                                         <div className="flex items-center justify-between pt-3 border-t border-zinc-50">
                                                             <div className="flex items-center gap-1">
@@ -285,7 +285,7 @@ const FavoritesPage: React.FC = () => {
                                                         />
                                                         <div className="absolute top-3 left-3 flex gap-2">
                                                             <Badge className="bg-white/90 backdrop-blur-md text-zinc-900 border-none text-[10px]">
-                                                                {pooja.category}
+                                                                {parseLocalizedValue(pooja.category)}
                                                             </Badge>
                                                         </div>
                                                         <div className="absolute bottom-3 right-3">
@@ -304,7 +304,7 @@ const FavoritesPage: React.FC = () => {
                                                             <span className="text-[11px] font-medium">{pooja.duration || pooja.time}</span>
                                                         </div>
                                                         <p className="text-zinc-500 text-[11px] line-clamp-2 mb-4">
-                                                            {Array.isArray(pooja.description) ? pooja.description[0] : pooja.description}
+                                                            {parseLocalizedValue(pooja.description)}
                                                         </p>
                                                     </div>
 
@@ -357,14 +357,24 @@ const FavoritesPage: React.FC = () => {
                                                     <div className="relative aspect-[4/5] overflow-hidden rounded-[1.5rem] mb-4 bg-zinc-50">
                                                         <NextImage
                                                             src={getFullImageUrl(product.image)}
-                                                            alt={product.name}
+                                                            alt={parseLocalizedValue(product.name)}
                                                             fill
                                                             className="object-cover group-hover:scale-110 transition-transform duration-700"
                                                             onError={(e: any) => { e.currentTarget.src = '/placeholder.jpg' }}
                                                         />
+                                                        
+                                                        {/* Out of Stock Label */}
+                                                        {product.variants?.every((v: any) => v.stock === 0) && (
+                                                            <div className="absolute inset-0 bg-black/40 backdrop-blur-[2px] z-10 flex items-center justify-center">
+                                                                <span className="px-3 py-1 bg-red-600 text-white text-[10px] font-bold uppercase tracking-widest rounded-full shadow-lg">
+                                                                    {t('marketplace.out_of_stock')}
+                                                                </span>
+                                                            </div>
+                                                        )}
+
                                                         <div className="absolute top-3 left-3 flex gap-2">
                                                             <Badge className="bg-white/90 backdrop-blur-md text-zinc-900 border-none text-[10px]">
-                                                                {product.category || "Sacred Item"}
+                                                                {parseLocalizedValue(product.category) || "Sacred Item"}
                                                             </Badge>
                                                         </div>
                                                         <div className="absolute bottom-3 right-3">
@@ -375,17 +385,21 @@ const FavoritesPage: React.FC = () => {
                                                     </div>
                                                     <div className="px-2 pb-2 flex-grow">
                                                         <h3 className="text-lg font-bold text-zinc-900 mb-1 group-hover:text-primary transition-colors line-clamp-2">
-                                                            {product.name}
+                                                            {parseLocalizedValue(product.name)}
                                                         </h3>
                                                         <p className="text-zinc-500 text-[11px] line-clamp-2 mb-4">
-                                                            {product.description}
+                                                            {parseLocalizedValue(product.description)}
                                                         </p>
                                                     </div>
                                                     <div className="mt-auto px-2 border-t border-zinc-50 pt-3 flex items-center justify-between">
                                                         <div className="text-xl font-extrabold text-zinc-900">
                                                             {getProductPrice(product)}
                                                         </div>
-                                                        <Button size="icon" className="h-10 w-10 rounded-xl bg-primary/10 text-primary hover:bg-primary hover:text-white transition-all shadow-sm">
+                                                        <Button 
+                                                            size="icon" 
+                                                            className="h-10 w-10 rounded-xl bg-primary/10 text-primary hover:bg-primary hover:text-white transition-all shadow-sm"
+                                                            disabled={product.variants?.every((v: any) => v.stock === 0)}
+                                                        >
                                                             <ShoppingCart className="w-5 h-5" />
                                                         </Button>
                                                     </div>

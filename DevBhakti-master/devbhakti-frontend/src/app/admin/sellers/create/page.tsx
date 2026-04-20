@@ -300,16 +300,18 @@ export default function CreateSellerPage() {
                                         </CardTitle>
                                         <CardDescription className="text-amber-800/70">Define multi-tier commission structures.</CardDescription>
                                     </div>
-                                    <Button
-                                        type="button"
-                                        variant="outline"
-                                        size="sm"
-                                        onClick={handleAddSlab}
-                                        className="bg-white hover:bg-amber-50 border-amber-200 text-amber-700 h-8 font-medium shadow-sm transition-all"
-                                    >
-                                        <Plus className="w-3.5 h-3.5 mr-1.5" />
-                                        Add Slab
-                                    </Button>
+                                    {rateType === 'CUSTOM' && (
+                                        <Button
+                                            type="button"
+                                            variant="outline"
+                                            size="sm"
+                                            onClick={handleAddSlab}
+                                            className="bg-white hover:bg-amber-50 border-amber-200 text-amber-700 h-8 font-medium shadow-sm transition-all"
+                                        >
+                                            <Plus className="w-3.5 h-3.5 mr-1.5" />
+                                            Add Slab
+                                        </Button>
+                                    )}
                                 </div>
                             </CardHeader>
                             <CardContent className="p-0">
@@ -329,58 +331,62 @@ export default function CreateSellerPage() {
                                         </div>
                                     </div>
 
-                                    {rateType === 'CUSTOM' ? (
-                                        <div className="overflow-x-auto">
-                                            <table className="w-full text-sm text-left">
-                                                <thead>
-                                                    <tr className="bg-slate-50/50 text-slate-500 border-b border-slate-100">
-                                                        <th className="px-4 py-3 font-semibold">Min (₹)</th>
-                                                        <th className="px-4 py-3 font-semibold">Max (₹)</th>
-                                                        <th className="px-4 py-3 font-semibold">Fixed (₹)</th>
-                                                        <th className="px-4 py-3 font-semibold">%</th>
-                                                        <th className="px-4 py-3 w-10"></th>
-                                                    </tr>
-                                                </thead>
-                                                <tbody className="divide-y divide-slate-50">
-                                                    {slabs.map((slab, index) => (
-                                                        <tr key={index} className="group hover:bg-slate-50/30 transition-colors">
-                                                            <td className="px-3 py-2">
-                                                                <Input
-                                                                    type="number"
-                                                                    value={slab.minAmount}
-                                                                    onChange={(e) => handleSlabChange(index, "minAmount", e.target.value)}
-                                                                    className="h-8 py-0 focus-visible:ring-amber-500 text-sm font-medium border-slate-200"
-                                                                    required
-                                                                />
-                                                            </td>
-                                                            <td className="px-3 py-2">
-                                                                <Input
-                                                                    type="number"
-                                                                    value={slab.maxAmount || ""}
-                                                                    placeholder="∞"
-                                                                    onChange={(e) => handleSlabChange(index, "maxAmount", e.target.value)}
-                                                                    className="h-8 py-0 focus-visible:ring-amber-500 text-sm font-medium border-slate-200"
-                                                                />
-                                                            </td>
-                                                            <td className="px-3 py-2">
-                                                                <Input
-                                                                    type="number"
-                                                                    value={slab.platformFee}
-                                                                    onChange={(e) => handleSlabChange(index, "platformFee", e.target.value)}
-                                                                    className="h-8 py-0 focus-visible:ring-amber-500 text-sm font-medium border-slate-200"
-                                                                    required
-                                                                />
-                                                            </td>
-                                                            <td className="px-3 py-2">
-                                                                <Input
-                                                                    type="number"
-                                                                    value={slab.percentage}
-                                                                    onChange={(e) => handleSlabChange(index, "percentage", e.target.value)}
-                                                                    className="h-8 py-0 focus-visible:ring-amber-500 text-sm font-medium border-slate-200"
-                                                                    required
-                                                                />
-                                                            </td>
-                                                            <td className="px-3 py-2">
+                                    <div className="overflow-x-auto">
+                                        <table className="w-full text-sm text-left">
+                                            <thead>
+                                                <tr className="bg-slate-50/50 text-slate-500 border-b border-slate-100">
+                                                    <th className="px-4 py-3 font-semibold">Min (₹)</th>
+                                                    <th className="px-4 py-3 font-semibold">Max (₹)</th>
+                                                    <th className="px-4 py-3 font-semibold">Fixed (₹)</th>
+                                                    <th className="px-4 py-3 font-semibold">%</th>
+                                                    <th className="px-4 py-3 w-10"></th>
+                                                </tr>
+                                            </thead>
+                                            <tbody className="divide-y divide-slate-50">
+                                                {slabs.map((slab, index) => (
+                                                    <tr key={index} className={`group hover:bg-slate-50/30 transition-colors ${rateType === 'DEFAULT' ? 'opacity-80' : ''}`}>
+                                                        <td className="px-3 py-2">
+                                                            <Input
+                                                                type="number"
+                                                                value={slab.minAmount}
+                                                                onChange={(e) => handleSlabChange(index, "minAmount", e.target.value)}
+                                                                className={`h-8 py-0 focus-visible:ring-amber-500 text-sm font-medium border-slate-200 ${rateType === 'DEFAULT' ? 'bg-slate-50 cursor-not-allowed border-dashed' : ''}`}
+                                                                required
+                                                                disabled={rateType === 'DEFAULT'}
+                                                            />
+                                                        </td>
+                                                        <td className="px-3 py-2">
+                                                            <Input
+                                                                type="number"
+                                                                value={slab.maxAmount || ""}
+                                                                placeholder="∞"
+                                                                onChange={(e) => handleSlabChange(index, "maxAmount", e.target.value)}
+                                                                className={`h-8 py-0 focus-visible:ring-amber-500 text-sm font-medium border-slate-200 ${rateType === 'DEFAULT' ? 'bg-slate-50 cursor-not-allowed border-dashed' : ''}`}
+                                                                disabled={rateType === 'DEFAULT'}
+                                                            />
+                                                        </td>
+                                                        <td className="px-3 py-2">
+                                                            <Input
+                                                                type="number"
+                                                                value={slab.platformFee}
+                                                                onChange={(e) => handleSlabChange(index, "platformFee", e.target.value)}
+                                                                className={`h-8 py-0 focus-visible:ring-amber-500 text-sm font-medium border-slate-200 ${rateType === 'DEFAULT' ? 'bg-slate-50 cursor-not-allowed border-dashed' : ''}`}
+                                                                required
+                                                                disabled={rateType === 'DEFAULT'}
+                                                            />
+                                                        </td>
+                                                        <td className="px-3 py-2">
+                                                            <Input
+                                                                type="number"
+                                                                value={slab.percentage}
+                                                                onChange={(e) => handleSlabChange(index, "percentage", e.target.value)}
+                                                                className={`h-8 py-0 focus-visible:ring-amber-500 text-sm font-medium border-slate-200 ${rateType === 'DEFAULT' ? 'bg-slate-50 cursor-not-allowed border-dashed' : ''}`}
+                                                                required
+                                                                disabled={rateType === 'DEFAULT'}
+                                                            />
+                                                        </td>
+                                                        <td className="px-3 py-2">
+                                                            {rateType === 'CUSTOM' && (
                                                                 <Button
                                                                     type="button"
                                                                     variant="ghost"
@@ -390,33 +396,26 @@ export default function CreateSellerPage() {
                                                                 >
                                                                     <Trash2 className="w-4 h-4" />
                                                                 </Button>
-                                                            </td>
-                                                        </tr>
-                                                    ))}
-                                                    {slabs.length === 0 && (
-                                                        <tr>
-                                                            <td colSpan={5} className="py-8 text-center text-slate-400 italic">
-                                                                No custom slabs defined. Using global defaults.
-                                                            </td>
-                                                        </tr>
-                                                    )}
-                                                </tbody>
-                                            </table>
-                                        </div>
-                                    ) : (
-                                        <div className="p-8 text-center bg-slate-50/50 border border-dashed rounded-xl mx-4 mb-4">
-                                            <p className="text-sm text-slate-500">
-                                                This seller will use <span className="font-bold text-primary">Global Default Slabs</span>.
-                                                Any changes to global defaults will automatically apply here.
+                                                            )}
+                                                        </td>
+                                                    </tr>
+                                                ))}
+                                                {slabs.length === 0 && (
+                                                    <tr>
+                                                        <td colSpan={5} className="py-8 text-center text-slate-400 italic">
+                                                            {rateType === 'DEFAULT' ? "Loading world defaults..." : "No custom slabs defined. Click 'Add Slab' to customize."}
+                                                        </td>
+                                                    </tr>
+                                                )}
+                                            </tbody>
+                                        </table>
+                                    </div>
+                                    {rateType === 'DEFAULT' && (
+                                        <div className="p-3 bg-blue-50/50 border-t border-blue-100 flex items-center justify-center gap-2">
+                                            <div className="w-1.5 h-1.5 rounded-full bg-blue-500 animate-pulse" />
+                                            <p className="text-[10px] font-bold text-blue-600 uppercase tracking-widest">
+                                                Global Default View Only
                                             </p>
-                                            <Button 
-                                                type="button" 
-                                                variant="link" 
-                                                className="mt-2 text-xs"
-                                                onClick={() => setRateType('CUSTOM')}
-                                            >
-                                                Switch to Custom to override
-                                            </Button>
                                         </div>
                                     )}
                                 </div>

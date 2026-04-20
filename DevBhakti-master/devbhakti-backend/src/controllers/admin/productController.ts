@@ -233,9 +233,10 @@ export const getAllProducts = async (req: Request, res: Response) => {
     if (search) {
       where.AND.push({
         OR: [
-          { name: { path: ['en'], string_contains: String(search) } },
-          { name: { path: ['hi'], string_contains: String(search) } },
-          { description: { path: ['en'], string_contains: String(search) } }
+          { name: { path: ['en'], string_contains: String(search), mode: 'insensitive' } },
+          { name: { path: ['hi'], string_contains: String(search), mode: 'insensitive' } },
+          { name: { path: ['mr'], string_contains: String(search), mode: 'insensitive' } },
+          { description: { path: ['en'], string_contains: String(search), mode: 'insensitive' } }
         ]
       });
     }
@@ -244,7 +245,15 @@ export const getAllProducts = async (req: Request, res: Response) => {
       where.AND.push({ category });
     }
 
-    if (status) {
+    if (status === "out_of_stock") {
+      where.AND.push({
+        variants: {
+          every: {
+            stock: 0
+          }
+        }
+      });
+    } else if (status) {
       where.AND.push({ status });
     }
 
@@ -278,7 +287,7 @@ export const getAllProducts = async (req: Request, res: Response) => {
     // Remove empty AND if no filters
     if (where.AND.length === 0) delete where.AND;
 
-    const [products, total, pendingCount, approvedCount, totalCount] = await Promise.all([
+    const [products, total, pendingCount, approvedCount, outOfStockCount, totalCount] = await Promise.all([
       prisma.product.findMany({
         where,
         include: {
@@ -322,6 +331,7 @@ export const getAllProducts = async (req: Request, res: Response) => {
       prisma.product.count({ where }),
       prisma.product.count({ where: { status: 'pending' } }),
       prisma.product.count({ where: { status: 'approved' } }),
+      prisma.product.count({ where: { variants: { every: { stock: 0 } } } }),
       prisma.product.count()
     ]);
 
@@ -359,7 +369,8 @@ export const getAllProducts = async (req: Request, res: Response) => {
         stats: {
           total: totalCount,
           pending: pendingCount,
-          approved: approvedCount
+          approved: approvedCount,
+          outOfStock: outOfStockCount
         },
         pagination: {
           page: Number(page),
@@ -475,7 +486,7 @@ export const getPublicProductById = async (req: Request, res: Response) => {
       },
       include: {
         variants: {
-          where: { stock: { gt: 0 } }
+          where: { isActive: true }
         },
         categoryObj: {
           select: {
@@ -700,16 +711,31 @@ export const updateProduct = async (req: Request, res: Response) => {
     // Handle variants update safely
     if (variants && Array.isArray(variants)) {
       try {
-        await prisma.productVariant.deleteMany({
-          where: { productId: id as string }
-        });
+        const existingVariants = variants.filter((v: any) => v.id && String(v.id).length > 20);
+        const newVariants = variants.filter((v: any) => !v.id || String(v.id).length <= 20);
+        const existingIds = existingVariants.map((v: any) => v.id);
 
         updateData.variants = {
-          create: variants.map((variant: any) => ({
+          updateMany: {
+            where: { id: { notIn: existingIds } },
+            data: { isActive: false }
+          },
+          update: existingVariants.map((variant: any) => ({
+            where: { id: variant.id },
+            data: {
+              name: buildLangJson(variant.name_en || variant.name, variant.name_hi, variant.name_mr),
+              price: parseFloat(variant.price),
+              stock: parseInt(variant.stock) || 0,
+              ...(variant.hasOwnProperty('image') && { image: variant.image }), // update image including null
+              isActive: true // ensure it's active
+            }
+          })),
+          create: newVariants.map((variant: any) => ({
             name: buildLangJson(variant.name_en || variant.name, variant.name_hi, variant.name_mr),
             price: parseFloat(variant.price),
             stock: parseInt(variant.stock) || 0,
-            image: variant.image || null
+            image: variant.image || null,
+            isActive: true
           }))
         };
       } catch (err: any) {
@@ -1014,24 +1040,12 @@ export const getPublicProducts = async (req: Request, res: Response) => {
           price: {
             gte: minPrice ? parseFloat(minPrice as string) : undefined,
             lte: maxPrice ? parseFloat(maxPrice as string) : undefined
-          }
+          },
+          isActive: true
         }
       };
     }
 
-
-    if (search) {
-      where.OR = [
-        { name: { path: ['en'], string_contains: search as string } },
-        { description: { path: ['en'], string_contains: search as string } }
-      ];
-    }
-
-    if (category) {
-      where.categoryObj = {
-        name: { path: ['en'], string_contains: category as string }
-      };
-    }
 
     if (templeId) {
       where.templeId = templeId;
@@ -1050,7 +1064,7 @@ export const getPublicProducts = async (req: Request, res: Response) => {
         where,
         include: {
           variants: {
-            where: { stock: { gt: 0 } },
+            where: { isActive: true },
             orderBy: { price: "asc" } 
           },
           categoryObj: {
@@ -1087,43 +1101,72 @@ export const getPublicProducts = async (req: Request, res: Response) => {
     const lang = getLang(req);
     let finalProducts = products.map(p => localize(p, lang));
 
-    // Support for Price Sorting and Search Ranking
-    if (sort === 'price_asc' || sort === 'price_desc' || search) {
-      finalProducts.sort((a: any, b: any) => {
-        // Handle Price Sorting
-        if (sort === 'price_asc' || sort === 'price_desc') {
-          const priceA = a.variants?.[0]?.price || 0;
-          const priceB = b.variants?.[0]?.price || 0;
-          return sort === 'price_asc' ? priceA - priceB : priceB - priceA;
+    // Robust JS-based Filtering (Case-Insensitive & Multi-Language)
+    if (search || category) {
+      const lowSearch = search ? String(search).toLowerCase() : "";
+      const lowCategory = category ? String(category).toLowerCase() : "";
+
+      finalProducts = finalProducts.filter(p => {
+        let matchesSearch = true;
+        let matchesCategory = true;
+
+        if (lowSearch) {
+          const nameEn = String(p.name_en || p.name?.en || "").toLowerCase();
+          const nameHi = String(p.name_hi || p.name?.hi || "").toLowerCase();
+          const nameMr = String(p.name_mr || p.name?.mr || "").toLowerCase();
+          const descEn = String(p.description_en || p.description?.en || "").toLowerCase();
+          
+          matchesSearch = nameEn.includes(lowSearch) || 
+                          nameHi.includes(lowSearch) || 
+                          nameMr.includes(lowSearch) ||
+                          descEn.includes(lowSearch);
         }
 
-        // Handle Search Ranking (already existing logic preserved)
-        if (search) {
-          const lowQuery = String(search).toLowerCase();
-          const nameA = (a.name || "").toLowerCase();
-          const nameB = (b.name || "").toLowerCase();
-          if (nameA === lowQuery && nameB !== lowQuery) return -1;
-          if (nameB === lowQuery && nameA !== lowQuery) return 1;
-          if (nameA.startsWith(lowQuery) && !nameB.startsWith(lowQuery)) return -1;
-          if (nameB.startsWith(lowQuery) && !nameA.startsWith(lowQuery)) return 1;
+        if (lowCategory) {
+          const catNameEn = String(p.categoryObj?.name?.en || p.category || "").toLowerCase();
+          const catNameHi = String(p.categoryObj?.name?.hi || "").toLowerCase();
+          const catNameMr = String(p.categoryObj?.name?.mr || "").toLowerCase();
+          
+          matchesCategory = catNameEn.includes(lowCategory) || 
+                            catNameHi.includes(lowCategory) || 
+                            catNameMr.includes(lowCategory);
         }
-        return 0;
+
+        return matchesSearch && matchesCategory;
       });
-
-      // Apply pagination for JS-sorted results
-      const start = (Number(page) - 1) * Number(limit);
-      finalProducts = finalProducts.slice(start, start + Number(limit));
     }
+
+    // Support for Price Sorting and Search Ranking
+    finalProducts.sort((a: any, b: any) => {
+      if (sort === 'price_asc' || sort === 'price_desc') {
+        const priceA = a.variants?.[0]?.price || 0;
+        const priceB = b.variants?.[0]?.price || 0;
+        return sort === 'price_asc' ? priceA - priceB : priceB - priceA;
+      }
+
+      if (search) {
+        const lowQuery = String(search).toLowerCase();
+        const nameA = String(a.name || "").toLowerCase();
+        const nameB = String(b.name || "").toLowerCase();
+        if (nameA === lowQuery && nameB !== lowQuery) return -1;
+        if (nameB === lowQuery && nameA !== lowQuery) return 1;
+      }
+      return 0;
+    });
+
+    const filteredTotal = finalProducts.length;
+    const startIndex = (Number(page) - 1) * Number(limit);
+    const paginatedProducts = finalProducts.slice(startIndex, startIndex + Number(limit));
 
     res.status(200).json({
       success: true,
       data: {
-        products: finalProducts,
+        products: paginatedProducts,
         pagination: {
           page: Number(page),
           limit: Number(limit),
-          total,
-          pages: Math.ceil(total / Number(limit))
+          total: filteredTotal,
+          pages: Math.ceil(filteredTotal / Number(limit))
         }
       }
     });

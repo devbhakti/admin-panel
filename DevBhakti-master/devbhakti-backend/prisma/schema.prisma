@@ -96,7 +96,7 @@ model Temple {
   urlType               String                @default("slug")
   isPrimaryLive         Boolean               @default(false)
   operatingHours        Json?
-  category              Json?   // {"en":"...","hi":"...","mr":"..."}
+  category              Json? // {"en":"...","hi":"...","mr":"..."}
   description           Json?
   fullAddress           Json?
   history               Json?
@@ -202,13 +202,13 @@ model Pooja {
   updatedAt     DateTime              @updatedAt
   status        Boolean               @default(true)
   slug          String?               @unique
-  about         Json?   // {"en":"...","hi":"...","mr":"..."}
-  benefits      Json?   // {"en":[...],"hi":[...],"mr":[...]}
-  bullets       Json?   // {"en":[...],"hi":[...],"mr":[...]}
+  about         Json? // {"en":"...","hi":"...","mr":"..."}
+  benefits      Json? // {"en":[...],"hi":[...],"mr":[...]}
+  bullets       Json? // {"en":[...],"hi":[...],"mr":[...]}
   category      Json?
   categoryId    String?
-  categoryIds   String[] @default([])
-  description   Json?   // {"en":[...],"hi":[...],"mr":[...]}
+  categoryIds   String[]              @default([])
+  description   Json? // {"en":[...],"hi":[...],"mr":[...]}
   duration      Json?
   name          Json?
   process       Json?
@@ -225,8 +225,8 @@ model Pooja {
 
 model PoojaCategory {
   id        String   @id @default(cuid())
-  name      Json     // {"en":"...","hi":"...","mr":"..."}
-  nameSlug  String   @unique  // English slug for uniqueness e.g. "ram-navami-pooja"
+  name      Json // {"en":"...","hi":"...","mr":"..."}
+  nameSlug  String   @unique // English slug for uniqueness e.g. "ram-navami-pooja"
   status    String   @default("APPROVED")
   createdAt DateTime @default(now())
   poojas    Pooja[]
@@ -234,9 +234,9 @@ model PoojaCategory {
 
 model Event {
   id          String   @id @default(cuid())
-  name        Json     // {"en":"...","hi":"...","mr":"..."}
+  name        Json // {"en":"...","hi":"...","mr":"..."}
   date        String
-  description Json?    // {"en":"...","hi":"...","mr":"..."}
+  description Json? // {"en":"...","hi":"...","mr":"..."}
   templeId    String?
   createdAt   DateTime @default(now())
   updatedAt   DateTime @updatedAt
@@ -254,8 +254,8 @@ model Banner {
   order     Int      @default(0)
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
-  title     Json?            // {"en":"...","hi":"...","mr":"..."}
-  subtitle  Json?            // {"en":"...","hi":"...","mr":"..."}
+  title     Json? // {"en":"...","hi":"...","mr":"..."}
+  subtitle  Json? // {"en":"...","hi":"...","mr":"..."}
 }
 
 model Feature {
@@ -266,8 +266,8 @@ model Feature {
   order       Int      @default(0)
   createdAt   DateTime @default(now())
   updatedAt   DateTime @updatedAt
-  description Json?    // {"en":"...","hi":"...","mr":"..."}
-  title       Json?    // {"en":"...","hi":"...","mr":"..."}
+  description Json? // {"en":"...","hi":"...","mr":"..."}
+  title       Json? // {"en":"...","hi":"...","mr":"..."}
 }
 
 model Testimonial {
@@ -278,9 +278,9 @@ model Testimonial {
   order     Int      @default(0)
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
-  category  Json?    // {"en":"...","hi":"...","mr":"..."}
-  subtitle  Json?    // {"en":"...","hi":"...","mr":"..."}
-  title     Json?    // {"en":"...","hi":"...","mr":"..."}
+  category  Json? // {"en":"...","hi":"...","mr":"..."}
+  subtitle  Json? // {"en":"...","hi":"...","mr":"..."}
+  title     Json? // {"en":"...","hi":"...","mr":"..."}
 }
 
 model ProductCategory {
@@ -290,9 +290,9 @@ model ProductCategory {
   sortOrder   Int       @default(0)
   createdAt   DateTime  @default(now())
   updatedAt   DateTime  @updatedAt
-  description Json?    // {"en":"...","hi":"...","mr":"..."}
-  name        Json?    // {"en":"...","hi":"...","mr":"..."}
-  nameSlug    String?  @unique  // uniqueness ke liye
+  description Json? // {"en":"...","hi":"...","mr":"..."}
+  name        Json? // {"en":"...","hi":"...","mr":"..."}
+  nameSlug    String?   @unique // uniqueness ke liye
   products    Product[]
 }
 
@@ -310,13 +310,13 @@ model Product {
   width           Float?           @default(10)
   height          Float?           @default(10)
   sellerId        String?
-  category        Json?    // {"en":"...","hi":"...","mr":"..."}
+  category        Json? // {"en":"...","hi":"...","mr":"..."}
   description     Json?
   highlights      Json?
   longDescription Json?
   name            Json?
-  origin          Json?    // {"en":"India","hi":"भारत","mr":"भारत"}
-  shippingInfo    Json?    // {"en":"Ships in 24-48 Hours","hi":"...","mr":"..."}
+  origin          Json? // {"en":"India","hi":"भारत","mr":"भारत"}
+  shippingInfo    Json? // {"en":"Ships in 24-48 Hours","hi":"...","mr":"..."}
   cartItems       CartItem[]
   favorites       Favorite[]
   orderItems      OrderItem[]
@@ -331,10 +331,11 @@ model ProductVariant {
   price     Float
   stock     Int        @default(0)
   image     String?
+  isActive  Boolean    @default(true)
   productId String
   createdAt DateTime   @default(now())
   updatedAt DateTime   @updatedAt
-  name      Json?    // {"en":"...","hi":"...","mr":"..."}
+  name      Json? // {"en":"...","hi":"...","mr":"..."}
   cartItems CartItem[]
   product   Product    @relation(fields: [productId], references: [id], onDelete: Cascade)
 }
@@ -358,10 +359,10 @@ model Favorite {
 
 model CTACard {
   id         String   @id @default(cuid())
-  title      Json?            // {"en":"...","hi":"...","mr":"..."}
-  points     Json?            // {"en":[...],"hi":[...],"mr":[...]}
+  title      Json? // {"en":"...","hi":"...","mr":"..."}
+  points     Json? // {"en":[...],"hi":[...],"mr":[...]}
   icon       String
-  buttonText Json?            // {"en":"...","hi":"...","mr":"..."}
+  buttonText Json? // {"en":"...","hi":"...","mr":"..."}
   buttonLink String
   cardType   String
   active     Boolean  @default(true)
@@ -587,28 +588,28 @@ model Notification {
 }
 
 model Donation {
-  id              String   @id @default(cuid())
-  userId          String?
-  templeId        String
-  donorName       String
-  donorPhone      String
-  donorEmail      String
-  amount          Float
-  status          String   @default("PENDING")
-  paymentMethod   String?
-  razorpayOrderId String?  @unique
-  isAnonymous     Boolean  @default(false)
-  is80GRequired   Boolean  @default(false)
-  panNumber       String?
-  address         String?
-  message         String?
+  id               String   @id @default(cuid())
+  userId           String?
+  templeId         String
+  donorName        String
+  donorPhone       String
+  donorEmail       String
+  amount           Float
+  status           String   @default("PENDING")
+  paymentMethod    String?
+  razorpayOrderId  String?  @unique
+  isAnonymous      Boolean  @default(false)
+  is80GRequired    Boolean  @default(false)
+  panNumber        String?
+  address          String?
+  message          String?
   commissionAmount Float    @default(0)
   netEarning       Float    @default(0)
-  createdAt       DateTime @default(now())
-  updatedAt       DateTime @updatedAt
-  displayId       String?  @unique
-  temple          Temple   @relation(fields: [templeId], references: [id])
-  user            User?    @relation(fields: [userId], references: [id])
+  createdAt        DateTime @default(now())
+  updatedAt        DateTime @updatedAt
+  displayId        String?  @unique
+  temple           Temple   @relation(fields: [templeId], references: [id])
+  user             User?    @relation(fields: [userId], references: [id])
 }
 
 model StandardFAQ {

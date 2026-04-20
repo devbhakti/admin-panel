@@ -19,17 +19,19 @@ import { Card, CardContent, CardHeader } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Badge } from "@/components/ui/badge";
-import {
-    Dialog,
-    DialogContent,
-    DialogHeader,
-    DialogTitle,
-    DialogDescription,
-} from "@/components/ui/dialog";
 import { Separator } from "@/components/ui/separator";
 import { useToast } from "@/hooks/use-toast";
 import { fetchSellerProducts, deleteSellerProduct } from "@/api/sellerController";
 import { API_URL, BASE_URL } from "@/config/apiConfig";
+import { parseLocalizedValue } from "@/utils/textUtils";
+import {
+    Select,
+    SelectContent,
+    SelectItem,
+    SelectTrigger,
+    SelectValue,
+} from "@/components/ui/select";
+import { Filter } from "lucide-react";
 
 
 
@@ -37,19 +39,26 @@ export default function SellerProductsPage() {
     const router = useRouter();
     const { toast } = useToast();
     const [products, setProducts] = useState<any[]>([]);
+    const [allProductsForStats, setAllProductsForStats] = useState<any[]>([]);
     const [isLoading, setIsLoading] = useState(true);
     const [searchQuery, setSearchQuery] = useState("");
-    const [selectedProduct, setSelectedProduct] = useState<any>(null);
-    const [isViewOpen, setIsViewOpen] = useState(false);
+    const [statusFilter, setStatusFilter] = useState("all");
 
     useEffect(() => {
         loadProducts();
-    }, [searchQuery]);
+    }, [searchQuery, statusFilter]);
+
+    useEffect(() => {
+        loadAllProductsForStats();
+    }, []);
 
     const loadProducts = async () => {
         try {
             setIsLoading(true);
-            const response = await fetchSellerProducts({ search: searchQuery });
+            const response = await fetchSellerProducts({ 
+                search: searchQuery, 
+                status: statusFilter === "all" ? undefined : statusFilter 
+            });
             if (response.success) {
                 setProducts(response.data.products);
             }
@@ -57,7 +66,7 @@ export default function SellerProductsPage() {
             console.error("Load Products Error:", error);
             toast({
                 title: "Error",
-                description: "Failed to load products. Please check if you are logged in.",
+                description: "Failed to load products.",
                 variant: "destructive"
             });
         } finally {
@@ -65,11 +74,23 @@ export default function SellerProductsPage() {
         }
     };
 
+    const loadAllProductsForStats = async () => {
+        try {
+            const response = await fetchSellerProducts({ limit: 1000 }); // Get all for simple stats
+            if (response.success) {
+                setAllProductsForStats(response.data.products);
+            }
+        } catch (error) {
+            console.error("Load Stats Error:", error);
+        }
+    };
+
     // Stats
-    const totalProducts = products.length;
-    const activeProducts = products.filter(p => p.status === 'approved' || p.status === 'active').length;
-    const pendingProducts = products.filter(p => p.status === 'pending').length;
-    const outOfStockCount = products.filter(p => {
+    // Stats from total list
+    const totalProducts = allProductsForStats.length;
+    const activeProducts = allProductsForStats.filter(p => p.status === 'approved' || p.status === 'active').length;
+    const pendingProducts = allProductsForStats.filter(p => p.status === 'pending').length;
+    const outOfStockCount = allProductsForStats.filter(p => {
         const totalStock = p.variants?.reduce((sum: number, v: any) => sum + (v.stock || 0), 0) || 0;
         return totalStock === 0;
     }).length;
@@ -93,8 +114,7 @@ export default function SellerProductsPage() {
     };
 
     const handleView = (product: any) => {
-        setSelectedProduct(product);
-        setIsViewOpen(true);
+        router.push(`/seller/dashboard/products/${product.id}/view`);
     };
 
     const filteredProducts = products;
@@ -142,12 +162,16 @@ export default function SellerProductsPage() {
             {/* Stats Grid */}
             <div className="grid grid-cols-2 md:grid-cols-4 gap-6">
                 {[
-                    { label: "Total Products", value: totalProducts, icon: ShoppingBag, color: "text-blue-600", bg: "bg-blue-50" },
-                    { label: "Active", value: activeProducts, icon: Package, color: "text-emerald-600", bg: "bg-emerald-50" },
-                    { label: "Pending", value: pendingProducts, icon: Layers, color: "text-amber-600", bg: "bg-amber-50" },
-                    { label: "Out of Stock", value: outOfStockCount, icon: Trash2, color: "text-red-600", bg: "bg-red-50" },
+                    { label: "Total Products", value: totalProducts, icon: ShoppingBag, color: "text-blue-600", bg: "bg-blue-50", filter: "all" },
+                    { label: "Active", value: activeProducts, icon: Package, color: "text-emerald-600", bg: "bg-emerald-50", filter: "approved" },
+                    { label: "Pending", value: pendingProducts, icon: Layers, color: "text-amber-600", bg: "bg-amber-50", filter: "pending" },
+                    { label: "Out of Stock", value: outOfStockCount, icon: Trash2, color: "text-red-600", bg: "bg-red-50", filter: "out_of_stock" },
                 ].map((stat) => (
-                    <Card key={stat.label} className="border-0 shadow-sm hover:shadow-md transition-all duration-300 rounded-2xl bg-white overflow-hidden group">
+                    <Card 
+                        key={stat.label} 
+                        onClick={() => setStatusFilter(stat.filter)}
+                        className={`border-0 shadow-sm hover:shadow-md transition-all duration-300 rounded-2xl bg-white overflow-hidden group cursor-pointer ${statusFilter === stat.filter ? 'ring-2 ring-primary ring-offset-2' : ''}`}
+                    >
                         <CardContent className="p-6 flex items-center justify-between">
                             <div className="space-y-1">
                                 <p className="text-xs font-semibold text-slate-400 uppercase tracking-wider">{stat.label}</p>
@@ -172,10 +196,27 @@ export default function SellerProductsPage() {
                         className="pl-12 h-12 bg-slate-50 border-0 focus:bg-white focus:ring-2 focus:ring-primary/20 transition-all rounded-xl text-slate-900"
                     />
                 </div>
-                <Button variant="outline" className="h-12 px-6 rounded-xl gap-2 border-slate-200">
-                    <ArrowUpDown className="w-4 h-4" />
-                    Sort: Newest
-                </Button>
+                <div className="flex items-center gap-2 w-full md:w-auto">
+                    <Select value={statusFilter} onValueChange={setStatusFilter}>
+                        <SelectTrigger className="h-12 w-[180px] rounded-xl bg-slate-50 border-0 focus:ring-2 focus:ring-primary/20">
+                            <div className="flex items-center gap-2">
+                                <Filter className="w-4 h-4 text-slate-400" />
+                                <SelectValue placeholder="Filter Status" />
+                            </div>
+                        </SelectTrigger>
+                        <SelectContent className="rounded-xl border-slate-100 shadow-xl">
+                            <SelectItem value="all">All Products</SelectItem>
+                            <SelectItem value="approved">Approved</SelectItem>
+                            <SelectItem value="pending">Pending</SelectItem>
+                            <SelectItem value="out_of_stock">Out of Stock</SelectItem>
+                        </SelectContent>
+                    </Select>
+
+                    <Button variant="outline" className="h-12 px-6 rounded-xl gap-2 border-slate-200">
+                        <ArrowUpDown className="w-4 h-4" />
+                        Sort: Newest
+                    </Button>
+                </div>
             </div>
 
             {/* Products Grid */}
@@ -226,7 +267,7 @@ export default function SellerProductsPage() {
                                             {product.image ? (
                                                 <img
                                                     src={`${BASE_URL}${product.image}`}
-                                                    alt={product.name}
+                                                    alt={parseLocalizedValue(product.name, 'en')}
                                                     className="w-full h-full object-cover transition-transform duration-700 group-hover/img:scale-110"
                                                 />
                                             ) : (
@@ -273,14 +314,14 @@ export default function SellerProductsPage() {
                                         <CardContent className="p-5 flex-1 flex flex-col">
                                             <div className="mb-2">
                                                 <span className="text-[10px] uppercase tracking-widest font-bold text-primary bg-primary/10 px-2 py-0.5 rounded-full">
-                                                    {product.categoryObj?.name || "General"}
+                                                    {parseLocalizedValue(product.categoryObj?.name, 'en') || "General"}
                                                 </span>
                                             </div>
-                                            <h3 className="font-bold text-lg text-slate-900 line-clamp-1 mb-1 group-hover:text-primary transition-colors" title={product.name}>
-                                                {product.name}
+                                            <h3 className="font-bold text-lg text-slate-900 line-clamp-1 mb-1 group-hover:text-primary transition-colors" title={parseLocalizedValue(product.name, 'en')}>
+                                                {parseLocalizedValue(product.name, 'en')}
                                             </h3>
                                             <p className="text-sm text-slate-500 line-clamp-2 mb-4 h-10 leading-relaxed">
-                                                {product.description}
+                                                {parseLocalizedValue(product.description, 'en')}
                                             </p>
 
                                             <div className="mt-auto">
@@ -307,160 +348,7 @@ export default function SellerProductsPage() {
                 </div>
             )}
 
-            {/* View Product Dialog */}
-            <Dialog open={isViewOpen} onOpenChange={setIsViewOpen}>
-                <DialogContent className="max-w-4xl p-0 border-0 rounded-3xl overflow-hidden shadow-2xl">
-                    {selectedProduct && (
-                        <div className="flex flex-col md:flex-row max-h-[90vh]">
-                            {/* Left Side: Product Image & Status */}
-                            <div className="w-full md:w-[45%] bg-slate-50 relative min-h-[350px] flex items-center justify-center p-8">
-                                {selectedProduct.image ? (
-                                    <img
-                                        src={`${BASE_URL}${selectedProduct.image}`}
-                                        alt={selectedProduct.name}
-                                        className="w-full h-full object-contain mix-blend-multiply"
-                                    />
-                                ) : (
-                                    <div className="text-center">
-                                        <Package className="w-24 h-24 text-slate-200 mx-auto" />
-                                        <p className="text-slate-400 font-medium mt-4">Product Visual</p>
-                                    </div>
-                                )}
-                                <div className="absolute top-6 left-6 z-10 scale-110">
-                                    {getStatusBadge(selectedProduct.status)}
-                                </div>
-                            </div>
-
-                            {/* Right Side: Details */}
-                            <div className="flex-1 p-8 md:p-10 overflow-y-auto bg-white">
-                                <DialogHeader className="mb-8">
-                                    <div className="space-y-3">
-                                        <Badge variant="outline" className="border-primary/20 text-primary bg-primary/5 rounded-lg px-2 py-1 text-xs font-bold">
-                                            {selectedProduct.categoryObj?.name || "General"}
-                                        </Badge>
-                                        <DialogTitle className="text-3xl font-black text-slate-900 leading-tight">
-                                            {selectedProduct.name}
-                                        </DialogTitle>
-                                        <DialogDescription className="text-base text-slate-500 leading-relaxed pr-6">
-                                            {selectedProduct.description}
-                                        </DialogDescription>
-                                    </div>
-                                </DialogHeader>
-
-                                <div className="space-y-8">
-                                    {/* Highlights */}
-                                    {selectedProduct.highlights && (
-                                        <div className="bg-amber-50/50 p-5 rounded-2xl border border-amber-100 flex items-start gap-3">
-                                            <div className="bg-amber-100 p-2 rounded-xl text-amber-600">
-                                                <Package className="w-5 h-5" />
-                                            </div>
-                                            <div>
-                                                <h4 className="text-sm font-bold text-amber-900 mb-1 leading-none uppercase tracking-wider">Features & Highlights</h4>
-                                                <p className="text-sm text-amber-800/80 font-medium">{selectedProduct.highlights}</p>
-                                            </div>
-                                        </div>
-                                    )}
-
-                                    {/* Variants Table */}
-                                    <div>
-                                        <div className="flex items-center justify-between mb-4">
-                                            <h4 className="font-bold text-slate-900 flex items-center gap-2 uppercase tracking-wider text-xs">
-                                                <Layers className="w-4 h-4 text-primary" />
-                                                Inventory Breakdown
-                                            </h4>
-                                            <Badge variant="secondary" className="text-[10px] font-bold rounded-full">
-                                                {selectedProduct.variants?.length} Options
-                                            </Badge>
-                                        </div>
-                                        <div className="border border-slate-100 rounded-2xl overflow-hidden shadow-sm">
-                                            <table className="w-full text-sm text-left">
-                                                <thead className="bg-slate-50/80 text-[10px] font-bold uppercase tracking-widest text-slate-400 border-b border-slate-100">
-                                                    <tr>
-                                                        <th className="px-5 py-4">Image</th>
-                                                        <th className="px-5 py-4">Variant Name</th>
-                                                        <th className="px-5 py-4">Price</th>
-                                                        <th className="px-5 py-4">Cost</th>
-                                                        <th className="px-5 py-4">Profit</th>
-                                                        <th className="px-5 py-4 text-right">Stock</th>
-                                                    </tr>
-                                                </thead>
-                                                <tbody className="divide-y divide-slate-50">
-                                                    {selectedProduct.variants?.map((variant: any) => {
-                                                        const profit = variant.costPrice && variant.price ? variant.price - variant.costPrice : null;
-                                                        const profitMargin = profit && variant.price ? ((profit / variant.price) * 100).toFixed(1) : null;
-
-                                                        return (
-                                                            <tr key={variant.id} className="hover:bg-slate-50/50 transition-colors">
-                                                                <td className="px-5 py-4">
-                                                                    {variant.image ? (
-                                                                        <img src={`${BASE_URL}${variant.image}`} alt={variant.name} className="w-12 h-12 object-cover rounded-lg border" />
-                                                                    ) : (
-                                                                        <div className="w-12 h-12 border-2 border-dashed border-slate-200 rounded-lg flex items-center justify-center">
-                                                                            <Package className="w-5 h-5 text-slate-300" />
-                                                                        </div>
-                                                                    )}
-                                                                </td>
-                                                                <td className="px-5 py-4 font-bold text-slate-700">{variant.name}</td>
-                                                                <td className="px-5 py-4 font-black text-slate-900">₹{variant.price}</td>
-                                                                <td className="px-5 py-4 text-slate-600">
-                                                                    {variant.costPrice ? `₹${variant.costPrice}` : <span className="text-slate-400">-</span>}
-                                                                </td>
-                                                                <td className="px-5 py-4">
-                                                                    {profit !== null ? (
-                                                                        <div className="flex flex-col">
-                                                                            <span className="font-bold text-emerald-600">₹{profit.toFixed(2)}</span>
-                                                                            <span className="text-[10px] text-emerald-600">({profitMargin}%)</span>
-                                                                        </div>
-                                                                    ) : (
-                                                                        <span className="text-slate-400">-</span>
-                                                                    )}
-                                                                </td>
-                                                                <td className={`px-5 py-4 text-right font-black ${variant.stock > 0 ? 'text-emerald-500' : 'text-red-400'}`}>
-                                                                    {variant.stock > 0 ? `${variant.stock} in stock` : 'Sold Out'}
-                                                                </td>
-                                                            </tr>
-                                                        );
-                                                    })}
-                                                </tbody>
-                                            </table>
-                                        </div>
-                                    </div>
-
-                                    {/* Info Grid */}
-                                    <div className="grid grid-cols-2 gap-4">
-                                        <div className="p-4 rounded-2xl border border-slate-100 bg-slate-50/50">
-                                            <span className="text-[10px] font-bold text-slate-400 uppercase tracking-widest block mb-1">Stock Origin</span>
-                                            <span className="font-bold text-slate-900">{selectedProduct.origin || "Not Specified"}</span>
-                                        </div>
-                                        <div className="p-4 rounded-2xl border border-slate-100 bg-slate-50/50">
-                                            <span className="text-[10px] font-bold text-slate-400 uppercase tracking-widest block mb-1">Shipping Time</span>
-                                            <span className="font-bold text-slate-900">{selectedProduct.shippingInfo || "Contact Seller"}</span>
-                                        </div>
-                                    </div>
-
-                                    {/* Actions */}
-                                    <div className="flex gap-4 pt-8 mt-auto border-t border-slate-100">
-                                        <Button
-                                            className="flex-1 h-12 rounded-xl font-bold bg-primary hover:bg-primary/90"
-                                            onClick={() => router.push(`/seller/dashboard/products/edit/${selectedProduct.id}`)}
-                                        >
-                                            <Edit className="w-4 h-4 mr-2" />
-                                            Update Product
-                                        </Button>
-                                        <Button
-                                            variant="outline"
-                                            className="h-12 w-12 rounded-xl text-red-500 border-red-100 hover:bg-red-50 hover:text-red-600 p-0"
-                                            onClick={() => { setIsViewOpen(false); handleDelete(selectedProduct.id); }}
-                                        >
-                                            <Trash2 className="w-5 h-5" />
-                                        </Button>
-                                    </div>
-                                </div>
-                            </div>
-                        </div>
-                    )}
-                </DialogContent>
-            </Dialog>
+            {/* Dialog removed – View navigates to dedicated page */}
         </div>
     );
 }

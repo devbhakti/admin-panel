@@ -378,7 +378,7 @@ export default function MyOrdersPage() {
                                                             )}
                                                         </div>
 
-                                                        <div className="flex items-center justify-between p-6 bg-slate-900 rounded-[2.5rem] text-white shadow-xl shadow-slate-900/10">
+                                                        <div className="flex items-center justify-between p-6 bg-[#794A05] rounded-[2.5rem] text-white shadow-xl shadow-[#794A05]/10">
                                                             <div className="flex items-center gap-4">
                                                                 <div className="w-14 h-14 rounded-2xl bg-white/10 flex items-center justify-center border border-white/5 backdrop-blur-sm">
                                                                     <Package className="w-7 h-7 text-orange-400" />

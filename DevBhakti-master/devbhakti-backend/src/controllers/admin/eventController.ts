@@ -11,12 +11,23 @@ export const getAllEvents = async (req: Request, res: Response) => {
         const search = req.query.search as string;
 
         const lang = getLang(req);
+        const templeId = req.query.templeId as string;
+        const date = req.query.date as string;
+
         let where: any = {};
         if (search) {
             where.OR = [
                 { name: { path: ['en'], string_contains: search } },
                 { temple: { name: { path: ['en'], string_contains: search } } }
             ];
+        }
+
+        if (templeId) {
+            where.templeId = templeId;
+        }
+
+        if (date) {
+            where.date = date;
         }
 
         const [events, total] = await Promise.all([

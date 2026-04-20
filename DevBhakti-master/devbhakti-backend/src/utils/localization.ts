@@ -89,12 +89,15 @@ export const localize = <T extends Record<string, any>>(
 
       // This is a multilingual field → pick selected lang, fallback to 'en'
       // Support both lowercase and Capitalized keys
+      // Pick selected lang, fallback in order: en -> hi -> mr
       const langVal = langObj[safeLang] || langObj[safeLang.charAt(0).toUpperCase() + safeLang.slice(1)];
-      const enVal = langObj['en'] || langObj['En'];
       
-      result[key] = (langVal !== undefined && langVal !== null && langVal !== '')
-        ? langVal
-        : enVal ?? null;
+      const getValue = (val: any) => (val !== undefined && val !== null && val !== '') ? val : null;
+
+      result[key] = getValue(langVal) || 
+                    getValue(langObj['en'] || langObj['En']) || 
+                    getValue(langObj['hi'] || langObj['Hi']) || 
+                    getValue(langObj['mr'] || langObj['Mr']);
     } else if (Array.isArray(value)) {
       // Array of values
       result[key] = value.map(item => {

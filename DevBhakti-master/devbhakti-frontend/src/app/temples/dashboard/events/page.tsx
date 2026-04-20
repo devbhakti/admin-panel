@@ -15,8 +15,10 @@ import {
     ChevronsUpDown,
     X,
     Power,
-    PowerOff
+    PowerOff,
+    Eye
 } from "lucide-react";
+import { useRouter } from "next/navigation";
 import { format } from "date-fns";
 import { cn } from "@/lib/utils";
 import { Calendar } from "@/components/ui/calendar";
@@ -69,6 +71,7 @@ import { Switch } from "@/components/ui/switch";
 import { parseLocalizedValue } from '@/utils/textUtils';
 
 export default function TempleEventsPage() {
+    const router = useRouter();
     const [events, setEvents] = useState<any[]>([]);
     const [isLoading, setIsLoading] = useState(true);
     const [searchTerm, setSearchTerm] = useState("");
@@ -400,7 +403,16 @@ export default function TempleEventsPage() {
                                             <Button
                                                 variant="ghost"
                                                 size="icon"
-                                                onClick={() => handleOpenDialog(event)}
+                                                onClick={() => router.push(`/temples/dashboard/events/${event.id}`)}
+                                                className="hover:bg-blue-50 hover:text-blue-600"
+                                                title="View Event"
+                                            >
+                                                <Eye className="w-4 h-4" />
+                                            </Button>
+                                            <Button
+                                                variant="ghost"
+                                                size="icon"
+                                                onClick={() => router.push(`/temples/dashboard/events/edit/${event.id}`)}
                                                 className="hover:bg-blue-50 hover:text-blue-600"
                                                 title="Edit Event"
                                             >

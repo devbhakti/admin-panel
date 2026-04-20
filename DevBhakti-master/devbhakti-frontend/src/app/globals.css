@@ -30,8 +30,8 @@
     --muted: 31 40% 92%;
     --muted-foreground: 0 0% 43%;
 
-    /* Deep Indigo - Accent */
-    --accent: 223 29% 26%;
+    /* Brown - Accent */
+    --accent: 24 56% 31%;
     --accent-foreground: 0 0% 100%;
 
     /* Error Red */
@@ -101,8 +101,8 @@
     --muted: 223 25% 22%;
     --muted-foreground: 0 0% 65%;
 
-    --accent: 41 68% 63%;
-    --accent-foreground: 223 29% 12%;
+    --accent: 24 56% 40%;
+    --accent-foreground: 0 0% 100%;
 
     --destructive: 0 50% 55%;
     --destructive-foreground: 0 0% 100%;

@@ -148,7 +148,7 @@ export default function SellerLoginPage() {
                                             placeholder="XXXXX XXXXX"
                                             value={phone}
                                             onChange={(e) => setPhone(e.target.value.replace(/\D/g, ''))}
-                                            className="h-14 pl-24 bg-slate-50 border-slate-200 focus:border-[#7b4623] focus:ring-[#7b4623]/10 rounded-2xl text-lg tracking-wide"
+                                            className="h-14 pl-24 bg-white border-slate-300 focus:border-[#7b4623] focus:ring-[#7b4623]/10 rounded-2xl text-lg tracking-wide"
                                             required
                                         />
                                     </div>
@@ -160,7 +160,11 @@ export default function SellerLoginPage() {
                                 <Button
                                     type="submit"
                                     disabled={loading || phone.length < 10}
-                                    className="w-full h-14 bg-gradient-to-r from-[#7b4623] to-[#a65d2e] hover:from-[#5d351a] hover:to-[#7b4623] text-white rounded-2xl text-lg font-bold shadow-lg shadow-[#7b4623]/20 transition-all hover:scale-[1.02] active:scale-[0.98]"
+                                    className={`w-full h-14 rounded-2xl text-lg font-bold shadow-lg transition-all hover:scale-[1.02] active:scale-[0.98] ${
+                                        phone.length < 10 
+                                            ? 'bg-slate-300 text-slate-500 cursor-not-allowed shadow-slate-200/30' 
+                                            : 'bg-gradient-to-r from-[#5d351a] to-[#7b4623] hover:from-[#4a2a15] hover:to-[#5d351a] text-white shadow-[#7b4623]/30'
+                                    }`}
                                 >
                                     {loading ? (
                                         <div className="flex items-center gap-2">
@@ -193,7 +197,7 @@ export default function SellerLoginPage() {
                                         <button
                                             type="button"
                                             onClick={() => setShowOtpInput(false)}
-                                            className="text-xs text-[#7b4623] font-bold hover:underline"
+                                            className="text-xs text-[#5d351a] font-bold hover:underline"
                                         >
                                             {t('seller_login.change_phone')}
                                         </button>
@@ -209,7 +213,7 @@ export default function SellerLoginPage() {
                                             placeholder="· · · · · ·"
                                             value={otp}
                                             onChange={(e) => setOtp(e.target.value)}
-                                            className="h-14 pl-12 bg-slate-50 border-slate-200 focus:border-[#7b4623] focus:ring-[#7b4623]/10 rounded-2xl text-2xl text-center tracking-[0.5em] font-bold"
+                                            className="h-14 pl-12 bg-white border-slate-300 focus:border-[#7b4623] focus:ring-[#7b4623]/10 rounded-2xl text-2xl text-center tracking-[0.5em] font-bold"
                                             required
                                         />
                                     </div>
@@ -221,7 +225,7 @@ export default function SellerLoginPage() {
                                 <Button
                                     type="submit"
                                     disabled={loading}
-                                    className="w-full h-14 bg-gradient-to-r from-[#7b4623] to-[#a65d2e] hover:from-[#5d351a] hover:to-[#7b4623] text-white rounded-2xl text-lg font-bold shadow-lg shadow-[#7b4623]/20 transition-all hover:scale-[1.02] active:scale-[0.98]"
+                                    className="w-full h-14 bg-gradient-to-r from-[#5d351a] to-[#7b4623] hover:from-[#4a2a15] hover:to-[#5d351a] text-white rounded-2xl text-lg font-bold shadow-lg shadow-[#7b4623]/30 transition-all hover:scale-[1.02] active:scale-[0.98]"
                                 >
                                     {loading ? (
                                         <div className="flex items-center gap-2">
@@ -240,7 +244,7 @@ export default function SellerLoginPage() {
                                     <button
                                         type="button"
                                         onClick={handleSendOTP}
-                                        className="text-sm text-slate-500 hover:text-[#7b4623] transition-colors"
+                                        className="text-sm text-slate-600 hover:text-[#5d351a] transition-colors font-medium"
                                     >
                                         {t('seller_login.resend_code')} <span className="font-bold underline">{t('seller_login.resend')}</span>
                                     </button>
@@ -251,7 +255,7 @@ export default function SellerLoginPage() {
                         <div className="mt-8 text-center border-t border-slate-100 pt-8">
                             <button
                                 onClick={() => router.push("/seller/staff-login")}
-                                className="text-sm font-bold text-[#7b4623] hover:underline flex items-center justify-center gap-2 mx-auto"
+                                className="text-sm font-bold text-[#5d351a] hover:underline flex items-center justify-center gap-2 mx-auto"
                             >
                                 <ShieldCheck className="w-4 h-4" />
                                 {t('seller_login.staff_login')}
@@ -261,8 +265,8 @@ export default function SellerLoginPage() {
 
                     {/* Footer Info */}
                     <div className="p-6 bg-slate-50 border-t border-slate-100 text-center">
-                        <p className="text-sm text-slate-500">
-                            {t('seller_login.footer_assistance')} <a href="mailto:admin@devbhakti.in" className="text-[#7b4623] font-bold hover:underline">admin@devbhakti.in</a>
+                        <p className="text-sm text-slate-600">
+                            {t('seller_login.footer_assistance')}                            <a href="mailto:admin@devbhakti.in" className="text-[#5d351a] font-bold hover:underline">admin@devbhakti.in</a>
                         </p>
                     </div>
                 </div>

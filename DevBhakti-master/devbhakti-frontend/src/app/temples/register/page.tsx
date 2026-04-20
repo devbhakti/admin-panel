@@ -121,8 +121,8 @@ export default function RegisterTemplePage() {
             <Navbar variant="temple" />
             {/* Decorative Background Elements */}
             <div className="fixed inset-0 overflow-hidden pointer-events-none z-0 opacity-40">
-                <div className="absolute top-1/4 -left-32 w-96 h-96 bg-primary/10 rounded-full blur-3xl animate-pulse-slow" />
-                <div className="absolute bottom-1/4 -right-32 w-80 h-80 bg-secondary/20 rounded-full blur-3xl animate-pulse-slow" />
+                <div className="absolute top-1/4 -left-32 w-100 h-100 bg-primary/10 rounded-full blur-3xl animate-pulse-slow" />
+                <div className="absolute bottom-1/4 -right-32 w-90 h-90 bg-secondary/20 rounded-full blur-3xl animate-pulse-slow" />
             </div>
 
             <main className="flex-grow relative z-10">
@@ -149,11 +149,14 @@ export default function RegisterTemplePage() {
                             initial={{ opacity: 0, y: 50 }}
                             animate={{ opacity: 1, y: 0 }}
                             transition={{ duration: 1, delay: 0.2 }}
+                            style={{ lineHeight: 1.3}}
+                              className="text-4xl sm:text-5xl md:text-6xl lg:text-7xl font-serif font-bold text-foreground mb-6"
+            
                         >
                             <div className="flex justify-center mb-6">
-                                <Logo size="xl" className="h-32 md:h-40 w-auto pointer-events-none" />
+                                <Logo size="xl" className="h-48 md:h-56 lg:h-64 w-auto pointer-events-none" />
                             </div>
-                            <h1 className="text-2xl md:text-4xl lg:text-6xl font-serif font-extrabold tracking-tight mb-8 leading-tight text-foreground">
+                            <h1 className="text-2xl md:text-4xl lg:text-6xl font-serif font-extrabold tracking-wide mb-8 leading-loose text-foreground">
                                 <span className="text-[#88542B]">{t('temple_register.hero.title_part1')}</span>
                                 <br />
                                 <span>{t('temple_register.hero.title_part2')}</span>

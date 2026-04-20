@@ -117,7 +117,7 @@ export const sendBookingReceiptEmail = async (data: BookingMailData) => {
                 <div class="content">
                     <div class="section">
                         <div class="section-title">Booking Information</div>
-                        <div class="info-row"><span class="label">Booking ID</span><span class="value">${data.bookingId}</span></div>
+                        // <div class="info-row"><span class="label">Booking ID</span><span class="value">${data.bookingId}</span></div>
                         <div class="info-row"><span class="label">Temple</span><span class="value">${data.templeName}</span></div>
                         <div class="info-row"><span class="label">Pooja Service</span><span class="value">${data.poojaName}</span></div>
                         <div class="info-row"><span class="label">Package</span><span class="value">${data.packageName}</span></div>

@@ -50,7 +50,7 @@ const MarketplaceSection: React.FC = () => {
       setIsLoading(true);
       try {
         const [productsData, favoritesRes, settingsData] = await Promise.all([
-          fetchPublicProducts({ limit: 8 }),
+          fetchPublicProducts({ limit: 8, lang: language }),
           fetchUserFavorites(),
           fetchRatingsSettings()
         ]);
@@ -210,6 +210,15 @@ const MarketplaceSection: React.FC = () => {
                         </span>
                       </div>
 
+                      {/* Out of Stock Label */}
+                      {product.variants?.every(v => v.stock === 0) && (
+                        <div className="absolute inset-0 bg-black/40 backdrop-blur-[2px] z-10 flex items-center justify-center">
+                          <span className="px-4 py-1.5 bg-red-600 text-white text-xs font-bold uppercase tracking-widest rounded-full shadow-lg">
+                            {t('marketplace.out_of_stock')}
+                          </span>
+                        </div>
+                      )}
+
                       {/* Favorite Button */}
                       <button
                         onClick={(e) => toggleFavorite(e, product.id)}
@@ -232,7 +241,7 @@ const MarketplaceSection: React.FC = () => {
 
                       <div className="flex items-center justify-between pt-3">
                         <span className="font-display font-bold text-[#794A05] text-xl">
-                          {product.variants?.[0]?.price ? formatPrice(product.variants[0].price) : "N/A"}
+                          {product.variants?.[0]?.price ? formatPrice(product.variants[0].price) : "₹0"}
                         </span>
                         {showRatings && (
                           <div className="flex items-center gap-1 bg-[#794A05]/5 px-2 py-1 rounded-full">

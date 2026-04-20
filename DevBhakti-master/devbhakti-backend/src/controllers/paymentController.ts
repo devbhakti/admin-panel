@@ -5,6 +5,8 @@ import razorpay from "../lib/razorpay";
 import { sendBookingReceiptEmail } from "../services/bookingMailService";
 import { sendWhatsAppMessage } from "../services/whatsappService";
 import { getEnglish } from "../utils/localization";
+import { generateDonationReceiptBuffer } from "./devotee/donationController";
+import { sendDonationReceiptEmail } from "../services/donationMailService";
 
 const prisma = new PrismaClient();
 
@@ -36,8 +38,39 @@ export const verifyPayment = async (req: Request, res: Response) => {
                 return res.status(400).json({ success: false, message: "Missing orderData or userId for Marketplace checkout" });
             }
 
-            const { createVerifiedOrder } = require('./marketplace/productOrderController');
-            await createVerifiedOrder(orderData, userId);
+            try {
+                const { createVerifiedOrder } = require('./marketplace/productOrderController');
+                await createVerifiedOrder(orderData, userId);
+            } catch (orderErr: any) {
+                const msg: string = orderErr?.message || "";
+
+                // Stock ran out — possibly because another user grabbed the last unit
+                if (msg.startsWith("OUT_OF_STOCK:")) {
+                    const parts = msg.split(":");
+                    // parts[2] = remaining stock count (could be 0)
+                    const remaining = parts[2] !== undefined ? Number(parts[2]) : 0;
+                    return res.status(409).json({
+                        success: false,
+                        code: "OUT_OF_STOCK",
+                        count: remaining,
+                        message: remaining === 0
+                            ? "Yeh product abhi available nahi hai (stock khatam ho gaya). Aapka payment refund ho jaayega."
+                            : `Sirf ${remaining} item(s) available hain. Aap jitna maang rahe hain utna stock nahi hai. Aapka payment refund ho jaayega.`,
+                    });
+                }
+
+                // Product was deactivated / deleted
+                if (msg.startsWith("PRODUCT_UNAVAILABLE:")) {
+                    return res.status(409).json({
+                        success: false,
+                        code: "PRODUCT_UNAVAILABLE",
+                        message: "Ek ya zyada product abhi available nahi hain. Aapka payment refund ho jaayega.",
+                    });
+                }
+
+                // Unknown order creation error — re-throw so outer catch handles it
+                throw orderErr;
+            }
         } else if (orderType === "POOJA") {
             const updatedBooking = await prisma.poojaBooking.update({
                 where: { id: referenceId },
@@ -230,6 +263,57 @@ export const verifyPayment = async (req: Request, res: Response) => {
                                 donationId: donation.id
                             }
                         });
+
+                        // Sync email to profile if missing
+                        try {
+                            const user = await prisma.user.findUnique({ where: { id: donation.userId } });
+                            if (user && !user.email) {
+                                // Check if email is already taken by someone else
+                                const existingUserWithEmail = await prisma.user.findFirst({
+                                    where: { email: donation.donorEmail }
+                                });
+
+                                if (!existingUserWithEmail) {
+                                    await prisma.user.update({
+                                        where: { id: donation.userId },
+                                        data: { email: donation.donorEmail }
+                                    });
+                                    console.log(`Synced donor email ${donation.donorEmail} to user ${donation.userId}`);
+                                } else {
+                                    console.log(`Email ${donation.donorEmail} already belongs to another user, skipping sync.`);
+                                }
+                            }
+                        } catch (syncErr) {
+                            console.error("Failed to sync donor email to profile:", syncErr);
+                        }
+                    }
+
+                    // Send Email Receipt
+                    if (donation.donorEmail) {
+                        try {
+                            const receiptData = await generateDonationReceiptBuffer(donation.id);
+                            if (receiptData) {
+                                await sendDonationReceiptEmail({
+                                    donationId: donation.id,
+                                    donorName: donation.donorName,
+                                    donorPhone: donation.donorPhone,
+                                    donorEmail: donation.donorEmail,
+                                    templeName: getEnglish(donation.temple?.name) || "Dev Bhakti",
+                                    amount: donation.amount,
+                                    status: "SUCCESSFUL",
+                                    createdAt: donation.createdAt.toISOString(),
+                                    isAnonymous: donation.isAnonymous,
+                                    is80GRequired: donation.is80GRequired,
+                                    panNumber: donation.panNumber || undefined,
+                                    address: donation.address || undefined,
+                                    message: donation.message || undefined,
+                                    displayId: donation.displayId || undefined
+                                }, receiptData.buffer);
+                                console.log(`Donation receipt email sent to ${donation.donorEmail}`);
+                            }
+                        } catch (emailErr) {
+                            console.error("Failed to send donation receipt email:", emailErr);
+                        }
                     }
 
                     if (donation.temple && donation.temple.userId) {

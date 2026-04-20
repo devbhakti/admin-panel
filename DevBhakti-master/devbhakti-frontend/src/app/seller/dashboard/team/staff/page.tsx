@@ -14,6 +14,7 @@ import {
     deleteSellerStaffMember
 } from "@/api/sellerController";
 import { useAdminAuth } from "@/hooks/use-admin-auth";
+import { useToast } from "@/hooks/use-toast";
 
 type Permission = { key: string; label: string };
 type Role = { id: string; name: string; permissions: Permission[] };
@@ -26,6 +27,7 @@ const emptyForm = { name: "", email: "", password: "", roleIds: [] as string[], 
 
 export default function SellerStaffMembersPage() {
     const { hasPermission } = useAdminAuth();
+    const { toast } = useToast();
     const [staffList, setStaffList] = useState<StaffMember[]>([]);
     const [roles, setRoles] = useState<Role[]>([]);
     const [loading, setLoading] = useState(true);
@@ -90,6 +92,7 @@ export default function SellerStaffMembersPage() {
     const handleSave = async () => {
         if (!form.name || !form.email) { setError("Name and email are required"); return; }
         if (!editingStaff && !form.password) { setError("Password is required"); return; }
+        if (form.roleIds.length === 0) { setError("Please select at least one role"); return; }
 
         setSaving(true);
         setError("");
@@ -108,15 +111,26 @@ export default function SellerStaffMembersPage() {
                 : await createSellerStaffMember(body);
 
             if (!res.success) {
-                setError(res.error || "Something went wrong");
+                setError(res.error || res.message || "Something went wrong");
                 return;
             }
 
+            toast({
+                variant: "success",
+                title: editingStaff ? "Access Updated" : "Staff Enlisted",
+                description: editingStaff 
+                    ? (form.password 
+                        ? `Security credentials updated and new password sent to ${form.email}.`
+                        : "Staff roles and profile details have been updated successfully.")
+                    : `Staff member ${form.name} has been created and login credentials sent to ${form.email}.`,
+            });
+
             setModalOpen(false);
             fetchData();
-        } catch (err) {
+        } catch (err: any) {
             console.error(err);
-            setError("Network error");
+            const apiError = err.response?.data?.error || err.response?.data?.message || "Network connection failed";
+            setError(apiError);
         } finally {
             setSaving(false);
         }
@@ -126,10 +140,15 @@ export default function SellerStaffMembersPage() {
         try {
             const res = await deleteSellerStaffMember(id);
             if (res.success) {
+                toast({
+                    title: "Access Revoked",
+                    description: "The staff member's access to the seller panel has been removed.",
+                    variant: "destructive"
+                });
                 setDeleteConfirm(null);
                 fetchData();
             } else {
-                setError(res.error || "Delete failed");
+                setError(res.error || res.message || "Delete failed");
             }
         } catch (err) {
             console.error(err);

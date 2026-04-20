@@ -124,9 +124,32 @@
       "order_total": "Order Total",
       "checkout_now": "Checkout Now",
       "secure_payments": "Secure payments powered by DevBhakti SafePay",
-      "added": "Added to cart",
+      "added": "Added to favorite",
       "removed": "Removed from favorites",
       "failed": "Action failed"
+    },
+    "order_success": {
+      "title": "Jai Shri Ram!",
+      "subtitle": "Order Placed Successfully",
+      "description": "Your sacred items have been ordered. You will receive a confirmation message soon. The respective temples and DevBhakti team will begin preparing your blessings for delivery.",
+      "continue_shopping": "Continue Shopping",
+      "view_orders": "View My Orders",
+      "authentic": "Authentic",
+      "temple_blessed": "Temple Blessed",
+      "quality": "Quality",
+      "handpicked": "Handpicked Items",
+      "fast_delivery": "Fast Delivery",
+      "pan_india": "Pan-India Shipping"
+    },
+    "checkout": {
+      "order_failed": "Order Failed",
+      "out_of_stock_title": "Item Out of Stock",
+      "out_of_stock_msg": "This product is currently out of stock. Your payment will be refunded shortly.",
+      "out_of_stock_limited": "Only {{count}} item(s) are available. The quantity you requested is not in stock. Your payment will be refunded.",
+      "product_unavailable_title": "Product Unavailable",
+      "product_unavailable_msg": "One or more products are currently unavailable. Your payment will be refunded shortly.",
+      "verification_failed": "Verification Failed",
+      "contact_support": "Please contact support if amount was deducted."
     }
   },
   "poojas": {
@@ -326,7 +349,7 @@
       "subtitle": "Sacred Temples",
       "title1": "Discover Divine ",
       "title2": "Temples",
-      "description": "Browse temples you can trust â€” curated and verified by DevBhakti",
+      "description": "Browse temples you can trust  acurated and verified by DevBhakti",
       "verified": "Verified",
       "live": "Live",
       "explore": "Explore",
@@ -636,8 +659,8 @@
   "terms": {
     "title": "Terms of Service",
     "effective_date": "Effective Date: 7 February 2026",
-    "intro_p1": "These Terms of Service (â€œTermsâ€) govern your access to and use of the DevBhakti website, mobile applications, and related services (collectively, the â€œPlatformâ€).",
-    "intro_p2": "DevBhakti is owned and operated by Divinity Labs Private Limited, a company incorporated under the Companies Act, 2013, having its registered office in India (hereinafter referred to as â€œCompanyâ€, â€œDevBhaktiâ€, â€œweâ€, â€œourâ€, or â€œusâ€).",
+    "intro_p1": "These Terms of Service ('Terms') govern your access to and use of the DevBhakti website, mobile applications, and related services (collectively, the \"Platform\").",
+    "intro_p2": "DevBhakti is owned and operated by Divinity Labs Private Limited, a company incorporated under the Companies Act, 2013, having its registered office in India (hereinafter referred to as \"Company\", \"DevBhakti\", \"we\", \"our\", or \"us\").",
     "intro_p3": "By accessing or using the Platform, you agree to be bound by these Terms.",
     "clauses": [
       {
@@ -647,7 +670,7 @@
           "Online pooja and seva bookings",
           "Live darshan access",
           "Sale of devotional products (where applicable)",
-          "(Donation-related services â€” currently not activated on the platform)"
+          "(Donation-related services - currently not activated on the platform)"
         ],
         "extra": "DevBhakti does not own, manage, operate, or control temples listed on the Platform. Temples and vendors are independent entities responsible for performing services and fulfilling obligations. DevBhakti does not guarantee religious, spiritual, or ritual outcomes."
       },
@@ -796,7 +819,7 @@
         "points": [
           "Online pooja bookings",
           "Coordination of devotional services",
-          "(Donation-related services â€” currently not activated on the platform)",
+          "(Donation-related services - currently not activated on the platform)",
           "Sale of devotional and related products (where applicable)"
         ],
         "extra": "DevBhakti does not directly perform temple services but enables bookings and transactions between users and temples/vendors."
@@ -908,11 +931,11 @@
           "Users should provide photographic evidence",
           "DevBhakti will coordinate with the shipping partner/vendor for verification"
         ],
-        "extra": "Replacement or resolution is at DevBhaktiâ€™s discretion following verification."
+        "extra": "Replacement or resolution is at DevBhakti's discretion following verification."
       },
       {
         "title": "6. Limitation of Liability",
-        "content": "DevBhaktiâ€™s liability for delivery issues is limited to:",
+        "content": "DevBhakti's liability for delivery issues is limited to:",
         "points": [
           "The transaction value paid for the item"
         ],
@@ -1197,7 +1220,7 @@
     },
     "placeholders": {
       "phone": "XXXXX XXXXX",
-      "otp": "Â· Â· Â· Â· Â· Â·"
+      "otp": "· · · · · ·"
     },
     "buttons": {
       "continue": "Continue to Dashboard",
@@ -1662,7 +1685,7 @@
     "sign_in_btn": "Sign In",
     "staff_login_prompt": "DevBhakti Admin Staff? Login Here",
     "secure_access_notif": "Secure access for authorized personnel only.",
-    "back_to_site": "â† Back to main website",
+    "back_to_site": "← Back to main website",
     "error_invalid_credentials": "Invalid email or password. Please try again."
   },
   "temple_preview": {
@@ -1821,6 +1844,9 @@
       "managed_from_en": "are managed from the English tab.",
       "list": {
         "title": "Product Management",
+        "success_update": "Product Updated Successfully",
+        "error_update": "Failed to update product",
+        "error_loading": "Error loading products",
         "desc": "Manage products, variants, and pricing.",
         "add_new": "Add New Product",
         "stat_total": "Total Products",

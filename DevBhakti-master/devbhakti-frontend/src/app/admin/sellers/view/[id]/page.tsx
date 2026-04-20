@@ -198,8 +198,10 @@ export default function ViewSellerPage() {
                 <Card className="border-none shadow-md bg-white hover:shadow-lg transition-all rounded-2xl">
                     <CardContent className="p-6 flex items-center justify-between">
                         <div>
-                            <p className="text-xs font-bold text-slate-400 uppercase tracking-wider">Commission</p>
-                            <h3 className="text-2xl font-black text-slate-900 mt-1">{seller.productCommissionRate}%</h3>
+                            <p className="text-xs font-bold text-slate-400 uppercase tracking-wider">Commission Model</p>
+                            <h3 className="text-2xl font-black text-slate-900 mt-1">
+                                {seller.commissionSlabs?.length > 0 ? "Tiered Model" : `${seller.productCommissionRate}%`}
+                            </h3>
                         </div>
                         <div className="w-12 h-12 rounded-full bg-purple-50 flex items-center justify-center text-purple-600">
                             <Layers className="w-6 h-6" />
@@ -266,6 +268,45 @@ export default function ViewSellerPage() {
                             </div>
                         </CardContent>
                     </Card>
+
+                    {/* Commission Slabs View (If any) */}
+                    {seller.commissionSlabs?.length > 0 && (
+                        <Card className="border-none shadow-md rounded-[1.5rem] overflow-hidden border-l-4 border-l-purple-500">
+                            <CardHeader className="bg-purple-50/50 border-b border-purple-100 pb-4">
+                                <CardTitle className="text-lg font-bold text-purple-900 flex items-center gap-2">
+                                    <IndianRupee className="w-5 h-5 text-purple-600" />
+                                    Commission Structure
+                                </CardTitle>
+                            </CardHeader>
+                            <CardContent className="p-0">
+                                <Table className="text-xs">
+                                    <TableHeader>
+                                        <TableRow className="hover:bg-transparent bg-purple-50/20">
+                                            <TableHead className="py-2 pl-6">Range (₹)</TableHead>
+                                            <TableHead className="py-2">Fixed</TableHead>
+                                            <TableHead className="py-2 pr-6 text-right">Rate</TableHead>
+                                        </TableRow>
+                                    </TableHeader>
+                                    <TableBody>
+                                        {seller.commissionSlabs.map((slab: any, idx: number) => (
+                                            <TableRow key={idx} className="hover:bg-purple-50/10">
+                                                <TableCell className="py-2.5 pl-6 font-medium text-slate-700">
+                                                    ₹{slab.minAmount} - {slab.maxAmount ? `₹${slab.maxAmount}` : "∞"}
+                                                </TableCell>
+                                                <TableCell className="py-2.5 text-slate-600">₹{slab.platformFee}</TableCell>
+                                                <TableCell className="py-2.5 text-right pr-6 font-bold text-purple-700">{slab.percentage}%</TableCell>
+                                            </TableRow>
+                                        ))}
+                                    </TableBody>
+                                </Table>
+                                <div className="p-4 bg-purple-50/30">
+                                    <p className="text-[10px] text-purple-600 italic">
+                                        Note: This custom structure overrides the global marketplace defaults for this seller.
+                                    </p>
+                                </div>
+                            </CardContent>
+                        </Card>
+                    )}
                 </div>
 
                 {/* Products Table Column */}

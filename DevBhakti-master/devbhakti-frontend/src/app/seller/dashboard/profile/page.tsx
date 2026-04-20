@@ -51,11 +51,11 @@ export default function SellerProfilePage() {
         fullAddress: "",
         phone: "",
         website: "",
-        shiprocketPickupNickname: "",
+        pickupLocation: "",
     });
 
     const [mainImagePreview, setMainImagePreview] = useState<string | null>(null);
-    const [heroPreviews, setHeroPreviews] = useState<string[]>([]);
+    const [heroPreviews, setHeroPreviews] = useState<any[]>([]); // Array of { url, isNew, file? }
     const [selectedMainFile, setSelectedMainFile] = useState<File | null>(null);
     const [selectedHeroFiles, setSelectedHeroFiles] = useState<File[]>([]);
 
@@ -86,20 +86,16 @@ export default function SellerProfilePage() {
                     fullAddress: data.fullAddress || "",
                     phone: data.phone || data.user?.phone || "",
                     website: data.website || "",
-                    shiprocketPickupNickname: data.shiprocketPickupNickname || "",
+                    pickupLocation: data.pickupLocation || "",
                 });
 
                 if (data.image) setMainImagePreview(`${BASE_URL}${data.image}`);
                 if (data.heroImages && Array.isArray(data.heroImages)) {
-                    setHeroPreviews(data.heroImages.map(img => `${BASE_URL}${img}`));
+                    setHeroPreviews(data.heroImages.map(img => ({ url: `${BASE_URL}${img}`, path: img, isNew: false })));
                 }
             }
         } catch (error) {
             console.error("Failed to load seller profile", error);
-            // toast({
-            //     title: "Profile Notice",
-            //     description: "Setup your store profile to go live.",
-            // });
         } finally {
             setIsLoading(false);
         }
@@ -142,8 +138,7 @@ export default function SellerProfilePage() {
             setSelectedMainFile(croppedFile);
             setMainImagePreview(URL.createObjectURL(croppedFile));
         } else {
-            setSelectedHeroFiles(prev => [...prev, croppedFile]);
-            setHeroPreviews(prev => [...prev, URL.createObjectURL(croppedFile)]);
+            setHeroPreviews(prev => [...prev, { url: URL.createObjectURL(croppedFile), file: croppedFile, isNew: true }]);
         }
         setShowCropper(false);
         setTempImage(null);
@@ -151,7 +146,6 @@ export default function SellerProfilePage() {
 
     const removeHeroImage = (index: number) => {
         setHeroPreviews(prev => prev.filter((_, i) => i !== index));
-        // Logic for backend subset removal would go here
     };
 
     const handleSubmit = async (e: React.FormEvent) => {
@@ -159,30 +153,47 @@ export default function SellerProfilePage() {
         setIsSaving(true);
         try {
             const fd = new FormData();
+            
+            // Append textual data
             Object.keys(formData).forEach(key => {
                 fd.append(key, formData[key]);
             });
 
+            // Append main image if changed
             if (selectedMainFile) {
                 fd.append('image', selectedMainFile);
             }
 
-            selectedHeroFiles.forEach(file => {
-                fd.append('heroImages', file);
+            // Append hero images: existing paths and new files
+            const existingHeroPaths = heroPreviews.filter(p => !p.isNew).map(p => p.path);
+            fd.append('existingHeroImages', JSON.stringify(existingHeroPaths));
+
+            heroPreviews.filter(p => p.isNew).forEach(p => {
+                if (p.file) fd.append('heroImages', p.file);
             });
 
             const response = await updateSellerProfile(fd);
             if (response.success) {
-                toast({ title: "Success", description: "Profile updated successfully" });
+                if (response.pendingApproval) {
+                    toast({ 
+                        title: "Pending Approval", 
+                        description: "Sensitive fields (like phone/bank) are pending admin verification. Other fields updated.",
+                    });
+                } else {
+                    toast({ 
+                        title: "Successful Update", 
+                        description: "Your store profile has been updated successfully.",
+                        variant: "success"
+                    });
+                }
                 loadProfile(); // Refresh data
                 setSelectedMainFile(null);
-                setSelectedHeroFiles([]);
             }
         } catch (error: any) {
             console.error("Update Profile Error:", error);
             toast({
                 title: "Error",
-                description: "Failed to update profile",
+                description: error.response?.data?.message || "Failed to update profile",
                 variant: "destructive",
             });
         } finally {
@@ -378,6 +389,39 @@ export default function SellerProfilePage() {
 
                 {/* Information Controls Section */}
                 <div className="lg:col-span-8 space-y-8">
+                    {/* Seller Personal Information */}
+                    <Card className="border-none shadow-[0_8px_30px_rgb(0,0,0,0.04)] rounded-[2rem] overflow-hidden bg-white">
+                        <CardHeader className="bg-gradient-to-r from-[#7b4623]/5 to-[#a65d2e]/5 border-b pb-5 px-10 pt-8">
+                            <div className="flex items-center justify-between">
+                                <CardTitle className="text-xl font-bold font-serif text-slate-900 flex items-center gap-3">
+                                    <Store className="w-6 h-6 text-[#7b4623]" />
+                                    Seller Information
+                                </CardTitle>
+                                <Badge variant="outline" className="rounded-full border-slate-200 bg-slate-50 text-slate-600 font-bold px-4 py-1">
+                                    Account Details
+                                </Badge>
+                            </div>
+                        </CardHeader>
+                        <CardContent className="p-10 space-y-6">
+                            <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
+                                <div className="space-y-3">
+                                    <Label className="text-xs font-extrabold text-slate-400 tracking-widest uppercase ml-1">Seller Name</Label>
+                                    <div className="flex items-center gap-3 p-4 bg-slate-50 rounded-2xl border border-slate-100/50">
+                                        <Store className="w-5 h-5 text-[#7b4623]" />
+                                        <span className="text-lg font-bold text-slate-700">{profile?.user?.name || 'Not available'}</span>
+                                    </div>
+                                </div>
+                                <div className="space-y-3">
+                                    <Label className="text-xs font-extrabold text-slate-400 tracking-widest uppercase ml-1">Email Address</Label>
+                                    <div className="flex items-center gap-3 p-4 bg-slate-50 rounded-2xl border border-slate-100/50">
+                                        <Mail className="w-5 h-5 text-[#7b4623]" />
+                                        <span className="text-lg font-bold text-slate-700">{profile?.user?.email || 'Not available'}</span>
+                                    </div>
+                                </div>
+                            </div>
+                        </CardContent>
+                    </Card>
+
                     {/* Basic Store info */}
                     <Card className="border-none shadow-[0_8px_30px_rgb(0,0,0,0.04)] rounded-[2rem] overflow-hidden bg-white">
                         <CardHeader className="bg-slate-50/50 border-b pb-5 px-10 pt-8">
@@ -511,8 +555,8 @@ export default function SellerProfilePage() {
                                 <div className="space-y-3">
                                     <Label className="text-xs font-extrabold text-[#0070F3] tracking-widest uppercase ml-1">Shiprocket Pickup Nickname *</Label>
                                     <Input
-                                        value={formData.shiprocketPickupNickname}
-                                        onChange={e => setFormData({ ...formData, shiprocketPickupNickname: e.target.value })}
+                                        value={formData.pickupLocation}
+                                        onChange={e => setFormData({ ...formData, pickupLocation: e.target.value })}
                                         className="h-12 border-[#0070F3]/10 bg-white focus:border-[#0070F3] focus:ring-[#0070F3]/10 text-slate-900 rounded-2xl text-sm font-bold transition-all"
                                         placeholder="e.g. PRIMARY_WAREHOUSE"
                                     />

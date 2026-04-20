@@ -8,7 +8,9 @@ import {
     Trash2,
     Upload,
     X,
-    Crop
+    Crop,
+    Eye,
+    Languages
 } from "lucide-react";
 import { ImageCropper } from "@/components/admin/ImageCropper";
 import { Button } from "@/components/ui/button";
@@ -70,6 +72,10 @@ export default function FeaturesPage() {
     const [showCropper, setShowCropper] = useState(false);
     const [tempImage, setTempImage] = useState<string | null>(null);
     const [cropType, setCropType] = useState<"icon" | "bg">("bg");
+
+    const [isPreviewOpen, setIsPreviewOpen] = useState(false);
+    const [previewFeature, setPreviewFeature] = useState<any>(null);
+    const [previewTab, setPreviewTab] = useState("en");
 
     useEffect(() => {
         loadFeatures();
@@ -165,6 +171,12 @@ export default function FeaturesPage() {
         }
         setShowCropper(false);
         setTempImage(null);
+    };
+
+    const handleOpenPreview = (feature: any) => {
+        setPreviewFeature(feature);
+        setPreviewTab(language as string || "en");
+        setIsPreviewOpen(true);
     };
 
     const handleSubmit = async (e: React.FormEvent) => {
@@ -350,7 +362,14 @@ export default function FeaturesPage() {
                                     </TableCell>
                                     <TableCell>{feature.order}</TableCell>
                                     <TableCell className="text-right">
-                                        <div className="flex justify-end gap-2">
+                                            <Button
+                                                variant="ghost"
+                                                size="icon"
+                                                onClick={() => handleOpenPreview(feature)}
+                                                title="View Feature"
+                                            >
+                                                <Eye className="w-4 h-4 text-emerald-600" />
+                                            </Button>
                                             <Button
                                                 variant="ghost"
                                                 size="icon"
@@ -365,7 +384,6 @@ export default function FeaturesPage() {
                                             >
                                                 <Trash2 className="w-4 h-4 text-destructive" />
                                             </Button>
-                                        </div>
                                     </TableCell>
                                 </TableRow>
                             ))}
@@ -515,6 +533,102 @@ export default function FeaturesPage() {
                         </DialogFooter>
 
                     </form>
+                </DialogContent>
+            </Dialog>
+
+            {/* Preview Dialog */}
+            <Dialog open={isPreviewOpen} onOpenChange={setIsPreviewOpen}>
+                <DialogContent className="sm:max-w-[900px] p-0 overflow-hidden bg-background border-none shadow-2xl rounded-2xl">
+                    {previewFeature && (
+                        <div className="flex flex-col h-full">
+                            {/* Modal Header */}
+                            <div className="flex items-center justify-between px-6 py-4 bg-background border-b border-orange-100">
+                                <div className="flex items-center gap-3">
+                                    <div className="p-2 bg-orange-100/50 rounded-lg">
+                                        <Eye className="w-5 h-5 text-orange-600" />
+                                    </div>
+                                    <div>
+                                        <h2 className="text-xl font-bold text-slate-900">Feature Details</h2>
+                                        <p className="text-xs text-slate-500 font-medium">CMS Content Verification</p>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <div className="grid grid-cols-1 lg:grid-cols-3 gap-0 bg-background">
+                                {/* Left Column - Images */}
+                                <div className="lg:col-span-1 p-6 space-y-6 bg-background border-r border-orange-100 min-h-[400px]">
+                                    <div className="space-y-4">
+                                        <h3 className="text-[10px] font-bold text-slate-400 uppercase tracking-widest">Background Image</h3>
+                                        <div className="aspect-[4/5] rounded-2xl overflow-hidden border border-orange-100/50 bg-white shadow-inner">
+                                            <img
+                                                src={previewFeature.image?.startsWith('http') ? previewFeature.image : `${BASE_URL}${previewFeature.image}`}
+                                                alt="Background"
+                                                className="w-full h-full object-cover"
+                                            />
+                                        </div>
+                                    </div>
+
+                                    <div className="space-y-4 pt-4 border-t border-orange-100">
+                                        <h3 className="text-[10px] font-bold text-slate-400 uppercase tracking-widest">Feature Icon</h3>
+                                        <div className="w-24 h-24 mx-auto rounded-3xl bg-white border border-orange-100 flex items-center justify-center p-5 shadow-sm">
+                                            <img
+                                                src={previewFeature.icon?.startsWith('http') ? previewFeature.icon : `${BASE_URL}${previewFeature.icon}`}
+                                                alt="Icon"
+                                                className="w-full h-full object-contain"
+                                            />
+                                        </div>
+                                    </div>
+
+                                    <div className="pt-4 border-t border-orange-100">
+                                        <div className="flex items-center justify-between text-xs">
+                                            <span className="text-slate-500 font-medium">Display Order:</span>
+                                            <Badge variant="outline" className="font-bold border-orange-200 text-orange-700 bg-orange-100/30">{previewFeature.order}</Badge>
+                                        </div>
+                                    </div>
+                                </div>
+
+                                {/* Right Column - Localized Tabs */}
+                                <div className="lg:col-span-2 p-6 bg-orange-50/20">
+                                    <Tabs value={previewTab} onValueChange={setPreviewTab} className="w-full h-full">
+                                        <div className="flex items-center justify-between mb-6 bg-white p-2 rounded-xl border border-orange-100 shadow-sm">
+                                            <div className="flex items-center gap-2 px-3 text-slate-500 font-bold text-xs uppercase tracking-widest">
+                                                <Languages className="w-4 h-4" /> Multi-Language
+                                            </div>
+                                            <TabsList className="bg-background border border-orange-100">
+                                                <TabsTrigger value="en" className="data-[state=active]:bg-white data-[state=active]:shadow-sm text-xs font-bold px-4">English</TabsTrigger>
+                                                <TabsTrigger value="hi" className="data-[state=active]:bg-white data-[state=active]:shadow-sm text-xs font-bold px-4">हिंदी</TabsTrigger>
+                                                <TabsTrigger value="mr" className="data-[state=active]:bg-white data-[state=active]:shadow-sm text-xs font-bold px-4">मराठी</TabsTrigger>
+                                            </TabsList>
+                                        </div>
+
+                                        {["en", "hi", "mr"].map((l) => (
+                                            <TabsContent key={l} value={l} className="space-y-6 mt-0 animate-in fade-in-50 duration-300">
+                                                {/* Localized Title */}
+                                                <div className="bg-white border border-orange-100 rounded-2xl p-6 shadow-sm border-l-4 border-l-orange-500">
+                                                    <h3 className="text-[10px] font-bold text-slate-400 uppercase tracking-widest mb-1">Feature Title ({l.toUpperCase()})</h3>
+                                                    <h2 className="text-2xl font-black text-slate-800 leading-tight">
+                                                        {getLocalized(previewFeature, 'title', l as Language)}
+                                                    </h2>
+                                                </div>
+
+                                                {/* Localized Description */}
+                                                <div className="bg-white border border-orange-100 rounded-2xl p-8 shadow-sm">
+                                                    <h3 className="text-[10px] font-bold text-slate-400 uppercase tracking-widest mb-4 border-b border-orange-50 pb-4">
+                                                        Description / Content ({l.toUpperCase()})
+                                                    </h3>
+                                                    <p className="text-slate-600 leading-relaxed font-semibold text-lg whitespace-pre-wrap">
+                                                        {getLocalized(previewFeature, 'description', l as Language) || (
+                                                            <span className="italic text-slate-400">No content provided in this language.</span>
+                                                        )}
+                                                    </p>
+                                                </div>
+                                            </TabsContent>
+                                        ))}
+                                    </Tabs>
+                                </div>
+                            </div>
+                        </div>
+                    )}
                 </DialogContent>
             </Dialog>
         </div>

@@ -55,7 +55,7 @@ function BookingForm() {
   const searchParams = useSearchParams();
   const { toast } = useToast();
   const router = useRouter();
-  const { t } = useLanguage();
+  const { t, language } = useLanguage();
 
   // Skip Step 1 if temple and pooja are already in the URL
   const initialStep = (searchParams.get("temple") && searchParams.get("pooja")) ? 2 : 1;
@@ -161,8 +161,11 @@ function BookingForm() {
       try {
         const poojaIdInUrl = searchParams.get("pooja");
         const [templesData, poojasData] = await Promise.all([
-          fetchPublicTemples(poojaIdInUrl ? { poojaId: poojaIdInUrl } : undefined),
-          fetchPublicPoojas()
+          fetchPublicTemples({ 
+            ...(poojaIdInUrl ? { poojaId: poojaIdInUrl } : {}),
+            lang: language 
+          }),
+          fetchPublicPoojas({ lang: language })
         ]);
         setAllTemples(templesData);
         setAllPoojas(poojasData);
@@ -173,7 +176,7 @@ function BookingForm() {
           const user = JSON.parse(savedUser);
           setFormData(prev => ({
             ...prev,
-            name: user.name || "",
+            name: parseLocalizedValue(user.name, language) || "",
             phone: (user.phone || "").replace(/\D/g, "").slice(-10),
             email: user.email || "",
             gothra: user.gothra || "",
@@ -213,9 +216,7 @@ function BookingForm() {
         const response = await fetch(`${API_URL}/temples/poojas?templeId=${selectedTemple}`);
         const data = await response.json();
         if (data.success) {
-          // Merge or replace? For the selector, we just need the ones for this temple
           setAllPoojas(prev => {
-            // Filter out existing poojas for this temple to avoid duplicates
             const others = prev.filter(p => p.templeId !== selectedTemple);
             return [...others, ...data.data];
           });
@@ -227,6 +228,29 @@ function BookingForm() {
 
     loadTemplePoojas();
   }, [selectedTemple]);
+
+  // ID Resolution: When temple changes or poojas are loaded, sync the selected pooja with its temple-specific version
+  useEffect(() => {
+    if (!selectedTemple || !selectedPooja) return;
+
+    const currentPoojaData = allPoojas.find(p => p.id === selectedPooja || p.slug === selectedPooja);
+    if (!currentPoojaData) return;
+
+    // If it's already a temple-specific pooja for the CORRECT temple, do nothing
+    if (currentPoojaData.templeId === selectedTemple) return;
+
+    // Resolve master ID (it's either the pooja itself if it'sMaster, or its masterPoojaId)
+    const masterId = currentPoojaData.isMaster ? currentPoojaData.id : currentPoojaData.masterPoojaId;
+    if (!masterId) return;
+
+    // Look for this master pooja's copy in the currently selected temple
+    const templeSpecificPooja = allPoojas.find(p => p.templeId === selectedTemple && p.masterPoojaId === masterId);
+    
+    if (templeSpecificPooja && templeSpecificPooja.id !== selectedPooja) {
+      console.log(`Switching selection to temple-specific pooja: ${templeSpecificPooja.id}`);
+      setSelectedPooja(templeSpecificPooja.id);
+    }
+  }, [selectedTemple, allPoojas]);
 
   const availablePoojas = selectedTemple
     ? allPoojas.filter(p => p.templeId === selectedTemple)
@@ -441,7 +465,11 @@ function BookingForm() {
               if (verifyData.success) {
                 setBookingId(res.data.id);
                 setStep(5); // Show confirmation
-                toast({ title: t("booking_client.toast_booking_confirmed"), description: t("booking_client.toast_booking_confirmed_desc") });
+                toast({ 
+                  title: t("booking_client.toast_booking_confirmed"), 
+                  description: t("booking_client.toast_booking_confirmed_desc"),
+                  variant: "success"
+                });
               }
 
             } catch (error) {
@@ -1272,7 +1300,7 @@ function BookingForm() {
 }
 
 export default function BookingClient() {
-  const { t } = useLanguage();
+  const { t, language } = useLanguage();
   return (
     <Suspense fallback={<div className="min-h-screen flex items-center justify-center font-serif text-xl text-primary/60 animate-pulse">{t("common.loading")}</div>}>
       <BookingForm />

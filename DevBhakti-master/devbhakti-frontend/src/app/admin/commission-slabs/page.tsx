@@ -117,6 +117,10 @@ export default function CommissionSlabsPage() {
             if (data.success) {
                 fetchSlabs();
                 setEditingId(null);
+                setIsCreating(false);
+                if (activeCategory !== 'DONATION') {
+                    setFormData({ minAmount: '0', maxAmount: '', platformFee: '0', percentage: '' });
+                }
                 alert('Updated successfully!');
             }
         } catch (error) {

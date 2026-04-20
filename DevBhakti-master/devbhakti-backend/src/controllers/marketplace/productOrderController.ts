@@ -173,6 +173,29 @@ export const createVerifiedOrder = async (orderData: any, userId: string) => {
         commissionAmount = commissionResult.totalCommission;
       }
 
+      // ✅ Atomic Stock Reservation — runs BEFORE writing any order records
+      // Single UPDATE per variant: reserves stock only if available (race-condition safe)
+      for (const item of groupItems) {
+        const rowsAffected = await tx.$executeRaw`
+          UPDATE "ProductVariant"
+          SET stock = stock - ${item.quantity}
+          WHERE id = ${item.variantId}
+            AND stock >= ${item.quantity}
+            AND "isActive" = true
+        `;
+
+        if (rowsAffected === 0) {
+          const variant = await tx.productVariant.findUnique({
+            where: { id: item.variantId },
+            select: { stock: true, isActive: true }
+          });
+          if (!variant || !variant.isActive) {
+            throw new Error(`PRODUCT_UNAVAILABLE:${item.variantId}`);
+          }
+          throw new Error(`OUT_OF_STOCK:${item.variantId}:${(variant.stock ?? 0)}`);
+        }
+      }
+
       const subOrder = await tx.subOrder.create({
         data: {
           orderId: order.id,
@@ -207,14 +230,6 @@ export const createVerifiedOrder = async (orderData: any, userId: string) => {
             description: `Earning from Order #${order.id.slice(-6).toUpperCase()}`,
             status: "COMPLETED"
           }
-        });
-      }
-
-      // Update Stock
-      for (const item of groupItems) {
-        await tx.productVariant.update({
-          where: { id: item.variantId },
-          data: { stock: { decrement: item.quantity } },
         });
       }
 

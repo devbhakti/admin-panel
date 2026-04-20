@@ -236,6 +236,39 @@ export const updateMyTempleProfile = async (req: Request, res: Response) => {
       return res.status(404).json({ success: false, message: 'Temple not found' });
     }
 
+    // ─── Trustee (Admin User) Info Update ───────────────────────────────────
+    const adminName  = data.adminName  ? String(data.adminName).trim()  : null;
+    const adminEmail = data.adminEmail ? String(data.adminEmail).trim() : null;
+    const adminPhone = data.adminPhone ? String(data.adminPhone).trim() : null;
+
+    const userUpdatePayload: any = {};
+    let trusteeInfoChanged = false;
+
+    if (adminName  && adminName  !== temple.user?.name)  { userUpdatePayload.name  = adminName;  trusteeInfoChanged = true; }
+    if (adminEmail && adminEmail !== temple.user?.email) { userUpdatePayload.email = adminEmail; trusteeInfoChanged = true; }
+    if (adminPhone) {
+      const normalizedAdminPhone = normalizePhone(adminPhone);
+      if (normalizedAdminPhone !== temple.user?.phone) {
+        const conflict = await prisma.user.findFirst({
+          where: { phone: normalizedAdminPhone, id: { not: temple.userId } }
+        });
+        if (conflict) {
+          return res.status(400).json({ success: false, message: `Phone ${normalizedAdminPhone} is already registered. Use a different number.` });
+        }
+        userUpdatePayload.phone = normalizedAdminPhone;
+        trusteeInfoChanged = true;
+      }
+    }
+
+    if (trusteeInfoChanged && Object.keys(userUpdatePayload).length > 0) {
+      await prisma.user.update({ where: { id: temple.userId }, data: userUpdatePayload });
+      notifyAdmins({
+        title: '\uD83D\uDD14 Temple Trustee Info Updated',
+        body: `${getEnglish(temple.name) || 'A Temple'} has updated their trustee (account) information.`,
+        data: { link: '/admin/temples', type: 'TRUSTEE_UPDATE' }
+      }).catch((err: any) => console.error('Trustee notification error:', err));
+    }
+
     // Validate Phone if provided
     if (data.phone) {
       const cleaned = data.phone.replace(/\D/g, '');
@@ -280,11 +313,11 @@ export const updateMyTempleProfile = async (req: Request, res: Response) => {
       const currentHeroImagesCount = temple.heroImages ? (temple.heroImages as string[]).length : 0;
       const totalHeroImages = currentHeroImagesCount + newHeroImagesCount;
 
-      if (totalHeroImages > 5) {
-        return res.status(400).json({ success: false, message: `Maximum 5 banners allowed. You already have ${currentHeroImagesCount} and tried to add ${newHeroImagesCount}.` });
+      if (totalHeroImages > 10) {
+        return res.status(400).json({ success: false, message: `Maximum 10 gallery images allowed. You already have ${currentHeroImagesCount} and tried to add ${newHeroImagesCount}.` });
       }
 
-      const allFiles = [...(files.image || []), ...(files.heroImages || []), ...(files.gallery || [])];
+      const allFiles = [...(files.image || []), ...(files.heroImages || [])];
       for (const file of allFiles) {
         if (file.size > MAX_SIZE) {
           return res.status(400).json({ success: false, message: `Image ${file.originalname} is too large. Max 2MB allowed.` });
@@ -359,12 +392,7 @@ export const updateMyTempleProfile = async (req: Request, res: Response) => {
       hasSensitiveChanges = true;
     }
 
-    const newGallery = files && files['gallery'] ? getFilePaths(files, 'gallery') : null;
-    if (newGallery && newGallery.length > 0) {
-      sensitiveChanges['gallery'] = newGallery;
-      oldSensitiveData['gallery'] = temple.gallery;
-      hasSensitiveChanges = true;
-    }
+    // Note: gallery field removed — heroImages now serves as the gallery
 
     // Check textual fields
     for (const key in fieldMapping) {
@@ -470,6 +498,11 @@ export const updateMyTempleProfile = async (req: Request, res: Response) => {
       }
 
       return res.json({ success: true, data: updatedTemple, message: 'Profile updated successfully' });
+    }
+
+    // If only trustee info was changed, still return success
+    if (trusteeInfoChanged) {
+      return res.json({ success: true, message: 'Trustee information updated successfully.' });
     }
 
     res.json({ success: true, message: 'No changes detected' });

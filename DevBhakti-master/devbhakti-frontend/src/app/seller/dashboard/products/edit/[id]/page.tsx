@@ -152,7 +152,7 @@ export default function EditSellerProductPage() {
                         width: p.width ? p.width.toString() : "",
                         height: p.height ? p.height.toString() : "",
                     });
-                    setVariants(p.variants.map((v: any) => ({
+                    setVariants(p.variants.filter((v: any) => v.isActive !== false).map((v: any) => ({
                         id: v.id,
                         name_en: getL(v.name, "en"),
                         name_hi: getL(v.name, "hi"),
@@ -418,14 +418,14 @@ export default function EditSellerProductPage() {
                                             </div>
 
                                             <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-                                                <div className="space-y-2">
+                                                {/* <div className="space-y-2">
                                                     <Label htmlFor={`origin_${lang}`}>Origin ({lang.toUpperCase()})</Label>
                                                     <Input id={`origin_${lang}`} value={(formData as any)[`origin_${lang}`]} onChange={(e) => setFormData({ ...formData, [`origin_${lang}`]: e.target.value })} />
                                                 </div>
                                                 <div className="space-y-2">
                                                     <Label htmlFor={`shippingInfo_${lang}`}>Shipping Label ({lang.toUpperCase()})</Label>
                                                     <Input id={`shippingInfo_${lang}`} value={(formData as any)[`shippingInfo_${lang}`]} onChange={(e) => setFormData({ ...formData, [`shippingInfo_${lang}`]: e.target.value })} />
-                                                </div>
+                                                </div> */}
                                                 <div className="space-y-2">
                                                     <Label htmlFor="rating">Base Rating (1-5)</Label>
                                                     <Input
@@ -444,10 +444,10 @@ export default function EditSellerProductPage() {
                                                 <Label htmlFor={`highlights_${lang}`}>Highlights ({lang.toUpperCase()})</Label>
                                                 <Textarea id={`highlights_${lang}`} value={(formData as any)[`highlights_${lang}`]} onChange={(e) => setFormData({ ...formData, [`highlights_${lang}`]: e.target.value })} rows={2} />
                                             </div>
-                                            <div className="space-y-2">
+                                            {/* <div className="space-y-2">
                                                 <Label htmlFor={`longDescription_${lang}`}>Detailed Description ({lang.toUpperCase()})</Label>
                                                 <Textarea id={`longDescription_${lang}`} value={(formData as any)[`longDescription_${lang}`]} onChange={(e) => setFormData({ ...formData, [`longDescription_${lang}`]: e.target.value })} rows={6} />
-                                            </div>
+                                            </div> */}
                                         </CardContent>
                                     </Card>
                                 </TabsContent>

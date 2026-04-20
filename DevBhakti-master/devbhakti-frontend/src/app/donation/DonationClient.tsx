@@ -53,6 +53,7 @@ import { API_URL } from "@/config/apiConfig";
 import axios from "axios";
 import { downloadDonationReceipt } from "@/api/userController";
 import { notifyFailedPayment } from "@/api/adminController";
+import { parseLocalizedValue } from "@/utils/textUtils";
 
 declare global {
     interface Window {
@@ -64,7 +65,7 @@ function DonationForm() {
     const searchParams = useSearchParams();
     const router = useRouter();
     const { toast } = useToast();
-    const { t: baseT } = useLanguage();
+    const { language, t: baseT } = useLanguage();
     const t = (key: string) => baseT(`donation.${key}`);
 
     const [step, setStep] = useState(searchParams.get("temple") ? 2 : 1);
@@ -98,7 +99,8 @@ function DonationForm() {
 
     React.useEffect(() => {
         const loadTemples = async () => {
-            const data = await fetchPublicTemples();
+       
+            const data = await fetchPublicTemples({ lang: language });
             setTemples(data);
         };
         loadTemples();
@@ -109,12 +111,12 @@ function DonationForm() {
             const user = JSON.parse(savedUser);
             setFormData(prev => ({
                 ...prev,
-                name: user.name || "",
+                name: parseLocalizedValue(user.name, language) || "",
                 phone: (user.phone || "").replace(/\D/g, "").slice(-10),
                 email: user.email || "",
             }));
         }
-    }, []);
+    }, [language]);
 
     const finalAmount = customAmount || amount;
 
@@ -171,7 +173,7 @@ function DonationForm() {
             if (!formData.email.trim()) {
                 newErrors.email = "Email address is required";
                 missingFields.push(t("step3.labels.email_address"));
-            } else if (!/\S+@\S+\.\S+/.test(formData.email)) {
+            } else if (!/^[A-Z0-9._%+-]+@[A-Z0-9.-]+\.[A-Z]{2,}$/i.test(formData.email)) {
                 newErrors.email = "Invalid email format";
                 missingFields.push(t("step3.labels.email_address") + " (Invalid)");
             }
@@ -268,7 +270,7 @@ function DonationForm() {
                             toast({
                                 title: t("toasts.success_title"),
                                 description: t("toasts.success_desc"),
-                                className: "bg-green-600 text-white border-none"
+                                variant: "success"
                             });
                         } else {
                             toast({ title: t("toasts.verification_failed"), description: verifyData.message, variant: "destructive" });

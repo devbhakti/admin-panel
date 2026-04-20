@@ -81,48 +81,45 @@ export default function SellersManagementPage() {
         const seller = sellers.find(s => s.id === sellerId);
         if (!seller) return;
 
-        const warningMessage = `⚠️ DELETE SELLER: ${seller.storeName}
+        // Show warning toast instead of popup
+        toast({
+            title: " Seller Deletion Warning",
+            description: `This will permanently delete ${seller.storeName} and all associated data including ${seller.totalProducts || 0} products and ${seller.totalOrders || 0} orders. Click delete again to confirm.`,
+            variant: "destructive",
+            action: (
+                <Button
+                    variant="destructive"
+                    size="sm"
+                    onClick={async () => {
+                        try {
+                            const response = await deleteSellerAdmin(sellerId);
 
-This action will permanently delete:
-• Seller Profile: ${seller.name}
-• ${seller.totalProducts || 0} Products
-• ${seller.totalOrders || 0} Orders
-• All ledger entries and financial records
-• All withdrawal requests
+                            // Show detailed success message
+                            const deletedData = response?.deletedData;
+                            let successMessage = "Seller deleted successfully";
 
-❌ THIS ACTION CANNOT BE UNDONE!
+                            if (deletedData) {
+                                successMessage = `Deleted: ${deletedData.seller}, ${deletedData.productsDeleted} products, ${deletedData.ordersDeleted} orders, ${deletedData.ledgerEntriesDeleted} ledger entries, ${deletedData.withdrawalsDeleted} withdrawal requests`;
+                            }
 
-Are you sure you want to proceed?`;
-
-        if (window.confirm(warningMessage)) {
-            try {
-                const response = await deleteSellerAdmin(sellerId);
-
-                // Show detailed success message
-                const deletedData = response?.deletedData;
-                let successMessage = "Seller deleted successfully";
-
-                if (deletedData) {
-                    successMessage = `Deleted: ${deletedData.seller}\n` +
-                        `• ${deletedData.productsDeleted} products\n` +
-                        `• ${deletedData.ordersDeleted} orders\n` +
-                        `• ${deletedData.ledgerEntriesDeleted} ledger entries\n` +
-                        `• ${deletedData.withdrawalsDeleted} withdrawal requests`;
-                }
-
-                toast({
-                    title: "✅ Seller Deleted",
-                    description: successMessage
-                });
-                loadSellers(); // Refresh list
-            } catch (error: any) {
-                toast({
-                    title: "Error",
-                    description: error.message || "Failed to delete seller",
-                    variant: "destructive",
-                });
-            }
-        }
+                            toast({
+                                title: " Seller Deleted",
+                                description: successMessage
+                            });
+                            loadSellers(); // Refresh list
+                        } catch (error: any) {
+                            toast({
+                                title: "Error",
+                                description: error.message || "Failed to delete seller",
+                                variant: "destructive",
+                            });
+                        }
+                    }}
+                >
+                    Delete
+                </Button>
+            ),
+        });
     };
 
     const handleToggleStatus = async (id: string, currentStatus: string) => {

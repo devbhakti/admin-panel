@@ -20,34 +20,23 @@ export type Language = 'en' | 'hi' | 'mr';
 export function getLocalized(
   obj: any,
   field: string,
-  lang: Language = 'en',
-  fallbackLang: Language = 'en'
+  lang: Language = 'en'
 ): string {
   if (!obj) return "";
 
-  const localizedKey = `${field}_${lang}`;
-  const fallbackKey = `${field}_${fallbackLang}`;
+  const getValue = (l: string) => {
+    const val = obj[`${field}_${l}`];
+    return (val && String(val).trim() !== "") ? String(val) : null;
+  };
 
-  // 1. Try to get the requested language value
-  const value = obj[localizedKey];
-  if (value && String(value).trim() !== "") {
-    return value;
-  }
-
-  // 2. If lang is already the fallback, or if requested lang is empty, return fallback
-  const fallbackValue = obj[fallbackKey];
-  if (fallbackValue && String(fallbackValue).trim() !== "") {
-    return fallbackValue;
-  }
-
-  // 3. Last resort fallback to legacy field 'name' or 'description' if they exist (for backward compatibility)
-  if (obj[field]) {
-    // If it's a string, it might be a JSON object string or a plain string
-    // Use parseLocalizedValue for robust handling
-    return parseLocalizedValue(obj[field], lang);
-  }
-
-  return "";
+  // 1. Try requested lang
+  // 2. Fallback to en -> hi -> mr
+  // 3. Last resort check legacy field
+  return getValue(lang) || 
+         getValue('en') || 
+         getValue('hi') || 
+         getValue('mr') || 
+         (obj[field] ? parseLocalizedValue(obj[field], lang) : "");
 }
 
 /**
@@ -56,27 +45,38 @@ export function getLocalized(
 export function getLocalizedArray(
   obj: any,
   field: string,
-  lang: Language = 'en',
-  fallbackLang: Language = 'en'
+  lang: Language = 'en'
 ): string[] {
   if (!obj) return [];
 
-  const localizedKey = `${field}_${lang}`;
-  const fallbackKey = `${field}_${fallbackLang}`;
+  const getArrayValue = (val: any, l: string): string[] | null => {
+    if (!val) return null;
+    
+    // 1. If it's already an array, use it directly (flattened response)
+    if (Array.isArray(val)) return val.length > 0 ? val : null;
+    
+    // 2. If it's an object, look for the language key
+    if (typeof val === 'object') {
+       const lValue = val[l] || val['en'] || val['hi'] || val['mr'];
+       return Array.isArray(lValue) ? (lValue.length > 0 ? lValue : null) : null;
+    }
 
-  const value = obj[localizedKey];
-  if (Array.isArray(value) && value.length > 0) {
-    return value;
-  }
+    // 3. If it's a string, try JSON parse
+    if (typeof val === 'string' && val.trim().startsWith('[')) {
+        try {
+            const parsed = JSON.parse(val);
+            if (Array.isArray(parsed)) return parsed.length > 0 ? parsed : null;
+        } catch (e) {}
+    }
 
-  const fallbackValue = obj[fallbackKey];
-  if (Array.isArray(fallbackValue) && fallbackValue.length > 0) {
-    return fallbackValue;
-  }
+    return null;
+  };
 
-  if (Array.isArray(obj[field])) {
-    return obj[field];
-  }
+  // Check {field}_{lang} format (name_en) OR {field} object format (name: {en: ...})
+  const topLevelVal = obj[`${field}_${lang}`] || obj[`${field}_en`] || obj[`${field}_hi`] || obj[`${field}_mr`];
+  const nestedVal = obj[field];
 
-  return [];
+  return getArrayValue(topLevelVal, lang) || 
+         getArrayValue(nestedVal, lang) || 
+         [];
 }

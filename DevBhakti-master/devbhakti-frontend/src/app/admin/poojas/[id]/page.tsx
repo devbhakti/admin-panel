@@ -111,7 +111,7 @@ export default function ViewPoojaPage() {
                     </div>
 
                     {/* Quick Info Card */}
-                    <div className="bg-card border rounded-lg p-6 space-y-4">
+                    <div className="bg-white border border-orange-100 rounded-xl p-6 space-y-4 shadow-sm">
                         <h3 className="font-semibold text-lg">Quick Info</h3>
 
                         <div className="space-y-3">
@@ -160,7 +160,7 @@ export default function ViewPoojaPage() {
                 {/* Right Column - Detailed Info with Tabs */}
                 <div className="lg:col-span-2 space-y-6">
                     <Tabs value={language} onValueChange={(v) => setLanguage(v as Language)} className="w-full">
-                        <div className="flex items-center justify-between mb-4 bg-slate-50 p-2 rounded-xl border border-slate-100">
+                        <div className="flex items-center justify-between mb-4 bg-background p-2 rounded-xl border border-orange-100 shadow-sm">
                             <div className="flex items-center gap-2 px-2 text-slate-500 font-bold text-sm">
                                 <Languages className="w-4 h-4" /> Localized Content View
                             </div>
@@ -181,7 +181,7 @@ export default function ViewPoojaPage() {
 
                                 {/* About */}
                                 {parseLocalizedValue(pooja.about, l) !== "N/A" && (
-                                    <div className="bg-card border rounded-lg p-6 shadow-sm">
+                                    <div className="bg-white border border-orange-100 rounded-xl p-6 shadow-sm border-l-4 border-l-orange-400">
                                         <h3 className="font-semibold text-lg mb-3">About</h3>
                                         <p className="text-muted-foreground leading-relaxed">
                                             {parseLocalizedValue(pooja.about, l)}
@@ -210,7 +210,7 @@ export default function ViewPoojaPage() {
                     </Tabs>
 
                     {/* Common Content (Not translated) */}
-                    <div className="bg-card border rounded-lg p-6 shadow-sm">
+                    <div className="bg-white border border-orange-100 rounded-xl p-6 shadow-sm">
                         <h3 className="font-semibold text-lg mb-4">Packages (Common)</h3>
                         {pooja.packages && pooja.packages.en && pooja.packages.en.length > 0 ? (
                             <div className="grid gap-4">

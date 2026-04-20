@@ -33,8 +33,10 @@ const CTASection: React.FC = () => {
 
   const fetchCTACards = async () => {
     try {
-      const response = await axios.get(`${API_URL}/admin/cms/cta-cards`);
-      const activeCards = response.data.data.filter((card: CTACard) => card.active);
+      const response = await axios.get(`${API_URL}/admin/cms/cta-cards`, {
+        params: { lang: language }
+      });
+      const activeCards = response.data.data.filter((card: any) => card.active);
       setCTACards(activeCards.slice(0, 2)); // Only show first 2 active cards
     } catch (error) {
       console.error("Error fetching CTA cards:", error);

@@ -186,7 +186,7 @@ export default function ProductDetailsPage() {
     setIsLoading(true);
     setError(null);
     try {
-      const data = await fetchProductByIdPublic(id);
+      const data = await fetchProductByIdPublic(id, language);
       setProduct(data);
       if (data.variants.length > 0) {
         setSelectedVariant(data.variants[0].id);

@@ -201,7 +201,8 @@ function BookingsContent() {
             if (res && res.success) {
                 toast({
                     title: `Booking ${status === 'BOOKED' ? 'Accepted' : (status === 'COMPLETED' ? 'Completed' : 'Rejected')}`,
-                    description: res.message
+                    description: res.message,
+                    variant: status === 'COMPLETED' ? 'success' : 'default'
                 });
                 loadBookings(currentPage);
                 setSelectedBooking(null);

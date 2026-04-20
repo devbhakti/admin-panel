@@ -369,7 +369,7 @@ export default function CreateProductPage() {
                     </div>
 
                     <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                      <div className="space-y-2">
+                      {/* <div className="space-y-2">
                         <Label htmlFor={`origin-${lang}`}>{t("admin.products.origin")}</Label>
                         <Input
                           id={`origin-${lang}`}
@@ -377,8 +377,8 @@ export default function CreateProductPage() {
                           onChange={(e) => setFormData({ ...formData, [f("origin", lang)]: e.target.value })}
                           placeholder={lang === "en" ? "e.g., India, Varanasi, Haridwar" : `${t("admin.products.origin")}...`}
                         />
-                      </div>
-                      <div className="space-y-2">
+                      </div> */}
+                      {/* <div className="space-y-2">
                         <Label htmlFor={`shippingInfo-${lang}`}>{t("admin.products.shipping_label")}</Label>
                         <Input
                           id={`shippingInfo-${lang}`}
@@ -386,7 +386,7 @@ export default function CreateProductPage() {
                           onChange={(e) => setFormData({ ...formData, [f("shippingInfo", lang)]: e.target.value })}
                           placeholder={lang === "en" ? "Ships in 24-48 Hours" : `${t("admin.products.shipping_label")}...`}
                         />
-                      </div>
+                      </div> */}
                     </div>
                   </CardContent>
                 </Card>

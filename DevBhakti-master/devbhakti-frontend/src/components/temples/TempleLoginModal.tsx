@@ -75,6 +75,7 @@ export default function TempleLoginModal({ onClose }: TempleLoginModalProps) {
             toast({
                 title: t('messages.welcome_back'),
                 description: t('messages.success'),
+                variant: 'success',
             });
             onClose();
             router.push("/temples/dashboard");

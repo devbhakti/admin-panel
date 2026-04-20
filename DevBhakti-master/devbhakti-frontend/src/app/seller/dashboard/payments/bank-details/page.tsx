@@ -175,7 +175,7 @@ export default function BankDetailsPage() {
                                         onChange={handleChange}
                                         disabled={verificationPending}
                                         placeholder="e.g. Rahul Kumar"
-                                        className="h-12 pl-11 rounded-xl bg-slate-50 border-slate-200 focus:bg-white transition-all font-bold text-slate-900 disabled:opacity-70 disabled:cursor-not-allowed"
+                                        className="h-12 pl-11 rounded-xl bg-slate-50 border-slate-200 focus:bg-white transition-all font-bold text-slate-900 placeholder:text-slate-400 disabled:opacity-70 disabled:cursor-not-allowed"
                                     />
                                 </div>
                             </div>
@@ -190,7 +190,7 @@ export default function BankDetailsPage() {
                                         onChange={handleChange}
                                         disabled={verificationPending}
                                         placeholder="e.g. 12345678901234"
-                                        className="h-12 pl-11 rounded-xl bg-slate-50 border-slate-200 focus:bg-white transition-all font-mono font-bold text-slate-900 disabled:opacity-70 disabled:cursor-not-allowed"
+                                        className="h-12 pl-11 rounded-xl bg-slate-50 border-slate-200 focus:bg-white transition-all font-mono font-bold text-slate-900 placeholder:text-slate-400 disabled:opacity-70 disabled:cursor-not-allowed"
                                     />
                                 </div>
                             </div>
@@ -206,7 +206,7 @@ export default function BankDetailsPage() {
                                             onChange={handleChange}
                                             disabled={verificationPending}
                                             placeholder="HDFC0001234"
-                                            className="h-12 pl-11 rounded-xl bg-slate-50 border-slate-200 focus:bg-white transition-all font-mono uppercase font-bold text-slate-900 disabled:opacity-70 disabled:cursor-not-allowed"
+                                            className="h-12 pl-11 rounded-xl bg-slate-50 border-slate-200 focus:bg-white transition-all font-mono uppercase font-bold text-slate-900 placeholder:text-slate-400 disabled:opacity-70 disabled:cursor-not-allowed"
                                             maxLength={11}
                                         />
                                     </div>
@@ -219,7 +219,7 @@ export default function BankDetailsPage() {
                                         onChange={handleChange}
                                         disabled={verificationPending}
                                         placeholder="e.g. HDFC Bank"
-                                        className="h-12 rounded-xl bg-slate-50 border-slate-200 focus:bg-white transition-all font-bold text-slate-900 disabled:opacity-70 disabled:cursor-not-allowed"
+                                        className="h-12 rounded-xl bg-slate-50 border-slate-200 focus:bg-white transition-all font-bold text-slate-900 placeholder:text-slate-400 disabled:opacity-70 disabled:cursor-not-allowed"
                                     />
                                 </div>
                             </div>
@@ -232,7 +232,7 @@ export default function BankDetailsPage() {
                                     onChange={handleChange}
                                     disabled={verificationPending}
                                     placeholder="e.g. rahul@upi"
-                                    className="h-12 rounded-xl bg-slate-50 border-slate-200 focus:bg-white transition-all font-bold text-slate-900 disabled:opacity-70 disabled:cursor-not-allowed"
+                                    className="h-12 rounded-xl bg-slate-50 border-slate-200 focus:bg-white transition-all font-bold text-slate-900 placeholder:text-slate-400 disabled:opacity-70 disabled:cursor-not-allowed"
                                 />
                             </div>
                         </CardContent>

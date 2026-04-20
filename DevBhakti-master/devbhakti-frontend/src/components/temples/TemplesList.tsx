@@ -90,7 +90,7 @@ export function TemplesList() {
 
   const fetchInitialOptions = async () => {
     try {
-      const data = await fetchPublicFilters();
+      const data = await fetchPublicFilters(language);
       if (data) {
         setAllOptions({
           categories: ["All", ...(data.categories || [])],

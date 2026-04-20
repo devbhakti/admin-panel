@@ -211,7 +211,7 @@ export default function EditProductPage() {
         height: data.height?.toString() || "",
       });
       setVariants(
-        (data.variants || []).map((v: any) => ({
+        (data.variants || []).filter((v: any) => v.isActive !== false).map((v: any) => ({
           id: v.id,
           name_en: v.name?.en || v.name_en || "",
           name_hi: v.name?.hi || v.name_hi || "",
@@ -420,7 +420,7 @@ export default function EditProductPage() {
                       />
                     </div>
 
-                    <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                    {/* <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                       <div className="space-y-2">
                         <Label>{t("admin.products.origin")}</Label>
                         <Input
@@ -437,7 +437,7 @@ export default function EditProductPage() {
                           placeholder={lang === "en" ? "Ships in 24-48 Hours" : `${t("admin.products.shipping_label")}...`}
                         />
                       </div>
-                    </div>
+                    </div> */}
                   </CardContent>
                 </Card>
 

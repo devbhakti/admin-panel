@@ -20,7 +20,7 @@ import {
     ChevronRight,
     Package,
     Store,
-    Youtube,
+    Video,
     ExternalLink as ExternalLinkIcon,
     Languages
 } from "lucide-react";
@@ -512,7 +512,7 @@ export default function ViewTemplePage() {
                         <Card className="border-none shadow-sm overflow-hidden">
                             <CardContent className="p-8 space-y-6">
                                 <h2 className="text-2xl font-bold flex items-center gap-2 text-slate-800">
-                                    <Youtube className="w-6 h-6 text-red-600" />
+                                    <Video className="w-6 h-6 text-red-600" />
                                     Sacred Video Gallery
                                 </h2>
                                 <div className="grid grid-cols-1 md:grid-cols-2 gap-6">

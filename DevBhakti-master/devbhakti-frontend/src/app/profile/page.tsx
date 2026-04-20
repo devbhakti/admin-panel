@@ -44,11 +44,12 @@ import { format } from "date-fns";
 import { cn } from "@/lib/utils";
 import { clearAllTokens } from "@/lib/auth-utils";
 import { useLanguage } from "@/context/LanguageContext";
+import { parseLocalizedValue } from "@/utils/textUtils";
 
 const ProfilePage = () => {
     const { toast } = useToast();
     const router = useRouter();
-    const { t } = useLanguage();
+    const { t, language } = useLanguage();
     const fileInputRef = useRef<HTMLInputElement>(null);
 
     const [user, setUser] = useState<any>(null);
@@ -100,7 +101,7 @@ const ProfilePage = () => {
                 const u = response.data.user;
                 setUser(u);
                 setFormData({
-                    name: u.name || "",
+                    name: parseLocalizedValue(u.name, language) || "",
                     email: u.email || "",
                     gothra: u.gothra || "",
                     kuldevi: u.kuldevi || "",
@@ -202,6 +203,7 @@ const ProfilePage = () => {
                 toast({
                     title: t('profile.messages.success_title'),
                     description: t('profile.messages.success_desc'),
+                    variant: 'success',
                 });
             }
         } catch (error: any) {
@@ -301,7 +303,7 @@ const ProfilePage = () => {
                                 <div className="relative mb-6 group">
                                     <div className="w-32 h-32 md:w-40 md:h-40 rounded-full border-4 border-orange-50 bg-orange-50 overflow-hidden shadow-inner relative">
                                         {profilePreview ? (
-                                            <img src={profilePreview} alt={user.name} className="w-full h-full object-cover" />
+                                            <img src={profilePreview} alt={parseLocalizedValue(user.name, language)} className="w-full h-full object-cover" />
                                         ) : (
                                             <div className="w-full h-full flex items-center justify-center bg-orange-100 text-orange-400">
                                                 <User className="w-16 h-16" />
@@ -323,7 +325,7 @@ const ProfilePage = () => {
                                     )}
                                 </div>
 
-                                <h3 className="text-2xl font-bold text-slate-900 mb-1">{user.name}</h3>
+                                <h3 className="text-2xl font-bold text-slate-900 mb-1">{parseLocalizedValue(user.name, language)}</h3>
                                 <div className="flex items-center gap-1.5 text-slate-500 text-sm mb-6">
                                     <Phone className="w-3.5 h-3.5" />
                                     {user.phone}
@@ -384,7 +386,7 @@ const ProfilePage = () => {
                                                     <p className="text-xs font-bold text-slate-400 uppercase tracking-widest ml-1">{t('profile.fields.name')}</p>
                                                     <div className="flex items-center gap-3 p-4 bg-slate-50 rounded-2xl border border-slate-100/50">
                                                         <User className="w-5 h-5 text-primary" />
-                                                        <span className="text-lg font-bold text-slate-700">{user.name}</span>
+                                                        <span className="text-lg font-bold text-slate-700">{parseLocalizedValue(user.name, language)}</span>
                                                     </div>
                                                 </div>
                                                 <div className="space-y-1.5">
@@ -545,7 +547,7 @@ const ProfilePage = () => {
                                             </div>
 
                                             {/* Donations Section */}
-                                            {/* <div className="pt-6">
+                                             <div className="pt-6">
                                                 <div className="flex items-center gap-3 mb-6">
                                                     <Heart className="w-5 h-5 text-orange-600" />
                                                     <h4 className="font-bold text-lg text-slate-800">Your Sacred Donations</h4>
@@ -620,7 +622,7 @@ const ProfilePage = () => {
                                                         </div>
                                                     )}
                                                 </div>
-                                            </div> */}
+                                            </div> 
 
 
                                             <div className="pt-6">

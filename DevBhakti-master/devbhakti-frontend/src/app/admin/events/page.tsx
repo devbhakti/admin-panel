@@ -15,7 +15,8 @@ import {
     X,
     Power,
     PowerOff,
-    Eye
+    Eye,
+    Languages
 } from "lucide-react";
 import { format } from "date-fns";
 import { hi } from "date-fns/locale";
@@ -58,6 +59,13 @@ import {
     CommandItem,
 } from "@/components/ui/command";
 import { Switch } from "@/components/ui/switch";
+import {
+    Select,
+    SelectContent,
+    SelectItem,
+    SelectTrigger,
+    SelectValue,
+} from "@/components/ui/select";
 import { fetchAllEventsAdmin, fetchAllTemplesAdmin, createEventAdmin, updateEventAdmin, deleteEventAdmin, fetchAllPoojasAdmin, toggleEventStatusAdmin, fetchEventByIdAdmin } from "@/api/adminController";
 import { useToast } from "@/hooks/use-toast";
 import {
@@ -81,6 +89,8 @@ export default function AdminEventsPage() {
     const [temples, setTemples] = useState<any[]>([]);
     const [isLoading, setIsLoading] = useState(true);
     const [searchTerm, setSearchTerm] = useState("");
+    const [filterTempleId, setFilterTempleId] = useState("all");
+    const [filterDate, setFilterDate] = useState<Date | undefined>(undefined);
     const debouncedSearch = useDebounce(searchTerm, 500);
     const [isDialogOpen, setIsDialogOpen] = useState(false);
     const [editingEvent, setEditingEvent] = useState<any>(null);
@@ -139,11 +149,11 @@ export default function AdminEventsPage() {
 
     useEffect(() => {
         loadEvents(1);
-    }, [debouncedSearch]);
+    }, [debouncedSearch, filterTempleId, filterDate]);
 
     useEffect(() => {
         loadEvents(currentPage);
-    }, [currentPage]);
+    }, [currentPage]);  
 
     useEffect(() => {
         loadTemples();
@@ -200,6 +210,8 @@ export default function AdminEventsPage() {
                 page,
                 limit: itemsPerPage,
                 search: debouncedSearch,
+                templeId: filterTempleId === 'all' ? undefined : filterTempleId,
+                date: filterDate ? format(filterDate, "yyyy-MM-dd") : undefined,
             });
 
             if (res.success) {
@@ -333,9 +345,25 @@ export default function AdminEventsPage() {
     const [isViewDialogOpen, setIsViewDialogOpen] = useState(false);
     const [viewingEvent, setViewingEvent] = useState<any>(null);
 
-    const handleViewEvent = (event: any) => {
-        setViewingEvent(event);
-        setIsViewDialogOpen(true);
+    const [viewTab, setViewTab] = useState<Language>("en");
+
+    const handleViewEvent = async (event: any) => {
+        try {
+            // Fetch full raw data to get all language fields for the tabbed view
+            const response = await fetchEventByIdAdmin(event.id);
+            if (response.success && response.data) {
+                setViewingEvent(response.data);
+                setViewTab(language as Language);
+                setIsViewDialogOpen(true);
+            }
+        } catch (error) {
+            console.error("Error fetching event for view:", error);
+            toast({
+                title: "Error",
+                description: "Failed to fetch event details",
+                variant: "destructive",
+            });
+        }
     };
 
     const handleDelete = async (id: string) => {
@@ -402,9 +430,9 @@ export default function AdminEventsPage() {
 
             </div>
 
-            {/* Search */}
+            {/* Search and Filters */}
             <div className="flex flex-col md:flex-row gap-4">
-                <div className="relative flex-1">
+                <div className="relative flex-[2]">
                     <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
                     <Input
                         placeholder={t('admin.events.search_placeholder') || "Search by event name or temple..."}
@@ -412,7 +440,58 @@ export default function AdminEventsPage() {
                         value={searchTerm}
                         onChange={(e) => setSearchTerm(e.target.value)}
                     />
+                </div>
 
+                {/* Temple Filter */}
+                <div className="flex-1">
+                    <Select value={filterTempleId} onValueChange={setFilterTempleId}>
+                        <SelectTrigger className="w-full bg-white">
+                            <SelectValue placeholder="All Temples" />
+                        </SelectTrigger>
+                        <SelectContent>
+                            <SelectItem value="all">All Temples</SelectItem>
+                            {temples.map((temple) => (
+                                <SelectItem key={temple.id} value={temple.id}>
+                                    {parseLocalizedValue(temple.name, language)}
+                                </SelectItem>
+                            ))}
+                        </SelectContent>
+                    </Select>
+                </div>
+
+                {/* Date Filter */}
+                <div className="flex-1">
+                    <Popover>
+                        <PopoverTrigger asChild>
+                            <Button
+                                variant={"outline"}
+                                className={cn(
+                                    "w-full justify-start text-left font-normal bg-white",
+                                    !filterDate && "text-muted-foreground"
+                                )}
+                            >
+                                <CalendarIcon className="mr-2 h-4 w-4" />
+                                {filterDate ? format(filterDate, "PPP") : <span>Filter by Date</span>}
+                                {filterDate && (
+                                    <X 
+                                        className="ml-auto h-4 w-4 opacity-50 hover:opacity-100" 
+                                        onClick={(e) => {
+                                            e.stopPropagation();
+                                            setFilterDate(undefined);
+                                        }}
+                                    />
+                                )}
+                            </Button>
+                        </PopoverTrigger>
+                        <PopoverContent className="w-auto p-0" align="end">
+                            <Calendar
+                                mode="single"
+                                selected={filterDate}
+                                onSelect={setFilterDate}
+                                initialFocus
+                            />
+                        </PopoverContent>
+                    </Popover>
                 </div>
             </div>
 
@@ -626,125 +705,128 @@ export default function AdminEventsPage() {
 
             {/* View Event Dialog */}
             <Dialog open={isViewDialogOpen} onOpenChange={setIsViewDialogOpen}>
-                <DialogContent className="sm:max-w-[600px]">
-                    <DialogHeader>
-                        <DialogTitle className="flex items-center gap-2">
-                            <Eye className="w-5 h-5 text-green-600" />
-                            {t('admin.events.view_event') || "Event Details"}
-                        </DialogTitle>
-                        <DialogDescription>
-                            {t('admin.events.view_event_desc') || "Complete information about this event"}
-                        </DialogDescription>
-                    </DialogHeader>
-                    
+                <DialogContent className="sm:max-w-[800px] p-0 overflow-hidden bg-background border-none shadow-2xl rounded-2xl">
                     {viewingEvent && (
-                        <div className="space-y-6 py-4">
-                            {/* Event Name */}
-                            <div className="space-y-2">
-                                <Label className="text-sm font-semibold text-muted-foreground flex items-center gap-2">
-                                    <CalendarIcon className="w-4 h-4" />
-                                    {t('admin.events.table_event') || "Event Name"}
-                                </Label>
-                                <p className="text-base font-medium">{getLocalized(viewingEvent, 'name', language as Language)}</p>
-                            </div>
-
-                            {/* Temple Information */}
-                            <div className="space-y-2">
-                                <Label className="text-sm font-semibold text-muted-foreground flex items-center gap-2">
-                                    <MapPin className="w-4 h-4" />
-                                    {t('admin.events.table_temple') || "Temple"}
-                                </Label>
-                                <p className="text-base">
-                                    {viewingEvent.temple ? (
-                                        getLocalized(viewingEvent.temple, 'name', language as Language)
-                                    ) : (
-                                        <Badge variant="secondary" className="bg-slate-50 text-slate-500 border-slate-200">
-                                            {t('admin.events.global_temple') || "General Event"}
-                                        </Badge>
-                                    )}
-                                </p>
-                            </div>
-
-                            {/* Date and Time */}
-                            <div className="space-y-2">
-                                <Label className="text-sm font-semibold text-muted-foreground flex items-center gap-2">
-                                    <Clock className="w-4 h-4" />
-                                    {t('admin.events.table_datetime') || "Date & Time"}
-                                </Label>
-                                <div className="flex items-center gap-4">
-                                    <Badge variant="outline" className="text-sm">
-                                        {viewingEvent.date}
-                                    </Badge>
-                                    {viewingEvent.time && (
-                                        <Badge variant="outline" className="text-sm">
-                                            {viewingEvent.time}
-                                        </Badge>
-                                    )}
+                        <div className="flex flex-col h-full">
+                            {/* Modal Header */}
+                            <div className="flex items-center justify-between px-6 py-4 bg-background border-b border-orange-100">
+                                <div className="flex items-center gap-3">
+                                    <div className="p-2 bg-orange-100/50 rounded-lg">
+                                        <Eye className="w-5 h-5 text-orange-600" />
+                                    </div>
+                                    <div>
+                                        <h2 className="text-xl font-bold text-slate-900">{t('admin.events.view_event') || "Event Details"}</h2>
+                                        <p className="text-xs text-slate-500 font-medium">{t('admin.events.view_event_desc') || "Complete information about this event"}</p>
+                                    </div>
                                 </div>
                             </div>
 
-                            {/* About the Event */}
-                            <div className="space-y-3">
-                                <Label className="text-base font-semibold text-foreground flex items-center gap-2">
-                                    <CalendarIcon className="w-4 h-4 text-primary" />
-                                    {t('admin.events.about_event') || "About the Event"}
-                                </Label>
-                                <div className="bg-gradient-to-r from-blue-50 to-indigo-50 p-4 rounded-lg border border-blue-200">
-                                    <p className="text-sm text-gray-800 leading-relaxed">
-                                        {getLocalized(viewingEvent, 'description', language as Language) || 
-                                         (t('admin.events.no_description') || "No description available")}
-                                    </p>
-                                </div>
-                            </div>
+                            <div className="grid grid-cols-1 lg:grid-cols-3 gap-0 bg-background">
+                                {/* Left Column - Event Metadata */}
+                                <div className="lg:col-span-1 p-6 space-y-6 bg-background border-r border-orange-100 min-h-[400px]">
+                                    {/* Temple Info */}
+                                    <div className="space-y-2">
+                                        <h3 className="text-[10px] font-bold text-slate-400 uppercase tracking-widest">{t('admin.events.table_temple') || "Temple"}</h3>
+                                        <div className="flex items-center gap-2 p-3 bg-white border border-orange-100 rounded-xl shadow-sm">
+                                            <MapPin className="w-4 h-4 text-orange-500" />
+                                            <span className="text-sm font-medium">
+                                                {viewingEvent.temple ? getLocalized(viewingEvent.temple, 'name', language as Language) : "General Event"}
+                                            </span>
+                                        </div>
+                                    </div>
 
-                            {/* Recommended Poojas */}
-                            <div className="space-y-3">
-                                <Label className="text-base font-semibold text-foreground flex items-center gap-2">
-                                    <Sparkles className="w-4 h-4 text-amber-600" />
-                                    {t('admin.events.recommended_poojas') || "Recommended Poojas"}
-                                </Label>
-                                <div className="bg-gradient-to-r from-amber-50 to-orange-50 p-4 rounded-lg border border-amber-200">
-                                    {viewingEvent.Pooja && viewingEvent.Pooja.length > 0 ? (
-                                        <div className="space-y-2">
-                                            <div className="flex flex-wrap gap-2">
-                                                {viewingEvent.Pooja.map((pooja: any) => (
-                                                    <Badge key={pooja.id} variant="secondary" className="bg-white text-amber-800 border-amber-300 px-3 py-1">
-                                                        <Sparkles className="w-3 h-3 mr-1" />
-                                                        {getLocalized(pooja, 'name', language as Language)}
-                                                    </Badge>
-                                                ))}
+                                    {/* Date and Time */}
+                                    <div className="space-y-2">
+                                        <h3 className="text-[10px] font-bold text-slate-400 uppercase tracking-widest">{t('admin.events.table_datetime') || "Date & Time"}</h3>
+                                        <div className="grid grid-cols-1 gap-2">
+                                            <div className="flex items-center gap-2 p-3 bg-white border border-orange-100 rounded-xl shadow-sm">
+                                                <CalendarIcon className="w-4 h-4 text-orange-500" />
+                                                <span className="text-sm font-medium">{viewingEvent.date}</span>
                                             </div>
-                                            <p className="text-xs text-amber-700 mt-2">
-                                                {t('admin.events.poojas_count', { count: viewingEvent.Pooja.length }) || 
-                                                 `${viewingEvent.Pooja.length} poojas recommended for this event`}
-                                            </p>
+                                            {viewingEvent.time && (
+                                                <div className="flex items-center gap-2 p-3 bg-white border border-orange-100 rounded-xl shadow-sm">
+                                                    <Clock className="w-4 h-4 text-orange-500" />
+                                                    <span className="text-sm font-medium">{viewingEvent.time}</span>
+                                                </div>
+                                            )}
                                         </div>
-                                    ) : (
-                                        <div className="text-center py-3">
-                                            <Sparkles className="w-8 h-8 text-amber-400 mx-auto mb-2" />
-                                            <p className="text-sm text-amber-700">
-                                                {t('admin.events.no_poojas_recommended') || "No poojas recommended yet"}
-                                            </p>
-                                        </div>
-                                    )}
-                                </div>
-                            </div>
+                                    </div>
 
-                            {/* Status */}
-                            <div className="space-y-2">
-                                <Label className="text-sm font-semibold text-muted-foreground">
-                                    {t('admin.events.table_status') || "Status"}
-                                </Label>
-                                <div className="flex items-center gap-2">
-                                    <Badge variant={viewingEvent.status ? "default" : "secondary"}>
-                                        {viewingEvent.status ? (t('admin.poojas.status_active') || "Active") : (t('admin.poojas.status_paused') || "Inactive")}
-                                    </Badge>
+                                    {/* Recommended Poojas */}
+                                    <div className="space-y-3">
+                                        <h3 className="text-[10px] font-bold text-slate-400 uppercase tracking-widest">{t('admin.events.recommended_poojas') || "Recommended Rituals"}</h3>
+                                        <div className="bg-white border border-orange-100 rounded-xl p-4 shadow-sm min-h-[100px] flex flex-col items-center justify-center">
+                                            {viewingEvent.Pooja && viewingEvent.Pooja.length > 0 ? (
+                                                <div className="flex flex-wrap gap-2 w-full">
+                                                    {viewingEvent.Pooja.map((pooja: any) => (
+                                                        <Badge key={pooja.id} variant="secondary" className="bg-orange-50 text-orange-800 border-orange-200 px-3 py-1 text-[10px]">
+                                                            <Sparkles className="w-3 h-3 mr-1" />
+                                                            {getLocalized(pooja, 'name', language as Language)}
+                                                        </Badge>
+                                                    ))}
+                                                </div>
+                                            ) : (
+                                                <div className="text-center space-y-1">
+                                                    <Sparkles className="w-6 h-6 text-orange-200 mx-auto" />
+                                                    <p className="text-[10px] text-slate-400">No poojas recommended</p>
+                                                </div>
+                                            )}
+                                        </div>
+                                    </div>
+
+                                    {/* Status */}
+                                    <div className="pt-4 border-t border-orange-100">
+                                        <div className="flex items-center justify-between text-xs">
+                                            <span className="text-slate-500 font-medium">Status:</span>
+                                            <Badge variant={viewingEvent.status ? "default" : "secondary"} className={viewingEvent.status ? "bg-green-100 text-green-700 hover:bg-green-200" : ""}>
+                                                {viewingEvent.status ? "Active" : "Inactive"}
+                                            </Badge>
+                                        </div>
+                                    </div>
+                                </div>
+
+                                {/* Right Column - Localized Tabs */}
+                                <div className="lg:col-span-2 p-6 bg-orange-50/20">
+                                    <Tabs value={viewTab} onValueChange={(v) => setViewTab(v as Language)} className="w-full h-full">
+                                        <div className="flex items-center justify-between mb-6 bg-white p-2 rounded-xl border border-orange-100 shadow-sm">
+                                            <div className="flex items-center gap-2 px-3 text-slate-500 font-bold text-xs uppercase tracking-widest">
+                                                <Languages className="w-4 h-4" /> Multi-Language
+                                            </div>
+                                            <TabsList className="bg-background border border-orange-100">
+                                                <TabsTrigger value="en" className="data-[state=active]:bg-white data-[state=active]:shadow-sm text-xs font-bold px-4">English</TabsTrigger>
+                                                <TabsTrigger value="hi" className="data-[state=active]:bg-white data-[state=active]:shadow-sm text-xs font-bold px-4">हिंदी</TabsTrigger>
+                                                <TabsTrigger value="mr" className="data-[state=active]:bg-white data-[state=active]:shadow-sm text-xs font-bold px-4">मराठी</TabsTrigger>
+                                            </TabsList>
+                                        </div>
+
+                                        {["en", "hi", "mr"].map((l) => (
+                                            <TabsContent key={l} value={l} className="space-y-6 mt-0 animate-in fade-in-50 duration-300">
+                                                {/* Localized Name */}
+                                                <div className="bg-white border border-orange-100 rounded-2xl p-6 shadow-sm border-l-4 border-l-orange-500">
+                                                    <h3 className="text-[10px] font-bold text-slate-400 uppercase tracking-widest mb-1">{t('admin.events.table_event')} ({l.toUpperCase()})</h3>
+                                                    <h2 className="text-2xl font-black text-slate-800 leading-tight">
+                                                        {getLocalized(viewingEvent, 'name', l as Language)}
+                                                    </h2>
+                                                </div>
+
+                                                {/* Localized Description */}
+                                                <div className="bg-white border border-orange-100 rounded-2xl p-8 shadow-sm">
+                                                    <h3 className="text-[10px] font-bold text-slate-400 uppercase tracking-widest mb-4 border-b border-orange-50 pb-4">
+                                                        {t('admin.events.about_event')} ({l.toUpperCase()})
+                                                    </h3>
+                                                    <p className="text-slate-600 leading-relaxed font-semibold text-lg whitespace-pre-wrap">
+                                                        {getLocalized(viewingEvent, 'description', l as Language) || (
+                                                            <span className="italic text-slate-400">No description provided in this language.</span>
+                                                        )}
+                                                    </p>
+                                                </div>
+                                            </TabsContent>
+                                        ))}
+                                    </Tabs>
                                 </div>
                             </div>
                         </div>
                     )}
-
-                
                 </DialogContent>
             </Dialog>
 

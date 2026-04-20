@@ -179,8 +179,37 @@ export const updateStaffMember = async (req: Request, res: Response) => {
       },
     });
 
+    // --- Send Email Notification if Password was Changed ---
+    if (password) {
+      const emailSubject = 'Your DevBhakti Staff Password Has Been Updated';
+      const emailHtml = `
+        <div style="font-family: Arial, sans-serif; color: #333; line-height: 1.6;">
+          <h2 style="color: #4A90E2;">Security Alert: Password Updated</h2>
+          <p>Hi <strong>${updated.name}</strong>,</p>
+          <p>An administrator has updated the security credentials for your staff account. Below is your new password:</p>
+          <div style="background-color: #f9f9f9; padding: 15px; border-radius: 5px; border: 1px solid #ddd; margin: 20px 0;">
+            <p style="margin: 0;"><strong>Email:</strong> ${updated.email}</p>
+            <p style="margin: 0;"><strong>New Password:</strong> ${password}</p>
+          </div>
+          <p>If you did not expect this change, please contact your administrator immediately.</p>
+          <br />
+          <p>Best Regards,<br /><strong>The DevBhakti Team</strong></p>
+        </div>
+      `;
+      
+      const emailResult = await sendEmail(updated.email, emailSubject, '', emailHtml);
+      if (!emailResult.success) {
+        console.error("Failed to send password update notification:", emailResult.error);
+      }
+    }
+    // -----------------------------------------------------
+
     const { password: _, ...staffData } = updated;
-    return res.json({ success: true, data: staffData });
+    return res.json({ 
+      success: true, 
+      message: password ? 'Staff updated and new password sent via email' : 'Staff updated successfully',
+      data: staffData 
+    });
   } catch (error) {
     console.error('Update staff error:', error);
     return res.status(500).json({ error: 'Internal server error' });

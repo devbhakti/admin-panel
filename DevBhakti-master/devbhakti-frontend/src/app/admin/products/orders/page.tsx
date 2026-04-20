@@ -653,12 +653,28 @@ function AdminOrdersContent() {
                                                                 <TableCell className="font-extrabold text-[#794A05] text-right pr-6">₹{item.price.toLocaleString()}</TableCell>
                                                             </TableRow>
                                                         ))}
-                                                        <TableRow className="hover:bg-transparent border-t-2 border-slate-50">
-                                                            <TableCell colSpan={3} className="pt-4 pb-4 pr-4 text-right">
+                                                        <TableRow className="hover:bg-transparent border-t border-slate-50">
+                                                            <TableCell colSpan={3} className="pt-2 pb-1 pr-4 text-right">
                                                                 <span className="text-[10px] font-extrabold text-slate-400 uppercase tracking-widest">{t("admin.orders.subtotal")}</span>
                                                             </TableCell>
-                                                            <TableCell className="pt-4 pb-4 pr-6 text-right font-extrabold text-xl text-slate-900">
+                                                            <TableCell className="pt-2 pb-1 pr-6 text-right font-extrabold text-slate-900">
                                                                 ₹{sub.totalAmount.toLocaleString()}
+                                                            </TableCell>
+                                                        </TableRow>
+                                                        <TableRow className="hover:bg-transparent border-none">
+                                                            <TableCell colSpan={3} className="pt-1 pb-1 pr-4 text-right text-orange-600">
+                                                                <span className="text-[10px] font-extrabold uppercase tracking-widest">Marketplace Commission (Expected)</span>
+                                                            </TableCell>
+                                                            <TableCell className="pt-1 pb-1 pr-6 text-right font-extrabold text-orange-600">
+                                                                + ₹{(sub.commissionAmount || 0).toLocaleString()}
+                                                            </TableCell>
+                                                        </TableRow>
+                                                        <TableRow className="hover:bg-transparent border-t-2 border-slate-50">
+                                                            <TableCell colSpan={3} className="pt-4 pb-4 pr-4 text-right">
+                                                                <span className="text-[10px] font-extrabold text-slate-900 uppercase tracking-widest">Consignment Total</span>
+                                                            </TableCell>
+                                                            <TableCell className="pt-4 pb-4 pr-6 text-right font-extrabold text-xl text-slate-900">
+                                                                ₹{(sub.totalAmount + (sub.commissionAmount || 0)).toLocaleString()}
                                                             </TableCell>
                                                         </TableRow>
                                                     </TableBody>
@@ -677,6 +693,11 @@ function AdminOrdersContent() {
                                         <div>
                                             <p className="text-white/60 font-bold uppercase tracking-widest text-xs">{t("admin.orders.total_order_value")}</p>
                                             <h3 className="text-4xl font-extrabold">₹{selectedOrder.totalAmount.toLocaleString()}</h3>
+                                            {selectedOrder.platformFee > 0 && (
+                                                <p className="text-white/80 text-[10px] font-bold mt-1 uppercase tracking-wider">
+                                                    Includes ₹{selectedOrder.platformFee.toLocaleString()} Marketplace Fee
+                                                </p>
+                                            )}
                                         </div>
                                     </div>
                                     <div className="text-center md:text-right">
