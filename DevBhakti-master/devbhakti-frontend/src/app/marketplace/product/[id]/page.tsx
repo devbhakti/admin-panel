@@ -203,6 +203,16 @@ export default function ProductDetailsPage() {
   const toggleFavorite = async () => {
     if (!product) return;
 
+    const savedUser = localStorage.getItem("user");
+    if (!savedUser) {
+      toast({
+        title: "Please Login",
+        description: "You need to login as a devotee to add favourites.",
+        variant: "destructive",
+      });
+      return;
+    }
+
     // Optimistic Update
     setIsFavorite(!isFavorite);
 
