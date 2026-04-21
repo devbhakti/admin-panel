@@ -56,6 +56,7 @@ import { API_URL } from "@/config/apiConfig";
 import { ImageCropper } from "@/components/admin/ImageCropper";
 import { parseLocalizedValue } from "@/utils/textUtils";
 import { useLanguage } from "@/context/LanguageContext";
+import { useAdminAuth } from "@/hooks/use-admin-auth";
 
 export default function TempleProfilePage() {
     const [isLoading, setIsLoading] = useState(true);
@@ -64,6 +65,8 @@ export default function TempleProfilePage() {
     const [profile, setProfile] = useState<any>(null);
     const { toast } = useToast();
     const { language, t } = useLanguage();
+    const { hasPermission } = useAdminAuth();
+    const canManage = hasPermission('temple.profile.manage');
 
     // Cropping states
     const [showCropper, setShowCropper] = useState(false);
@@ -386,6 +389,9 @@ export default function TempleProfilePage() {
                         <div className="flex items-center gap-2 text-[#7b4623] mb-1">
                             <ShieldCheck className="w-4 h-4" />
                             <span className="text-[10px] font-black uppercase tracking-[0.2em]">Verified Temple Profile</span>
+                            {JSON.parse(localStorage.getItem('user') || '{}').isStaff && (
+                                <Badge variant="outline" className="ml-2 border-[#7b4623]/20 bg-[#7b4623]/5 text-[#7b4623] text-[9px] font-black tracking-widest px-2 py-0">STAFF VIEW</Badge>
+                            )}
                         </div>
                         <h1 className="text-3xl font-bold font-serif text-slate-900 tracking-tight">{formData.name_en || "Your Temple"}</h1>
                         <p className="text-xs text-slate-500 font-medium">{t('admin.temples.list.desc') || "Manage your temple's public identity and information"}</p>
@@ -393,6 +399,9 @@ export default function TempleProfilePage() {
                 </div>
 
                 <div className="flex items-center gap-3">
+                    {!canManage && (
+                        <Badge className="bg-slate-100 text-slate-500 border-slate-200 uppercase font-black tracking-widest px-4 py-2 rounded-xl">View Only Mode</Badge>
+                    )}
                     {!isEditing ? (
                         <>
                             <Button
@@ -402,12 +411,14 @@ export default function TempleProfilePage() {
                             >
                                 <Eye className="w-4 h-4 mr-2" /> View Public Profile
                             </Button>
-                            <Button
-                                onClick={() => setIsEditing(true)}
-                                className="bg-[#7b4623] hover:bg-[#5d351a] text-white px-8 rounded-2xl shadow-lg shadow-[#7b4623]/20 transition-all font-bold"
-                            >
-                                <Settings2 className="w-4 h-4 mr-2" /> Edit Profile
-                            </Button>
+                            {canManage && (
+                                <Button
+                                    onClick={() => setIsEditing(true)}
+                                    className="bg-[#7b4623] hover:bg-[#5d351a] text-white px-8 rounded-2xl shadow-lg shadow-[#7b4623]/20 transition-all font-bold"
+                                >
+                                    <Settings2 className="w-4 h-4 mr-2" /> Edit Profile
+                                </Button>
+                            )}
                         </>
                     ) : (
                         <>

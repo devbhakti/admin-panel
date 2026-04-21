@@ -586,7 +586,7 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
           </div>
 
           <div className="flex items-center gap-3">
-            <AdminLanguageSwitcher />
+            {/* <AdminLanguageSwitcher /> */}
             <NotificationBell userId={user?.id || ''} userType="admin" />
             <Button variant="outline" size="sm" asChild>
               <Link href="/">View Site</Link>

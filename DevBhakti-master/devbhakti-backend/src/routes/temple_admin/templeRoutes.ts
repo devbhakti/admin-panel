@@ -24,7 +24,7 @@ router.post('/register', (upload as any).fields([
     { name: 'heroImages', maxCount: 10 }
 ]), registerTemple);
 
-router.get('/profile', authenticate, injectTempleContext, checkPermission('temple.profile.manage'), getMyTempleProfile);
+router.get('/profile', authenticate, injectTempleContext, getMyTempleProfile);
 router.put('/profile', authenticate, injectTempleContext, (upload as any).fields([
     { name: 'image', maxCount: 1 },
     { name: 'heroImages', maxCount: 10 }

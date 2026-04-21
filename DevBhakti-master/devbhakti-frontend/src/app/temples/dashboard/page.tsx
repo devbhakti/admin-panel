@@ -13,9 +13,11 @@ import {
     Video,
     Heart,
     IndianRupee,
-    Info
+    Info,
+    Shield
 } from "lucide-react";
 import { useRouter } from "next/navigation";
+import { useAdminAuth } from "@/hooks/use-admin-auth";
 import { useState, useEffect } from "react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
@@ -86,6 +88,7 @@ const upcomingBookings = [
 
 export default function TempleDashboardPage() {
     const router = useRouter();
+    const { hasPermission } = useAdminAuth();
     const [bookings, setBookings] = useState<any[]>([]);
     const [orders, setOrders] = useState<any[]>([]);
     const [events, setEvents] = useState<any[]>([]);
@@ -334,6 +337,20 @@ export default function TempleDashboardPage() {
             <div className="flex flex-col items-center justify-center min-h-[60vh] gap-4">
                 <Loader2 className="w-10 h-10 animate-spin text-sidebar-primary" />
                 <p className="text-sidebar-primary font-medium font-serif">Loading Dashboard Stats...</p>
+            </div>
+        );
+    }
+
+    if (!hasPermission('dashboard.view')) {
+        return (
+            <div className="flex flex-col items-center justify-center min-h-[60vh] gap-4">
+                <div className="w-20 h-20 rounded-full bg-red-50 flex items-center justify-center border-4 border-red-100">
+                    <Shield className="w-10 h-10 text-red-500" />
+                </div>
+                <h2 className="text-2xl font-serif font-bold text-slate-800">Access Restricted</h2>
+                <p className="text-slate-500 text-center max-w-md">
+                    You don't have permission to view the main dashboard analytics. Please use the sidebar menu to access your permitted areas.
+                </p>
             </div>
         );
     }

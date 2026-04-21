@@ -137,15 +137,18 @@ type Toast = Omit<ToasterToast, "id">;
 function toast({ ...props }: Toast) {
   const id = genId();
 
-  // Automatically set variant based on title keywords if no variant is provided
-  if (!props.variant && props.title && typeof props.title === "string") {
-    const title = props.title.toLowerCase();
-    const successKeywords = ["success", "saved", "updated", "deleted", "sent", "verified", "enabled", "disabled", "removed", "matched", "added"];
-    const errorKeywords = ["error", "failed", "invalid", "denied", "forbidden", "unauthorized", "wrong", "missing", "required"];
+  // Automatically set variant based on title/description keywords if no variant is provided
+  if (!props.variant) {
+    const titleText = typeof props.title === "string" ? props.title.toLowerCase() : "";
+    const descText = typeof props.description === "string" ? props.description.toLowerCase() : "";
+    const combinedText = `${titleText} ${descText}`;
+    
+    const successKeywords = ["success", "saved", "updated", "deleted", "sent", "verified", "enabled", "disabled", "removed", "matched", "added", "resumed", "activated", "completed", "approved", "confirmed"];
+    const errorKeywords = ["error", "failed", "invalid", "denied", "forbidden", "unauthorized", "wrong", "missing", "required", "rejected", "paused", "deactivated", "cancelled"];
 
-    if (successKeywords.some(key => title.includes(key))) {
+    if (successKeywords.some(key => combinedText.includes(key))) {
       props.variant = "success";
-    } else if (errorKeywords.some(key => title.includes(key))) {
+    } else if (errorKeywords.some(key => combinedText.includes(key))) {
       props.variant = "destructive";
     }
   }

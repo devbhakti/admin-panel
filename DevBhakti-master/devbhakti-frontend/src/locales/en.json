@@ -1790,6 +1790,12 @@
     }
   },
   "admin": {
+    "temples": {
+      "list": {
+        "title": "Temple Management",
+        "desc": "Manage your temple's public identity and information"
+      }
+    },
     "products": {
       "basic_info": "Basic Information",
       "product_name": "Product Name",

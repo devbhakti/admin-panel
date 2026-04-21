@@ -57,6 +57,11 @@ export const checkPermission = (...permissionKeys: string[]) => {
       return next();
     }
 
+    // Staff members must have permissions checked
+    if (req.user.isStaff) {
+      return next(); // Go to permission check below
+    }
+
     // Check staff permissions
     const permissions = req.user.permissions || [];
     const hasAnyPermission = permissionKeys.some(key => permissions.includes(key));

@@ -26,6 +26,7 @@ import {
 import { Badge } from "@/components/ui/badge";
 import { fetchMyPoojas, deleteMyPooja, togglePoojaStatus } from "@/api/templeAdminController";
 import { useToast } from "@/hooks/use-toast";
+import { useAdminAuth } from "@/hooks/use-admin-auth";
 import { API_URL } from "@/config/apiConfig";
 import { parseLocalizedValue } from '@/utils/textUtils';
 
@@ -35,6 +36,7 @@ export default function TemplePoojasListPage() {
     const [isLoading, setIsLoading] = useState(true);
     const [searchTerm, setSearchTerm] = useState("");
     const { toast } = useToast();
+    const { hasPermission } = useAdminAuth();
 
     useEffect(() => {
         loadPoojas();
@@ -111,13 +113,15 @@ export default function TemplePoojasListPage() {
                         Manage your temple's rituals and offerings.
                     </p>
                 </div>
-                <Button
-                    onClick={() => router.push('/temples/dashboard/poojas/create')}
-                    className="bg-[#7b4623] hover:bg-[#5d351a] text-white w-full md:w-auto"
-                >
-                    <Plus className="w-4 h-4 mr-2" />
-                    Offer New Pooja
-                </Button>
+                {hasPermission('poojas.create') && (
+                    <Button
+                        onClick={() => router.push('/temples/dashboard/poojas/create')}
+                        className="bg-[#7b4623] hover:bg-[#5d351a] text-white w-full md:w-auto"
+                    >
+                        <Plus className="w-4 h-4 mr-2" />
+                        Offer New Pooja
+                    </Button>
+                )}
             </div>
 
             {/* Search */}
@@ -210,37 +214,45 @@ export default function TemplePoojasListPage() {
                                                 >
                                                     <Eye className="w-4 h-4" />
                                                 </Button>
-                                                <Button
-                                                    variant="ghost"
-                                                    size="icon"
-                                                    onClick={() => router.push(`/temples/dashboard/poojas/edit/${pooja.id}`)}
-                                                    className="hover:bg-blue-50 hover:text-blue-600"
-                                                    title="Edit Pooja"
-                                                >
-                                                    <Edit2 className="w-4 h-4" />
-                                                </Button>
-                                                <Button
-                                                    variant="ghost"
-                                                    size="icon"
-                                                    onClick={() => handleToggleStatus(pooja.id, pooja.status)}
-                                                    className="hover:bg-orange-50 hover:text-orange-600"
-                                                    title={pooja.status ? "Pause Pooja" : "Resume Pooja"}
-                                                >
-                                                    {pooja.status ? (
-                                                        <Pause className="w-4 h-4" />
-                                                    ) : (
-                                                        <Play className="w-4 h-4" />
-                                                    )}
-                                                </Button>
-                                                <Button
-                                                    variant="ghost"
-                                                    size="icon"
-                                                    onClick={() => handleDelete(pooja.id)}
-                                                    className="hover:bg-red-50 hover:text-red-600"
-                                                    title="Remove Pooja"
-                                                >
-                                                    <Trash2 className="w-4 h-4" />
-                                                </Button>
+                                                
+                                                {hasPermission('poojas.edit') && (
+                                                    <>
+                                                        <Button
+                                                            variant="ghost"
+                                                            size="icon"
+                                                            onClick={() => router.push(`/temples/dashboard/poojas/edit/${pooja.id}`)}
+                                                            className="hover:bg-blue-50 hover:text-blue-600"
+                                                            title="Edit Pooja"
+                                                        >
+                                                            <Edit2 className="w-4 h-4" />
+                                                        </Button>
+                                                        <Button
+                                                            variant="ghost"
+                                                            size="icon"
+                                                            onClick={() => handleToggleStatus(pooja.id, pooja.status)}
+                                                            className="hover:bg-orange-50 hover:text-orange-600"
+                                                            title={pooja.status ? "Pause Pooja" : "Resume Pooja"}
+                                                        >
+                                                            {pooja.status ? (
+                                                                <Pause className="w-4 h-4" />
+                                                            ) : (
+                                                                <Play className="w-4 h-4" />
+                                                            )}
+                                                        </Button>
+                                                    </>
+                                                )}
+
+                                                {hasPermission('poojas.delete') && (
+                                                    <Button
+                                                        variant="ghost"
+                                                        size="icon"
+                                                        onClick={() => handleDelete(pooja.id)}
+                                                        className="hover:bg-red-50 hover:text-red-600"
+                                                        title="Remove Pooja"
+                                                    >
+                                                        <Trash2 className="w-4 h-4" />
+                                                    </Button>
+                                                )}
                                             </div>
                                         </TableCell>
                                     </TableRow>

@@ -44,12 +44,17 @@ import {
 } from "@/api/templeAdminController";
 import { useToast } from "@/hooks/use-toast";
 import { parseLocalizedValue } from '@/utils/textUtils';
+import { useAdminAuth } from "@/hooks/use-admin-auth";
+import { AlertCircle } from "lucide-react";
 
 export default function TempleEditEventPage() {
     const router = useRouter();
     const params = useParams();
     const eventId = params.id as string;
     const { toast } = useToast();
+    const { hasPermission } = useAdminAuth();
+    
+    const canEdit = hasPermission('events.edit');
     
     const [isLoading, setIsLoading] = useState(true);
     const [isSubmitting, setIsSubmitting] = useState(false);
@@ -182,6 +187,28 @@ export default function TempleEditEventPage() {
             <div className="flex flex-col items-center justify-center min-h-[400px] gap-4">
                 <Loader2 className="w-10 h-10 border-4 border-[#7b4623] border-t-transparent rounded-full animate-spin" />
                 <p className="text-muted-foreground">Loading event form...</p>
+            </div>
+        );
+    }
+
+    if (!canEdit) {
+        return (
+            <div className="flex flex-col items-center justify-center min-h-[400px] gap-6 text-center">
+                <div className="w-20 h-20 rounded-full bg-red-50 flex items-center justify-center">
+                    <AlertCircle className="w-10 h-10 text-red-500" />
+                </div>
+                <div className="space-y-2">
+                    <h2 className="text-2xl font-bold text-slate-800">Access Restricted</h2>
+                    <p className="text-slate-500 max-w-md">
+                        You do not have permission to edit events. Please contact your temple administrator for access.
+                    </p>
+                </div>
+                <Button 
+                    onClick={() => router.push('/temples/dashboard/events')}
+                    className="bg-[#7b4623] hover:bg-[#5d351a] text-white rounded-xl px-8"
+                >
+                    Back to Events
+                </Button>
             </div>
         );
     }

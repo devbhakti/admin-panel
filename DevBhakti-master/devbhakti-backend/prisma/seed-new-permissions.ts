@@ -113,7 +113,7 @@ const permissions = [
     module: 'users',
     label: 'View Users List',
     description: 'Allows viewing the list of all registered users/devotees and their profiles.',
-    applicableTo: [OwnerType.ADMIN]
+    applicableTo: [OwnerType.ADMIN, OwnerType.TEMPLE]
   },
   {
     key: 'users.manage',
@@ -152,14 +152,14 @@ const permissions = [
     module: 'donations',
     label: 'Show Donations Menu',
     description: 'Displays the "Donations" link in the sidebar.',
-    applicableTo: [OwnerType.ADMIN]
+    applicableTo: [OwnerType.ADMIN, OwnerType.TEMPLE]
   },
   {
     key: 'donations.view',
     module: 'donations',
     label: 'View Donation History',
     description: 'Allows viewing the list of all donations received across temples.',
-    applicableTo: [OwnerType.ADMIN]
+    applicableTo: [OwnerType.ADMIN, OwnerType.TEMPLE]
   },
 
   // ── PRODUCT MANAGEMENT ──────────────────────────────────
@@ -210,7 +210,7 @@ const permissions = [
     module: 'products',
     label: 'View Product Orders',
     description: 'Allows viewing the list of product orders and sub-orders.',
-    applicableTo: [OwnerType.ADMIN, OwnerType.SELLER]
+    applicableTo: [OwnerType.ADMIN, OwnerType.TEMPLE, OwnerType.SELLER]
   },
   {
     key: 'products.orders.manage',
@@ -279,6 +279,13 @@ const permissions = [
     description: 'Allows permanent removal of a pooja service.',
     applicableTo: [OwnerType.ADMIN]
   },
+  {
+    key: 'poojas.categories',
+    module: 'poojas',
+    label: 'Manage Pooja Purposes',
+    description: 'Allows management of pooja categories and purposes for organizing services.',
+    applicableTo: [OwnerType.ADMIN]
+  },
 
   // ── EVENTS ──────────────────────────────────────────────
   {
@@ -337,6 +344,27 @@ const permissions = [
     module: 'cms',
     label: 'Manage Testimonials',
     description: 'Allows management of video testimonials and customer reviews.',
+    applicableTo: [OwnerType.ADMIN]
+  },
+  {
+    key: 'cms.faqs',
+    module: 'cms',
+    label: 'Manage Pooja FAQs',
+    description: 'Allows management of frequently asked questions for pooja services and rituals.',
+    applicableTo: [OwnerType.ADMIN]
+  },
+  {
+    key: 'cms.ratings',
+    module: 'cms',
+    label: 'Manage Global Ratings',
+    description: 'Allows management of global rating system and review displays.',
+    applicableTo: [OwnerType.ADMIN]
+  },
+  {
+    key: 'cms.cta_cards',
+    module: 'cms',
+    label: 'Manage CTA Cards',
+    description: 'Allows management of call-to-action cards on landing pages.',
     applicableTo: [OwnerType.ADMIN]
   },
 

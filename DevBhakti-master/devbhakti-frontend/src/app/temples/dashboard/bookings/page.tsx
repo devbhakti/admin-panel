@@ -61,6 +61,7 @@ import { useToast } from "@/hooks/use-toast";
 import { format, isWithinInterval, startOfDay, endOfDay, subWeeks, subMonths, subYears, isAfter } from "date-fns";
 import { cn } from "@/lib/utils";
 import { parseLocalizedValue } from "@/utils/textUtils";
+import { useAdminAuth } from "@/hooks/use-admin-auth";
 
 const statusConfig = {
     BOOKED: {
@@ -107,6 +108,7 @@ export default function TempleBookingsPage() {
     const [endDate, setEndDate] = useState<Date | undefined>(undefined);
     const [statsPeriod, setStatsPeriod] = useState<"week" | "month" | "year" | "lifetime">("week");
     const { toast } = useToast();
+    const { hasPermission } = useAdminAuth();
 
     useEffect(() => {
         loadBookings();
@@ -205,8 +207,11 @@ export default function TempleBookingsPage() {
             } else {
                 toast({ title: "Update Failed", description: res.message, variant: "destructive" });
             }
-        } catch (error) {
-            toast({ title: "Error", description: "Failed to update status", variant: "destructive" });
+        } catch (error: any) {
+            const errorMsg = error.response?.status === 403 
+                ? "You have no permission" 
+                : (error.response?.data?.message || "Failed to update status");
+            toast({ title: "Error", description: errorMsg, variant: "destructive" });
         } finally {
             setIsProcessing(false);
         }
@@ -353,24 +358,26 @@ export default function TempleBookingsPage() {
                         </DialogContent>
                     </Dialog>
 
-                    <Button
-                        variant={isTodayClosed ? "destructive" : "outline"}
-                        onClick={handleToggleToday}
-                        disabled={isProcessing}
-                        className={isTodayClosed ? "bg-red-50 text-red-600 hover:bg-red-100 border-red-200" : "text-amber-600 border-amber-200 hover:bg-amber-50"}
-                    >
-                        {isTodayClosed ? (
-                            <>
-                                <PlayCircle className="w-4 h-4 mr-2" />
-                                Resume Today
-                            </>
-                        ) : (
-                            <>
-                                <Ban className="w-4 h-4 mr-2" />
-                                Stop Today
-                            </>
-                        )}
-                    </Button>
+                    {hasPermission('bookings.manage') && (
+                        <Button
+                            variant={isTodayClosed ? "destructive" : "outline"}
+                            onClick={handleToggleToday}
+                            disabled={isProcessing}
+                            className={isTodayClosed ? "bg-red-50 text-red-600 hover:bg-red-100 border-red-200" : "text-amber-600 border-amber-200 hover:bg-amber-50"}
+                        >
+                            {isTodayClosed ? (
+                                <>
+                                    <PlayCircle className="w-4 h-4 mr-2" />
+                                    Resume Today
+                                </>
+                            ) : (
+                                <>
+                                    <Ban className="w-4 h-4 mr-2" />
+                                    Stop Today
+                                </>
+                            )}
+                        </Button>
+                    )}
                     <Button variant="outline" onClick={() => loadBookings()} disabled={loading}>
                         Refresh
                     </Button>
@@ -733,7 +740,7 @@ export default function TempleBookingsPage() {
                                                                     <Eye className="w-4 h-4 mr-2" /> View Details
                                                                 </DropdownMenuItem>
 
-                                                                {booking.status === 'BOOKED' && (
+                                                                {booking.status === 'BOOKED' && hasPermission('bookings.manage') && (
                                                                     <DropdownMenuItem
                                                                         onClick={() => setConfirmCompleteId(booking.id)}
                                                                         className="text-emerald-600 focus:text-emerald-600 font-bold"
@@ -743,7 +750,7 @@ export default function TempleBookingsPage() {
                                                                     </DropdownMenuItem>
                                                                 )}
 
-                                                                {booking.status === 'BOOKED' && (
+                                                                {booking.status === 'BOOKED' && hasPermission('bookings.manage') && (
                                                                     <DropdownMenuItem
                                                                         onClick={() => setConfirmCancelId(booking.id)}
                                                                         className="text-slate-600 focus:text-slate-600"
@@ -917,7 +924,7 @@ export default function TempleBookingsPage() {
                                             <p className="text-2xl font-bold text-primary">₹{selectedBooking.packagePrice}</p>
                                         </div>
                                         <div className="flex gap-2">
-                                            {selectedBooking.status === 'BOOKED' && (
+                                            {selectedBooking.status === 'BOOKED' && hasPermission('bookings.manage') && (
                                                 <Button
                                                     onClick={() => setConfirmCompleteId(selectedBooking.id)}
                                                     className="bg-gradient-to-r from-gold to-gold hover:bg-gold text-white rounded-xl px-6"

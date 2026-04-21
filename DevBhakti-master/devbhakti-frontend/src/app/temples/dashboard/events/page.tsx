@@ -69,6 +69,7 @@ import {
 import { useToast } from "@/hooks/use-toast";
 import { Switch } from "@/components/ui/switch";
 import { parseLocalizedValue } from '@/utils/textUtils';
+import { useAdminAuth } from "@/hooks/use-admin-auth";
 
 export default function TempleEventsPage() {
     const router = useRouter();
@@ -79,6 +80,12 @@ export default function TempleEventsPage() {
     const [editingEvent, setEditingEvent] = useState<any>(null);
     const [isSubmitting, setIsSubmitting] = useState(false);
     const { toast } = useToast();
+    const { hasPermission } = useAdminAuth();
+
+    const canCreate = hasPermission('events.create');
+    const canEdit = hasPermission('events.edit');
+    const canManage = hasPermission('events.manage');
+    const canDelete = hasPermission('events.delete');
 
     // Pooja selection state
     const [templePoojas, setTemplePoojas] = useState<any[]>([]);
@@ -288,13 +295,20 @@ export default function TempleEventsPage() {
                         Manage festivals and special celebrations at your temple.
                     </p>
                 </div>
-                <Button
-                    onClick={() => handleOpenDialog()}
-                    className="bg-[#7b4623] hover:bg-[#5d351a] text-white"
-                >
-                    <Plus className="w-4 h-4 mr-2" />
-                    New Event
-                </Button>
+                <div className="flex items-center gap-3">
+                    {(!canCreate || !canEdit || !canManage || !canDelete) && (
+                        <Badge className="bg-slate-100 text-slate-500 border-slate-200 uppercase font-black tracking-widest px-4 py-2 rounded-xl">View Only Mode</Badge>
+                    )}
+                    {canCreate && (
+                        <Button
+                            onClick={() => handleOpenDialog()}
+                            className="bg-[#7b4623] hover:bg-[#5d351a] text-white"
+                        >
+                            <Plus className="w-4 h-4 mr-2" />
+                            New Event
+                        </Button>
+                    )}
+                </div>
             </div>
 
             {/* Search */}
@@ -391,6 +405,7 @@ export default function TempleEventsPage() {
                                         <div className="flex items-center gap-2">
                                             <Switch
                                                 checked={event.status}
+                                                disabled={!canManage}
                                                 onCheckedChange={() => handleToggleStatus(event.id, event.status)}
                                             />
                                             <Badge variant={event.status ? "default" : "secondary"} className={event.status ? "bg-emerald-100 text-emerald-800" : ""}>
@@ -409,24 +424,28 @@ export default function TempleEventsPage() {
                                             >
                                                 <Eye className="w-4 h-4" />
                                             </Button>
-                                            <Button
-                                                variant="ghost"
-                                                size="icon"
-                                                onClick={() => router.push(`/temples/dashboard/events/edit/${event.id}`)}
-                                                className="hover:bg-blue-50 hover:text-blue-600"
-                                                title="Edit Event"
-                                            >
-                                                <Edit2 className="w-4 h-4" />
-                                            </Button>
-                                            <Button
-                                                variant="ghost"
-                                                size="icon"
-                                                onClick={() => handleDelete(event.id)}
-                                                className="hover:bg-red-50 hover:text-red-600"
-                                                title="Delete Event"
-                                            >
-                                                <Trash2 className="w-4 h-4" />
-                                            </Button>
+                                            {canEdit && (
+                                                <Button
+                                                    variant="ghost"
+                                                    size="icon"
+                                                    onClick={() => router.push(`/temples/dashboard/events/edit/${event.id}`)}
+                                                    className="hover:bg-blue-50 hover:text-blue-600"
+                                                    title="Edit Event"
+                                                >
+                                                    <Edit2 className="w-4 h-4" />
+                                                </Button>
+                                            )}
+                                            {canDelete && (
+                                                <Button
+                                                    variant="ghost"
+                                                    size="icon"
+                                                    onClick={() => handleDelete(event.id)}
+                                                    className="hover:bg-red-50 hover:text-red-600"
+                                                    title="Delete Event"
+                                                >
+                                                    <Trash2 className="w-4 h-4" />
+                                                </Button>
+                                            )}
                                         </div>
                                     </TableCell>
                                 </TableRow>

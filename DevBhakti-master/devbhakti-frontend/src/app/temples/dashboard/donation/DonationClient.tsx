@@ -334,6 +334,8 @@ export default function DonationClient() {
                                         <tr>
                                             <th className="text-left p-4 text-xs font-bold uppercase tracking-wider text-muted-foreground">Donor</th>
                                             <th className="text-left p-4 text-xs font-bold uppercase tracking-wider text-muted-foreground">Amount</th>
+                                            <th className="text-left p-4 text-xs font-bold uppercase tracking-wider text-muted-foreground">Fee</th>
+                                            <th className="text-left p-4 text-xs font-bold uppercase tracking-wider text-muted-foreground">Net Earning</th>
                                             <th className="text-left p-4 text-xs font-bold uppercase tracking-wider text-muted-foreground">Date</th>
                                             <th className="text-left p-4 text-xs font-bold uppercase tracking-wider text-muted-foreground text-center">Status</th>
                                             <th className="text-right p-4 text-xs font-bold uppercase tracking-wider text-muted-foreground">Actions</th>
@@ -342,7 +344,7 @@ export default function DonationClient() {
                                     <tbody className="divide-y divide-primary/5">
                                         {donations.length === 0 ? (
                                             <tr>
-                                                <td colSpan={5} className="p-12 text-center">
+                                                <td colSpan={7} className="p-12 text-center">
                                                     <div className="flex flex-col items-center gap-2">
                                                         <Heart className="w-12 h-12 text-muted-foreground/20" />
                                                         <p className="text-muted-foreground font-medium">No donations found in this sacred circle</p>
@@ -372,6 +374,12 @@ export default function DonationClient() {
                                                     </td>
                                                     <td className="p-4">
                                                         <p className="font-bold text-base text-foreground">₹{donation.amount.toLocaleString()}</p>
+                                                    </td>
+                                                    <td className="p-4">
+                                                        <p className="font-medium text-sm text-rose-600">₹{(donation.commissionAmount || 0).toLocaleString()}</p>
+                                                    </td>
+                                                    <td className="p-4">
+                                                        <p className="font-bold text-sm text-emerald-600">₹{(donation.netEarning || donation.amount).toLocaleString()}</p>
                                                     </td>
                                                     <td className="p-4 text-sm text-muted-foreground">
                                                         {new Date(donation.createdAt).toLocaleDateString(undefined, { day: 'numeric', month: 'short' })}

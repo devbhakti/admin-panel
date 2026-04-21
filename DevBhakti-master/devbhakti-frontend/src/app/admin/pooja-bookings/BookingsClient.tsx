@@ -457,7 +457,7 @@ function BookingsContent() {
                                             </p>
                                         </td>
                                         <td className="p-4">
-                                            <p className="text-sm font-bold text-slate-900">₹{String(booking.packagePrice)}</p>
+                                            <p className="text-sm font-bold text-slate-900">₹{String((booking.packagePrice || 0) + (booking.platformFee || 0))}</p>
                                         </td>
                                         <td className="p-4">
                                             <Badge variant="outline" className={`rounded-full px-3 py-1 font-extrabold text-[10px] ${status.color}`}>
@@ -507,7 +507,13 @@ function BookingsContent() {
                                 <p className="text-[10px] font-bold text-orange-400 uppercase mb-1">Pooja Service</p>
                                 <p className="font-bold text-[#794A05] text-lg">{parseLocalizedValue(selectedBooking.pooja?.name)}</p>
                                 <p className="text-sm text-[#794A05]">{parseLocalizedValue(selectedBooking.packageName)}</p>
-                                <p className="text-2xl font-black text-[#794A05] mt-2">₹{String(selectedBooking.packagePrice)}</p>
+                                <div className="mt-2 flex justify-between items-end">
+                                    <div>
+                                        <p className="text-[9px] text-orange-400 font-bold uppercase">Base: ₹{selectedBooking.packagePrice}</p>
+                                        <p className="text-[9px] text-orange-400 font-bold uppercase">Fee: + ₹{(selectedBooking.platformFee || 0)}</p>
+                                    </div>
+                                    <p className="text-2xl font-black text-[#794A05]">₹{String((selectedBooking.packagePrice || 0) + (selectedBooking.platformFee || 0))}</p>
+                                </div>
                             </div>
                             {selectedBooking.bookingDate && (
                                 <div className="p-4 bg-slate-50 rounded-2xl">

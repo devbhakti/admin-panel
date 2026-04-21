@@ -250,6 +250,7 @@ export const createBooking = async (req: Request, res: Response) => {
                     status: 'PENDING', // Mark as pending until Razorpay payment is verified
 
                     commissionAmount,
+                    platformFee: commissionAmount,
 
                     netEarning
 
@@ -292,7 +293,7 @@ export const createBooking = async (req: Request, res: Response) => {
 
             razorpayOrder: await razorpay.orders.create({
 
-                amount: Math.round(packagePrice * 100),
+                amount: Math.round((finalPrice + commissionAmount) * 100),
 
                 currency: "INR",
 
@@ -752,13 +753,19 @@ export const getBookingReceipt = async (req: Request, res: Response) => {
 
         doc.font('Helvetica-Bold').text(`Rs. ${booking.packagePrice}`, 400, summaryY, { align: 'right', width: 140 });
 
+        doc.moveDown(1);
+        
+        doc.fillColor(textColor).font('Helvetica').fontSize(10).text('Platform Fee:', 350, doc.y);
+
+        doc.font('Helvetica-Bold').text(`Rs. ${booking.platformFee || 0}`, 400, doc.y - 12, { align: 'right', width: 140 });
+
 
 
         doc.moveDown(1);
 
         doc.font('Helvetica-Bold').fontSize(13).text('Total Amount Paid:', 280, doc.y);
 
-        doc.fillColor(primaryColor).text(`Rs. ${booking.packagePrice}`, 400, doc.y - 13, { align: 'right', width: 140 });
+        doc.fillColor(primaryColor).text(`Rs. ${booking.packagePrice + (booking.platformFee || 0)}`, 400, doc.y - 13, { align: 'right', width: 140 });
 
 
 

@@ -77,7 +77,7 @@ const sidebarItems = [
         label: "Donations",
         icon: Heart,
         href: "/temples/dashboard/donation",
-        permission: "finance.menu"
+        permission: "donations.menu"
     },
     {
         label: "Product Management",
@@ -251,44 +251,58 @@ export default function TempleAdminLayout({ children }: { children: React.ReactN
 
     const loadCounts = async () => {
         try {
-            const [bookingsRes, profileRes] = await Promise.all([
-                fetchMyTempleBookings(),
-                fetchMyTempleProfile()
-            ]);
-
-            if (profileRes.success) {
-                setTempleProfile(profileRes.data);
-            }
-
-            let newCounts = { ...counts };
-
-            if (bookingsRes.success) {
-                const data = bookingsRes.data;
-                newCounts.bookings = {
-                    total: data.length,
-                    booked: data.filter((b: any) => b.status === 'BOOKED').length,
-                    completed: data.filter((b: any) => b.status === 'COMPLETED').length,
-                    cancelled: data.filter((b: any) => b.status === 'CANCELLED' || b.status === 'REJECTED').length
-                };
-            }
-
-            if (profileRes.success && profileRes.data.id) {
-                const ordersRes = await fetchTempleOrders(profileRes.data.id);
-                if (ordersRes.success) {
-                    const data = ordersRes.data;
-                    newCounts.orders = {
-                        total: data.length,
-                        pending: data.filter((o: any) => o.status === 'PENDING').length,
-                        accepted: data.filter((o: any) => o.status === 'ACCEPTED').length,
-                        shipped: data.filter((o: any) => o.status === 'SHIPPED').length,
-                        delivered: data.filter((o: any) => o.status === 'DELIVERED').length,
-                        cancelled: data.filter((o: any) => o.status === 'CANCELLED').length,
-                    };
+            // Load Profile first to get the templeId for orders
+            try {
+                const profileRes = await fetchMyTempleProfile();
+                if (profileRes.success) {
+                    setTempleProfile(profileRes.data);
+                    
+                    // If we have a profile, try to load orders
+                    if (profileRes.data.id) {
+                        fetchTempleOrders(profileRes.data.id)
+                            .then(ordersRes => {
+                                if (ordersRes.success) {
+                                    const data = ordersRes.data;
+                                    setCounts(prev => ({
+                                        ...prev,
+                                        orders: {
+                                            total: data.length,
+                                            pending: data.filter((o: any) => o.status === 'PENDING').length,
+                                            accepted: data.filter((o: any) => o.status === 'ACCEPTED').length,
+                                            shipped: data.filter((o: any) => o.status === 'SHIPPED').length,
+                                            delivered: data.filter((o: any) => o.status === 'DELIVERED').length,
+                                            cancelled: data.filter((o: any) => o.status === 'CANCELLED').length,
+                                        }
+                                    }));
+                                }
+                            })
+                            .catch(err => console.error("Failed to load orders", err));
+                    }
                 }
+            } catch (err) {
+                console.error("Failed to load profile", err);
             }
-            setCounts(newCounts);
+
+            // Load Bookings separately
+            try {
+                const bookingsRes = await fetchMyTempleBookings();
+                if (bookingsRes.success) {
+                    const data = bookingsRes.data;
+                    setCounts(prev => ({
+                        ...prev,
+                        bookings: {
+                            total: data.length,
+                            booked: data.filter((b: any) => b.status === 'BOOKED').length,
+                            completed: data.filter((b: any) => b.status === 'COMPLETED').length,
+                            cancelled: data.filter((b: any) => b.status === 'CANCELLED' || b.status === 'REJECTED').length
+                        }
+                    }));
+                }
+            } catch (err) {
+                console.error("Failed to load bookings", err);
+            }
         } catch (error) {
-            console.error("Failed to load counts", error);
+            console.error("Unexpected error in loadCounts", error);
         }
     };
 
@@ -492,7 +506,8 @@ export default function TempleAdminLayout({ children }: { children: React.ReactN
                         {sidebarOpen && (
                             <div className="flex-1 min-w-0">
                                 <p className="text-sm font-medium text-sidebar-foreground truncate">
-                                    {parseLocalizedValue(templeProfile?.name) || parseLocalizedValue(user?.name) || "Temple Admin"}
+                                    {user?.isStaff && <span className="text-[10px] bg-sidebar-primary/10 text-sidebar-primary px-1.5 py-0.5 rounded mr-1.5 font-bold">STAFF</span>}
+                                    {parseLocalizedValue(templeProfile?.name) || parseLocalizedValue(user?.name) || (user?.isStaff ? "Sacred Staff" : "Temple Admin")}
                                 </p>
                                 <p className="text-xs text-sidebar-foreground/60 truncate">
                                     {user?.phone || user?.email || "admin@temple.com"}
@@ -566,7 +581,7 @@ export default function TempleAdminLayout({ children }: { children: React.ReactN
                     </div>
 
                     <div className="flex items-center gap-3">
-                        <NotificationBell userId={user?.id || user?.email || ''} userType="temple_admin" />
+                        {/* <NotificationBell userId={user?.id || user?.email || ''} userType="temple_admin" /> */}
                         <Button variant="outline" size="sm" asChild>
                             <Link href="/">View Site</Link>
                         </Button>

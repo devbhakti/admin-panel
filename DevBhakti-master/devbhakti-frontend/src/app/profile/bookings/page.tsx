@@ -23,7 +23,8 @@ import {
     MapPin,
     AlertCircle,
     Sparkles,
-    Users
+    Users,
+    IndianRupee
 } from "lucide-react";
 import { useRouter } from "next/navigation";
 import { format } from "date-fns";
@@ -201,7 +202,7 @@ export default function MyBookingsPage() {
                                             </div>
                                             <div>
                                                 <p className="text-xs font-bold text-slate-400 uppercase tracking-widest mb-2">{t("bookings.label_total_offering")}</p>
-                                                <p className="text-xl font-bold text-[#794A05]">₹{booking.packagePrice?.toLocaleString()}</p>
+                                                <p className="text-xl font-bold text-[#794A05]">₹{( (booking.packagePrice || 0) + (booking.platformFee || 0) ).toLocaleString()}</p>
                                             </div>
                                         </div>
 
@@ -274,6 +275,27 @@ export default function MyBookingsPage() {
                                                                     <div>
                                                                         <p className="text-[10px] text-slate-400 font-bold uppercase tracking-tighter">{t("bookings.label_email")}</p>
                                                                         <p className="text-sm font-bold text-slate-700">{booking.devoteeEmail || t("bookings.not_provided")}</p>
+                                                                    </div>
+                                                                </div>
+                                                            </div>
+
+                                                            <div className="bg-slate-50/50 p-6 rounded-3xl border border-slate-100 flex flex-col gap-4">
+                                                                <h4 className="text-xs font-bold text-slate-400 uppercase tracking-widest flex items-center gap-2">
+                                                                    <IndianRupee className="w-4 h-4 text-[#794A05]" />
+                                                                    {t("bookings.section_payment_breakdown") || "Payment Breakdown"}
+                                                                </h4>
+                                                                <div className="space-y-3">
+                                                                    <div className="flex justify-between items-center">
+                                                                        <p className="text-[10px] text-slate-400 font-bold uppercase tracking-tighter">{t("bookings.label_package_price") || "Package Price"}</p>
+                                                                        <p className="text-sm font-bold text-slate-700">₹{booking.packagePrice?.toLocaleString()}</p>
+                                                                    </div>
+                                                                    <div className="flex justify-between items-center">
+                                                                        <p className="text-[10px] text-slate-400 font-bold uppercase tracking-tighter">{t("bookings.label_platform_fee") || "Platform Fee"}</p>
+                                                                        <p className="text-sm font-bold text-slate-700">+ ₹{booking.platformFee?.toLocaleString() || 0}</p>
+                                                                    </div>
+                                                                    <div className="pt-2 border-t border-slate-200 flex justify-between items-center">
+                                                                        <p className="text-[10px] text-slate-900 font-bold uppercase tracking-tighter">{t("bookings.label_total_paid") || "Total Paid"}</p>
+                                                                        <p className="text-sm font-bold text-[#794A05]">₹{((booking.packagePrice || 0) + (booking.platformFee || 0)).toLocaleString()}</p>
                                                                     </div>
                                                                 </div>
                                                             </div>

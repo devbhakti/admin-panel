@@ -21,7 +21,7 @@ import {
     Link as LinkIcon
 } from "lucide-react";
 import axios from "axios";
-import { checkPhoneGlobal, checkEmailExists } from "@/api/authController";
+import { checkPhoneGlobal, checkEmailExists, checkInstitutionPhone } from "@/api/authController";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
@@ -311,8 +311,8 @@ export function TempleForm({
 
         setPhoneValidation({ status: "checking", message: "" });
         try {
-            const result = await checkPhoneGlobal(formData.phone, 'INSTITUTION');
-            if (result.exists) {
+            const response = await checkInstitutionPhone(formData.phone);
+            if (response.isInstitutionRegistered) {
                 setPhoneValidation({ status: "error", message: "A Temple/Institution account already exists with this phone number." });
             } else {
                 setPhoneValidation({ status: "ok", message: "Number is available for Temple registration." });

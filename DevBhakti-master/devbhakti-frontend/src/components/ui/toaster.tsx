@@ -11,8 +11,8 @@ export function Toaster() {
         return (
           <Toast key={id} variant={variant} {...props}>
             <div className="flex gap-3">
-              {variant === "success" && <CheckCircle2 className="h-5 w-5 text-white shrink-0 mt-0.5" />}
-              {variant === "destructive" && <AlertCircle className="h-5 w-5 text-white shrink-0 mt-0.5" />}
+              {variant === "success" && <CheckCircle2 className="h-5 w-5 text-white shrink-0 mt-0.5 animate-in zoom-in-50 duration-300" />}
+              {variant === "destructive" && <AlertCircle className="h-5 w-5 text-white shrink-0 mt-0.5 animate-in zoom-in-50 duration-300" />}
               {variant !== "success" && variant !== "destructive" && <Info className="h-5 w-5 text-blue-500 shrink-0 mt-0.5" />}
               
               <div className="grid gap-1">
