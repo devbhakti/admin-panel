@@ -385,16 +385,16 @@ function PoojasContent() {
                     </p>
                 </div>
                 <div className="flex flex-wrap items-center gap-2">
-                    <Button
+                    {/* <Button
                         variant="outline"
                         onClick={downloadTemplate}
                         className="text-xs h-9"
                     >
                         <Download className="w-4 h-4 mr-2" />
                         Template
-                    </Button>
+                    </Button> */}
 
-                    <div className="relative">
+                    {/* <div className="relative">
                         <input
                             type="file"
                             accept=".xlsx, .xls"
@@ -410,16 +410,16 @@ function PoojasContent() {
                             {isImporting ? <Loader2 className="w-4 h-4 mr-2 animate-spin" /> : <Upload className="w-4 h-4 mr-2" />}
                             Import Excel
                         </Button>
-                    </div>
+                    </div> */}
 
-                    <Button
+                    {/* <Button
                         variant="outline"
                         onClick={handleExportExcel}
                         className="text-xs h-9"
                     >
                         <FileSpreadsheet className="w-4 h-4 mr-2" />
                         Export All
-                    </Button>
+                    </Button> */}
 
                     {hasPermission("poojas.create") && (
                         <Button

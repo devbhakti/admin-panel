@@ -306,14 +306,14 @@ export default function TempleProductsPage() {
                     </p>
                 </div>
                 <div className="flex flex-wrap items-center gap-2 sm:gap-3 w-full md:w-auto">
-                    <Button
+                    {/* <Button
                         onClick={downloadTemplate}
                         variant="outline"
                         className="flex-1 md:flex-initial border-[#7b4623]/20 hover:bg-[#7b4623]/5"
                     >
                         <FileText className="w-4 h-4 mr-2" />
                         Template
-                    </Button>
+                    </Button> */}
                     <div className="relative flex-1 md:flex-initial">
                         <input
                             type="file"
@@ -322,23 +322,23 @@ export default function TempleProductsPage() {
                             id="import-excel"
                             onChange={handleImportExcel}
                         />
-                        <Button
+                        {/* <Button
                             onClick={() => document.getElementById('import-excel')?.click()}
                             variant="outline"
                             className="w-full border-[#7b4623]/20 hover:bg-[#7b4623]/5"
                         >
                             <Upload className="w-4 h-4 mr-2" />
                             Import
-                        </Button>
+                        </Button> */}
                     </div>
-                    <Button
+                    {/* <Button
                         onClick={handleExportExcel}
                         variant="outline"
                         className="flex-1 md:flex-initial border-[#7b4623]/20 hover:bg-[#7b4623]/5"
                     >
                         <Download className="w-4 h-4 mr-2" />
                         Export
-                    </Button>
+                    </Button> */}
                     <Button
                         onClick={() => router.push('/temples/dashboard/products/create')}
                         className="bg-[#7b4623] hover:bg-[#5d351a] text-white shadow-lg shadow-primary/20 transition-all hover:scale-105 flex-1 md:flex-initial"

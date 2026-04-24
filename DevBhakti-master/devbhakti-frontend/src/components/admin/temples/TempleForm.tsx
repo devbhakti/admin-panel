@@ -54,8 +54,10 @@ export function TempleForm({
     allPoojas,
     onAddMasterPooja
 }: TempleFormProps) {
-    const { t, language, setLanguage } = useLanguage();
+    const { t, language } = useLanguage();
     const { toast } = useToast();
+    // Local language tab for the form — independent of global app language
+    const [activeFormLang, setActiveFormLang] = useState<Language>('en');
     const router = useRouter();
 
     // Form State
@@ -526,7 +528,7 @@ export function TempleForm({
                 />
             )}
 
-            <Tabs value={language} onValueChange={(v) => setLanguage(v as Language)} className="w-full">
+            <Tabs value={activeFormLang} onValueChange={(v) => setActiveFormLang(v as Language)} className="w-full">
                 <TabsList className="mb-6 grid w-full max-w-md grid-cols-3">
                     <TabsTrigger value="en">English (EN)</TabsTrigger>
                     <TabsTrigger value="hi">हिंदी (HI)</TabsTrigger>
@@ -717,8 +719,8 @@ export function TempleForm({
                                 <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
                                     {allPoojas && allPoojas.length > 0 ? allPoojas.map((pooja) => {
                                         const poojaId = pooja.masterPoojaId || pooja.id;
-                                        const poojaName = parseLocalizedValue(pooja.name, language) || pooja.name_en || pooja.name || "Unnamed Pooja";
-                                        const poojaCategory = parseLocalizedValue(pooja.category, language) || pooja.category || "";
+                                        const poojaName = parseLocalizedValue(pooja.name, activeFormLang) || pooja.name_en || pooja.name || "Unnamed Pooja";
+                                        const poojaCategory = parseLocalizedValue(pooja.category, activeFormLang) || pooja.category || "";
                                         return (
                                             <label
                                                 key={poojaId}

@@ -842,17 +842,17 @@ function TemplesContent() {
                         <div className="flex flex-col sm:flex-row gap-2 w-full sm:w-auto mt-2 sm:mt-0">
                             <input type="file" accept=".xlsx" className="hidden" ref={globalImportRef} onChange={handleImportExcel} />
                             
-                             <Button variant="outline" onClick={downloadTemplate} className="border-secondary text-secondary hover:bg-secondary/10 px-3 w-full sm:w-auto" title="Download Template">
+                             {/* <Button variant="outline" onClick={downloadTemplate} className="border-secondary text-secondary hover:bg-secondary/10 px-3 w-full sm:w-auto" title="Download Template">
                                 <FileSpreadsheet className="w-4 h-4" />
                             </Button> 
-                            
-                            <Button variant="outline" onClick={() => globalImportRef.current?.click()} className="border-amber-600 text-amber-600 hover:bg-amber-50 px-3 w-full sm:w-auto" title="Import All Temples">
+                             */}
+                            {/* <Button variant="outline" onClick={() => globalImportRef.current?.click()} className="border-amber-600 text-amber-600 hover:bg-amber-50 px-3 w-full sm:w-auto" title="Import All Temples">
                                 <Upload className="w-4 h-4" />
-                            </Button> 
-
+                            </Button>  */}
+{/* 
                             <Button variant="outline" onClick={() => handleExportExcel('all')} className="border-emerald-600 text-emerald-600 hover:bg-emerald-50 px-3 w-full sm:w-auto" title="Export All Temples">
                                 <Download className="w-4 h-4" />
-                            </Button>
+                            </Button> */}
 
                             <Button onClick={() => router.push('/admin/temples/create')} className="bg-primary w-full sm:w-auto justify-center">
                                 <Plus className="w-4 h-4 mr-2" />

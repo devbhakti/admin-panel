@@ -70,7 +70,8 @@ interface Variant {
 export default function CreateProductPage() {
   const router = useRouter();
   const { toast } = useToast();
-  const { language, setLanguage, t } = useLanguage();
+  const { t } = useLanguage();
+  const [activeFormLang, setActiveFormLang] = useState<Language>("en");
 
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [vendors, setVendors] = useState<any[]>([]);
@@ -308,7 +309,7 @@ export default function CreateProductPage() {
         </div>
       </div>
 
-      <Tabs value={language} onValueChange={(v) => setLanguage(v as Language)} className="w-full">
+      <Tabs value={activeFormLang} onValueChange={(v) => setActiveFormLang(v as Language)} className="w-full">
         <TabsList className="mb-6 grid w-full max-w-md grid-cols-3">
           <TabsTrigger value="en">English (EN)</TabsTrigger>
           <TabsTrigger value="hi">हिंदी (HI)</TabsTrigger>

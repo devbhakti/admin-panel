@@ -245,15 +245,15 @@ export default function TemplePoojasListPage() {
                     </p>
                 </div>
                 <div className="flex flex-wrap items-center gap-2 sm:gap-3 w-full md:w-auto">
-                    <Button
+                    {/* <Button
                         onClick={downloadTemplate}
                         variant="outline"
                         className="flex-1 md:flex-initial border-[#7b4623]/20 hover:bg-[#7b4623]/5"
                     >
                         <FileText className="w-4 h-4 mr-2" />
                         Template
-                    </Button>
-                    <div className="relative flex-1 md:flex-initial">
+                    </Button> */}
+                    {/* <div className="relative flex-1 md:flex-initial">
                         <input
                             type="file"
                             accept=".xlsx, .xls"
@@ -269,15 +269,15 @@ export default function TemplePoojasListPage() {
                             <Upload className="w-4 h-4 mr-2" />
                             Import
                         </Button>
-                    </div>
-                    <Button
+                    </div> */}
+                    {/* <Button
                         onClick={handleExportExcel}
                         variant="outline"
                         className="flex-1 md:flex-initial border-[#7b4623]/20 hover:bg-[#7b4623]/5"
                     >
                         <Download className="w-4 h-4 mr-2" />
                         Export
-                    </Button>
+                    </Button> */}
                     {hasPermission('poojas.create') && (
                         <Button
                             onClick={() => router.push('/temples/dashboard/poojas/create')}

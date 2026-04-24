@@ -80,7 +80,8 @@ export default function EditProductPage() {
   const searchParams = useSearchParams();
   const sourcePage = searchParams.get("page") || "1";
   const { toast } = useToast();
-  const { language, setLanguage, t } = useLanguage();
+  const { t } = useLanguage();
+  const [activeFormLang, setActiveFormLang] = useState<Language>("en");
 
   const [isLoading, setIsLoading] = useState(true);
   const [isSubmitting, setIsSubmitting] = useState(false);
@@ -366,7 +367,7 @@ export default function EditProductPage() {
       </div>
 
       {/* ── LANGUAGE TABS (same as TempleForm) ── */}
-      <Tabs value={language} onValueChange={(v) => setLanguage(v as Language)} className="w-full">
+      <Tabs value={activeFormLang} onValueChange={(v) => setActiveFormLang(v as Language)} className="w-full">
         <TabsList className="mb-6 grid w-full max-w-md grid-cols-3">
           <TabsTrigger value="en">English (EN)</TabsTrigger>
           <TabsTrigger value="hi">हिंदी (HI)</TabsTrigger>

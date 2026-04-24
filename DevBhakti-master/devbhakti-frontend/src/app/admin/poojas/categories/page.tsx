@@ -59,10 +59,11 @@ const LangTabsInput = ({
     onCancel: () => void;
     saving: boolean;
 }) => {
-    const { language, setLanguage } = useLanguage();
+    // Local tab — independent of global app language
+    const [activeTab, setActiveTab] = useState<Language>("en");
     return (
         <>
-            <Tabs value={language} onValueChange={(v) => setLanguage(v as Language)} className="w-full">
+            <Tabs value={activeTab} onValueChange={(v) => setActiveTab(v as Language)} className="w-full">
                 <TabsList className="w-full grid grid-cols-3 mb-3 h-9">
                     {LANGUAGES.map(l => (
                         <TabsTrigger key={l.key} value={l.key} className="text-xs sm:text-sm gap-0.5 sm:gap-1">
@@ -122,7 +123,6 @@ const LangTabsInput = ({
 };
 
 export default function AdminPoojaCategoriesPage() {
-    const { language, setLanguage } = useLanguage();
     const { toast } = useToast();
     const [categories, setCategories] = useState<any[]>([]);
     const [isLoading, setIsLoading] = useState(true);
@@ -470,11 +470,11 @@ export default function AdminPoojaCategoriesPage() {
                 </div>
 
                 <div className="flex flex-wrap items-center gap-2">
-                    <Button variant="outline" onClick={downloadTemplate} className="text-xs h-9">
+                    {/* <Button variant="outline" onClick={downloadTemplate} className="text-xs h-9">
                         <Download className="w-4 h-4 mr-1.5" />
                         Template
-                    </Button>
-
+                    </Button> */}
+{/* 
                     <div className="relative">
                         <input
                             type="file"
@@ -486,12 +486,12 @@ export default function AdminPoojaCategoriesPage() {
                             <Upload className="w-4 h-4 mr-1.5" />
                             Import
                         </Button>
-                    </div>
+                    </div> */}
 
-                    <Button variant="outline" onClick={handleExportExcel} className="text-xs h-9">
+                    {/* <Button variant="outline" onClick={handleExportExcel} className="text-xs h-9">
                         <Download className="w-4 h-4 mr-1.5" />
                         Export All
-                    </Button>
+                    </Button> */}
 
                     <Dialog open={isAdding} onOpenChange={(o) => { setIsAdding(o); if (!o) setNewNames(emptyNames()); }}>
                         <DialogTrigger asChild>

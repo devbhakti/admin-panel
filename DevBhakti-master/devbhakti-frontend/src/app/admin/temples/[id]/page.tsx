@@ -45,8 +45,8 @@ export default function ViewTemplePage() {
     const [isCustomMarketplace, setIsCustomMarketplace] = useState(false);
     const [isCustomPooja, setIsCustomPooja] = useState(false);
     const [products, setProducts] = useState<any[]>([]);
-    const { language, setLanguage } = useLanguage();
-    const [activeTab, setActiveTab] = useState<Language>(language);
+    const { language } = useLanguage();
+    const [activeTab, setActiveTab] = useState<Language>("en");
 
     useEffect(() => {
         loadData();

@@ -281,11 +281,11 @@ export default function CategoriesManagementPage() {
           <p className="text-muted-foreground">{t("admin.categories.desc")}</p>
         </div>
         <div className="flex flex-wrap items-center gap-2">
-          <Button variant="outline" onClick={downloadTemplate} className="text-xs h-9">
+          {/* <Button variant="outline" onClick={downloadTemplate} className="text-xs h-9">
             <Download className="w-4 h-4 mr-1.5" />
             Template
-          </Button>
-
+          </Button> */}
+{/* 
           <div className="relative">
             <input
               type="file"
@@ -297,12 +297,12 @@ export default function CategoriesManagementPage() {
               <Upload className="w-4 h-4 mr-1.5" />
               Import
             </Button>
-          </div>
+          </div> */}
 
-          <Button variant="outline" onClick={handleExportExcel} className="text-xs h-9">
+          {/* <Button variant="outline" onClick={handleExportExcel} className="text-xs h-9">
             <Download className="w-4 h-4 mr-1.5" />
             Export All
-          </Button>
+          </Button> */}
 
           {hasPermission("categories.create") && (
             <Button

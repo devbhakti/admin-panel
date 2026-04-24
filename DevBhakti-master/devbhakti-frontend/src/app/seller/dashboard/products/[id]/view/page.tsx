@@ -28,7 +28,9 @@ export default function SellerViewProductPage() {
     const params = useParams();
     const productId = params.id as string;
     const { toast } = useToast();
-    const { language, setLanguage, t } = useLanguage();
+    const { t } = useLanguage();
+    // Local language tab — independent of global app language
+    const [activeViewLang, setActiveViewLang] = useState<Language>("en");
     const [product, setProduct] = useState<any>(null);
     const [isLoading, setIsLoading] = useState(true);
 
@@ -114,7 +116,7 @@ export default function SellerViewProductPage() {
                     </Button>
                     <div>
                         <h1 className="text-2xl font-bold tracking-tight text-slate-900">
-                            {parseLocalizedValue(product.name, language)}
+                            {parseLocalizedValue(product.name, activeViewLang)}
                         </h1>
                         <p className="text-muted-foreground text-sm">Product Details</p>
                     </div>
@@ -239,8 +241,8 @@ export default function SellerViewProductPage() {
                 {/* Right Column – Language Tabs & Variants */}
                 <div className="lg:col-span-2 space-y-6">
                     <Tabs
-                        value={language}
-                        onValueChange={(v) => setLanguage(v as Language)}
+                        value={activeViewLang}
+                        onValueChange={(v) => setActiveViewLang(v as Language)}
                         className="w-full"
                     >
                         {/* Tab Header */}
@@ -344,7 +346,7 @@ export default function SellerViewProductPage() {
                                         {variant.image ? (
                                             <img
                                                 src={getImageUrl(variant.image)}
-                                                alt={parseLocalizedValue(variant.name, language)}
+                                                alt={parseLocalizedValue(variant.name, activeViewLang)}
                                                 className="w-full h-full object-cover"
                                             />
                                         ) : (
@@ -357,7 +359,7 @@ export default function SellerViewProductPage() {
                                         <div className="flex flex-col md:flex-row md:items-center justify-between gap-2">
                                             <div>
                                                 <h4 className="font-bold text-slate-900 truncate">
-                                                    {parseLocalizedValue(variant.name, language)}
+                                                    {parseLocalizedValue(variant.name, activeViewLang)}
                                                 </h4>
                                                 <div className="flex items-center gap-3 mt-1 text-xs text-slate-500">
                                                     <span className="flex items-center gap-1">

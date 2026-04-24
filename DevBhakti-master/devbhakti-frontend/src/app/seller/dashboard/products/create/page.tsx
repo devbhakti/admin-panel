@@ -56,7 +56,9 @@ interface Variant {
 
 
 export default function CreateSellerProductPage() {
-    const { t, language, setLanguage } = useLanguage();
+    const { t } = useLanguage();
+    // Local language tab — independent of global app language
+    const [activeFormLang, setActiveFormLang] = useState<Language>("en");
     const router = useRouter();
     const { toast } = useToast();
 
@@ -294,7 +296,7 @@ export default function CreateSellerProductPage() {
             </div>
 
             <form onSubmit={handleSubmit} className="space-y-6">
-                <Tabs value={language} onValueChange={(v) => setLanguage(v as Language)} className="w-full">
+                <Tabs value={activeFormLang} onValueChange={(v) => setActiveFormLang(v as Language)} className="w-full">
                     <TabsList className="mb-6 grid w-full max-w-md grid-cols-3">
                         <TabsTrigger value="en">English (EN)</TabsTrigger>
                         <TabsTrigger value="hi">हिंदी (HI)</TabsTrigger>
@@ -463,17 +465,17 @@ export default function CreateSellerProductPage() {
                                             </div>
 
                                             <div className="space-y-2">
-                                                <Label>Variant Name ({language.toUpperCase()}) *</Label>
+                                                <Label>Variant Name ({activeFormLang.toUpperCase()}) *</Label>
                                                 <Input 
                                                     placeholder="e.g. Small, Red, 100ml" 
-                                                    value={(variant as any)[`name_${language}`]} 
+                                                    value={(variant as any)[`name_${activeFormLang}`]} 
                                                     onChange={(e) => {
                                                         const newVariants = [...variants];
-                                                        (newVariants[index] as any)[`name_${language}`] = e.target.value;
+                                                        (newVariants[index] as any)[`name_${activeFormLang}`] = e.target.value;
                                                         setVariants(newVariants);
                                                     }} 
                                                 />
-                                                {errors[`variant_name_${index}`] && language === 'en' && <p className="text-xs text-red-500">{errors[`variant_name_${index}`]}</p>}
+                                                {errors[`variant_name_${index}`] && activeFormLang === 'en' && <p className="text-xs text-red-500">{errors[`variant_name_${index}`]}</p>}
                                             </div>
 
                                             <div className="space-y-2">

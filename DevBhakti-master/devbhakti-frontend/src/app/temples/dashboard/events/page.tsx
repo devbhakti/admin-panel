@@ -416,15 +416,15 @@ export default function TempleEventsPage() {
                     </p>
                 </div>
                 <div className="flex flex-wrap items-center gap-2 sm:gap-3 w-full md:w-auto">
-                    <Button
+                    {/* <Button
                         onClick={downloadTemplate}
                         variant="outline"
                         className="flex-1 md:flex-initial border-[#7b4623]/20 hover:bg-[#7b4623]/5"
                     >
                         <FileText className="w-4 h-4 mr-2" />
                         Template
-                    </Button>
-                    <div className="relative flex-1 md:flex-initial">
+                    </Button> */}
+                    {/* <div className="relative flex-1 md:flex-initial">
                         <input
                             type="file"
                             accept=".xlsx, .xls"
@@ -439,16 +439,16 @@ export default function TempleEventsPage() {
                         >
                             <Upload className="w-4 h-4 mr-2" />
                             Import
-                        </Button>
-                    </div>
-                    <Button
+                        </Button> */}
+                    {/* </div> */}
+                    {/* <Button
                         onClick={handleExportExcel}
                         variant="outline"
                         className="flex-1 md:flex-initial border-[#7b4623]/20 hover:bg-[#7b4623]/5"
                     >
                         <Download className="w-4 h-4 mr-2" />
                         Export
-                    </Button>
+                    </Button> */}
                     {(!canCreate || !canEdit || !canManage || !canDelete) && (
                         <Badge className="bg-slate-100 text-slate-500 border-slate-200 uppercase font-black tracking-widest px-4 py-2 rounded-xl">View Only Mode</Badge>
                     )}

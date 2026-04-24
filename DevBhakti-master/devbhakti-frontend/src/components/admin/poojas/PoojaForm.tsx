@@ -63,7 +63,8 @@ export const PoojaForm: React.FC<PoojaFormProps> = ({
     onSubmit,
     isLoading = false
 }) => {
-    const { t, language, setLanguage } = useLanguage();
+    const { t } = useLanguage();
+    // Local language tab — independent of global app language
     const [activeTab, setActiveTab] = useState<Language>("en");
     const [isMaster, setIsMaster] = useState(false);
 
@@ -351,7 +352,7 @@ export const PoojaForm: React.FC<PoojaFormProps> = ({
 
 
     return (
-        <Tabs value={language} onValueChange={(v) => setLanguage(v as Language)} className="w-full">
+        <Tabs value={activeTab} onValueChange={(v) => setActiveTab(v as Language)} className="w-full">
             <TabsList className="mb-8 grid w-full max-w-md grid-cols-3 bg-slate-100 p-1 rounded-xl">
                 <TabsTrigger value="en" className="rounded-lg data-[state=active]:bg-white data-[state=active]:shadow-sm transition-all duration-200">
                     English (EN)
@@ -399,7 +400,7 @@ export const PoojaForm: React.FC<PoojaFormProps> = ({
                                             <option value="">{isMaster ? t('admin_pooja_form.placeholders.not_applicable') : t('admin_pooja_form.placeholders.select_temple')}</option>
                                             {temples.map(t => (
                                                 <option key={t.id} value={t.id}>
-                                                    {parseLocalizedValue(t[`name_${language}`] || t.name_en || t.name, language) || 'Unnamed'}
+                                                    {parseLocalizedValue(t[`name_${activeTab}`] || t.name_en || t.name, activeTab) || 'Unnamed'}
                                                 </option>
                                             ))}
                                         </select>
