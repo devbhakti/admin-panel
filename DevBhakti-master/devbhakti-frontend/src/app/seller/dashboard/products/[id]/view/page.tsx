@@ -143,7 +143,7 @@ export default function SellerViewProductPage() {
                         {product.image ? (
                             <img
                                 src={getImageUrl(product.image)}
-                                alt={parseLocalizedValue(product.name, language)}
+                                alt={parseLocalizedValue(product.name, activeViewLang)}
                                 className="w-full h-full object-contain"
                             />
                         ) : (
@@ -181,8 +181,8 @@ export default function SellerViewProductPage() {
                                         Category
                                     </p>
                                     <Badge variant="outline" className="font-medium">
-                                        {parseLocalizedValue(product.categoryObj?.name, language) ||
-                                            parseLocalizedValue(product.category, language) ||
+                                        {parseLocalizedValue(product.categoryObj?.name, activeViewLang) ||
+                                            parseLocalizedValue(product.category, activeViewLang) ||
                                             "General"}
                                     </Badge>
                                 </div>
@@ -212,7 +212,7 @@ export default function SellerViewProductPage() {
                                             Stock Origin
                                         </p>
                                         <p className="text-sm font-semibold text-slate-700">
-                                            {parseLocalizedValue(product.origin, language)}
+                                            {parseLocalizedValue(product.origin, activeViewLang)}
                                         </p>
                                     </div>
                                 </div>
@@ -229,7 +229,7 @@ export default function SellerViewProductPage() {
                                             Shipping Info
                                         </p>
                                         <p className="text-sm font-semibold text-slate-700">
-                                            {parseLocalizedValue(product.shippingInfo, language)}
+                                            {parseLocalizedValue(product.shippingInfo, activeViewLang)}
                                         </p>
                                     </div>
                                 </div>

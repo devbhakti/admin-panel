@@ -485,7 +485,7 @@ export default function CreateProductPage() {
                                       <CommandItem key={vendor.id} value={vendor.searchText || vendor.name} onSelect={() => { setFormData({ ...formData, templeId: vendor.id }); setOpen(false); }}>
                                         <div className="flex items-center gap-2 w-full">
                                           {vendor.icon}
-                                          <span className="flex-1">{parseLocalizedValue(vendor.name, language)}</span>
+                                          <span className="flex-1">{parseLocalizedValue(vendor.name, activeFormLang)}</span>
                                           <span className="text-[10px] font-bold uppercase py-0.5 px-1 bg-slate-100 rounded text-slate-500">{vendor.role}</span>
                                           <Check className={cn("ml-2 h-4 w-4", formData.templeId === vendor.id ? "opacity-100" : "opacity-0")} />
                                         </div>
