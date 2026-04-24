@@ -186,34 +186,34 @@ export default function StaffMembersPage() {
             {/* Header */}
             <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
                 <div>
-                    <h1 className="text-2xl font-bold text-foreground flex items-center gap-2">
-                        <Users className="w-7 h-7 text-primary" /> Staff Members
+                    <h1 className="text-xl sm:text-2xl font-bold text-foreground flex items-center gap-2">
+                        <Users className="w-5 h-5 sm:w-7 sm:h-7 text-primary" /> Staff Members
                     </h1>
-                    <p className="text-muted-foreground text-sm mt-1">
+                    <p className="text-muted-foreground text-xs sm:text-sm mt-1">
                         Manage your admin panel team members and their access roles
                     </p>
                 </div>
                 <button
                     onClick={openCreate}
-                    className="flex items-center gap-2 px-4 py-2 bg-primary text-primary-foreground rounded-lg hover:bg-primary/90 transition-colors font-medium text-sm"
+                    className="flex items-center gap-2 px-3 sm:px-4 py-2 bg-primary text-primary-foreground rounded-lg hover:bg-primary/90 transition-colors font-medium text-xs sm:text-sm"
                 >
-                    <UserPlus className="w-4 h-4" /> Add Staff Member
+                    <UserPlus className="w-3.5 h-3.5 sm:w-4 sm:h-4" /> <span className="hidden sm:inline">Add Staff Member</span><span className="sm:hidden">Add</span>
                 </button>
             </div>
 
             {/* Stats */}
-            <div className="grid grid-cols-2 sm:grid-cols-3 gap-4">
-                <div className="bg-card border border-border rounded-xl p-4">
+            <div className="grid grid-cols-3 gap-3 sm:gap-4">
+                <div className="bg-card border border-border rounded-xl p-3 sm:p-4">
                     <p className="text-xs text-muted-foreground uppercase tracking-wide">Total Staff</p>
-                    <p className="text-3xl font-bold text-foreground mt-1">{staffList.length}</p>
+                    <p className="text-2xl sm:text-3xl font-bold text-foreground mt-1">{staffList.length}</p>
                 </div>
-                <div className="bg-card border border-border rounded-xl p-4">
+                <div className="bg-card border border-border rounded-xl p-3 sm:p-4">
                     <p className="text-xs text-muted-foreground uppercase tracking-wide">Active</p>
-                    <p className="text-3xl font-bold text-green-500 mt-1">{staffList.filter(s => s.isActive).length}</p>
+                    <p className="text-2xl sm:text-3xl font-bold text-green-500 mt-1">{staffList.filter(s => s.isActive).length}</p>
                 </div>
-                <div className="bg-card border border-border rounded-xl p-4">
+                <div className="bg-card border border-border rounded-xl p-3 sm:p-4">
                     <p className="text-xs text-muted-foreground uppercase tracking-wide">Inactive</p>
-                    <p className="text-3xl font-bold text-destructive mt-1">{staffList.filter(s => !s.isActive).length}</p>
+                    <p className="text-2xl sm:text-3xl font-bold text-destructive mt-1">{staffList.filter(s => !s.isActive).length}</p>
                 </div>
             </div>
 
@@ -240,33 +240,34 @@ export default function StaffMembersPage() {
                 </div>
             ) : (
                 <div className="bg-card border border-border rounded-xl overflow-hidden">
-                    <table className="w-full">
-                        <thead>
-                            <tr className="border-b border-border bg-muted/30">
-                                <th className="text-left px-4 py-3 text-xs font-semibold text-muted-foreground uppercase tracking-wide">Member</th>
-                                <th className="text-left px-4 py-3 text-xs font-semibold text-muted-foreground uppercase tracking-wide">Roles</th>
-                                <th className="text-left px-4 py-3 text-xs font-semibold text-muted-foreground uppercase tracking-wide">Status</th>
-                                <th className="text-left px-4 py-3 text-xs font-semibold text-muted-foreground uppercase tracking-wide">Joined</th>
-                                <th className="text-right px-4 py-3 text-xs font-semibold text-muted-foreground uppercase tracking-wide">Actions</th>
-                            </tr>
-                        </thead>
+                    <div className="overflow-x-auto">
+                        <table className="w-full min-w-[600px]">
+                            <thead>
+                                <tr className="border-b border-border bg-muted/30">
+                                    <th className="text-left px-3 sm:px-4 py-3 text-xs font-semibold text-muted-foreground uppercase tracking-wide">Member</th>
+                                    <th className="text-left px-3 sm:px-4 py-3 text-xs font-semibold text-muted-foreground uppercase tracking-wide">Roles</th>
+                                    <th className="text-left px-3 sm:px-4 py-3 text-xs font-semibold text-muted-foreground uppercase tracking-wide">Status</th>
+                                    <th className="text-left px-3 sm:px-4 py-3 text-xs font-semibold text-muted-foreground uppercase tracking-wide hidden sm:table-cell">Joined</th>
+                                    <th className="text-right px-3 sm:px-4 py-3 text-xs font-semibold text-muted-foreground uppercase tracking-wide">Actions</th>
+                                </tr>
+                            </thead>
                         <tbody className="divide-y divide-border">
                             {filtered.map((s) => (
                                 <tr key={s.id} className="hover:bg-muted/20 transition-colors">
-                                    <td className="px-4 py-3">
-                                        <div className="flex items-center gap-3">
-                                            <div className="w-9 h-9 rounded-full bg-primary/10 flex items-center justify-center text-primary font-bold text-sm">
+                                    <td className="px-3 sm:px-4 py-3">
+                                        <div className="flex items-center gap-2 sm:gap-3">
+                                            <div className="w-7 h-7 sm:w-9 sm:h-9 rounded-full bg-primary/10 flex items-center justify-center text-primary font-bold text-xs sm:text-sm">
                                                 {s.name[0].toUpperCase()}
                                             </div>
                                             <div>
-                                                <p className="font-medium text-foreground text-sm">{s.name}</p>
+                                                <p className="font-medium text-foreground text-xs sm:text-sm">{s.name}</p>
                                                 <p className="text-xs text-muted-foreground flex items-center gap-1">
                                                     <Mail className="w-3 h-3" />{s.email}
                                                 </p>
                                             </div>
                                         </div>
                                     </td>
-                                    <td className="px-4 py-3">
+                                    <td className="px-3 sm:px-4 py-3">
                                         <div className="flex flex-wrap gap-1">
                                             {s.staffRoles.length === 0 ? (
                                                 <span className="text-xs text-muted-foreground italic">No roles</span>
@@ -277,45 +278,46 @@ export default function StaffMembersPage() {
                                             ))}
                                         </div>
                                     </td>
-                                    <td className="px-4 py-3">
+                                    <td className="px-3 sm:px-4 py-3">
                                         <span className={`inline-flex items-center gap-1 text-xs px-2 py-0.5 rounded-full font-medium ${s.isActive ? "bg-green-500/10 text-green-500" : "bg-destructive/10 text-destructive"}`}>
                                             {s.isActive ? <Power className="w-3 h-3" /> : <PowerOff className="w-3 h-3" />}
                                             {s.isActive ? "Active" : "Inactive"}
                                         </span>
                                     </td>
-                                    <td className="px-4 py-3 text-xs text-muted-foreground">
+                                    <td className="px-3 sm:px-4 py-3 text-xs text-muted-foreground hidden sm:table-cell">
                                         {new Date(s.createdAt).toLocaleDateString("en-IN")}
                                     </td>
-                                    <td className="px-4 py-3">
+                                    <td className="px-3 sm:px-4 py-3">
                                         <div className="flex items-center justify-end gap-2">
                                             <button onClick={() => openEdit(s)} className="p-1.5 rounded-lg hover:bg-primary/10 text-primary transition-colors" title="Edit">
-                                                <Pencil className="w-4 h-4" />
+                                                <Pencil className="w-3.5 h-3.5 sm:w-4 sm:h-4" />
                                             </button>
                                             <button onClick={() => setDeleteConfirm(s.id)} className="p-1.5 rounded-lg hover:bg-destructive/10 text-destructive transition-colors" title="Delete">
-                                                <Trash2 className="w-4 h-4" />
+                                                <Trash2 className="w-3.5 h-3.5 sm:w-4 sm:h-4" />
                                             </button>
                                         </div>
                                     </td>
                                 </tr>
                             ))}
                         </tbody>
-                    </table>
+                        </table>
+                    </div>
                 </div>
             )}
 
             {/* Create/Edit Modal */}
             {modalOpen && (
                 <div className="fixed inset-0 z-50 bg-black/60 backdrop-blur-sm flex items-center justify-center p-4">
-                    <div className="bg-card border border-border rounded-2xl shadow-2xl w-full max-w-lg">
-                        <div className="flex items-center justify-between p-6 border-b border-border">
-                            <h2 className="text-lg font-semibold text-foreground">
+                    <div className="bg-card border border-border rounded-2xl shadow-2xl w-full max-w-md sm:max-w-lg max-h-[90vh] overflow-y-auto">
+                        <div className="flex items-center justify-between p-4 sm:p-6 border-b border-border">
+                            <h2 className="text-base sm:text-lg font-semibold text-foreground">
                                 {editingStaff ? "Edit Staff Member" : "Add New Staff Member"}
                             </h2>
                             <button onClick={() => setModalOpen(false)} className="p-2 rounded-lg hover:bg-muted/50 text-muted-foreground transition-colors">
-                                <X className="w-5 h-5" />
+                                <X className="w-4 h-4 sm:w-5 sm:h-5" />
                             </button>
                         </div>
-                        <div className="p-6 space-y-4">
+                        <div className="p-4 sm:p-6 space-y-4">
                             {error && (
                                 <div className="bg-destructive/10 border border-destructive/20 text-destructive text-sm px-4 py-3 rounded-lg">
                                     {error}
@@ -446,7 +448,7 @@ export default function StaffMembersPage() {
                                 )}
                             </div>
                         </div>
-                        <div className="flex items-center gap-3 p-6 border-t border-border">
+                        <div className="flex items-center gap-3 p-4 sm:p-6 border-t border-border">
                             <button onClick={() => setModalOpen(false)} className="flex-1 px-4 py-2.5 border border-border rounded-lg text-sm font-medium hover:bg-muted/50 transition-colors">
                                 Cancel
                             </button>
@@ -462,11 +464,11 @@ export default function StaffMembersPage() {
             {/* Delete Confirm Modal */}
             {deleteConfirm && (
                 <div className="fixed inset-0 z-50 bg-black/60 backdrop-blur-sm flex items-center justify-center p-4">
-                    <div className="bg-card border border-border rounded-2xl p-6 shadow-2xl w-full max-w-sm text-center">
-                        <div className="w-12 h-12 rounded-full bg-destructive/10 flex items-center justify-center mx-auto mb-4">
-                            <Trash2 className="w-6 h-6 text-destructive" />
+                    <div className="bg-card border border-border rounded-2xl p-4 sm:p-6 shadow-2xl w-full max-w-sm text-center max-h-[90vh] overflow-y-auto">
+                        <div className="w-10 h-10 sm:w-12 sm:h-12 rounded-full bg-destructive/10 flex items-center justify-center mx-auto mb-4">
+                            <Trash2 className="w-5 h-5 sm:w-6 sm:h-6 text-destructive" />
                         </div>
-                        <h3 className="text-lg font-semibold text-foreground mb-1">Delete Staff Member?</h3>
+                        <h3 className="text-base sm:text-lg font-semibold text-foreground mb-1">Delete Staff Member?</h3>
                         <p className="text-sm text-muted-foreground mb-6">This action cannot be undone. The staff member will lose all access immediately.</p>
                         <div className="flex gap-3">
                             <button onClick={() => setDeleteConfirm(null)} className="flex-1 px-4 py-2.5 border border-border rounded-lg text-sm font-medium hover:bg-muted/50 transition-colors">Cancel</button>

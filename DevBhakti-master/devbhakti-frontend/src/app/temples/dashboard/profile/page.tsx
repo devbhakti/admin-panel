@@ -317,6 +317,23 @@ export default function TempleProfilePage() {
         setFormData({ ...formData, youtubeLinks: formData.youtubeLinks.filter((_: any, i: number) => i !== index) });
     };
 
+    const addOperatingHour = () => {
+        setFormData((prev: any) => ({
+            ...prev,
+            operatingHours: [
+                ...prev.operatingHours,
+                { label: t("temple_dashboard.profile.new_slot_default") || "New Slot", start: "09:00 AM", end: "05:00 PM", active: true }
+            ]
+        }));
+    };
+
+    const removeOperatingHour = (index: number) => {
+        setFormData((prev: any) => ({
+            ...prev,
+            operatingHours: prev.operatingHours.filter((_: any, i: number) => i !== index)
+        }));
+    };
+
     const handleSubmit = async (e: React.FormEvent) => {
         e.preventDefault();
         setIsSaving(true);
@@ -335,7 +352,11 @@ export default function TempleProfilePage() {
 
             const response = await updateMyTempleProfile(fd);
             if (response.success) {
-                toast({ title: "Success", description: response.pendingApproval ? "Profile saved. Sensitive changes are pending admin approval." : "Profile updated successfully" });
+                toast({ 
+                    title: "Success", 
+                    description: response.pendingApproval ? "Profile saved. Sensitive changes are pending admin approval." : "Profile updated successfully",
+                    variant: "success"
+                });
                 loadProfile();
                 setIsEditing(false);
                 setSelectedMainFile(null);
@@ -698,17 +719,46 @@ export default function TempleProfilePage() {
                                         </div>
                                     </div>
 
-                                    {/* Operating Hours */}
-                                    <div className="space-y-6 pt-8 border-t border-slate-100">
+                                    <div className="flex items-center justify-between pt-8 border-t border-slate-100">
                                         <div className="flex items-center gap-2 text-[#7b4623]">
                                             <Clock className="w-5 h-5" />
-                                            <h3 className="text-sm font-bold uppercase tracking-widest">Divine Operating Hours</h3>
+                                            <h3 className="text-sm font-bold uppercase tracking-widest">{t("temple_dashboard.profile.divine_hours") || "Divine Operating Hours"}</h3>
                                         </div>
-                                        <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                                        <Button 
+                                            type="button" 
+                                            variant="outline" 
+                                            size="sm" 
+                                            onClick={addOperatingHour}
+                                            className="rounded-xl border-[#7b4623]/20 text-[#7b4623] hover:bg-[#7b4623]/5"
+                                        >
+                                            <Plus className="w-4 h-4 mr-2" /> {t("temple_dashboard.profile.add_slot") || "Add Slot"}
+                                        </Button>
+                                    </div>
+                                    <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                                             {formData.operatingHours.map((hour: any, idx: number) => (
-                                                <div key={idx} className="p-6 bg-white border border-slate-100 rounded-3xl space-y-4 shadow-sm">
+                                                <div key={idx} className="p-6 bg-white border border-slate-100 rounded-3xl space-y-4 shadow-sm relative group">
+                                                    {formData.operatingHours.length > 1 && (
+                                                        <button
+                                                            type="button"
+                                                            onClick={() => removeOperatingHour(idx)}
+                                                            className="absolute -top-2 -right-2 bg-white border border-slate-200 shadow-sm rounded-full p-1.5 text-red-500 opacity-0 group-hover:opacity-100 transition-all z-10 hover:bg-red-50 hover:scale-110"
+                                                        >
+                                                            <Trash2 className="w-3.5 h-3.5" />
+                                                        </button>
+                                                    )}
                                                     <div className="flex items-center justify-between">
-                                                        <Label className="font-bold text-slate-700">{hour.label} Shifting</Label>
+                                                        <div className="flex-1 mr-4">
+                                                            <Input 
+                                                                value={hour.label} 
+                                                                onChange={e => {
+                                                                    const newHours = [...formData.operatingHours];
+                                                                    newHours[idx].label = e.target.value;
+                                                                    setFormData({...formData, operatingHours: newHours});
+                                                                }}
+                                                                className="h-8 border-none bg-transparent font-bold text-slate-700 p-0 focus-visible:ring-0" 
+                                                                placeholder={t("temple_dashboard.profile.slot_label") || "Slot Label"}
+                                                            />
+                                                        </div>
                                                         <Switch 
                                                             checked={hour.active} 
                                                             onCheckedChange={(checked) => {
@@ -718,37 +768,73 @@ export default function TempleProfilePage() {
                                                             }} 
                                                         />
                                                     </div>
-                                                    <div className="grid grid-cols-2 gap-4">
-                                                        <div className="space-y-2">
-                                                            <span className="text-[9px] font-black text-slate-400 uppercase">Opening</span>
-                                                            <Input 
-                                                                value={hour.start} 
-                                                                onChange={e => {
-                                                                    const newHours = [...formData.operatingHours];
-                                                                    newHours[idx].start = e.target.value;
-                                                                    setFormData({...formData, operatingHours: newHours});
-                                                                }}
-                                                                className="h-10 rounded-lg text-xs" 
-                                                            />
-                                                        </div>
-                                                        <div className="space-y-2">
-                                                            <span className="text-[9px] font-black text-slate-400 uppercase">Closing</span>
-                                                            <Input 
-                                                                value={hour.end} 
-                                                                onChange={e => {
-                                                                    const newHours = [...formData.operatingHours];
-                                                                    newHours[idx].end = e.target.value;
-                                                                    setFormData({...formData, operatingHours: newHours});
-                                                                }}
-                                                                className="h-10 rounded-lg text-xs" 
-                                                            />
-                                                        </div>
+                                                        <div className="grid grid-cols-2 gap-4">
+                                                            <div className="space-y-2">
+                                                                <span className="text-[9px] font-black text-slate-400 uppercase">{t("registration_form.labels.opening") || "Opening"}</span>
+                                                                <Input 
+                                                                    type="time"
+                                                                    value={(() => {
+                                                                        if (!hour.start) return "";
+                                                                        const [time, modifier] = hour.start.split(' ');
+                                                                        if (!time || !modifier) return "";
+                                                                        let [hours, minutes] = time.split(':');
+                                                                        let h = parseInt(hours, 10);
+                                                                        if (modifier === 'PM' && h < 12) h += 12;
+                                                                        if (modifier === 'AM' && h === 12) h = 0;
+                                                                        return `${String(h).padStart(2, '0')}:${minutes}`;
+                                                                    })()}
+                                                                    onChange={e => {
+                                                                        const time24 = e.target.value;
+                                                                        if (!time24) return;
+                                                                        let [hours, minutes] = time24.split(':');
+                                                                        let h = parseInt(hours, 10);
+                                                                        const modifier = h >= 12 ? 'PM' : 'AM';
+                                                                        if (h > 12) h -= 12;
+                                                                        if (h === 0) h = 12;
+                                                                        const time12 = `${String(h).padStart(2, '0')}:${minutes} ${modifier}`;
+                                                                        
+                                                                        const newHours = [...formData.operatingHours];
+                                                                        newHours[idx].start = time12;
+                                                                        setFormData({...formData, operatingHours: newHours});
+                                                                    }}
+                                                                    className="h-10 rounded-lg text-xs" 
+                                                                />
+                                                            </div>
+                                                            <div className="space-y-2">
+                                                                <span className="text-[9px] font-black text-slate-400 uppercase">{t("registration_form.labels.closing") || "Closing"}</span>
+                                                                <Input 
+                                                                    type="time"
+                                                                    value={(() => {
+                                                                        if (!hour.end) return "";
+                                                                        const [time, modifier] = hour.end.split(' ');
+                                                                        if (!time || !modifier) return "";
+                                                                        let [hours, minutes] = time.split(':');
+                                                                        let h = parseInt(hours, 10);
+                                                                        if (modifier === 'PM' && h < 12) h += 12;
+                                                                        if (modifier === 'AM' && h === 12) h = 0;
+                                                                        return `${String(h).padStart(2, '0')}:${minutes}`;
+                                                                    })()}
+                                                                    onChange={e => {
+                                                                        const time24 = e.target.value;
+                                                                        if (!time24) return;
+                                                                        let [hours, minutes] = time24.split(':');
+                                                                        let h = parseInt(hours, 10);
+                                                                        const modifier = h >= 12 ? 'PM' : 'AM';
+                                                                        if (h > 12) h -= 12;
+                                                                        if (h === 0) h = 12;
+                                                                        const time12 = `${String(h).padStart(2, '0')}:${minutes} ${modifier}`;
+                                                                        
+                                                                        const newHours = [...formData.operatingHours];
+                                                                        newHours[idx].end = time12;
+                                                                        setFormData({...formData, operatingHours: newHours});
+                                                                    }}
+                                                                    className="h-10 rounded-lg text-xs" 
+                                                                />
                                                     </div>
                                                 </div>
-                                            ))}
-                                        </div>
+                                            </div>
+                                        ))}
                                     </div>
-
                                 </CardContent>
                             </Card>
 

@@ -259,23 +259,24 @@ function BookingsContent() {
 
     return (
         <div className="space-y-6">
-            <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
+            <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
                 <div>
-                    <h1 className="text-2xl md:text-3xl font-serif font-bold text-[#794A05]">Pooja & Seva Bookings</h1>
-                    <p className="text-muted-foreground mt-1 text-sm font-medium">Manage all sacred service reservations</p>
+                    <h1 className="text-xl sm:text-2xl md:text-3xl font-serif font-bold text-[#794A05]">Pooja & Seva Bookings</h1>
+                    <p className="text-muted-foreground mt-1 text-xs sm:text-sm font-medium">Manage all sacred service reservations</p>
                 </div>
+                <Button
+                    onClick={handleExportBookings}
+                    variant="sacred"
+                    className="w-full sm:w-auto"
+                >
+                    <Download className="w-4 h-4" />
+                    <span className="hidden sm:inline ml-2">Export Excel</span>
+                    <span className="sm:hidden ml-2">Export</span>
+                </Button>
             </div>
 
-            <Button
-                onClick={handleExportBookings}
-                variant="sacred"
-            >
-                <Download className="w-4 h-4" />
-                Export Excel
-            </Button>
 
-
-            <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+            <div className="grid grid-cols-2 md:grid-cols-4 gap-3 sm:gap-4">
                 {[
                     { label: "Total", value: totalItems, color: "text-slate-900" },
                     { label: "Booked", value: stats.booked, color: "text-blue-600" },
@@ -283,24 +284,24 @@ function BookingsContent() {
                     { label: "Rejections", value: stats.cancelled + stats.rejected, color: "text-rose-600" },
                 ].map((stat) => (
                     <Card key={stat.label} className="border-none shadow-sm bg-white/50 backdrop-blur-sm">
-                        <CardContent className="p-4">
-                            <p className={`text-2xl font-extrabold ${stat.color}`}>{String(stat.value)}</p>
-                            <p className="text-[10px] font-bold text-slate-400 uppercase tracking-widest">{stat.label}</p>
+                        <CardContent className="p-3 sm:p-4">
+                            <p className={`text-lg sm:text-2xl font-extrabold ${stat.color}`}>{String(stat.value)}</p>
+                            <p className="text-[9px] sm:text-[10px] font-bold text-slate-400 uppercase tracking-widest">{stat.label}</p>
                         </CardContent>
                     </Card>
                 ))}
             </div>
 
-            <div className="bg-white p-4 rounded-xl shadow-sm border border-slate-100 flex flex-col gap-4">
+            <div className="bg-white p-3 sm:p-4 rounded-xl shadow-sm border border-slate-100 flex flex-col gap-4">
                 {/* Search & Status Filters */}
-                <div className="flex flex-col lg:flex-row gap-4 justify-between items-start lg:items-center">
-                    <div className="relative w-full lg:max-w-md">
+                <div className="flex flex-col xl:flex-row gap-4 justify-between items-start xl:items-center">
+                    <div className="relative w-full xl:max-w-md">
                         <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
                         <Input
                             placeholder="Search IDs, Devotees, Temples..."
                             value={searchQuery}
                             onChange={(e) => setSearchQuery(e.target.value)}
-                            className="pl-10 h-11 rounded-xl bg-slate-50 border-transparent focus-visible:ring-2 focus-visible:ring-[#794A05] transition-all"
+                            className="pl-10 h-10 sm:h-11 rounded-xl bg-slate-50 border-transparent focus-visible:ring-2 focus-visible:ring-[#794A05] transition-all"
                         />
                     </div>
                     <div className="flex gap-2 flex-wrap">
@@ -311,7 +312,7 @@ function BookingsContent() {
                                 size="sm"
                                 onClick={() => setStatusFilter(status)}
                                 className={cn(
-                                    "rounded-xl px-4 h-11 font-semibold transition-all shadow-sm border",
+                                    "rounded-xl px-3 sm:px-4 h-10 sm:h-11 font-semibold transition-all shadow-sm border text-xs sm:text-sm",
                                     statusFilter === status
                                         ? "bg-[#794A05] hover:bg-[#5d3904] text-white border-transparent"
                                         : "bg-white text-slate-600 border-slate-200 hover:bg-slate-50 hover:text-slate-900"
@@ -327,8 +328,8 @@ function BookingsContent() {
                 <div className="h-px w-full bg-slate-100"></div>
 
                 {/* Date & Sort Filters */}
-                <div className="flex flex-col md:flex-row gap-4 items-center justify-between">
-                    <div className="flex flex-wrap gap-3 items-center w-full md:w-auto">
+                <div className="flex flex-col lg:flex-row gap-4 items-center justify-between">
+                    <div className="flex flex-wrap gap-3 items-center w-full lg:w-auto">
                         <div className="flex items-center gap-2 bg-slate-50 p-1.5 rounded-xl border border-slate-200/60 shadow-sm transition-all hover:border-slate-300">
                             <Calendar className="w-4 h-4 text-slate-400 ml-2" />
                             <select
@@ -372,17 +373,8 @@ function BookingsContent() {
                         )}
                     </div>
 
-                    <div className="flex items-center gap-2 bg-slate-50 p-1.5 rounded-xl border border-slate-200/60 shadow-sm transition-all hover:border-slate-300 w-full md:w-auto justify-end">
-                        {/* <Clock className="w-4 h-4 text-slate-400 ml-2" /> */}
+                    <div className="flex items-center gap-2 bg-slate-50 p-1.5 rounded-xl border border-slate-200/60 shadow-sm transition-all hover:border-slate-300 w-full lg:w-auto justify-end">
                         <span className="text-sm text-slate-500 font-medium">Sort by:</span>
-                        {/* <select
-                            className="h-8 bg-transparent text-sm font-semibold focus:outline-none text-slate-800 cursor-pointer pr-1"
-                            value={sortBy}
-                            onChange={(e) => setSortBy(e.target.value as any)}
-                        >
-                            <option value="bookingDate">Booking Date</option>
-                            <option value="ritualDate">Ritual Date</option>
-                        </select> */}
                         <span className="text-slate-300">|</span>
                         <Button
                             variant="ghost"
@@ -391,87 +383,87 @@ function BookingsContent() {
                             className="h-8 px-2 text-sm font-medium text-slate-700 hover:text-[#794A05] hover:bg-orange-50 rounded-lg"
                         >
                             {sortOrder === 'desc' ? (
-                                <span className="flex items-center gap-1">Latest First <ChevronDown className="w-4 h-4 ml-0.5" /></span>
+                                <span className="flex items-center gap-1 text-xs sm:text-sm">Latest First <ChevronDown className="w-4 h-4 ml-0.5" /></span>
                             ) : (
-                                <span className="flex items-center gap-1">Oldest First <ChevronDown className="w-4 h-4 ml-0.5 rotate-180" /></span>
+                                <span className="flex items-center gap-1 text-xs sm:text-sm">Oldest First <ChevronDown className="w-4 h-4 ml-0.5 rotate-180" /></span>
                             )}
                         </Button>
                     </div>
                 </div>
             </div>
 
-            <Card className="border-none shadow-xl rounded-[24px] overflow-hidden bg-white">
+            <Card className="border-none shadow-xl rounded-[16px] sm:rounded-[24px] overflow-hidden bg-white">
                 <div className="overflow-x-auto">
-                    <table className="w-full text-left">
+                    <table className="w-full text-left min-w-[600px]">
                         <thead className="bg-[#FAF9F6] border-b border-slate-100">
                             <tr>
-                                <th className="p-4 text-[11px] font-bold text-slate-400 uppercase tracking-widest whitespace-nowrap">ID</th>
-                                <th className="p-4 text-[11px] font-bold text-slate-400 uppercase tracking-widest whitespace-nowrap">Service</th>
-                                <th className="p-4 text-[11px] font-bold text-slate-400 uppercase tracking-widest whitespace-nowrap">Temple</th>
-                                <th className="p-4 text-[11px] font-bold text-slate-400 uppercase tracking-widest whitespace-nowrap">Devotee</th>
-                                <th className="p-4 text-[11px] font-bold text-slate-400 uppercase tracking-widest whitespace-nowrap" title="DDMMYYYY format">Booking Date & Time</th>
-                                <th className="p-4 text-[11px] font-bold text-slate-400 uppercase tracking-widest whitespace-nowrap" title="DDMMYYYY format">Ritual Date</th>
-                                <th className="p-4 text-[11px] font-bold text-slate-400 uppercase tracking-widest whitespace-nowrap">Amount</th>
-                                <th className="p-4 text-[11px] font-bold text-slate-400 uppercase tracking-widest whitespace-nowrap">Status</th>
-                                <th className="p-4 text-right text-[11px] font-bold text-slate-400 uppercase tracking-widest whitespace-nowrap">Actions</th>
+                                <th className="p-2 sm:p-4 text-[9px] sm:text-[11px] font-bold text-slate-400 uppercase tracking-widest whitespace-nowrap">ID</th>
+                                <th className="p-2 sm:p-4 text-[9px] sm:text-[11px] font-bold text-slate-400 uppercase tracking-widest whitespace-nowrap">Service</th>
+                                <th className="p-2 sm:p-4 text-[9px] sm:text-[11px] font-bold text-slate-400 uppercase tracking-widest whitespace-nowrap">Temple</th>
+                                <th className="p-2 sm:p-4 text-[9px] sm:text-[11px] font-bold text-slate-400 uppercase tracking-widest whitespace-nowrap">Devotee</th>
+                                <th className="p-2 sm:p-4 text-[9px] sm:text-[11px] font-bold text-slate-400 uppercase tracking-widest whitespace-nowrap hidden lg:table-cell" title="DDMMYYYY format">Booking Date & Time</th>
+                                <th className="p-2 sm:p-4 text-[9px] sm:text-[11px] font-bold text-slate-400 uppercase tracking-widest whitespace-nowrap" title="DDMMYYYY format">Ritual Date</th>
+                                <th className="p-2 sm:p-4 text-[9px] sm:text-[11px] font-bold text-slate-400 uppercase tracking-widest whitespace-nowrap">Amount</th>
+                                <th className="p-2 sm:p-4 text-[9px] sm:text-[11px] font-bold text-slate-400 uppercase tracking-widest whitespace-nowrap">Status</th>
+                                <th className="p-2 sm:p-4 text-right text-[9px] sm:text-[11px] font-bold text-slate-400 uppercase tracking-widest whitespace-nowrap">Actions</th>
                             </tr>
                         </thead>
                         <tbody>
                             {loading ? (
-                                <tr><td colSpan={9} className="p-12 text-center text-slate-400">Loading Sacred Data...</td></tr>
+                                <tr><td colSpan={9} className="p-8 sm:p-12 text-center text-slate-400 text-sm sm:text-base">Loading Sacred Data...</td></tr>
                             ) : bookings.length === 0 ? (
-                                <tr><td colSpan={9} className="p-12 text-center text-slate-400">No results found</td></tr>
+                                <tr><td colSpan={9} className="p-8 sm:p-12 text-center text-slate-400 text-sm sm:text-base">No results found</td></tr>
                             ) : bookings.map((booking) => {
                                 const status = statusConfig[booking.status as keyof typeof statusConfig] || statusConfig.BOOKED;
                                 return (
                                     <tr key={booking.id} className="border-b border-slate-50 hover:bg-slate-50 transition-colors">
-                                        <td className="p-4 font-mono text-[11px] font-bold text-[#794A05]">#{String(booking.id).slice(-8).toUpperCase()}</td>
-                                        <td className="p-4">
-                                            <p className="text-sm font-bold text-slate-900">{parseLocalizedValue(booking.pooja?.name)}</p>
+                                        <td className="p-2 sm:p-4 font-mono text-[9px] sm:text-[11px] font-bold text-[#794A05]">#{String(booking.id).slice(-8).toUpperCase()}</td>
+                                        <td className="p-2 sm:p-4">
+                                            <p className="text-xs sm:text-sm font-bold text-slate-900">{parseLocalizedValue(booking.pooja?.name)}</p>
                                             {booking.packageName && <p className="text-xs text-slate-500 mt-0.5">{parseLocalizedValue(booking.packageName)}</p>}
                                         </td>
-                                        <td className="p-4">
+                                        <td className="p-2 sm:p-4">
                                             {booking.temple ? (
                                                 <div className="flex items-center gap-2">
-                                                    <Building2 className="w-4 h-4 text-slate-400" />
-                                                    <p className="text-sm font-bold text-slate-900">{parseLocalizedValue(booking.temple.name)}</p>
+                                                    <Building2 className="w-3 h-3 sm:w-4 sm:h-4 text-slate-400" />
+                                                    <p className="text-xs sm:text-sm font-bold text-slate-900">{parseLocalizedValue(booking.temple.name)}</p>
                                                 </div>
                                             ) : (
-                                                <p className="text-sm font-bold text-slate-400">N/A</p>
+                                                <p className="text-xs sm:text-sm font-bold text-slate-400">N/A</p>
                                             )}
                                         </td>
-                                        <td className="p-4">
+                                        <td className="p-2 sm:p-4">
                                             <div className="flex items-center gap-2">
-                                                <User className="w-4 h-4 text-slate-400" />
-                                                <p className="text-sm font-bold text-slate-900">{parseLocalizedValue(booking.devoteeName)}</p>
+                                                <User className="w-3 h-3 sm:w-4 sm:h-4 text-slate-400" />
+                                                <p className="text-xs sm:text-sm font-bold text-slate-900">{parseLocalizedValue(booking.devoteeName)}</p>
                                             </div>
                                         </td>
-                                        <td className="p-4">
-                                            <p className="text-sm font-medium text-slate-900" title="Date is in DDMMYYYY format">
+                                        <td className="p-2 sm:p-4 hidden lg:table-cell">
+                                            <p className="text-xs sm:text-sm font-medium text-slate-900" title="Date is in DDMMYYYY format">
                                                 {formatDateDDMMYYYY(booking.createdAt, true)}
                                             </p>
                                         </td>
-                                        <td className="p-4">
-                                            <p className="text-sm font-medium text-slate-900" title="Date is in DDMMYYYY format">
+                                        <td className="p-2 sm:p-4">
+                                            <p className="text-xs sm:text-sm font-medium text-slate-900" title="Date is in DDMMYYYY format">
                                                 {formatDateDDMMYYYY(typeof booking.bookingDate === 'string' ? booking.bookingDate : (booking.bookingDate?.en || booking.bookingDate?.hi || booking.bookingDate?.mr || "N/A"), false)}
                                             </p>
                                         </td>
-                                        <td className="p-4">
-                                            <p className="text-sm font-bold text-slate-900">₹{String((booking.packagePrice || 0) + (booking.platformFee || 0))}</p>
+                                        <td className="p-2 sm:p-4">
+                                            <p className="text-xs sm:text-sm font-bold text-slate-900">₹{String((booking.packagePrice || 0) + (booking.platformFee || 0))}</p>
                                         </td>
-                                        <td className="p-4">
-                                            <Badge variant="outline" className={`rounded-full px-3 py-1 font-extrabold text-[10px] ${status.color}`}>
+                                        <td className="p-2 sm:p-4">
+                                            <Badge variant="outline" className={`rounded-full px-2 sm:px-3 py-1 font-extrabold text-[9px] sm:text-[10px] ${status.color}`}>
                                                 {status.label}
                                             </Badge>
                                         </td>
-                                        <td className="p-4 text-right">
+                                        <td className="p-2 sm:p-4 text-right">
                                             <div className="flex items-center justify-end gap-2">
-                                                <Button variant="ghost" size="icon" onClick={() => setSelectedBooking(booking)} className="h-8 w-8 rounded-lg">
-                                                    <Eye className="w-4 h-4" />
+                                                <Button variant="ghost" size="icon" onClick={() => setSelectedBooking(booking)} className="h-7 w-7 sm:h-8 sm:w-8 rounded-lg">
+                                                    <Eye className="w-3 h-3 sm:w-4 sm:h-4" />
                                                 </Button>
                                                 {hasPermission('bookings.delete') && (
-                                                    <Button variant="ghost" size="icon" onClick={() => handleDelete(booking.id)} className="h-8 w-8 rounded-lg text-rose-500 hover:text-rose-600 hover:bg-rose-50">
-                                                        <Trash2 className="w-4 h-4" />
+                                                    <Button variant="ghost" size="icon" onClick={() => handleDelete(booking.id)} className="h-7 w-7 sm:h-8 sm:w-8 rounded-lg text-rose-500 hover:text-rose-600 hover:bg-rose-50">
+                                                        <Trash2 className="w-3 h-3 sm:w-4 sm:h-4" />
                                                     </Button>
                                                 )}
                                             </div>
@@ -485,17 +477,17 @@ function BookingsContent() {
             </Card>
 
             {totalPages > 1 && (
-                <div className="flex justify-center gap-2 mt-4 pb-12">
-                    <Button variant="outline" size="sm" onClick={() => setCurrentPage(p => Math.max(1, p - 1))} disabled={currentPage === 1}>Prev</Button>
-                    <span className="flex items-center text-sm font-bold px-4">Page {currentPage} of {totalPages}</span>
-                    <Button variant="outline" size="sm" onClick={() => setCurrentPage(p => Math.min(totalPages, p + 1))} disabled={currentPage === totalPages}>Next</Button>
+                <div className="flex justify-center gap-2 mt-4 pb-8 sm:pb-12">
+                    <Button variant="outline" size="sm" onClick={() => setCurrentPage(p => Math.max(1, p - 1))} disabled={currentPage === 1} className="text-xs sm:text-sm px-3 sm:px-4">Prev</Button>
+                    <span className="flex items-center text-xs sm:text-sm font-bold px-2 sm:px-4">Page {currentPage} of {totalPages}</span>
+                    <Button variant="outline" size="sm" onClick={() => setCurrentPage(p => Math.min(totalPages, p + 1))} disabled={currentPage === totalPages} className="text-xs sm:text-sm px-3 sm:px-4">Next</Button>
                 </div>
             )}
 
             {selectedBooking && (
-                <div className="fixed inset-0 z-[100] flex items-center justify-center p-4 bg-black/50">
-                    <div className="bg-white rounded-[32px] w-full max-w-lg shadow-2xl p-8 relative">
-                        <h3 className="text-xl font-bold font-serif mb-6 text-[#794A05]">Booking Details</h3>
+                <div className="fixed inset-0 z-[100] flex items-center justify-center p-4 sm:p-6 bg-black/50">
+                    <div className="bg-white rounded-[24px] sm:rounded-[32px] w-full max-w-md sm:max-w-lg lg:max-w-xl shadow-2xl p-4 sm:p-6 lg:p-8 relative max-h-[90vh] overflow-y-auto">
+                        <h3 className="text-lg sm:text-xl font-bold font-serif mb-4 sm:mb-6 text-[#794A05]">Booking Details</h3>
                         <div className="space-y-4">
                             <div className="p-4 bg-slate-50 rounded-2xl">
                                 <p className="text-[10px] font-bold text-slate-400 uppercase mb-1">Devotee Information</p>
@@ -551,12 +543,20 @@ function BookingsContent() {
                             {selectedBooking.status === 'COMPLETED' && selectedBooking.proofPhotos && selectedBooking.proofPhotos.length > 0 && (
                                 <div className="space-y-3 pt-4 border-t border-slate-100">
                                     <p className="text-[10px] font-bold text-slate-400 uppercase">Pooja Proof Photos</p>
-                                    <div className="grid grid-cols-2 gap-3">
+                            <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
                                         {selectedBooking.proofPhotos.map((photo: string, i: number) => (
                                             <a key={i} href={photo} target="_blank" rel="noopener noreferrer" className="relative aspect-video rounded-xl overflow-hidden border border-slate-100 group">
-                                                <img src={photo} alt="Proof" className="w-full h-full object-cover transition-transform group-hover:scale-110" />
+                                                <img 
+                                                    src={photo.startsWith('http') ? photo : `${API_URL}${photo}`} 
+                                                    alt="Proof" 
+                                                    className="w-full h-full object-cover transition-transform group-hover:scale-110" 
+                                                    onError={(e) => {
+                                                        const target = e.target as HTMLImageElement;
+                                                        target.src = '/placeholder-image.jpg';
+                                                    }}
+                                                />
                                                 <div className="absolute inset-0 bg-black/20 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center">
-                                                    <Eye className="w-5 h-5 text-white" />
+                                                    <Eye className="w-4 h-4 sm:w-5 sm:h-5 text-white" />
                                                 </div>
                                             </a>
                                         ))}
@@ -564,7 +564,7 @@ function BookingsContent() {
                                 </div>
                             )}
                         </div>
-                        <Button className="w-full mt-8 bg-[#794A05] hover:bg-[#5d3904] text-white h-12 rounded-2xl font-bold" onClick={() => {
+                        <Button className="w-full mt-6 sm:mt-8 bg-[#794A05] hover:bg-[#5d3904] text-white h-12 sm:h-14 rounded-2xl font-bold text-sm sm:text-base" onClick={() => {
                             setSelectedBooking(null);
                             setProofPhotos([]);
                         }}>Close Details</Button>
@@ -575,7 +575,7 @@ function BookingsContent() {
             {/* Mark Complete Confirmation Dialog */}
             <AnimatePresence>
                 {confirmCompleteId && (
-                    <div className="fixed inset-0 z-[200] flex items-center justify-center p-4">
+                    <div className="fixed inset-0 z-[200] flex items-center justify-center p-4 sm:p-6">
                         <motion.div
                             initial={{ opacity: 0 }}
                             animate={{ opacity: 1 }}
@@ -591,7 +591,7 @@ function BookingsContent() {
                             animate={{ opacity: 1, scale: 1, y: 0 }}
                             exit={{ opacity: 0, scale: 0.85, y: 20 }}
                             transition={{ type: "spring", damping: 25, stiffness: 350 }}
-                            className="bg-[#7b4623] w-full max-w-md rounded-2xl shadow-2xl overflow-hidden relative border border-[#63391c]"
+                            className="bg-[#7b4623] w-full max-w-sm sm:max-w-md rounded-2xl shadow-2xl overflow-hidden relative border border-[#63391c] max-h-[90vh] overflow-y-auto"
                         >
                             {/* Warning Header */}
                             <div className="bg-[#63391c]/50 p-6 text-white border-b border-[#63391c]">

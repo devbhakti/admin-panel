@@ -366,13 +366,13 @@ function LedgerContent() {
             {/* Filter Section */}
             <div className="bg-white p-6 rounded-[2rem] shadow-sm border border-slate-100 space-y-4 mt-8">
                 <div className="flex flex-col lg:flex-row justify-between items-start lg:items-center gap-4">
-                    <div className="relative w-full lg:max-w-md">
+                    <div className="relative w-full lg:w-80 xl:w-96">
                         <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-400" />
                         <Input
                             placeholder="Search IDs, merchants, descriptions..."
                             value={searchTerm}
                             onChange={(e) => setSearchTerm(e.target.value)}
-                            className="pl-10 h-11 rounded-xl bg-slate-50 border-transparent transition-all"
+                            className="pl-10 h-11 rounded-xl bg-slate-50 border-transparent transition-all text-sm"
                         />
                     </div>
                     <div className="flex flex-wrap items-center gap-2">

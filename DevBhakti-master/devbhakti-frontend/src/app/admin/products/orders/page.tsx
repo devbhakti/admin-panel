@@ -180,6 +180,7 @@ function AdminOrdersContent() {
                 toast({
                     title: t("admin.orders.update_success") || "Status Updated",
                     description: (t("admin.orders.update_success_msg") || "Order status changed to {status}").replace("{status}", status),
+                    variant: "success",
                 });
 
                 // Refresh local state for selected order if it's open
@@ -293,7 +294,7 @@ function AdminOrdersContent() {
                 document.body.appendChild(link);
                 link.click();
                 link.parentNode?.removeChild(link);
-                toast({ title: t("admin.categories.success") || "Success", description: t("admin.orders.export_success") || "Orders exported successfully!" });
+                toast({ title: t("admin.categories.success") || "Success", description: t("admin.orders.export_success") || "Orders exported successfully!", variant: "success" });
             } else {
                 throw new Error("Download failed");
             }
@@ -663,7 +664,7 @@ function AdminOrdersContent() {
                                                         </TableRow>
                                                         <TableRow className="hover:bg-transparent border-none">
                                                             <TableCell colSpan={3} className="pt-1 pb-1 pr-4 text-right text-orange-600">
-                                                                <span className="text-[10px] font-extrabold uppercase tracking-widest">Marketplace Commission (Expected)</span>
+                                                                <span className="text-[10px] font-extrabold uppercase tracking-widest">{t("admin.orders.marketplace_commission") || "Marketplace Commission (Expected)"}</span>
                                                             </TableCell>
                                                             <TableCell className="pt-1 pb-1 pr-6 text-right font-extrabold text-orange-600">
                                                                 + ₹{(sub.commissionAmount || 0).toLocaleString()}
@@ -671,7 +672,7 @@ function AdminOrdersContent() {
                                                         </TableRow>
                                                         <TableRow className="hover:bg-transparent border-t-2 border-slate-50">
                                                             <TableCell colSpan={3} className="pt-4 pb-4 pr-4 text-right">
-                                                                <span className="text-[10px] font-extrabold text-slate-900 uppercase tracking-widest">Consignment Total</span>
+                                                                <span className="text-[10px] font-extrabold text-slate-900 uppercase tracking-widest">{t("admin.orders.consignment_total") || "Consignment Total"}</span>
                                                             </TableCell>
                                                             <TableCell className="pt-4 pb-4 pr-6 text-right font-extrabold text-xl text-slate-900">
                                                                 ₹{(sub.totalAmount + (sub.commissionAmount || 0)).toLocaleString()}
@@ -695,13 +696,15 @@ function AdminOrdersContent() {
                                             <h3 className="text-4xl font-extrabold">₹{selectedOrder.totalAmount.toLocaleString()}</h3>
                                             {selectedOrder.platformFee > 0 && (
                                                 <p className="text-white/80 text-[10px] font-bold mt-1 uppercase tracking-wider">
-                                                    Includes ₹{selectedOrder.platformFee.toLocaleString()} Marketplace Fee
+                                                    {(t("admin.orders.includes_marketplace_fee") || "Includes ₹{amount} Marketplace Fee").replace("{amount}", selectedOrder.platformFee.toLocaleString())}
                                                 </p>
                                             )}
                                         </div>
                                     </div>
                                     <div className="text-center md:text-right">
-                                        <p className="text-white/80 font-bold text-sm">{t("admin.orders.table_status")}: {getStatusText(selectedOrder.paymentStatus)} via {selectedOrder.paymentMethod}</p>
+                                        <p className="text-white/80 font-bold text-sm">
+                                            {t("admin.orders.table_status")}: {getStatusText(selectedOrder.paymentStatus)} {(t("admin.orders.via_method") || "via {method}").replace("{method}", selectedOrder.paymentMethod)}
+                                        </p>
                                         <div className="mt-2 text-white/60 text-xs font-bold uppercase tracking-widest">
                                             {t("admin.orders.delivery_process_hint")}
                                         </div>
@@ -743,8 +746,9 @@ function AdminOrdersContent() {
 }
 
 export default function AdminOrdersPage() {
+    const { t } = useLanguage();
     return (
-        <React.Suspense fallback={<div className="p-12 text-center text-[#794A05] font-serif">Loading Orders...</div>}>
+        <React.Suspense fallback={<div className="p-12 text-center text-[#794A05] font-serif">{t("admin.orders.loading") || "Loading Orders..."}</div>}>
             <AdminOrdersContent />
         </React.Suspense>
     );

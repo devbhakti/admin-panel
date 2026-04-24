@@ -13,15 +13,19 @@ import {
     ShoppingBag,
     Layers,
     ArrowUpDown,
-    Download
+    Download,
+    Upload,
+    Loader2,
+    FileText
 } from "lucide-react";
+import * as XLSX from 'xlsx';
 import { Card, CardContent, CardHeader } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Badge } from "@/components/ui/badge";
 import { Separator } from "@/components/ui/separator";
 import { useToast } from "@/hooks/use-toast";
-import { fetchSellerProducts, deleteSellerProduct } from "@/api/sellerController";
+import { fetchSellerProducts, deleteSellerProduct, createSellerProduct, fetchCategories } from "@/api/sellerController";
 import { API_URL, BASE_URL } from "@/config/apiConfig";
 import { parseLocalizedValue } from "@/utils/textUtils";
 import {
@@ -43,6 +47,21 @@ export default function SellerProductsPage() {
     const [isLoading, setIsLoading] = useState(true);
     const [searchQuery, setSearchQuery] = useState("");
     const [statusFilter, setStatusFilter] = useState("all");
+    const [categories, setCategories] = useState<any[]>([]);
+
+    useEffect(() => {
+        loadProducts();
+        loadCategories();
+    }, [searchQuery, statusFilter]);
+
+    const loadCategories = async () => {
+        try {
+            const data = await fetchCategories();
+            setCategories(data || []);
+        } catch (error) {
+            console.error("Load Categories Error:", error);
+        }
+    };
 
     useEffect(() => {
         loadProducts();
@@ -119,6 +138,168 @@ export default function SellerProductsPage() {
 
     const filteredProducts = products;
 
+    // --- BULK MANAGEMENT ---
+    const downloadTemplate = () => {
+        const template = [
+            {
+                "Name_EN": "Holy Tulsi Mala",
+                "Name_HI": "पवित्र तुलसी माला",
+                "Name_MR": "पवित्र तुळशी माळ",
+                "Category": categories[0]?.name || "General",
+                "Short_Description_EN": "Handcrafted wooden beads.",
+                "Short_Description_HI": "हाथ से बने लकड़ी के मोती।",
+                "Short_Description_MR": "हाताने बनवलेले लाकडी मणी.",
+                "Highlights_EN": "Natural wood, Spiritual",
+                "Highlights_HI": "प्राकृतिक लकड़ी, आध्यात्मिक",
+                "Highlights_MR": "नैसर्गिक लाकूड, आध्यात्मिक",
+                "Origin": "India",
+                "Base_Rating": 4.8,
+                "Weight": 0.05,
+                "Length": 15,
+                "Width": 15,
+                "Height": 2,
+                "Variants_JSON": JSON.stringify([{ name_en: "Standard", name_hi: "मानक", name_mr: "प्रमाणित", price: 150, stock: 50 }])
+            }
+        ];
+        const ws = XLSX.utils.json_to_sheet(template);
+        const wb = XLSX.utils.book_new();
+        XLSX.utils.book_append_sheet(wb, ws, "Product Template");
+        XLSX.writeFile(wb, "Seller_Product_Import_Template.xlsx");
+    };
+
+    const handleExportExcel = () => {
+        const exportData = products.map(p => ({
+            "ID": p.id,
+            "Name_EN": p.name?.en || p.name || "",
+            "Name_HI": p.name?.hi || "",
+            "Name_MR": p.name?.mr || "",
+            "Category": p.categoryObj?.name || "",
+            "Status": p.status,
+            "Price_Starting": p.variants?.[0]?.price || 0,
+            "Total_Stock": p.variants?.reduce((sum: number, v: any) => sum + (v.stock || 0), 0) || 0,
+            "Short_Description_EN": p.description?.en || p.description || "",
+            "Highlights_EN": p.highlights?.en || p.highlights || "",
+            "Origin": p.origin || "India",
+            "Base_Rating": p.rating || 4.5,
+            "Weight": p.weight || 0,
+            "Variants_Data": JSON.stringify(p.variants || [])
+        }));
+        const ws = XLSX.utils.json_to_sheet(exportData);
+        const wb = XLSX.utils.book_new();
+        XLSX.utils.book_append_sheet(wb, ws, "My Products");
+        XLSX.writeFile(wb, `Seller_Products_Export_${new Date().toISOString().split('T')[0]}.xlsx`);
+    };
+
+    const handleImportExcel = async (e: React.ChangeEvent<HTMLInputElement>) => {
+        const file = e.target.files?.[0];
+        if (!file) return;
+
+        const reader = new FileReader();
+        reader.onload = async (evt) => {
+            try {
+                const bstr = evt.target?.result;
+                const wb = XLSX.read(bstr, { type: 'binary' });
+                const wsname = wb.SheetNames[0];
+                const ws = wb.Sheets[wsname];
+                const data = XLSX.utils.sheet_to_json(ws) as any[];
+
+                if (data.length === 0) {
+                    toast({ title: "Error", description: "Excel file is empty", variant: "destructive" });
+                    return;
+                }
+
+                toast({ title: "Import Started", description: `Importing ${data.length} products...`, variant: "success" });
+
+                let successCount = 0;
+                let failCount = 0;
+                const errors: string[] = [];
+
+                for (let i = 0; i < data.length; i++) {
+                    const row = data[i];
+                    const rowNum = i + 2;
+                    try {
+                        if (!row.Name_EN) throw new Error("Product Name (EN) is required");
+                        
+                        // Find category ID
+                        const categoryName = String(row.Category || "").trim();
+                        const foundCategory = categories.find(c => 
+                            c.name.toLowerCase() === categoryName.toLowerCase() || 
+                            c.id === categoryName
+                        );
+                        
+                        if (!foundCategory && row.Category) {
+                            throw new Error(`Category '${categoryName}' not found`);
+                        }
+
+                        const formDataToSend = new FormData();
+                        formDataToSend.append('name_en', String(row.Name_EN || "").trim());
+                        formDataToSend.append('name_hi', String(row.Name_HI || "").trim());
+                        formDataToSend.append('name_mr', String(row.Name_MR || "").trim());
+                        formDataToSend.append('description_en', String(row.Short_Description_EN || "").trim());
+                        formDataToSend.append('description_hi', String(row.Short_Description_HI || "").trim());
+                        formDataToSend.append('description_mr', String(row.Short_Description_MR || "").trim());
+                        formDataToSend.append('category', foundCategory?.id || categories[0]?.id || "");
+                        formDataToSend.append('highlights_en', String(row.Highlights_EN || "").trim());
+                        formDataToSend.append('highlights_hi', String(row.Highlights_HI || "").trim());
+                        formDataToSend.append('highlights_mr', String(row.Highlights_MR || "").trim());
+                        formDataToSend.append('origin', String(row.Origin || "India").trim());
+                        formDataToSend.append('rating', String(row.Base_Rating || "4.5"));
+                        formDataToSend.append('weight', String(row.Weight || "0.5"));
+                        formDataToSend.append('length', String(row.Length || "10"));
+                        formDataToSend.append('width', String(row.Width || "10"));
+                        formDataToSend.append('height', String(row.Height || "10"));
+
+                        // Variants handling
+                        let variantsArray = [];
+                        try {
+                            if (row.Variants_JSON) {
+                                variantsArray = JSON.parse(row.Variants_JSON);
+                            } else {
+                                variantsArray = [{
+                                    name_en: "Standard",
+                                    name_hi: "मानक",
+                                    name_mr: "प्रमाणित",
+                                    price: Number(row.Price_Starting || 0),
+                                    stock: Number(row.Total_Stock || 0)
+                                }];
+                            }
+                        } catch (e) {
+                            throw new Error("Invalid Variants_JSON format");
+                        }
+                        
+                        formDataToSend.append('variants', JSON.stringify(variantsArray));
+
+                        await createSellerProduct(formDataToSend);
+                        successCount++;
+                    } catch (err: any) {
+                        const errorMsg = err.response?.data?.message || err.message || "Unknown error";
+                        failCount++;
+                        errors.push(`Row ${rowNum}: ${errorMsg}`);
+                        console.error(`Import Error Row ${rowNum}:`, errorMsg);
+                    }
+                }
+
+                if (failCount > 0) {
+                    toast({
+                        title: "Import Partially Failed",
+                        description: `Success: ${successCount}, Failed: ${failCount}. Errors: ${errors.slice(0, 2).join(", ")}${errors.length > 2 ? "..." : ""}`,
+                        variant: "destructive"
+                    });
+                } else {
+                    toast({
+                        title: "Import Successful",
+                        description: `Successfully imported ${successCount} products.`
+                    });
+                }
+                loadProducts();
+            } catch (error) {
+                toast({ title: "Import Failed", description: "Failed to process Excel file", variant: "destructive" });
+            }
+        };
+        reader.readAsBinaryString(file);
+        e.target.value = '';
+    };
+
     const getStatusBadge = (status: string) => {
         switch (status) {
             case 'approved':
@@ -144,11 +325,40 @@ export default function SellerProductsPage() {
                         Manage your store's catalog, inventory, and product details.
                     </p>
                 </div>
-                <div className="flex gap-3">
-                    {/* <Button variant="outline" className="hidden md:flex gap-2 rounded-xl">
-                        <Download className="w-4 h-4" />
+                <div className="flex flex-wrap items-center gap-2 sm:gap-3">
+                    <Button
+                        onClick={downloadTemplate}
+                        variant="outline"
+                        className="flex-1 md:flex-initial border-[#7b4623]/20 hover:bg-[#7b4623]/5"
+                    >
+                        <FileText className="w-4 h-4 mr-2" />
+                        Template
+                    </Button>
+                    <div className="relative flex-1 md:flex-initial">
+                        <input
+                            type="file"
+                            accept=".xlsx, .xls"
+                            className="hidden"
+                            id="import-excel"
+                            onChange={handleImportExcel}
+                        />
+                        <Button
+                            onClick={() => document.getElementById('import-excel')?.click()}
+                            variant="outline"
+                            className="w-full border-[#7b4623]/20 hover:bg-[#7b4623]/5"
+                        >
+                            <Upload className="w-4 h-4 mr-2" />
+                            Import
+                        </Button>
+                    </div>
+                    <Button
+                        onClick={handleExportExcel}
+                        variant="outline"
+                        className="flex-1 md:flex-initial border-[#7b4623]/20 hover:bg-[#7b4623]/5"
+                    >
+                        <Download className="w-4 h-4 mr-2" />
                         Export
-                    </Button> */}
+                    </Button>
                     <Button
                         onClick={() => router.push('/seller/dashboard/products/create')}
                         className="bg-primary hover:bg-primary/90 text-white shadow-lg shadow-primary/20 transition-all hover:scale-[1.02] active:scale-[0.98] rounded-xl px-6"

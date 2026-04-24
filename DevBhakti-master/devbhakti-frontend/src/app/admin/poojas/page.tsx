@@ -9,9 +9,15 @@ import {
     Eye,
     Clock,
     IndianRupee,
+    Download,
+    Upload,
+    FileSpreadsheet,
+    Filter,
+    Loader2
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
+import * as XLSX from 'xlsx';
 import {
     Table,
     TableBody,
@@ -21,7 +27,15 @@ import {
     TableRow,
 } from "@/components/ui/table";
 import { Badge } from "@/components/ui/badge";
-import { fetchAllPoojasAdmin, deletePoojaAdmin, promotePoojaToMasterAdmin, updatePoojaAdmin, togglePoojaStatusAdmin } from "@/api/adminController";
+import { 
+    fetchAllPoojasAdmin, 
+    deletePoojaAdmin, 
+    promotePoojaToMasterAdmin, 
+    updatePoojaAdmin, 
+    togglePoojaStatusAdmin,
+    fetchAllTemplesAdmin,
+    createPoojaAdmin
+} from "@/api/adminController";
 import { Pause, Play, Trash2 } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 import { API_URL } from "@/config/apiConfig";
@@ -43,6 +57,16 @@ function PoojasContent() {
     const { toast } = useToast();
     const { hasPermission } = useAdminAuth();
 
+    // New states for Filter & Import/Export
+    const [temples, setTemples] = useState<any[]>([]);
+    const [selectedTempleId, setSelectedTempleId] = useState<string>("all");
+    const [isImporting, setIsImporting] = useState(false);
+    const [importProgress, setImportProgress] = useState({ total: 0, current: 0, success: 0, failed: 0 });
+
+
+    useEffect(() => {
+        loadTemples();
+    }, []);
 
     useEffect(() => {
         if (qParam) setSearchTerm(qParam);
@@ -51,7 +75,19 @@ function PoojasContent() {
 
     useEffect(() => {
         loadPoojas();
-    }, [activeTab, searchTerm]);
+    }, [activeTab, searchTerm, selectedTempleId]);
+
+    const loadTemples = async () => {
+        try {
+            const data = await fetchAllTemplesAdmin();
+            const actualTemples = data
+                .filter((user: any) => user.temple)
+                .map((user: any) => user.temple);
+            setTemples(actualTemples);
+        } catch (error) {
+            console.error("Failed to load temples", error);
+        }
+    };
 
     const loadPoojas = async () => {
         setIsLoading(true);
@@ -63,6 +99,7 @@ function PoojasContent() {
             };
             if (activeTab === 'master') params.isMaster = true;
             if (activeTab === 'temple') params.isMaster = false;
+            if (selectedTempleId !== "all") params.templeId = selectedTempleId;
 
             const data = await fetchAllPoojasAdmin(params);
             setPoojas(data);
@@ -164,6 +201,179 @@ function PoojasContent() {
         return lang === 'en' ? val : "";
     };
 
+    // --- Excel Helper Functions ---
+
+    const downloadTemplate = () => {
+        const template = [
+            {
+                "Name_EN": "Maha Mrityunjaya Pooja",
+                "Name_HI": "महा मृत्युंजय पूजा",
+                "Name_MR": "महा मृत्युंजय पूजा",
+                "Price": 1100,
+                "Temple_ID": "TEMPLE_ID_HERE",
+                "Category_ID": "CAT_ID_HERE",
+                "Category_Name_EN": "Spiritual",
+                "Category_Name_HI": "आध्यात्मिक",
+                "Category_Name_MR": "आध्यात्मिक",
+                "Is_Master": "NO",
+                "About_EN": "Powerful pooja for health and longevity.",
+                "About_HI": "स्वास्थ्य और दीर्घायु के लिए शक्तिशाली पूजा।",
+                "About_MR": "आरोग्य आणि दीर्घायुष्यासाठी शक्तिशाली पूजा.",
+                "Packages": '[]',
+                "FAQs": '{"en":[], "hi":[], "mr":[]}',
+                "Slug": "maha-mrityunjaya-pooja",
+                "Image_URL": "https://example.com/image.jpg"
+            }
+        ];
+
+        const ws = XLSX.utils.json_to_sheet(template);
+        const wb = XLSX.utils.book_new();
+        XLSX.utils.book_append_sheet(wb, ws, "Pooja Template");
+        XLSX.writeFile(wb, "Pooja_Import_Template.xlsx");
+    };
+
+    const handleImportExcel = async (e: React.ChangeEvent<HTMLInputElement>) => {
+        const file = e.target.files?.[0];
+        if (!file) return;
+
+        const reader = new FileReader();
+        reader.onload = async (evt) => {
+            try {
+                const bstr = evt.target?.result;
+                const wb = XLSX.read(bstr, { type: 'binary' });
+                const wsname = wb.SheetNames[0];
+                const ws = wb.Sheets[wsname];
+                const data = XLSX.utils.sheet_to_json(ws) as any[];
+
+                if (data.length === 0) {
+                    toast({ title: "Empty File", description: "No records found", variant: "destructive" });
+                    return;
+                }
+
+                setIsImporting(true);
+                setImportProgress({ total: data.length, current: 0, success: 0, failed: 0 });
+                toast({ title: "Import Started", description: `Processing ${data.length} poojas...`, variant: "success" });
+                let successCount = 0;
+                let failCount = 0;
+
+                for (let i = 0; i < data.length; i++) {
+                    const row = data[i];
+                    setImportProgress(p => ({ ...p, current: i + 1 }));
+
+                    try {
+                        // --- 1. VALIDATION ---
+                        const name_en = String(row.Name_EN || "").trim();
+                        const priceRaw = String(row.Price || "");
+                        const time = String(row.Time || "Anytime").trim(); // Default to "Anytime"
+                        const isMaster = (String(row.Is_Master || "").toUpperCase() === "YES");
+                        const templeId = String(row.Temple_ID || "").trim();
+
+                        if (!name_en) throw new Error("English Name is required");
+                        if (!priceRaw) throw new Error("Price is required");
+                        // Time check removed as requested
+                        
+                        if (!isMaster && (!templeId || templeId === "TEMPLE_ID_HERE" || templeId === "")) {
+                            throw new Error("Temple_ID is required for non-master poojas");
+                        }
+
+                        // --- 2. SANITIZATION ---
+                        const price = parseFloat(priceRaw.replace(/[^0-9.]/g, ""));
+                        if (isNaN(price)) throw new Error("Invalid Price format");
+
+                        const categoryIdRaw = String(row.Category_ID || "").trim();
+                        const categoryId = (categoryIdRaw === "CAT_ID_HERE" || categoryIdRaw === "" || categoryIdRaw === "null") ? null : categoryIdRaw;
+
+                        const fd = new FormData();
+                        
+                        // Basic Fields
+                        fd.append("price", String(price));
+                        fd.append("time", "Anytime"); // Default since it's required in DB
+                        fd.append("slug", String(row.Slug || "").trim());
+                        fd.append("isMaster", isMaster.toString());
+                        fd.append("templeId", isMaster ? "null" : templeId);
+                        fd.append("categoryId", categoryId || "null");
+                        fd.append("category_en", String(row.Category_Name_EN || "").trim());
+                        fd.append("category_hi", String(row.Category_Name_HI || "").trim());
+                        fd.append("category_mr", String(row.Category_Name_MR || "").trim());
+
+                        // Localized Names
+                        fd.append("name_en", name_en);
+                        fd.append("name_hi", String(row.Name_HI || "").trim());
+                        fd.append("name_mr", String(row.Name_MR || "").trim());
+
+                        // Localized About
+                        fd.append("about_en", String(row.About_EN || "").trim());
+                        fd.append("about_hi", String(row.About_HI || "").trim());
+                        fd.append("about_mr", String(row.About_MR || "").trim());
+
+                        // Defaults for complex fields
+                        fd.append("packages", JSON.stringify({ en: [], hi: [], mr: [] }));
+                        fd.append("faqs", JSON.stringify({ en: [], hi: [], mr: [] }));
+                        fd.append("categoryIds", JSON.stringify(row.Category_ID ? [row.Category_ID] : []));
+
+                        if (row.Image_URL) fd.append("image_url", String(row.Image_URL));
+
+                        await createPoojaAdmin(fd);
+                        successCount++;
+                    } catch (err: any) {
+                        const errorMsg = err.response?.data?.message || err.response?.data?.error || err.message || "Unknown error";
+                        console.error(`Failed row ${i + 2}:`, errorMsg);
+                        failCount++;
+                        toast({
+                            title: `Error in Row ${i + 2}`,
+                            description: errorMsg,
+                            variant: "destructive"
+                        });
+                    }
+                }
+
+                setImportProgress(p => ({ ...p, success: successCount, failed: failCount }));
+                toast({ title: "Import Done", description: `Success: ${successCount}, Failed: ${failCount}`, variant: "success" });
+                loadPoojas();
+            } catch (error) {
+                toast({ title: "Import Error", description: "Failed to process file", variant: "destructive" });
+            } finally {
+                setIsImporting(false);
+                if (e.target) e.target.value = "";
+            }
+        };
+        reader.readAsBinaryString(file);
+    };
+
+    const handleExportExcel = () => {
+        const exportData = poojas.map(p => ({
+            "ID": p.id,
+            "Name_EN": getRawLangValue(p.name, 'en'),
+            "Name_HI": getRawLangValue(p.name, 'hi'),
+            "Name_MR": getRawLangValue(p.name, 'mr'),
+            "Price": p.price,
+            "Temple_ID": p.templeId,
+            "Temple_Name": parseLocalizedValue(p.temple?.name),
+            "Category": parseLocalizedValue(p.category),
+            "Category_Name_EN": getRawLangValue(p.category, 'en'),
+            "Category_Name_HI": getRawLangValue(p.category, 'hi'),
+            "Category_Name_MR": getRawLangValue(p.category, 'mr'),
+            "Is_Master": p.isMaster ? "YES" : "NO",
+            "Status": p.status ? "ACTIVE" : "PAUSED",
+            "Slug": p.slug,
+            
+            // Localized About
+            "About_EN": getRawLangValue(p.about, 'en'),
+            "About_HI": getRawLangValue(p.about, 'hi'),
+            "About_MR": getRawLangValue(p.about, 'mr'),
+
+            // Complex Objects
+            "Packages": JSON.stringify(p.packages || { en: [], hi: [], mr: [] }),
+            "FAQs": JSON.stringify(p.faqs || { en: [], hi: [], mr: [] }),
+            "Image_URL": p.image
+        }));
+
+        const ws = XLSX.utils.json_to_sheet(exportData);
+        const wb = XLSX.utils.book_new();
+        XLSX.utils.book_append_sheet(wb, ws, "Poojas");
+        XLSX.writeFile(wb, `Poojas_Export_${new Date().toISOString().split('T')[0]}.xlsx`);
+    };
+
     return (
         <div className="space-y-6">
             {/* Page Header */}
@@ -174,16 +384,74 @@ function PoojasContent() {
                         Manage all poojas, rituals, and spiritual services.
                     </p>
                 </div>
-                {hasPermission("poojas.create") && (
+                <div className="flex flex-wrap items-center gap-2">
                     <Button
-                        onClick={() => router.push('/admin/poojas/create')}
-                        className="bg-primary hover:bg-primary/90 px-4 py-2 text-sm"
+                        variant="outline"
+                        onClick={downloadTemplate}
+                        className="text-xs h-9"
                     >
-                        <Plus className="w-4 h-4 mr-2" />
-                        Add New Pooja
+                        <Download className="w-4 h-4 mr-2" />
+                        Template
                     </Button>
-                )}
+
+                    <div className="relative">
+                        <input
+                            type="file"
+                            accept=".xlsx, .xls"
+                            className="absolute inset-0 opacity-0 cursor-pointer"
+                            onChange={handleImportExcel}
+                            disabled={isImporting}
+                        />
+                        <Button
+                            variant="outline"
+                            className="text-xs h-9"
+                            disabled={isImporting}
+                        >
+                            {isImporting ? <Loader2 className="w-4 h-4 mr-2 animate-spin" /> : <Upload className="w-4 h-4 mr-2" />}
+                            Import Excel
+                        </Button>
+                    </div>
+
+                    <Button
+                        variant="outline"
+                        onClick={handleExportExcel}
+                        className="text-xs h-9"
+                    >
+                        <FileSpreadsheet className="w-4 h-4 mr-2" />
+                        Export All
+                    </Button>
+
+                    {hasPermission("poojas.create") && (
+                        <Button
+                            onClick={() => router.push('/admin/poojas/create')}
+                            className="bg-primary hover:bg-primary/90 px-4 py-2 text-sm h-9"
+                        >
+                            <Plus className="w-4 h-4 mr-2" />
+                            Add New Pooja
+                        </Button>
+                    )}
+                </div>
             </div>
+
+            {/* Import Progress */}
+            {isImporting && (
+                <div className="bg-blue-50 border border-blue-100 rounded-xl p-4 animate-pulse">
+                    <div className="flex items-center justify-between mb-2">
+                        <span className="text-sm font-bold text-blue-900">Importing Poojas...</span>
+                        <span className="text-xs font-bold text-blue-700">{importProgress.current} / {importProgress.total}</span>
+                    </div>
+                    <div className="w-full bg-blue-200 rounded-full h-2">
+                        <div 
+                            className="bg-blue-600 h-2 rounded-full transition-all duration-300" 
+                            style={{ width: `${(importProgress.current / importProgress.total) * 100}%` }}
+                        />
+                    </div>
+                    <div className="flex gap-4 mt-2 text-[10px] font-bold uppercase tracking-wider">
+                        <span className="text-green-600">Success: {importProgress.success}</span>
+                        <span className="text-red-600">Failed: {importProgress.failed}</span>
+                    </div>
+                </div>
+            )}
 
             {/* Tabs */}
             <div className="flex flex-col sm:flex-row border-b border-slate-200">
@@ -219,9 +487,9 @@ function PoojasContent() {
                 </button>
             </div>
 
-            {/* Search */}
-            <div className="flex flex-col gap-3">
-                <div className="relative w-full">
+            {/* Search & Filter */}
+            <div className="flex flex-col lg:flex-row gap-3">
+                <div className="relative flex-1">
                     <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
                     <Input
                         placeholder="Search by name or category..."
@@ -229,6 +497,24 @@ function PoojasContent() {
                         value={searchTerm}
                         onChange={(e) => setSearchTerm(e.target.value)}
                     />
+                </div>
+
+                <div className="flex items-center gap-2">
+                    <div className="relative w-full lg:w-64">
+                        <Filter className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
+                        <select
+                            className="w-full pl-10 pr-4 h-10 md:h-11 bg-white border border-slate-200 rounded-md text-sm focus:outline-none focus:ring-2 focus:ring-primary/20 transition-all font-medium appearance-none"
+                            value={selectedTempleId}
+                            onChange={(e) => setSelectedTempleId(e.target.value)}
+                        >
+                            <option value="all">All Temples</option>
+                            {temples.map(t => (
+                                <option key={t.id} value={t.id}>
+                                    {parseLocalizedValue(t.name)}
+                                </option>
+                            ))}
+                        </select>
+                    </div>
                 </div>
             </div>
 

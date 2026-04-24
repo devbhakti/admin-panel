@@ -21,7 +21,11 @@ import {
     X,
     Filter,
     ChevronRight,
+    Download,
+    Upload,
+    FileSpreadsheet
 } from "lucide-react";
+import * as XLSX from "xlsx";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import {
     Select,
@@ -82,7 +86,8 @@ import {
     fetchCommissionSlabsAdmin,
     fetchTempleCategories,
     fetchTempleLocations,
-    fetchAllPoojasAdmin
+    fetchAllPoojasAdmin,
+    createTempleAdmin
 } from "@/api/adminController";
 import { useToast } from "@/hooks/use-toast";
 import { Suspense } from "react";
@@ -111,6 +116,8 @@ function TemplesContent() {
     const [currentPage, setCurrentPage] = useState(1);
     const [totalPages, setTotalPages] = useState(1);
     const [totalItems, setTotalItems] = useState(0);
+    const [verifiedCount, setVerifiedCount] = useState<number | null>(null);
+    const [unverifiedCount, setUnverifiedCount] = useState<number | null>(null);
     const [itemsPerPage] = useState(10);
     const [activeTab, setActiveTab] = useState("verified");
     const [allTemplesForFilter, setAllTemplesForFilter] = useState<any[]>([]);
@@ -128,6 +135,308 @@ function TemplesContent() {
         poojaSlabs: [],
         marketplaceSlabs: []
     });
+
+    // Excel feature states
+    const [isImporting, setIsImporting] = useState(false);
+    const [importProgress, setImportProgress] = useState({ total: 0, current: 0, success: 0, failed: 0 });
+    const globalImportRef = React.useRef<HTMLInputElement>(null);
+    const tabImportRef = React.useRef<HTMLInputElement>(null);
+
+    const getLoc = (jsonObj: any, lang: string) => {
+        if (!jsonObj) return "";
+        if (typeof jsonObj === "string") return lang === "en" ? jsonObj : "";
+        return jsonObj[lang] || "";
+    };
+
+    const handleExportExcel = async (scope: 'all' | 'verified' | 'unverified') => {
+        try {
+            toast({ title: "Exporting...", description: "Gathering temple data. Please wait." });
+            let isVerifiedParam = undefined;
+            if (scope === 'verified') isVerifiedParam = true;
+            if (scope === 'unverified') isVerifiedParam = false;
+
+            const res = await fetchAllTemplesAdmin({
+                page: 1, limit: 10000, search: debouncedSearch, isVerified: isVerifiedParam,
+                category: selectedCategory === "all" ? undefined : selectedCategory,
+                location: selectedLocation === "all" ? undefined : selectedLocation,
+                ritual: selectedRitual === "all" ? undefined : selectedRitual,
+            });
+
+            const rawData = Array.isArray(res) ? res : res.data;
+            if (!rawData || rawData.length === 0) {
+                toast({ title: "No Data", description: "No temples found to export.", variant: "destructive" });
+                return;
+            }
+
+            const exportData = rawData.filter((u:any) => u.temple).map((u: any) => {
+                const t = u.temple;
+                return {
+                    "Admin_Name_EN": getLoc(u.name, "en"),
+                    "Admin_Name_HI": getLoc(u.name, "hi"),
+                    "Admin_Name_MR": getLoc(u.name, "mr"),
+                    "Email": u.email || "",
+                    "Phone": u.phone || "",
+                    "Name_EN": getLoc(t.name, "en"),
+                    "Name_HI": getLoc(t.name, "hi"),
+                    "Name_MR": getLoc(t.name, "mr"),
+                    "Location_EN": getLoc(t.location, "en"),
+                    "Location_HI": getLoc(t.location, "hi"),
+                    "Location_MR": getLoc(t.location, "mr"),
+                    "Address_EN": getLoc(t.fullAddress, "en"),
+                    "Address_HI": getLoc(t.fullAddress, "hi"),
+                    "Address_MR": getLoc(t.fullAddress, "mr"),
+                    "Category_EN": getLoc(t.category, "en"),
+                    "Category_HI": getLoc(t.category, "hi"),
+                    "Category_MR": getLoc(t.category, "mr"),
+                    "Description_EN": getLoc(t.description, "en"),
+                    "Description_HI": getLoc(t.description, "hi"),
+                    "Description_MR": getLoc(t.description, "mr"),
+                    "History_EN": getLoc(t.history, "en"),
+                    "History_HI": getLoc(t.history, "hi"),
+                    "History_MR": getLoc(t.history, "mr"),
+                    "Pickup_Location_EN": getLoc(t.pickupLocation, "en"),
+                    "Pickup_Location_HI": getLoc(t.pickupLocation, "hi"),
+                    "Pickup_Location_MR": getLoc(t.pickupLocation, "mr"),
+                    "Open_Time": t.openTime || "",
+                    "Temple_Phone": t.phone || "",
+                    "Website": t.website || "",
+                    "Map_URL": t.mapUrl || "",
+                    "Viewers": t.viewers || "",
+                    "Rating": t.rating || "0",
+                    "Reviews_Count": t.reviewsCount || "0",
+                    "Slug": t.slug || "",
+                    "Subdomain": t.subdomain || "",
+                    "URL_Type": t.urlType || "slug",
+                    "Is_Verified": u.isVerified ? "YES" : "NO",
+                    "Is_Active": t.isActive ? "YES" : "NO",
+                    "Live_Status": t.liveStatus ? "YES" : "NO",
+                    "Pooja_Commission_Rate": t.poojaCommissionRate || "5.0",
+                    "Product_Commission_Rate": t.productCommissionRate || "10.0",
+                    "Image_URL": t.image || "",
+                    "Youtube_Links": Array.isArray(t.youtubeLinks) ? t.youtubeLinks.join(", ") : (t.youtubeLinks || ""),
+                    "Operating_Hours": t.operatingHours ? JSON.stringify(t.operatingHours) : "",
+                    "Pooja_IDs": Array.isArray(t.poojas) ? t.poojas.map((p: any) => p.masterPoojaId || p.id).join(", ") : ""
+                };
+            });
+
+            const worksheet = XLSX.utils.json_to_sheet(exportData);
+            const workbook = XLSX.utils.book_new();
+            XLSX.utils.book_append_sheet(workbook, worksheet, "Temples");
+            XLSX.writeFile(workbook, `temples_export_${scope}_${new Date().getTime()}.xlsx`);
+            toast({ title: "Success", description: "Export downloaded successfully!" });
+        } catch (error) {
+            console.error(error);
+            toast({ title: "Error", description: "Failed to export data.", variant: "destructive" });
+        }
+    };
+
+    const downloadTemplate = () => {
+        const templateData = [{
+            "Admin_Name_EN": "Admin User",
+            "Admin_Name_HI": "व्यवस्थापक",
+            "Admin_Name_MR": "प्रशासक",
+            "Email": "temple@example.com",
+            "Phone": "9876543210",
+            "Name_EN": "Shri Ram Temple",
+            "Name_HI": "श्री राम मंदिर",
+            "Name_MR": "श्री राम मंदिर",
+            "Location_EN": "Ayodhya",
+            "Location_HI": "अयोध्या",
+            "Location_MR": "अयोध्या",
+            "Address_EN": "Ram Janmabhoomi, Ayodhya, UP",
+            "Address_HI": "राम जन्मभूमि, अयोध्या",
+            "Address_MR": "राम जन्मभूमी, अयोध्या",
+            "Category_EN": "Rama",
+            "Category_HI": "राम",
+            "Category_MR": "राम",
+            "Description_EN": "Historic and divine temple of Lord Ram.",
+            "Description_HI": "भगवान राम का ऐतिहासिक और दिव्य मंदिर।",
+            "Description_MR": "भगवान रामाचे ऐतिहासिक आणि दिव्य मंदिर.",
+            "History_EN": "Ancient temple built at the birthplace of Lord Ram.",
+            "History_HI": "भगवान राम के जन्मस्थान पर बना प्राचीन मंदिर।",
+            "History_MR": "भगवान रामाच्या जन्मस्थानी बांधलेले प्राचीन मंदिर.",
+            "Pickup_Location_EN": "Main Gate, Ram Temple",
+            "Pickup_Location_HI": "मुख्य द्वार, राम मंदिर",
+            "Pickup_Location_MR": "मुख्य द्वार, राम मंदिर",
+            "Open_Time": "06:00 AM - 09:00 PM",
+            "Temple_Phone": "9876543211",
+            "Website": "https://ramtemple.com",
+            "Map_URL": "https://maps.google.com/...",
+            "Viewers": "10000+",
+            "Rating": "5",
+            "Reviews_Count": "1200",
+            "Slug": "shri-ram-temple-ayodhya",
+            "Subdomain": "shriram",
+            "URL_Type": "slug",
+            "Is_Verified": "YES",
+            "Is_Active": "YES",
+            "Live_Status": "NO",
+            "Pooja_Commission_Rate": "5.0",
+            "Product_Commission_Rate": "10.0",
+            "Image_URL": "https://example.com/temple.jpg",
+            "Youtube_Links": "https://youtube.com/watch?v=123, https://youtube.com/watch?v=456",
+            "Operating_Hours": '[{"label":"Morning","start":"06:00 AM","end":"12:00 PM","active":true},{"label":"Evening","start":"04:00 PM","end":"09:00 PM","active":true}]',
+            "Pooja_IDs": "pooja_id_1, pooja_id_2"
+        }];
+        const worksheet = XLSX.utils.json_to_sheet(templateData);
+        const workbook = XLSX.utils.book_new();
+        XLSX.utils.book_append_sheet(workbook, worksheet, "Template");
+        XLSX.writeFile(workbook, `temple_import_template.xlsx`);
+    };
+
+    const handleImportExcel = async (e: React.ChangeEvent<HTMLInputElement>) => {
+        const file = e.target.files?.[0];
+        if (!file) return;
+
+        const reader = new FileReader();
+        reader.onload = async (evt) => {
+            try {
+                const bstr = evt.target?.result;
+                const wb = XLSX.read(bstr, { type: 'binary' });
+                const wsname = wb.SheetNames[0];
+                const ws = wb.Sheets[wsname];
+                const data: any[] = XLSX.utils.sheet_to_json(ws);
+
+                if (data.length === 0) {
+                    toast({ title: "Empty File", description: "No records found in Excel sheet", variant: "destructive"});
+                    return;
+                }
+
+                setIsImporting(true);
+                setImportProgress({ total: data.length, current: 0, success: 0, failed: 0 });
+                toast({ title: "Import Started", description: `Processing ${data.length} temples...`, variant: "success" });
+                let successCount = 0;
+                let failCount = 0;
+
+                for (let i = 0; i < data.length; i++) {
+                    const row = data[i];
+                    setImportProgress(p => ({ ...p, current: i + 1 }));
+                    
+                    try {
+                        const formData = new FormData();
+                        formData.append("email", String(row.Email || ""));
+                        formData.append("phone", String(row.Phone || ""));
+                        
+                        // Admin Names
+                        formData.append("adminName_en", String(row.Admin_Name_EN || ""));
+                        formData.append("adminName_hi", String(row.Admin_Name_HI || ""));
+                        formData.append("adminName_mr", String(row.Admin_Name_MR || ""));
+                        
+                        // Temple Names
+                        formData.append("name_en", String(row.Name_EN || ""));
+                        formData.append("name_hi", String(row.Name_HI || ""));
+                        formData.append("name_mr", String(row.Name_MR || ""));
+                        
+                        // Locations
+                        formData.append("location_en", String(row.Location_EN || ""));
+                        formData.append("location_hi", String(row.Location_HI || ""));
+                        formData.append("location_mr", String(row.Location_MR || ""));
+                        
+                        // Addresses
+                        formData.append("fullAddress_en", String(row.Address_EN || ""));
+                        formData.append("fullAddress_hi", String(row.Address_HI || ""));
+                        formData.append("fullAddress_mr", String(row.Address_MR || ""));
+                        
+                        // Categories
+                        formData.append("category_en", String(row.Category_EN || ""));
+                        formData.append("category_hi", String(row.Category_HI || ""));
+                        formData.append("category_mr", String(row.Category_MR || ""));
+                        
+                        // Descriptions
+                        formData.append("description_en", String(row.Description_EN || ""));
+                        formData.append("description_hi", String(row.Description_HI || ""));
+                        formData.append("description_mr", String(row.Description_MR || ""));
+                        
+                        // History
+                        formData.append("history_en", String(row.History_EN || ""));
+                        formData.append("history_hi", String(row.History_HI || ""));
+                        formData.append("history_mr", String(row.History_MR || ""));
+                        
+                        // Pickup Locations
+                        formData.append("pickupLocation_en", String(row.Pickup_Location_EN || ""));
+                        formData.append("pickupLocation_hi", String(row.Pickup_Location_HI || ""));
+                        formData.append("pickupLocation_mr", String(row.Pickup_Location_MR || ""));
+                        
+                        // Metadata
+                        formData.append("openTime", String(row.Open_Time || ""));
+                        formData.append("templePhone", String(row.Temple_Phone || ""));
+                        formData.append("website", String(row.Website || ""));
+                        formData.append("mapUrl", String(row.Map_URL || ""));
+                        formData.append("viewers", String(row.Viewers || ""));
+                        formData.append("rating", String(row.Rating || "0"));
+                        formData.append("reviewsCount", String(row.Reviews_Count || "0"));
+                        formData.append("slug", String(row.Slug || ""));
+                        formData.append("subdomain", String(row.Subdomain || ""));
+                        formData.append("urlType", String(row.URL_Type || "slug"));
+                        
+                        // Status
+                        formData.append("isVerified", (row.Is_Verified === "YES") ? "true" : "false");
+                        formData.append("isActive", (row.Is_Active === "YES") ? "true" : "false");
+                        formData.append("liveStatus", (row.Live_Status === "YES") ? "true" : "false");
+                        
+                        // Commission Rates
+                        formData.append("poojaCommissionRate", String(row.Pooja_Commission_Rate || "5.0"));
+                        formData.append("productCommissionRate", String(row.Product_Commission_Rate || "10.0"));
+                        
+                        // Associations
+                        const youtubeLinks = row.Youtube_Links ? String(row.Youtube_Links).split(",").map(l => l.trim()).filter(Boolean) : [];
+                        formData.append("youtubeLinks", JSON.stringify(youtubeLinks));
+                        
+                        if (row.Operating_Hours) {
+                            formData.append("operatingHours", String(row.Operating_Hours));
+                        } else {
+                            formData.append("operatingHours", JSON.stringify([
+                                { label: "Morning", start: "07:00 AM", end: "01:00 PM", active: true },
+                                { label: "Evening", start: "05:00 PM", end: "10:00 PM", active: true }
+                            ]));
+                        }
+                        
+                        const poojaIds = row.Pooja_IDs ? String(row.Pooja_IDs).split(",").map(i => i.trim()).filter(Boolean) : [];
+                        formData.append("poojaIds", JSON.stringify(poojaIds));
+                        
+                        // Image URL (If backend supports creating from URL, otherwise this might need logic)
+                        if (row.Image_URL) formData.append("image_url", String(row.Image_URL));
+                        
+                        // Add an empty array for inlineEvents if backend requires it
+                        formData.append("inlineEvents", JSON.stringify([]));
+                        
+                        // Treat as create new user/temple
+                        await createTempleAdmin(formData as any);
+                        successCount++;
+                    } catch (err: any) {
+                        const errorMsg = err.response?.data?.message || err.message || "Unknown error";
+                        console.error(`Failed to import row ${i+2}:`, errorMsg, err);
+                        failCount++;
+                        toast({
+                            title: `Error in Row ${i+2}`,
+                            description: errorMsg,
+                            variant: "destructive"
+                        });
+                    }
+                    setImportProgress(p => ({ ...p, success: successCount, failed: failCount }));
+                }
+                
+                toast({ 
+                    title: "Import Complete", 
+                    description: `Successfully imported ${successCount} out of ${data.length} temples.`,
+                    variant: successCount > 0 ? "success" : "destructive"
+                });
+                
+                setTimeout(() => {
+                    setIsImporting(false);
+                    loadTemples(1);
+                }, 2000);
+            } catch (err) {
+                console.error(err);
+                toast({ title: "Format Error", description: "Could not parse Excel file.", variant: "destructive" });
+                setIsImporting(false);
+            }
+        };
+        reader.readAsBinaryString(file);
+        
+        // Reset file input
+        if (e.target) e.target.value = "";
+    };
 
     useEffect(() => {
         if (qParam) setSearchTerm(qParam);
@@ -217,6 +526,31 @@ function TemplesContent() {
     const loadTemples = async (page: number) => {
         setIsLoading(true);
         try {
+            // Fetch total counts for both tabs in background
+            Promise.all([
+                fetchAllTemplesAdmin({
+                    page: 1, limit: 1, search: debouncedSearch, isVerified: true,
+                    templeId: idParam || (selectedTempleFilter === "all" ? undefined : selectedTempleFilter),
+                    date: date ? date.toISOString() : undefined,
+                    category: selectedCategory === "all" ? undefined : selectedCategory,
+                    transactionRange: transactionRange === "all" ? undefined : transactionRange,
+                    location: selectedLocation === "all" ? undefined : selectedLocation,
+                    ritual: selectedRitual === "all" ? undefined : selectedRitual
+                }),
+                fetchAllTemplesAdmin({
+                    page: 1, limit: 1, search: debouncedSearch, isVerified: false,
+                    templeId: idParam || (selectedTempleFilter === "all" ? undefined : selectedTempleFilter),
+                    date: date ? date.toISOString() : undefined,
+                    category: selectedCategory === "all" ? undefined : selectedCategory,
+                    transactionRange: transactionRange === "all" ? undefined : transactionRange,
+                    location: selectedLocation === "all" ? undefined : selectedLocation,
+                    ritual: selectedRitual === "all" ? undefined : selectedRitual
+                })
+            ]).then(([vRes, uRes]) => {
+                setVerifiedCount(vRes.pagination?.total ?? (Array.isArray(vRes) ? vRes.length : vRes.data?.length ?? 0));
+                setUnverifiedCount(uRes.pagination?.total ?? (Array.isArray(uRes) ? uRes.length : uRes.data?.length ?? 0));
+            }).catch(console.error);
+
             const res = await fetchAllTemplesAdmin({
                 page,
                 limit: itemsPerPage,
@@ -505,10 +839,26 @@ function TemplesContent() {
                         </Button>
                     )}
                     {hasPermission("temples.create") && (
-                        <Button onClick={() => router.push('/admin/temples/create')} className="bg-primary w-full sm:w-auto justify-center">
-                            <Plus className="w-4 h-4 mr-2" />
-                            Add New Temple
-                        </Button>
+                        <div className="flex flex-col sm:flex-row gap-2 w-full sm:w-auto mt-2 sm:mt-0">
+                            <input type="file" accept=".xlsx" className="hidden" ref={globalImportRef} onChange={handleImportExcel} />
+                            
+                             <Button variant="outline" onClick={downloadTemplate} className="border-secondary text-secondary hover:bg-secondary/10 px-3 w-full sm:w-auto" title="Download Template">
+                                <FileSpreadsheet className="w-4 h-4" />
+                            </Button> 
+                            
+                            <Button variant="outline" onClick={() => globalImportRef.current?.click()} className="border-amber-600 text-amber-600 hover:bg-amber-50 px-3 w-full sm:w-auto" title="Import All Temples">
+                                <Upload className="w-4 h-4" />
+                            </Button> 
+
+                            <Button variant="outline" onClick={() => handleExportExcel('all')} className="border-emerald-600 text-emerald-600 hover:bg-emerald-50 px-3 w-full sm:w-auto" title="Export All Temples">
+                                <Download className="w-4 h-4" />
+                            </Button>
+
+                            <Button onClick={() => router.push('/admin/temples/create')} className="bg-primary w-full sm:w-auto justify-center">
+                                <Plus className="w-4 h-4 mr-2" />
+                                Add New Temple
+                            </Button>
+                        </div>
                     )}
                 </div>
             </div>
@@ -637,23 +987,8 @@ function TemplesContent() {
 
             {/* Tabs for Verified vs Pending */}
             <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full">
-                <div className="flex items-center justify-between mb-4">
-                    {/* <TabsList>
-                        <TabsTrigger value="verified" className="flex items-center gap-2">
-                            <CheckCircle className="w-4 h-4 text-emerald-600" />
-                            Verified Temples
-                        </TabsTrigger>
-                        <TabsTrigger value="unverified" className="flex items-center gap-2">
-                            <Clock className="w-4 h-4 text-amber-600" />
-                            Pending Verification
-                        </TabsTrigger>
-                    </TabsList> */}
-
-
-
-
-
-                    <TabsList className="grid grid-cols-2 bg-gray-100 p-1 rounded-xl">
+                <div className="flex flex-col md:flex-row items-center justify-between mb-4 gap-4">
+                    <TabsList className="grid grid-cols-2 bg-gray-100 p-1 rounded-xl w-full md:w-auto">
 
                         {/* VERIFIED TAB */}
                         <TabsTrigger
@@ -663,7 +998,7 @@ function TemplesContent() {
     data-[state=active]:text-white"
                         >
                             <CheckCircle className="w-4 h-4 text-emerald-900 data-[state=active]:text-white" />
-                            Verified Temples
+                            Verified Temples {verifiedCount !== null && `(${verifiedCount})`}
                         </TabsTrigger>
 
                         {/* PENDING TAB */}
@@ -674,10 +1009,29 @@ function TemplesContent() {
     data-[state=active]:text-white"
                         >
                             <Clock className="w-4 h-4 text-amber-600 data-[state=active]:text-white" />
-                            Pending Verification
+                            Pending Verification {unverifiedCount !== null && `(${unverifiedCount})`}
                         </TabsTrigger>
 
                     </TabsList>
+
+                    {hasPermission("temples.create") && (
+                        <div className="flex items-center gap-2 w-full md:w-auto">
+                            <input type="file" accept=".xlsx" className="hidden" ref={tabImportRef} onChange={handleImportExcel} />
+{/*                             
+                            <Button variant="outline" size="sm" onClick={downloadTemplate} className="border-secondary text-secondary hover:bg-secondary/10 flex-1 md:flex-none" title="Download Template">
+                                <FileSpreadsheet className="w-4 h-4 md:mr-2" />
+                                <span className="hidden md:inline">Template</span>
+                            </Button>
+                            <Button variant="outline" size="sm" onClick={() => tabImportRef.current?.click()} className="border-amber-600 text-amber-600 hover:bg-amber-50 flex-1 md:flex-none" title={`Import into ${activeTab === 'verified' ? 'Verified' : 'Pending'}`}>
+                                <Upload className="w-4 h-4 md:mr-2" />
+                                <span className="hidden md:inline">Import</span>
+                            </Button>
+                            <Button variant="outline" size="sm" onClick={() => handleExportExcel(activeTab as any)} className="border-emerald-600 text-emerald-600 hover:bg-emerald-50 flex-1 md:flex-none" title={`Export ${activeTab === 'verified' ? 'Verified' : 'Pending'} Temples`}>
+                                <Download className="w-4 h-4 md:mr-2" />
+                                <span className="hidden md:inline">Export</span>
+                            </Button> */}
+                        </div>
+                    )}
                 </div>
 
                 <TabsContent value="verified">
@@ -1594,6 +1948,32 @@ function TemplesContent() {
                     <div className="flex justify-end gap-3">
                         <Button variant="ghost" onClick={() => setApprovalModalOpen(false)}>Cancel</Button>
                         <Button onClick={handleConfirmApproval} className="bg-emerald-600 hover:bg-emerald-700">Approve & Live</Button>
+                    </div>
+                </DialogContent>
+            </Dialog>
+
+        {/* Import Progress Dialog */}
+            <Dialog open={isImporting} onOpenChange={() => {}}>
+                <DialogContent className="sm:max-w-md" hideCloseButton>
+                    <DialogHeader>
+                        <DialogTitle>Importing Temples</DialogTitle>
+                    </DialogHeader>
+                    <div className="flex flex-col items-center justify-center p-6 space-y-4">
+                        <div className="text-4xl animate-bounce">📦</div>
+                        <h3 className="text-lg font-medium text-slate-900">
+                            Processing Row {importProgress.current} of {importProgress.total}
+                        </h3>
+                        <div className="w-full bg-slate-100 rounded-full h-3 mb-2 overflow-hidden">
+                            <div 
+                                className="bg-primary h-3 rounded-full transition-all duration-300" 
+                                style={{ width: `${importProgress.total > 0 ? Math.round((importProgress.current / importProgress.total) * 100) : 0}%` }}
+                            ></div>
+                        </div>
+                        <div className="flex justify-between w-full text-sm text-slate-500">
+                            <span className="text-emerald-600 font-medium">Success: {importProgress.success}</span>
+                            <span className="text-red-500 font-medium">Failed: {importProgress.failed}</span>
+                        </div>
+                        <p className="text-xs text-slate-400 mt-2 text-center w-full">Please do not close this window until the process completes.</p>
                     </div>
                 </DialogContent>
             </Dialog>

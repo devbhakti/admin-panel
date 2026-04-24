@@ -16,8 +16,12 @@ import {
     Power,
     PowerOff,
     Eye,
-    Languages
+    Languages,
+    Download,
+    Upload,
+    Loader2
 } from "lucide-react";
+import * as XLSX from 'xlsx';
 import { format } from "date-fns";
 import { hi } from "date-fns/locale";
 
@@ -408,6 +412,122 @@ export default function AdminEventsPage() {
         }
     };
 
+    // --- BULK MANAGEMENT ---
+    const downloadTemplate = () => {
+        const template = [
+            {
+                "Name_EN": "Maha Shivaratri",
+                "Name_HI": "महा शिवरात्रि",
+                "Name_MR": "महा शिवरात्री",
+                "Description_EN": "Grand celebration of Lord Shiva",
+                "Description_HI": "भगवान शिव का भव्य उत्सव",
+                "Description_MR": "भगवान शिवाचा भव्य उत्सव",
+                "Date": "2026-02-15",
+                "Time": "10:00 AM",
+                "Temple_ID": "",
+                "Is_Active": "TRUE"
+            }
+        ];
+        const ws = XLSX.utils.json_to_sheet(template);
+        const wb = XLSX.utils.book_new();
+        XLSX.utils.book_append_sheet(wb, ws, "Event Template");
+        XLSX.writeFile(wb, "Events_Import_Template.xlsx");
+    };
+
+    const handleExportExcel = () => {
+        const exportData = events.map(ev => ({
+            "ID": ev.id,
+            "Name_EN": getLocalized(ev, 'name', 'en'),
+            "Name_HI": getLocalized(ev, 'name', 'hi'),
+            "Name_MR": getLocalized(ev, 'name', 'mr'),
+            "Date": ev.date,
+            "Time": ev.time,
+            "Temple": ev.temple ? getLocalized(ev.temple, 'name', 'en') : "Global",
+            "Status": ev.status ? "ACTIVE" : "INACTIVE",
+            "Created_At": ev.createdAt
+        }));
+        const ws = XLSX.utils.json_to_sheet(exportData);
+        const wb = XLSX.utils.book_new();
+        XLSX.utils.book_append_sheet(wb, ws, "Events");
+        XLSX.writeFile(wb, `Events_Export_${new Date().toISOString().split('T')[0]}.xlsx`);
+    };
+
+    const handleImportExcel = async (e: React.ChangeEvent<HTMLInputElement>) => {
+        const file = e.target.files?.[0];
+        if (!file) return;
+
+        const reader = new FileReader();
+        reader.onload = async (evt) => {
+            try {
+                const bstr = evt.target?.result;
+                const wb = XLSX.read(bstr, { type: 'binary' });
+                const wsname = wb.SheetNames[0];
+                const ws = wb.Sheets[wsname];
+                const data = XLSX.utils.sheet_to_json(ws) as any[];
+
+                if (data.length === 0) {
+                    toast({ title: "Error", description: "Excel file is empty", variant: "destructive" });
+                    return;
+                }
+
+                toast({ title: "Import Started", description: `Importing ${data.length} events...`, variant: "default" });
+
+                let successCount = 0;
+                let failCount = 0;
+                const errors: string[] = [];
+
+                for (let i = 0; i < data.length; i++) {
+                    const row = data[i];
+                    const rowNum = i + 2;
+                    try {
+                        if (!row.Name_EN) throw new Error("English name is required");
+                        if (!row.Date) throw new Error("Date is required");
+
+                        const payload = {
+                            name_en: String(row.Name_EN || "").trim(),
+                            name_hi: String(row.Name_HI || "").trim(),
+                            name_mr: String(row.Name_MR || "").trim(),
+                            description_en: String(row.Description_EN || "").trim(),
+                            description_hi: String(row.Description_HI || "").trim(),
+                            description_mr: String(row.Description_MR || "").trim(),
+                            date: String(row.Date),
+                            time: String(row.Time || "10:00 AM"),
+                            templeId: row.Temple_ID ? String(row.Temple_ID) : undefined,
+                            status: String(row.Is_Active || "TRUE").toUpperCase() === "TRUE",
+                            recommendedPoojaIds: []
+                        };
+
+                        await createEventAdmin(payload);
+                        successCount++;
+                    } catch (err: any) {
+                        const errorMsg = err.response?.data?.message || err.message || "Unknown error";
+                        failCount++;
+                        errors.push(`Row ${rowNum}: ${errorMsg}`);
+                        console.error(`Import Error Row ${rowNum}:`, errorMsg);
+                    }
+                }
+
+                if (failCount > 0) {
+                    toast({
+                        title: "Import Partially Failed",
+                        description: `Success: ${successCount}, Failed: ${failCount}. Check console or fix these: ${errors.slice(0, 3).join(", ")}${errors.length > 3 ? "..." : ""}`,
+                        variant: "destructive"
+                    });
+                } else {
+                    toast({
+                        title: "Import Successful",
+                        description: `Successfully imported ${successCount} events.`
+                    });
+                }
+                loadEvents(1);
+            } catch (error) {
+                toast({ title: "Import Failed", description: "Failed to process Excel file", variant: "destructive" });
+            }
+        };
+        reader.readAsBinaryString(file);
+        e.target.value = '';
+    };
+
     return (
         <div className="space-y-6">
             {/* Page Header */}
@@ -418,15 +538,40 @@ export default function AdminEventsPage() {
                         {t('admin.events.desc') || "Manage upcoming events and festivals for temples"}
                     </p>
                 </div>
-                {hasPermission("events.create") && (
-                    <Button
-                        onClick={() => handleOpenDialog()}
-                        className="bg-primary hover:bg-primary/90"
-                    >
-                        <Plus className="w-4 h-4 mr-2" />
-                        {t('admin.events.add_new') || "Add New Event"}
+                <div className="flex flex-wrap items-center gap-2">
+                    <Button variant="outline" onClick={downloadTemplate} className="text-xs h-9">
+                        <Download className="w-4 h-4 mr-1.5" />
+                        Template
                     </Button>
-                )}
+
+                    <div className="relative">
+                        <input
+                            type="file"
+                            accept=".xlsx, .xls"
+                            className="absolute inset-0 opacity-0 cursor-pointer"
+                            onChange={handleImportExcel}
+                        />
+                        <Button variant="outline" className="text-xs h-9">
+                            <Upload className="w-4 h-4 mr-1.5" />
+                            Import
+                        </Button>
+                    </div> 
+
+                    <Button variant="outline" onClick={handleExportExcel} className="text-xs h-9">
+                        <Download className="w-4 h-4 mr-1.5" />
+                        Export All
+                    </Button>
+
+                    {hasPermission("events.create") && (
+                        <Button
+                            onClick={() => handleOpenDialog()}
+                            className="bg-[#7b4623] hover:bg-[#5d351a] h-9"
+                        >
+                            <Plus className="w-4 h-4 mr-2" />
+                            {t('admin.events.add_new') || "Add New Event"}
+                        </Button>
+                    )}
+                </div>
 
             </div>
 
@@ -705,7 +850,7 @@ export default function AdminEventsPage() {
 
             {/* View Event Dialog */}
             <Dialog open={isViewDialogOpen} onOpenChange={setIsViewDialogOpen}>
-                <DialogContent className="sm:max-w-[800px] p-0 overflow-hidden bg-background border-none shadow-2xl rounded-2xl">
+                <DialogContent className="sm:max-w-[800px] w-[95vw] max-h-[95vh] overflow-y-auto p-0 bg-background border-none shadow-2xl rounded-2xl scrollbar-hide">
                     {viewingEvent && (
                         <div className="flex flex-col h-full">
                             {/* Modal Header */}
@@ -832,7 +977,7 @@ export default function AdminEventsPage() {
 
             {/* Add/Edit Dialog */}
             <Dialog open={isDialogOpen} onOpenChange={setIsDialogOpen}>
-                <DialogContent className="sm:max-w-[600px]">
+                <DialogContent className="sm:max-w-[600px] w-[95vw] max-h-[95vh] overflow-y-auto scrollbar-hide">
                     <DialogHeader>
                         <DialogTitle>
                             {editingEvent ? t('admin.events.edit_event') : t('admin.events.add_new')}
@@ -905,7 +1050,7 @@ export default function AdminEventsPage() {
                         </div>
 
 
-                        <div className="grid grid-cols-2 gap-4">
+                        <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                             <div className="space-y-2">
                                 <Label htmlFor="date">{t('admin.events.date_label')} *</Label>
                                 <Popover>
@@ -1049,7 +1194,7 @@ export default function AdminEventsPage() {
                                                 <ChevronsUpDown className="ml-2 h-4 w-4 shrink-0 opacity-50" />
                                             </Button>
                                         </PopoverTrigger>
-                                        <PopoverContent className="w-[520px] p-0" align="start">
+                                        <PopoverContent className="w-[95vw] sm:w-[520px] p-0" align="start">
                                             <Command>
                                                 <CommandInput placeholder={t('admin.events.search_poojas')} />
                                                 <CommandEmpty>{t('admin.events.no_pooja_found')}</CommandEmpty>

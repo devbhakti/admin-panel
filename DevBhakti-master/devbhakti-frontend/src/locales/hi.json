@@ -1940,8 +1940,22 @@
       "delivery_process_hint": "देवभक्ति द्वारा पवित्र वितरण",
       "confirm_status_update": "स्थिति अपडेट की पुष्टि करें",
       "status_change_warning": "क्या आप वाकई आदेश की स्थिति को {status} में बदलना चाहते हैं? यह ग्राहक को सूचित करेगा और शिपिंग प्रक्रियाओं को शुरू कर सकता है।",
+      "yes_update": "हाँ, अपडेट करें",
       "update_success": "स्थिति अपडेट की गई",
+      "update_success_msg": "ऑर्डर की स्थिति बदलकर {status} कर दी गई है",
       "update_error": "अपडेट विफल रहा",
+      "update_error_msg": "ऑर्डर की स्थिति अपडेट नहीं की जा सकी",
+      "item_payment_mode": "भुगतान विधि",
+      "sub_order_id": "उप-ऑर्डर आईडी",
+      "marketplace_commission": "मार्केटप्लेस कमीशन (अनुमानित)",
+      "consignment_total": "खेप कुल",
+      "includes_marketplace_fee": "इसमें ₹{amount} मार्केटप्लेस शुल्क शामिल है",
+      "via_method": "{method} के माध्यम से",
+      "loading": "आदेश लोड हो रहे हैं...",
+      "exporting": "निर्यात किया जा रहा है...",
+      "export_msg": "जब हम एक्सेल फ़ाइल तैयार करते हैं तो कृपया प्रतीक्षा करें।",
+      "export_success": "ऑर्डर सफलतापूर्वक निर्यात किए गए!",
+      "export_failed": "एक्सेल डाउनलोड करने में विफल।",
       "prev": "पिछला",
       "next": "अगला",
       "page_of": "पेज {current} / {total}",
@@ -2164,10 +2178,21 @@
       "error_create": "श्रेणी बनाने में त्रुटि",
       "error_update": "श्रेणी अपडेट करने में त्रुटि",
       "error_loading": "श्रेणी लोड करने में त्रुटि",
+      "success": "सफलता",
+      "no_cancel": "नहीं, रद्द करें",
       "back": "वापस",
       "file_hint": "JPG, PNG, GIF अधिकतम 5MB",
       "rec_size": "सिफ़ारिश: 800x800 px (वर्गाकार)",
       "current_image_loaded": "वर्तमान छवि लोड हुई"
+    }
+  },
+  "temple_dashboard": {
+    "profile": {
+      "add_slot": "स्लॉट जोड़ें",
+      "remove_slot": "स्लॉट निकालें",
+      "divine_hours": "दिव्य संचालन समय",
+      "slot_label": "स्लॉट लेबल",
+      "new_slot_default": "नया स्लॉट"
     }
   }
 }

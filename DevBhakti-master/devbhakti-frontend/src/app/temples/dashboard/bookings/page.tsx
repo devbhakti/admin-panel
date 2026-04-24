@@ -22,8 +22,10 @@ import {
     PlayCircle,
     ArrowUpDown,
     CalendarRange,
-    Calendar as CalendarIcon
+    Calendar as CalendarIcon,
+    Download
 } from "lucide-react";
+import * as XLSX from 'xlsx';
 import { useSearchParams } from "next/navigation";
 import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -156,7 +158,7 @@ export default function TempleBookingsPage() {
                     description: newStatus
                         ? "No new bookings will be accepted for today."
                         : "You are now accepting bookings for today.",
-                    variant: newStatus ? "destructive" : "default"
+                    variant: newStatus ? "destructive" : "success"
                 });
             }
         } catch (error) {
@@ -199,7 +201,8 @@ export default function TempleBookingsPage() {
             if (res.success) {
                 toast({
                     title: `Booking ${status === 'BOOKED' ? 'Accepted' : (status === 'COMPLETED' ? 'Completed' : 'Rejected')}`,
-                    description: res.message
+                    description: res.message,
+                    variant: "success"
                 });
                 loadBookings();
                 if (selectedBooking?.id === id) setSelectedBooking(null);
@@ -224,7 +227,7 @@ export default function TempleBookingsPage() {
         try {
             const res = await deleteBooking(id);
             if (res.success) {
-                toast({ title: "Booking Deleted", description: res.message });
+                toast({ title: "Booking Deleted", description: res.message, variant: "success" });
                 loadBookings();
                 if (selectedBooking?.id === id) setSelectedBooking(null);
             } else {
@@ -235,6 +238,33 @@ export default function TempleBookingsPage() {
         } finally {
             setIsProcessing(false);
         }
+    };
+
+    const handleExportExcel = () => {
+        if (bookings.length === 0) {
+            toast({ title: "No Data", description: "There are no bookings to export", variant: "destructive" });
+            return;
+        }
+
+        const exportData = filteredBookings.map(b => ({
+            "Booking ID": b.id,
+            "Devotee Name": b.devoteeName || "N/A",
+            "Devotee Phone": b.devoteePhone || "N/A",
+            "Pooja Name": parseLocalizedValue(b.pooja?.name),
+            "Package": parseLocalizedValue(b.packageName),
+            "Ritual Date": b.bookingDate ? format(new Date(b.bookingDate), "dd MMM yyyy") : "N/A",
+            "Booked On": format(new Date(b.createdAt), "dd MMM yyyy"),
+            "Amount": b.packagePrice,
+            "Status": b.status,
+            "Gotra": b.gotra || "N/A",
+            "Rashi": b.rashi || "N/A",
+            "Nakshatra": b.nakshatra || "N/A"
+        }));
+
+        const ws = XLSX.utils.json_to_sheet(exportData);
+        const wb = XLSX.utils.book_new();
+        XLSX.utils.book_append_sheet(wb, ws, "Bookings");
+        XLSX.writeFile(wb, `Temple_Bookings_Export_${new Date().toISOString().split('T')[0]}.xlsx`);
     };
 
     const searchParams = useSearchParams();
@@ -380,6 +410,14 @@ export default function TempleBookingsPage() {
                     )}
                     <Button variant="outline" onClick={() => loadBookings()} disabled={loading}>
                         Refresh
+                    </Button>
+                    <Button
+                        onClick={handleExportExcel}
+                        variant="outline"
+                        className="gap-2 border-[#794A05]/20 hover:bg-[#794A05]/5 text-[#794A05] font-bold"
+                    >
+                        <Download className="w-4 h-4" />
+                        Export
                     </Button>
                     {/* <Button variant="sacred">
                         <Plus className="w-4 h-4 mr-2" />

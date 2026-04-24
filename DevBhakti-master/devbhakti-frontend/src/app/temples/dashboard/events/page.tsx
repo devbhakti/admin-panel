@@ -16,8 +16,12 @@ import {
     X,
     Power,
     PowerOff,
-    Eye
+    Eye,
+    Download,
+    Upload,
+    FileText
 } from "lucide-react";
+import * as XLSX from 'xlsx';
 import { useRouter } from "next/navigation";
 import { format } from "date-fns";
 import { cn } from "@/lib/utils";
@@ -285,6 +289,122 @@ export default function TempleEventsPage() {
         return name.includes(searchTerm.toLowerCase());
     });
 
+    // --- BULK MANAGEMENT ---
+    const downloadTemplate = () => {
+        const template = [
+            {
+                "Name_EN": "Hanuman Janmotsav",
+                "Name_HI": "हनुमान जन्मोत्सव",
+                "Name_MR": "हनुमान जन्मोत्सव",
+                "Date": "May 15, 2026",
+                "Time": "10:00 AM",
+                "Status": "TRUE",
+                "Description_EN": "Special celebration of Lord Hanuman's birth.",
+                "Description_HI": "भगवान हनुमान के जन्म का विशेष उत्सव।",
+                "Description_MR": "भगवान हनुमानाचा जन्मोत्सव सोहळा."
+            }
+        ];
+        const ws = XLSX.utils.json_to_sheet(template);
+        const wb = XLSX.utils.book_new();
+        XLSX.utils.book_append_sheet(wb, ws, "Event Template");
+        XLSX.writeFile(wb, "Temple_Event_Import_Template.xlsx");
+    };
+
+    const handleExportExcel = () => {
+        const exportData = events.map(e => ({
+            "ID": e.id,
+            "Name_EN": getL(e.name, 'en'),
+            "Name_HI": getL(e.name, 'hi'),
+            "Name_MR": getL(e.name, 'mr'),
+            "Date": e.date,
+            "Time": e.time,
+            "Status": e.status ? "TRUE" : "FALSE",
+            "Description_EN": getL(e.description, 'en'),
+            "Description_HI": getL(e.description, 'hi'),
+            "Description_MR": getL(e.description, 'mr'),
+            "Created_At": e.createdAt
+        }));
+        const ws = XLSX.utils.json_to_sheet(exportData);
+        const wb = XLSX.utils.book_new();
+        XLSX.utils.book_append_sheet(wb, ws, "My Events");
+        XLSX.writeFile(wb, `My_Events_Export_${new Date().toISOString().split('T')[0]}.xlsx`);
+    };
+
+    const handleImportExcel = async (e: React.ChangeEvent<HTMLInputElement>) => {
+        const file = e.target.files?.[0];
+        if (!file) return;
+
+        const reader = new FileReader();
+        reader.onload = async (evt) => {
+            try {
+                const bstr = evt.target?.result;
+                const wb = XLSX.read(bstr, { type: 'binary' });
+                const wsname = wb.SheetNames[0];
+                const ws = wb.Sheets[wsname];
+                const data = XLSX.utils.sheet_to_json(ws) as any[];
+
+                if (data.length === 0) {
+                    toast({ title: "Error", description: "Excel file is empty", variant: "destructive" });
+                    return;
+                }
+
+                toast({ title: "Import Started", description: `Importing ${data.length} events...`, variant: "success" });
+
+                let successCount = 0;
+                let failCount = 0;
+                const errors: string[] = [];
+
+                for (let i = 0; i < data.length; i++) {
+                    const row = data[i];
+                    const rowNum = i + 2;
+                    try {
+                        if (!row.Name_EN) throw new Error("English name is required");
+                        if (!row.Date) throw new Error("Date is required");
+
+                        const payload = {
+                            name_en: String(row.Name_EN || "").trim(),
+                            name_hi: String(row.Name_HI || "").trim(),
+                            name_mr: String(row.Name_MR || "").trim(),
+                            date: String(row.Date || "").trim(),
+                            time: String(row.Time || "10:00 AM").trim(),
+                            description_en: String(row.Description_EN || "").trim(),
+                            description_hi: String(row.Description_HI || "").trim(),
+                            description_mr: String(row.Description_MR || "").trim(),
+                            status: String(row.Status || "TRUE").toUpperCase() === "TRUE",
+                            recommendedPoojaIds: []
+                        };
+
+                        await createMyEvent(payload);
+                        successCount++;
+                    } catch (err: any) {
+                        const errorMsg = err.response?.data?.message || err.message || "Unknown error";
+                        failCount++;
+                        errors.push(`Row ${rowNum}: ${errorMsg}`);
+                        console.error(`Import Error Row ${rowNum}:`, errorMsg);
+                    }
+                }
+
+                if (failCount > 0) {
+                    toast({
+                        title: "Import Partially Failed",
+                        description: `Success: ${successCount}, Failed: ${failCount}. Check console or fix these: ${errors.slice(0, 3).join(", ")}${errors.length > 3 ? "..." : ""}`,
+                        variant: "destructive"
+                    });
+                } else {
+                    toast({
+                        title: "Import Successful",
+                        description: `Successfully imported ${successCount} events.`
+                    });
+                }
+                loadData();
+            } catch (error) {
+                toast({ title: "Import Failed", description: "Failed to process Excel file", variant: "destructive" });
+            }
+        };
+        reader.readAsBinaryString(file);
+        e.target.value = '';
+    };
+
     return (
         <div className="space-y-6">
             {/* Page Header */}
@@ -295,14 +415,47 @@ export default function TempleEventsPage() {
                         Manage festivals and special celebrations at your temple.
                     </p>
                 </div>
-                <div className="flex items-center gap-3">
+                <div className="flex flex-wrap items-center gap-2 sm:gap-3 w-full md:w-auto">
+                    <Button
+                        onClick={downloadTemplate}
+                        variant="outline"
+                        className="flex-1 md:flex-initial border-[#7b4623]/20 hover:bg-[#7b4623]/5"
+                    >
+                        <FileText className="w-4 h-4 mr-2" />
+                        Template
+                    </Button>
+                    <div className="relative flex-1 md:flex-initial">
+                        <input
+                            type="file"
+                            accept=".xlsx, .xls"
+                            className="hidden"
+                            id="import-excel"
+                            onChange={handleImportExcel}
+                        />
+                        <Button
+                            onClick={() => document.getElementById('import-excel')?.click()}
+                            variant="outline"
+                            className="w-full border-[#7b4623]/20 hover:bg-[#7b4623]/5"
+                        >
+                            <Upload className="w-4 h-4 mr-2" />
+                            Import
+                        </Button>
+                    </div>
+                    <Button
+                        onClick={handleExportExcel}
+                        variant="outline"
+                        className="flex-1 md:flex-initial border-[#7b4623]/20 hover:bg-[#7b4623]/5"
+                    >
+                        <Download className="w-4 h-4 mr-2" />
+                        Export
+                    </Button>
                     {(!canCreate || !canEdit || !canManage || !canDelete) && (
                         <Badge className="bg-slate-100 text-slate-500 border-slate-200 uppercase font-black tracking-widest px-4 py-2 rounded-xl">View Only Mode</Badge>
                     )}
                     {canCreate && (
                         <Button
                             onClick={() => handleOpenDialog()}
-                            className="bg-[#7b4623] hover:bg-[#5d351a] text-white"
+                            className="bg-[#7b4623] hover:bg-[#5d351a] text-white flex-1 md:flex-initial"
                         >
                             <Plus className="w-4 h-4 mr-2" />
                             New Event

@@ -46,6 +46,7 @@ export default function ViewTemplePage() {
     const [isCustomPooja, setIsCustomPooja] = useState(false);
     const [products, setProducts] = useState<any[]>([]);
     const { language, setLanguage } = useLanguage();
+    const [activeTab, setActiveTab] = useState<Language>(language);
 
     useEffect(() => {
         loadData();
@@ -283,7 +284,7 @@ export default function ViewTemplePage() {
                 <div className="flex items-center gap-2 px-2 text-slate-500 font-bold text-sm">
                     <Languages className="w-4 h-4" /> Localized Content View
                 </div>
-                <Tabs value={language} onValueChange={(v) => setLanguage(v as Language)} className="w-auto">
+                <Tabs value={activeTab} onValueChange={(v) => setActiveTab(v as Language)} className="w-auto">
                     <TabsList className="bg-white border">
                         <TabsTrigger value="en">English</TabsTrigger>
                         <TabsTrigger value="hi">हिंदी</TabsTrigger>
@@ -295,7 +296,7 @@ export default function ViewTemplePage() {
             <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
                 {/* Detailed Info with Tabs Support */}
                 <div className="lg:col-span-2 space-y-8">
-                    <Tabs value={language} onValueChange={(v) => setLanguage(v as Language)} className="w-full">
+                    <Tabs value={activeTab} onValueChange={(v) => setActiveTab(v as Language)} className="w-full">
                         {(['en', 'hi', 'mr'] as Language[]).map((l) => (
                             <TabsContent key={l} value={l} className="space-y-8 mt-0">
                                 {/* Display Name Preview Card */}
@@ -359,8 +360,8 @@ export default function ViewTemplePage() {
                                 {temple?.poojas?.map((p: any) => (
                                     <div key={p.id} className="p-4 rounded-xl border bg-slate-50 flex items-center justify-between group hover:border-primary transition-all">
                                         <div className="flex flex-col">
-                                            <span className="font-bold text-slate-800">{parseL(p.name, language)}</span>
-                                            <span className="text-sm text-slate-500">{parseL(p.category, language)}{p.duration ? ` • ${p.duration}` : ''}</span>
+                                            <span className="font-bold text-slate-800">{parseL(p.name, activeTab)}</span>
+                                            <span className="text-sm text-slate-500">{parseL(p.category, activeTab)}{p.duration ? ` • ${p.duration}` : ''}</span>
                                         </div>
                                         <Badge variant="outline" className="group-hover:bg-primary group-hover:text-white transition-colors">₹{p.price}</Badge>
                                     </div>
@@ -381,8 +382,8 @@ export default function ViewTemplePage() {
                                 {products?.map((p: any) => (
                                     <div key={p.id} className="p-4 rounded-xl border bg-slate-50 flex items-center justify-between group hover:border-primary transition-all">
                                         <div className="flex flex-col">
-                                            <span className="font-bold text-slate-800">{parseL(p.name, language)}</span>
-                                            <span className="text-sm text-slate-500">{parseL(p.category, language)}</span>
+                                            <span className="font-bold text-slate-800">{parseL(p.name, activeTab)}</span>
+                                            <span className="text-sm text-slate-500">{parseL(p.category, activeTab)}</span>
                                         </div>
                                         <Badge variant="outline" className="group-hover:bg-primary group-hover:text-white transition-colors">
                                             ₹{p.variants?.[0]?.price || 0}
@@ -497,8 +498,8 @@ export default function ViewTemplePage() {
                                             <span className="text-xl font-bold">{ev.date?.split(' ')[1]?.replace(',', '') || ev.date}</span>
                                         </div>
                                         <div>
-                                            <h4 className="font-bold text-slate-800">{parseL(ev.name, language)}</h4>
-                                            <p className="text-sm text-slate-500">{parseL(ev.description, language) || "Divine celebration at the temple."}</p>
+                                            <h4 className="font-bold text-slate-800">{parseL(ev.name, activeTab)}</h4>
+                                            <p className="text-sm text-slate-500">{parseL(ev.description, activeTab) || "Divine celebration at the temple."}</p>
                                         </div>
                                     </div>
                                 ))}

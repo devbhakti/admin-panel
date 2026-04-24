@@ -20,6 +20,7 @@ export default function ViewProductPage() {
     const { language, setLanguage, t } = useLanguage();
     const [product, setProduct] = useState<any>(null);
     const [isLoading, setIsLoading] = useState(true);
+    const [activeTab, setActiveTab] = useState<Language>(language);
 
     useEffect(() => {
         loadProduct();
@@ -108,7 +109,7 @@ export default function ViewProductPage() {
                         <ArrowLeft className="w-5 h-5" />
                     </Button>
                     <div>
-                        <h1 className="text-2xl font-bold tracking-tight">{parseLocalizedValue(product.name, language)}</h1>
+                        <h1 className="text-2xl font-bold tracking-tight">{parseLocalizedValue(product.name, activeTab)}</h1>
                         <p className="text-muted-foreground">Product Details</p>
                     </div>
                 </div>
@@ -129,7 +130,7 @@ export default function ViewProductPage() {
                         {product.image ? (
                             <img
                                 src={getImageUrl(product.image)}
-                                alt={parseLocalizedValue(product.name, language)}
+                                alt={parseLocalizedValue(product.name, activeTab)}
                                 className="w-full h-full object-contain"
                             />
                         ) : (
@@ -159,7 +160,7 @@ export default function ViewProductPage() {
                                 <div>
                                     <p className="text-[10px] font-bold uppercase tracking-wider text-slate-400 mb-0.5">Category</p>
                                     <Badge variant="outline" className="font-medium">
-                                        {parseLocalizedValue(product.categoryObj?.name, language) || parseLocalizedValue(product.category, language)}
+                                        {parseLocalizedValue(product.categoryObj?.name, activeTab) || parseLocalizedValue(product.category, activeTab)}
                                     </Badge>
                                 </div>
                             </div>
@@ -173,9 +174,9 @@ export default function ViewProductPage() {
                                     <div className="flex items-center gap-2">
                                         <span className="font-semibold text-slate-900">
                                             {product.temple 
-                                                ? parseLocalizedValue(product.temple.name, language)
+                                                ? parseLocalizedValue(product.temple.name, activeTab)
                                                 : product.seller 
-                                                    ? parseLocalizedValue(product.seller.name, language)
+                                                    ? parseLocalizedValue(product.seller.name, activeTab)
                                                     : "DevBhakti Official"}
                                         </span>
                                         <Badge variant="secondary" className="text-[9px] h-4">
@@ -200,7 +201,7 @@ export default function ViewProductPage() {
 
                 {/* Right Column - Localized Content Tabs & Variants */}
                 <div className="lg:col-span-2 space-y-6">
-                    <Tabs value={language} onValueChange={(v) => setLanguage(v as Language)} className="w-full">
+                    <Tabs value={activeTab} onValueChange={(v) => setActiveTab(v as Language)} className="w-full">
                         <div className="flex items-center justify-between mb-4 bg-white p-2 rounded-2xl border shadow-sm">
                             <div className="flex items-center gap-2 px-3 text-slate-500 font-bold text-xs uppercase tracking-widest">
                                 <Languages className="w-4 h-4" /> Multi-Language View
@@ -280,7 +281,7 @@ export default function ViewProductPage() {
                                         {variant.image ? (
                                             <img
                                                 src={getImageUrl(variant.image)}
-                                                alt={parseLocalizedValue(variant.name, language)}
+                                                alt={parseLocalizedValue(variant.name, activeTab)}
                                                 className="w-full h-full object-cover"
                                             />
                                         ) : (
@@ -291,7 +292,7 @@ export default function ViewProductPage() {
                                         <div className="flex flex-col md:flex-row md:items-center justify-between gap-2">
                                             <div>
                                                 <h4 className="font-bold text-slate-900 truncate">
-                                                    {parseLocalizedValue(variant.name, language)}
+                                                    {parseLocalizedValue(variant.name, activeTab)}
                                                 </h4>
                                                 <div className="flex items-center gap-3 mt-1 text-xs text-slate-500">
                                                     <span className="flex items-center gap-1">

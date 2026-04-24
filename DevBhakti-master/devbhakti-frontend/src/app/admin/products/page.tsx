@@ -21,7 +21,10 @@ import {
   Image as ImageIcon,
   ChevronLeft,
   ChevronRight,
+  Download,
+  Upload,
 } from "lucide-react";
+import * as XLSX from 'xlsx';
 import {
   Select,
   SelectContent,
@@ -68,6 +71,7 @@ import {
   deleteProductAdmin,
   toggleProductStatusAdmin,
   fetchProductOwnersAdmin,
+  createProductAdmin,
 } from "@/api/adminController";
 
 function ProductsContent() {
@@ -89,6 +93,8 @@ function ProductsContent() {
   const [date, setDate] = useState<Date | undefined>(undefined);
   const [selectedOwner, setSelectedOwner] = useState<string>("all");
   const [owners, setOwners] = useState<any[]>([]);
+  const [isImporting, setIsImporting] = useState(false);
+  const [importProgress, setImportProgress] = useState({ total: 0, current: 0, success: 0, failed: 0 });
   const { toast } = useToast();
   const { hasPermission } = useAdminAuth();
   const { language, t } = useLanguage();
@@ -263,6 +269,160 @@ function ProductsContent() {
     return text.slice(0, maxLength) + "...";
   };
 
+  // --- BULK MANAGEMENT ---
+  const downloadTemplate = () => {
+    const template = [
+      {
+        "Name_EN": "Brass Ganesha Idol",
+        "Name_HI": "पीतल गणेश मूर्ति",
+        "Name_MR": "पितळी गणेश मूर्ती",
+        "Description_EN": "Beautifully handcrafted brass idol.",
+        "Description_HI": "खूबसूरती से तैयार की गई पीतल की मूर्ति।",
+        "Description_MR": "सुंदर हाताने तयार केलेली पितळी मूर्ती.",
+        "Category_ID": "CAT_ID_HERE",
+        "Temple_ID": "TEMPLE_ID_HERE",
+        "Status": "approved",
+        "Price": 1500, // For simple single variant
+        "Stock": 50,
+        "Weight": "1kg",
+        "Length": "10cm",
+        "Width": "8cm",
+        "Height": "15cm",
+        "Variants": '[{"name_en": "Small", "name_hi": "छोटा", "price": 1200, "stock": 20}, {"name_en": "Large", "name_hi": "बड़ा", "price": 2500, "stock": 10}]',
+        "Image_URL": "https://example.com/product.jpg"
+      }
+    ];
+
+    const ws = XLSX.utils.json_to_sheet(template);
+    const wb = XLSX.utils.book_new();
+    XLSX.utils.book_append_sheet(wb, ws, "Product Template");
+    XLSX.writeFile(wb, "Product_Import_Template.xlsx");
+  };
+
+  const handleExportExcel = () => {
+    const exportData = products.map(p => ({
+      "ID": p.id,
+      "Name_EN": p.name_en || (p.name && p.name.en) || "",
+      "Name_HI": p.name_hi || (p.name && p.name.hi) || "",
+      "Name_MR": p.name_mr || (p.name && p.name.mr) || "",
+      "Category": parseLocalizedValue(p.categoryObj?.name),
+      "Category_ID": p.category,
+      "Vendor_ID": p.templeId || p.sellerId || "",
+      "Status": p.status,
+      "Weight": p.weight,
+      "Variants": JSON.stringify(p.variants || []),
+      "Image_URL": p.image
+    }));
+
+    const ws = XLSX.utils.json_to_sheet(exportData);
+    const wb = XLSX.utils.book_new();
+    XLSX.utils.book_append_sheet(wb, ws, "Products");
+    XLSX.writeFile(wb, `Products_Export_${new Date().toISOString().split('T')[0]}.xlsx`);
+  };
+
+  const handleImportExcel = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+
+    const reader = new FileReader();
+    reader.onload = async (evt) => {
+      try {
+        const bstr = evt.target?.result;
+        const wb = XLSX.read(bstr, { type: 'binary' });
+        const wsname = wb.SheetNames[0];
+        const ws = wb.Sheets[wsname];
+        const data = XLSX.utils.sheet_to_json(ws) as any[];
+
+        if (data.length === 0) {
+          toast({ title: "Error", description: "Excel file is empty", variant: "destructive" });
+          return;
+        }
+
+        setIsImporting(true);
+        setImportProgress({ total: data.length, current: 0, success: 0, failed: 0 });
+        toast({ title: "Import Started", description: `Processing ${data.length} products...`, variant: "success" });
+        
+        let successCount = 0;
+        let failCount = 0;
+
+        for (let i = 0; i < data.length; i++) {
+          const row = data[i];
+          setImportProgress(p => ({ ...p, current: i + 1 }));
+          try {
+            const fd = new FormData();
+            
+            // Name & Description
+            fd.append("name_en", String(row.Name_EN || "").trim());
+            fd.append("name_hi", String(row.Name_HI || "").trim());
+            fd.append("name_mr", String(row.Name_MR || "").trim());
+            fd.append("description_en", String(row.Description_EN || "").trim());
+            fd.append("description_hi", String(row.Description_HI || "").trim());
+            fd.append("description_mr", String(row.Description_MR || "").trim());
+
+            // Common fields
+            fd.append("category", String(row.Category_ID || "").trim());
+            fd.append("templeId", String(row.Temple_ID || "general").trim());
+            fd.append("status", String(row.Status || "pending").toLowerCase());
+            fd.append("weight", String(row.Weight || ""));
+            fd.append("length", String(row.Length || ""));
+            fd.append("width", String(row.Width || ""));
+            fd.append("height", String(row.Height || ""));
+            fd.append("origin_en", "India");
+            fd.append("shippingInfo_en", "Ships in 24-48 Hours");
+
+            // Variants
+            let variantsData = [];
+            if (row.Variants) {
+              try {
+                variantsData = typeof row.Variants === 'string' ? JSON.parse(row.Variants) : row.Variants;
+              } catch (e) {
+                console.warn(`Row ${i+2}: Failed to parse Variants JSON, falling back to simple variant`);
+              }
+            }
+            
+            if (!Array.isArray(variantsData) || variantsData.length === 0) {
+              variantsData = [{
+                name_en: "Default",
+                price: parseFloat(String(row.Price || 0).replace(/[^0-9.]/g, "")),
+                stock: parseInt(String(row.Stock || 0))
+              }];
+            }
+            fd.append("variants", JSON.stringify(variantsData));
+
+            if (row.Image_URL) fd.append("image_url", String(row.Image_URL));
+
+            await createProductAdmin(fd);
+            successCount++;
+          } catch (err: any) {
+            const errorMsg = err.response?.data?.message || err.response?.data?.error || err.message || "Unknown error";
+            console.error(`Row ${i + 2} failed:`, errorMsg);
+            failCount++;
+            toast({
+              title: `Error in Row ${i + 2}`,
+              description: errorMsg,
+              variant: "destructive",
+            });
+          }
+          setImportProgress(p => ({ ...p, success: successCount, failed: failCount }));
+        }
+
+        toast({
+          title: "Import Complete",
+          description: `Success: ${successCount}, Failed: ${failCount}`,
+          variant: successCount > 0 ? "success" : "destructive"
+        });
+        loadProducts();
+      } catch (error) {
+        console.error("Import Error:", error);
+        toast({ title: "Import Failed", description: "Failed to process Excel file", variant: "destructive" });
+      } finally {
+        setIsImporting(false);
+        if (e.target) e.target.value = '';
+      }
+    };
+    reader.readAsBinaryString(file);
+  };
+
   return (
     <div className="space-y-6">
       <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
@@ -270,13 +430,66 @@ function ProductsContent() {
           <h1 className="text-2xl font-bold tracking-tight text-slate-900">{t("admin.products.list.title")}</h1>
           <p className="text-slate-600">{t("admin.products.list.desc")}</p>
         </div>
-        {hasPermission("products.create") && (
-          <Button onClick={() => router.push('/admin/products/create')} className="bg-primary">
-            <Plus className="w-4 h-4 mr-2" />
-            {t("admin.products.list.add_new")}
+        <div className="flex flex-wrap items-center gap-2">
+          <Button
+            variant="outline"
+            onClick={downloadTemplate}
+            className="text-xs h-9"
+          >
+            <Download className="w-4 h-4 mr-2" />
+            Template
           </Button>
-        )}
+
+          <div className="relative">
+            <input
+              type="file"
+              accept=".xlsx, .xls"
+              className="absolute inset-0 opacity-0 cursor-pointer"
+              onChange={handleImportExcel}
+            />
+            <Button variant="outline" className="text-xs h-9">
+              <Upload className="w-4 h-4 mr-2" />
+              Import
+            </Button>
+          </div>
+
+          <Button
+            variant="outline"
+            onClick={handleExportExcel}
+            className="text-xs h-9"
+          >
+            <Download className="w-4 h-4 mr-2" />
+            Export All
+          </Button>
+
+          {hasPermission("products.create") && (
+            <Button onClick={() => router.push('/admin/products/create')} className="bg-primary text-xs h-9">
+              <Plus className="w-4 h-4 mr-2" />
+              {t("admin.products.list.add_new")}
+            </Button>
+          )}
+        </div>
       </div>
+
+      {/* Import Progress */}
+      {isImporting && (
+        <div className="bg-blue-50 border border-blue-100 rounded-xl p-4 animate-pulse">
+          <div className="flex items-center justify-between mb-2">
+            <span className="text-sm font-bold text-blue-900">Importing Products...</span>
+            <span className="text-xs font-bold text-blue-700">{importProgress.current} / {importProgress.total}</span>
+          </div>
+          <div className="w-full bg-blue-200 rounded-full h-2">
+            <div 
+              className="bg-blue-600 h-2 rounded-full transition-all duration-300" 
+              style={{ width: `${(importProgress.current / importProgress.total) * 100}%` }}
+            />
+          </div>
+          <div className="flex gap-4 mt-2 text-[10px] font-bold uppercase tracking-wider">
+            <span className="text-green-600">Success: {importProgress.success}</span>
+            <span className="text-red-600">Failed: {importProgress.failed}</span>
+          </div>
+        </div>
+      )}
 
       {/* Stats Cards */}
       <div className="grid grid-cols-1 md:grid-cols-4 gap-4">

@@ -25,6 +25,8 @@ export const createBooking = async (req: Request, res: Response) => {
 
             poojaId,
 
+            templeId: requestedTempleId,
+
             packageName,
 
             packagePrice,
@@ -61,25 +63,51 @@ export const createBooking = async (req: Request, res: Response) => {
 
 
         // Get pooja and calculate commission using new slab system
-
-        const pooja = await prisma.pooja.findUnique({
-
-            where: { id: poojaId },
-
+        const initialPooja = await prisma.pooja.findFirst({
+            where: {
+                OR: [
+                    { id: poojaId },
+                    { slug: poojaId }
+                ]
+            },
             include: {
-
                 temple: true
-
             }
-
         });
 
-
-
-        if (!pooja) {
-
+        if (!initialPooja) {
             return res.status(404).json({ success: false, message: 'Pooja not found' });
+        }
 
+
+
+        // --- TEMPLE-SPECIFIC POOJA RESOLUTION ---
+        // If a templeId was provided by the client and the found pooja doesn't belong
+        // to that temple (e.g. it's a master pooja or a different temple's copy),
+        // resolve to the correct temple-specific copy.
+        let pooja = initialPooja;
+        const effectiveTempleId = requestedTempleId || initialPooja.templeId || null;
+
+        if (requestedTempleId && initialPooja.templeId !== requestedTempleId) {
+            // Determine the master pooja ID to find the temple-specific copy
+            const masterId = initialPooja.isMaster ? initialPooja.id : initialPooja.masterPoojaId;
+
+            if (masterId) {
+                const templeSpecificPooja = await prisma.pooja.findFirst({
+                    where: {
+                        templeId: requestedTempleId,
+                        masterPoojaId: masterId,
+                    },
+                    include: { temple: true }
+                });
+
+                if (templeSpecificPooja) {
+                    console.log(`[Booking] Resolved master/wrong pooja "${initialPooja.id}" → temple-specific pooja "${templeSpecificPooja.id}" for temple "${requestedTempleId}"`);
+                    pooja = templeSpecificPooja;
+                } else {
+                    console.warn(`[Booking] No temple-specific copy found for master "${masterId}" at temple "${requestedTempleId}". Using original pooja.`);
+                }
+            }
         }
 
 
@@ -112,9 +140,9 @@ export const createBooking = async (req: Request, res: Response) => {
 
 
 
-        // Optional: If price in body is significantly different, you might want to log it or use verifiedPrice
+        // Use server-verified price, never trust client-sent price
 
-        const finalPrice = verifiedPrice || parseFloat(packagePrice);
+        const finalPrice = verifiedPrice;
 
 
 
@@ -126,7 +154,7 @@ export const createBooking = async (req: Request, res: Response) => {
 
             SlabType.TEMPLE,
 
-            pooja.templeId || undefined,
+            effectiveTempleId || undefined,
 
             CommissionCategory.POOJA
 
@@ -179,7 +207,7 @@ export const createBooking = async (req: Request, res: Response) => {
             const poojaAvailability = await prisma.bookingAvailability.findFirst({
                 where: {
                     templeId: pooja.templeId as string,
-                    poojaId: poojaId as string,
+                    poojaId: pooja.id,
                     date: bookingDate as string
                 }
             });
@@ -190,7 +218,7 @@ export const createBooking = async (req: Request, res: Response) => {
                 }
                 const totalPoojaBookings = await prisma.poojaBooking.count({
                     where: {
-                        poojaId: poojaId,
+                        poojaId: pooja.id,
                         bookingDate: bookingDate,
                         status: { not: 'CANCELLED' }
                     }
@@ -220,8 +248,8 @@ export const createBooking = async (req: Request, res: Response) => {
 
                     userId,
 
-                    poojaId,
-                    templeId: pooja.templeId || null,
+                    poojaId: pooja.id,
+                    templeId: effectiveTempleId,
 
 
                     packageName,
@@ -263,7 +291,7 @@ export const createBooking = async (req: Request, res: Response) => {
             // Create ledger entry for temple
             await tx.templeLedger.create({
                 data: {
-                    templeId: pooja.templeId || null,
+                    templeId: effectiveTempleId,
                     amount: netEarning,
                     grossAmount: finalPrice, // Use verified price
                     commission: commissionAmount,
@@ -378,7 +406,38 @@ export const checkAvailability = async (req: Request, res: Response) => {
             return res.status(400).json({ success: false, message: 'Date is required' });
         }
 
-        if (!templeId) {
+        let resolvedTempleId = templeId as string;
+        let resolvedPoojaId = poojaId as string;
+
+        // Resolve Temple ID if it's a slug
+        if (templeId) {
+            const temple = await prisma.temple.findFirst({
+                where: {
+                    OR: [
+                        { id: templeId as string },
+                        { slug: templeId as string }
+                    ]
+                },
+                select: { id: true }
+            });
+            if (temple) resolvedTempleId = temple.id;
+        }
+
+        // Resolve Pooja ID if it's a slug
+        if (poojaId) {
+            const pooja = await prisma.pooja.findFirst({
+                where: {
+                    OR: [
+                        { id: poojaId as string },
+                        { slug: poojaId as string }
+                    ]
+                },
+                select: { id: true }
+            });
+            if (pooja) resolvedPoojaId = pooja.id;
+        }
+
+        if (!resolvedTempleId) {
             return res.json({
                 success: true,
                 available: true,
@@ -395,7 +454,7 @@ export const checkAvailability = async (req: Request, res: Response) => {
 
             where: {
 
-                templeId: templeId as string,
+                templeId: resolvedTempleId,
 
                 poojaId: undefined,
 
@@ -429,7 +488,7 @@ export const checkAvailability = async (req: Request, res: Response) => {
 
                 where: {
 
-                    templeId: templeId as string,
+                    templeId: resolvedTempleId,
 
                     bookingDate: date as string,
 
@@ -461,15 +520,15 @@ export const checkAvailability = async (req: Request, res: Response) => {
 
         // 2. Specific Pooja Availability Check (if poojaId provided)
 
-        if (poojaId) {
+        if (resolvedPoojaId) {
 
             const poojaAvailability = await prisma.bookingAvailability.findFirst({
 
                 where: {
 
-                    templeId: templeId as string,
+                    templeId: resolvedTempleId,
 
-                    poojaId: poojaId as string,
+                    poojaId: resolvedPoojaId,
 
                     date: date as string
 
@@ -501,7 +560,7 @@ export const checkAvailability = async (req: Request, res: Response) => {
 
                     where: {
 
-                        poojaId: poojaId as string,
+                        poojaId: resolvedPoojaId,
 
                         bookingDate: date as string,
 
@@ -809,7 +868,37 @@ export const getUnavailableDates = async (req: Request, res: Response) => {
 
 
 
-        if (!templeId) {
+        let resolvedTempleId = templeId as string;
+        let resolvedPoojaId = poojaId as string;
+
+        // Resolve IDs if they are slugs
+        if (templeId) {
+            const temple = await prisma.temple.findFirst({
+                where: {
+                    OR: [
+                        { id: templeId as string },
+                        { slug: templeId as string }
+                    ]
+                },
+                select: { id: true }
+            });
+            if (temple) resolvedTempleId = temple.id;
+        }
+
+        if (poojaId) {
+            const pooja = await prisma.pooja.findFirst({
+                where: {
+                    OR: [
+                        { id: poojaId as string },
+                        { slug: poojaId as string }
+                    ]
+                },
+                select: { id: true }
+            });
+            if (pooja) resolvedPoojaId = pooja.id;
+        }
+
+        if (!resolvedTempleId) {
             return res.json({ success: true, data: [] });
         }
 
@@ -822,7 +911,7 @@ export const getUnavailableDates = async (req: Request, res: Response) => {
 
             where: {
 
-                templeId: templeId as string,
+                templeId: resolvedTempleId,
 
                 isClosed: true,
 
@@ -830,7 +919,7 @@ export const getUnavailableDates = async (req: Request, res: Response) => {
 
                     { poojaId: null },
 
-                    { poojaId: poojaId ? (poojaId as string) : undefined }
+                    { poojaId: resolvedPoojaId || undefined }
 
                 ]
 
@@ -876,7 +965,7 @@ export const getUnavailableDates = async (req: Request, res: Response) => {
 
                 where: {
 
-                    templeId: templeId as string,
+                    templeId: resolvedTempleId,
 
                     poojaId: record.poojaId || undefined,
 

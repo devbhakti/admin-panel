@@ -107,14 +107,14 @@ export const registerTemple = async (req: Request, res: Response) => {
       const temple = await tx.temple.create({
         data: {
           templeId: templeId,
-          name: buildLangJson(data.name_en || data.templeName || 'New Temple', data.name_hi, data.name_mr),
-          category: buildLangJson(data.category_en || data.category || 'Sacred', data.category_hi, data.category_mr),
+          name: JSON.stringify(buildLangJson(data.name_en || data.templeName || 'New Temple', data.name_hi, data.name_mr)),
+          category: JSON.stringify(buildLangJson(data.category_en || data.category || 'Sacred', data.category_hi, data.category_mr)),
           openTime: data.openTime || '',
           operatingHours: operatingHours,
-          description: buildLangJson(data.description_en || data.description || '', data.description_hi, data.description_mr),
-          history: buildLangJson(data.history_en || data.history || '', data.history_hi, data.history_mr),
-          location: buildLangJson(data.location_en || data.location || '', data.location_hi, data.location_mr),
-          fullAddress: buildLangJson(data.fullAddress_en || data.fullAddress || '', data.fullAddress_hi, data.fullAddress_mr),
+          description: JSON.stringify(buildLangJson(data.description_en || data.description || '', data.description_hi, data.description_mr)),
+          history: JSON.stringify(buildLangJson(data.history_en || data.history || '', data.history_hi, data.history_mr)),
+          location: JSON.stringify(buildLangJson(data.location_en || data.location || '', data.location_hi, data.location_mr)),
+          fullAddress: JSON.stringify(buildLangJson(data.fullAddress_en || data.fullAddress || '', data.fullAddress_hi, data.fullAddress_mr)),
           phone: data.phone || '',
           website: data.website,
           mapUrl: data.mapUrl,
@@ -135,7 +135,7 @@ export const registerTemple = async (req: Request, res: Response) => {
               date: ev.date,
             }))
           },
-          pickupLocation: buildLangJson(`TEMPLE_${Math.random().toString(36).substring(2, 7).toUpperCase()}`, null, null)
+          pickupLocation: JSON.stringify(buildLangJson(`TEMPLE_${Math.random().toString(36).substring(2, 7).toUpperCase()}`, null, null))
         }
       });
 

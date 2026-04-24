@@ -7,8 +7,9 @@ import {
     ArrowLeft,
     Wallet,
     AlertCircle,
-    Download, // Added
+    Download,
 } from "lucide-react";
+import * as XLSX from 'xlsx';
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import { fetchSellerWithdrawalHistory } from "@/api/sellerController";
@@ -44,6 +45,24 @@ export default function PayoutHistoryPage() {
         }
     };
 
+    const handleExportExcel = () => {
+        if (withdrawals.length === 0) return;
+
+        const exportData = withdrawals.map(w => ({
+            "Transaction Ref": `#${w.id.slice(-8).toUpperCase()}`,
+            "Date": format(new Date(w.createdAt), "dd MMM yyyy HH:mm"),
+            "Amount": w.amount,
+            "Status": w.status,
+            "Transaction ID": w.transactionId || "N/A",
+            "Admin Notes": w.adminNotes || "N/A"
+        }));
+
+        const ws = XLSX.utils.json_to_sheet(exportData);
+        const wb = XLSX.utils.book_new();
+        XLSX.utils.book_append_sheet(wb, ws, "Payout History");
+        XLSX.writeFile(wb, `Seller_Payout_History_${new Date().toISOString().split('T')[0]}.xlsx`);
+    };
+
     return (
         <div className="w-full space-y-8 pb-12">
             {/* Header */}
@@ -51,7 +70,7 @@ export default function PayoutHistoryPage() {
                 <Button variant="ghost" size="icon" onClick={() => router.back()} className="h-10 w-10">
                     <ArrowLeft className="w-5 h-5" />
                 </Button>
-                <div>
+                <div className="flex-1">
                     <h1 className="text-2xl font-serif font-bold text-slate-900 flex items-center gap-2">
                         <Wallet className="w-6 h-6 text-[#794A05]" />
                         Payout History
@@ -60,6 +79,14 @@ export default function PayoutHistoryPage() {
                         View all your past withdrawal requests and their status.
                     </p>
                 </div>
+                <Button
+                    onClick={handleExportExcel}
+                    variant="outline"
+                    className="h-10 px-6 rounded-xl border-slate-200 hover:bg-[#794A05]/5 text-[#794A05] font-bold flex items-center gap-2"
+                >
+                    <Download className="w-4 h-4" />
+                    Export History
+                </Button>
             </div>
 
             {/* Withdrawal History Table */}

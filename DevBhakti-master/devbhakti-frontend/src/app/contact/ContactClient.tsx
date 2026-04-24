@@ -7,10 +7,11 @@ import Footer from "@/components/landing/Footer";
 import { Mail, Phone, MapPin, MessageSquare, Clock, Send, Loader2 } from "lucide-react";
 import { useLanguage } from "@/context/LanguageContext";
 import { submitContactForm } from "@/api/publicController";
-import toast from "react-hot-toast";
+import { useToast } from "@/hooks/use-toast";
 
 export default function ContactClient() {
     const { t } = useLanguage();
+    const { toast } = useToast();
     const [isSubmitting, setIsSubmitting] = useState(false);
     const [formData, setFormData] = useState({
         name: "",
@@ -88,7 +89,10 @@ export default function ContactClient() {
         e.preventDefault();
         const { valid, missingFields } = validate();
         if (!valid) {
-            toast.error(`Please fill required fields: ${missingFields.join(", ")}`);
+            toast({
+                description: `Please fill required fields: ${missingFields.join(", ")}`,
+                variant: "destructive"
+            });
             return;
         }
 
@@ -96,7 +100,11 @@ export default function ContactClient() {
         try {
             const result = await submitContactForm(formData);
             if (result.success) {
-                toast.success(result.message || "Thank you! Your message has been sent.");
+                toast({
+                    title: "Success",
+                    description: result.message || "Thank you! Your message has been sent.",
+                    variant: "success"
+                });
                 setFormData({
                     name: "",
                     email: "",
@@ -105,10 +113,16 @@ export default function ContactClient() {
                     message: ""
                 });
             } else {
-                toast.error(result.error || "Failed to send message. Please try again.");
+                toast({
+                    description: result.error || "Failed to send message. Please try again.",
+                    variant: "destructive"
+                });
             }
         } catch (error) {
-            toast.error("An unexpected error occurred. Please try again.");
+            toast({
+                description: "An unexpected error occurred. Please try again.",
+                variant: "destructive"
+            });
         } finally {
             setIsSubmitting(false);
         }

@@ -254,6 +254,23 @@ export default function TempleRegistrationForm({ onClose }: { onClose?: () => vo
         );
     };
 
+    const addOperatingHour = () => {
+        setFormData(prev => ({
+            ...prev,
+            operatingHours: [
+                ...prev.operatingHours,
+                { label: "New Slot", start: "09:00 AM", end: "05:00 PM", active: true }
+            ]
+        }));
+    };
+
+    const removeOperatingHour = (index: number) => {
+        setFormData(prev => ({
+            ...prev,
+            operatingHours: prev.operatingHours.filter((_, i) => i !== index)
+        }));
+    };
+
     const handleSubmit = async (e: React.FormEvent) => {
         e.preventDefault();
 
@@ -519,8 +536,17 @@ export default function TempleRegistrationForm({ onClose }: { onClose?: () => vo
                             <div className="col-span-full space-y-6">
                                 <div className="flex items-center justify-between">
                                     <label className="text-sm font-bold text-slate-600 ml-1">{t('registration_form.labels.operating_hours')}</label>
+                                    <Button 
+                                        type="button" 
+                                        variant="outline" 
+                                        size="sm" 
+                                        onClick={addOperatingHour}
+                                        className="h-8 border-[#88542b] text-[#88542b] hover:bg-[#88542b]/10 rounded-xl px-4"
+                                    >
+                                        <Plus className="w-3.5 h-3.5 mr-1.5" />
+                                        {t('registration_form.buttons.add_slot') || 'Add Slot'}
+                                    </Button>
                                 </div>
-
                                 <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                                     {formData.operatingHours.map((slot, index) => {
                                         const updateTime = (type: 'start' | 'end', val: string) => {
@@ -530,11 +556,28 @@ export default function TempleRegistrationForm({ onClose }: { onClose?: () => vo
                                         };
 
                                         return (
-                                            <div key={index} className="p-4 bg-slate-50 rounded-2xl border border-slate-100 space-y-4">
+                                            <div key={index} className="p-4 bg-slate-50 rounded-2xl border border-slate-100 space-y-4 relative group">
+                                                {formData.operatingHours.length > 1 && (
+                                                    <button
+                                                        type="button"
+                                                        onClick={() => removeOperatingHour(index)}
+                                                        className="absolute -top-2 -right-2 bg-white border border-slate-200 shadow-sm rounded-full p-1.5 text-red-500 opacity-0 group-hover:opacity-100 transition-all z-10 hover:bg-red-50 hover:scale-110"
+                                                    >
+                                                        <Trash2 className="w-3 h-3" />
+                                                    </button>
+                                                )}
                                                 <div className="flex items-center justify-between">
-                                                    <span className="text-sm font-bold text-[#88542b]">
-                                                        {t('registration_form.labels.shift').replace('$VAL$', t(`registration_form.labels.${slot.label.toLowerCase()}`))}
-                                                    </span>
+                                                    <Input
+                                                        value={slot.label}
+                                                        onChange={(e) => {
+                                                            const newHours = [...formData.operatingHours];
+                                                            newHours[index].label = e.target.value;
+                                                            setFormData({ ...formData, operatingHours: newHours });
+                                                        }}
+                                                        placeholder="Slot Name (e.g. Afternoon)"
+                                                        className="h-7 w-2/3 text-xs font-bold text-[#88542b] bg-transparent border-none focus-visible:ring-0 p-0"
+                                                        disabled={!slot.active}
+                                                    />
                                                     <div className="flex items-center gap-2">
                                                         <input
                                                             type="checkbox"
@@ -554,9 +597,28 @@ export default function TempleRegistrationForm({ onClose }: { onClose?: () => vo
                                                     <div className="flex-1 space-y-1">
                                                         <p className="text-[10px] font-bold text-slate-400 uppercase ml-1">{t('registration_form.labels.opening')}</p>
                                                         <Input
-                                                            value={slot.start}
-                                                            onChange={(e) => updateTime('start', e.target.value)}
-                                                            placeholder={t('registration_form.placeholders.time')}
+                                                            type="time"
+                                                            value={(() => {
+                                                                if (!slot.start) return "";
+                                                                const [time, modifier] = slot.start.split(' ');
+                                                                if (!time || !modifier) return "";
+                                                                let [hours, minutes] = time.split(':');
+                                                                let h = parseInt(hours, 10);
+                                                                if (modifier === 'PM' && h < 12) h += 12;
+                                                                if (modifier === 'AM' && h === 12) h = 0;
+                                                                return `${String(h).padStart(2, '0')}:${minutes}`;
+                                                            })()}
+                                                            onChange={e => {
+                                                                const time24 = e.target.value;
+                                                                if (!time24) return;
+                                                                let [hours, minutes] = time24.split(':');
+                                                                let h = parseInt(hours, 10);
+                                                                const modifier = h >= 12 ? 'PM' : 'AM';
+                                                                if (h > 12) h -= 12;
+                                                                if (h === 0) h = 12;
+                                                                const time12 = `${String(h).padStart(2, '0')}:${minutes} ${modifier}`;
+                                                                updateTime('start', time12);
+                                                            }}
                                                             className="h-9 border-slate-200 focus:border-[#88542b] rounded-xl text-xs"
                                                             disabled={!slot.active}
                                                         />
@@ -567,9 +629,28 @@ export default function TempleRegistrationForm({ onClose }: { onClose?: () => vo
                                                     <div className="flex-1 space-y-1">
                                                         <p className="text-[10px] font-bold text-slate-400 uppercase ml-1">{t('registration_form.labels.closing')}</p>
                                                         <Input
-                                                            value={slot.end}
-                                                            onChange={(e) => updateTime('end', e.target.value)}
-                                                            placeholder={t('registration_form.placeholders.time')}
+                                                            type="time"
+                                                            value={(() => {
+                                                                if (!slot.end) return "";
+                                                                const [time, modifier] = slot.end.split(' ');
+                                                                if (!time || !modifier) return "";
+                                                                let [hours, minutes] = time.split(':');
+                                                                let h = parseInt(hours, 10);
+                                                                if (modifier === 'PM' && h < 12) h += 12;
+                                                                if (modifier === 'AM' && h === 12) h = 0;
+                                                                return `${String(h).padStart(2, '0')}:${minutes}`;
+                                                            })()}
+                                                            onChange={e => {
+                                                                const time24 = e.target.value;
+                                                                if (!time24) return;
+                                                                let [hours, minutes] = time24.split(':');
+                                                                let h = parseInt(hours, 10);
+                                                                const modifier = h >= 12 ? 'PM' : 'AM';
+                                                                if (h > 12) h -= 12;
+                                                                if (h === 0) h = 12;
+                                                                const time12 = `${String(h).padStart(2, '0')}:${minutes} ${modifier}`;
+                                                                updateTime('end', time12);
+                                                            }}
                                                             className="h-9 border-slate-200 focus:border-[#88542b] rounded-xl text-xs"
                                                             disabled={!slot.active}
                                                         />

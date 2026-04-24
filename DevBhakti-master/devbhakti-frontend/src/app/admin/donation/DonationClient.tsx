@@ -43,12 +43,13 @@ import {
     PaginationPrevious,
 } from "@/components/ui/pagination";
 import { useDebounce } from "@/hooks/use-debounce";
-
 import { API_URL } from "@/config/apiConfig";
 import { parseLocalizedValue } from "@/utils/textUtils";
 import { generateReceiptHTML } from "@/utils/donationReceipt";
 import { Download } from "lucide-react";
 import axios from "axios";
+import { fetchAllTemplesAdmin, fetchAllDonationsAdmin, createDonationAdmin } from "@/api/adminController";
+import * as XLSX from 'xlsx';
 
 const statusConfig = {
     SUCCESS: {
@@ -82,6 +83,11 @@ export default function DonationClient() {
     const [loading, setLoading] = useState(true);
     const [selectedDonation, setSelectedDonation] = useState<any | null>(null);
     const [sendingEmail, setSendingEmail] = useState(false);
+    
+    const [temples, setTemples] = useState<any[]>([]);
+    const [selectedTempleId, setSelectedTempleId] = useState("all");
+    const [isImporting, setIsImporting] = useState(false);
+    const [importProgress, setImportProgress] = useState({ total: 0, current: 0, success: 0, failed: 0 });
     const { toast } = useToast();
 
     // Stats state
@@ -102,19 +108,17 @@ export default function DonationClient() {
     const fetchDonations = async () => {
         try {
             setLoading(true);
-            const query = new URLSearchParams({
-                page: currentPage.toString(),
-                limit: itemsPerPage.toString(),
+            const data = await fetchAllDonationsAdmin({
+                page: currentPage,
+                limit: itemsPerPage,
                 search: debouncedSearch,
                 status: statusFilter,
                 startDate: startDate,
                 endDate: endDate,
+                templeId: selectedTempleId,
                 sortBy: sortBy,
                 sortOrder: sortOrder
             });
-
-            const response = await axios.get(`${API_URL}/admin/donations?${query}`, { validateStatus: () => true });
-            const data = response.data;
 
             if (data.success) {
                 setDonations(data.data);
@@ -126,6 +130,16 @@ export default function DonationClient() {
             toast({ title: "Error", description: "Failed to fetch donations", variant: "destructive" });
         } finally {
             setLoading(false);
+        }
+    };
+
+    const loadTemples = async () => {
+        try {
+            const res = await fetchAllTemplesAdmin({ page: 1, limit: 1000 });
+            const data = Array.isArray(res) ? res : (res.data || []);
+            setTemples(data);
+        } catch (error) {
+            console.error("Load Temples Error:", error);
         }
     };
 
@@ -143,10 +157,11 @@ export default function DonationClient() {
 
     useEffect(() => {
         fetchDonations();
-    }, [debouncedSearch, statusFilter, currentPage, startDate, endDate, sortBy, sortOrder]);
+    }, [debouncedSearch, statusFilter, selectedTempleId, currentPage, startDate, endDate, sortBy, sortOrder]);
 
     useEffect(() => {
         fetchStats();
+        loadTemples();
     }, []);
 
     const handlePageChange = (page: number) => {
@@ -177,7 +192,7 @@ export default function DonationClient() {
             const data = response.data;
             if (data.success) {
                 setDonations(donations.filter(d => d.id !== id));
-                toast({ title: "Success", description: "Donation record removed", variant: "success" });
+                toast({ title: "Success", description: data.message || "Donation record removed", variant: "success" });
                 fetchStats(); // Update stats
             } else {
                 toast({ title: "Error", description: data.message, variant: "destructive" });
@@ -195,34 +210,152 @@ export default function DonationClient() {
 
     const handleDownloadExcel = async () => {
         try {
-            toast({ title: "Generating Excel...", description: "Please wait." });
-
-            // URL me 'excel' lagaya hai
-            const response = await axios.get(`${API_URL}/admin/donations/export/excel`, {
-                responseType: 'blob',
-                validateStatus: () => true
+            toast({ title: "Exporting...", description: "Gathering donation data. Please wait." });
+            const res = await fetchAllDonationsAdmin({
+                page: 1, limit: 10000,
+                search: debouncedSearch,
+                status: statusFilter,
+                templeId: selectedTempleId,
+                startDate, endDate,
+                sortBy, sortOrder
             });
 
-            if (response.status === 200) {
-                const url = window.URL.createObjectURL(new Blob([response.data]));
-                const link = document.createElement('a');
-                link.href = url;
-
-                // File extension .xlsx kar di
-                link.setAttribute('download', `donations_report_${new Date().toISOString().slice(0, 10)}.xlsx`);
-
-                document.body.appendChild(link);
-                link.click();
-                link.parentNode?.removeChild(link);
-
-                toast({ title: "Success", description: "Excel file downloaded!", variant: "success" });
-            } else {
-                throw new Error("Download failed");
+            const rawData = res.data || [];
+            if (rawData.length === 0) {
+                toast({ title: "No Data", description: "No records found to export.", variant: "destructive" });
+                return;
             }
+
+            const exportData = rawData.map((d: any) => ({
+                "Donation_ID": d.displayId || d.id,
+                "Donor_Name": parseLocalizedValue(d.donorName),
+                "Donor_Email": d.donorEmail || "",
+                "Donor_Phone": d.donorPhone || "",
+                "Amount": d.amount,
+                "Temple_Name": d.templeName || "DevBhakti",
+                "Temple_ID": d.templeId || "",
+                "Status": d.status,
+                "Payment_Method": d.paymentMethod || "ONLINE",
+                "Date": new Date(d.createdAt).toLocaleString(),
+                "Address": d.address || "",
+                "Message": d.message || "",
+                "80G_Required": d.is80GRequired ? "YES" : "NO",
+                "PAN": d.panNumber || "",
+                "Anonymous": d.isAnonymous ? "YES" : "NO"
+            }));
+
+            const worksheet = XLSX.utils.json_to_sheet(exportData);
+            const workbook = XLSX.utils.book_new();
+            XLSX.utils.book_append_sheet(workbook, worksheet, "Donations");
+            XLSX.writeFile(workbook, `donations_export_${new Date().getTime()}.xlsx`);
+            toast({ title: "Success", description: "Export downloaded successfully!", variant: "success" });
         } catch (error) {
             console.error(error);
-            toast({ title: "Error", description: "Failed to download Excel", variant: "destructive" });
+            toast({ title: "Error", description: "Failed to export data.", variant: "destructive" });
         }
+    };
+
+    const downloadTemplate = () => {
+        const templateData = [{
+            "Donor_Name": "John Doe",
+            "Donor_Email": "john@example.com",
+            "Donor_Phone": "9876543210",
+            "Amount": "501",
+            "Temple_ID": "temple_uuid_here",
+            "Status": "SUCCESS",
+            "Payment_Method": "CASH",
+            "Message": "Pranam",
+            "Address": "Mumbai, India",
+            "Date": "2024-04-22"
+        }];
+        const worksheet = XLSX.utils.json_to_sheet(templateData);
+        const workbook = XLSX.utils.book_new();
+        XLSX.utils.book_append_sheet(workbook, worksheet, "Template");
+        XLSX.writeFile(workbook, `donation_import_template.xlsx`);
+    };
+
+    const handleImportExcel = async (e: React.ChangeEvent<HTMLInputElement>) => {
+        const file = e.target.files?.[0];
+        if (!file) return;
+
+        const reader = new FileReader();
+        reader.onload = async (evt) => {
+            try {
+                const bstr = evt.target?.result;
+                const wb = XLSX.read(bstr, { type: 'binary' });
+                const wsname = wb.SheetNames[0];
+                const ws = wb.Sheets[wsname];
+                const data: any[] = XLSX.utils.sheet_to_json(ws);
+
+                if (data.length === 0) {
+                    toast({ title: "Empty File", description: "No records found in Excel sheet", variant: "destructive"});
+                    return;
+                }
+
+                setIsImporting(true);
+                setImportProgress({ total: data.length, current: 0, success: 0, failed: 0 });
+                let successCount = 0;
+                let failCount = 0;
+                const errors: string[] = [];
+
+                for (let i = 0; i < data.length; i++) {
+                    const row = data[i];
+                    const rowNum = i + 2;
+                    setImportProgress(p => ({ ...p, current: i + 1 }));
+                    
+                    try {
+                        const payload = {
+                            donorName: row.Donor_Name,
+                            donorEmail: row.Donor_Email,
+                            donorPhone: row.Donor_Phone,
+                            amount: parseFloat(row.Amount),
+                            templeId: row.Temple_ID,
+                            status: row.Status || "SUCCESS",
+                            paymentMethod: row.Payment_Method || "CASH",
+                            message: row.Message || "",
+                            address: row.Address || "",
+                            createdAt: row.Date ? new Date(row.Date) : new Date()
+                        };
+                        
+                        await createDonationAdmin(payload);
+                        successCount++;
+                    } catch (err: any) {
+                        const errorMsg = err.response?.data?.message || err.response?.data?.error || err.message || "Unknown error";
+                        console.error(`Failed to import row ${rowNum}:`, errorMsg, err);
+                        failCount++;
+                        errors.push(`Row ${rowNum}: ${errorMsg}`);
+                    }
+                }
+                
+                setImportProgress(p => ({ ...p, success: successCount, failed: failCount }));
+                
+                if (failCount > 0) {
+                    toast({
+                        title: "Import Partially Failed",
+                        description: `Success: ${successCount}, Failed: ${failCount}. Check console or fix these: ${errors.slice(0, 3).join(", ")}${errors.length > 3 ? "..." : ""}`,
+                        variant: "destructive"
+                    });
+                } else {
+                    toast({ 
+                        title: "Import Successful", 
+                        description: `Successfully imported ${successCount} donations.`,
+                        variant: "success"
+                    });
+                }
+                
+                setTimeout(() => {
+                    setIsImporting(false);
+                    fetchDonations();
+                    fetchStats();
+                }, 2000);
+            } catch (err) {
+                console.error(err);
+                toast({ title: "Format Error", description: "Could not parse Excel file.", variant: "destructive" });
+                setIsImporting(false);
+            }
+        };
+        reader.readAsBinaryString(file);
+        if (e.target) e.target.value = "";
     };
     const handleSendEmail = async (id: string) => {
         try {
@@ -230,7 +363,7 @@ export default function DonationClient() {
             const response = await axios.post(`${API_URL}/admin/donations/send-email/${id}`, {}, { validateStatus: () => true });
             const data = response.data;
             if (data.success) {
-                toast({ title: "Success", description: "Receipt sent successfully via email!", variant: "success" });
+                toast({ title: "Success", description: data.message || "Receipt sent successfully via email!", variant: "success" });
             } else {
                 toast({ title: "Error", description: data.message || "Failed to send email", variant: "destructive" });
             }
@@ -255,15 +388,48 @@ export default function DonationClient() {
                         View and manage all sacred contributions from devotees
                     </p>
                 </div>
-                <Button
-                    onClick={handleDownloadExcel}
-                    variant="sacred"
-                    className="w-full sm:w-auto flex-shrink-0"
-                >
-                    <Download className="w-4 h-4" />
-                    <span className="hidden sm:inline">Export All</span>
-                    <span className="sm:hidden">Export</span>
-                </Button>
+                <div className="flex flex-wrap items-center gap-2 sm:gap-3">
+                    <Button
+                        onClick={downloadTemplate}
+                        variant="outline"
+                        className="w-full sm:w-auto flex-shrink-0 border-primary/20 hover:bg-primary/5"
+                    >
+                        <FileText className="w-4 h-4 mr-2" />
+                        Template
+                    </Button>
+                    <div className="relative w-full sm:w-auto">
+                        <input
+                            type="file"
+                            accept=".xlsx, .xls"
+                            className="hidden"
+                            id="import-excel"
+                            onChange={handleImportExcel}
+                            disabled={isImporting}
+                        />
+                        <Button
+                            onClick={() => document.getElementById('import-excel')?.click()}
+                            variant="outline"
+                            className="w-full sm:w-auto flex-shrink-0 border-primary/20 hover:bg-primary/5"
+                            disabled={isImporting}
+                        >
+                            {isImporting ? (
+                                <Sparkles className="w-4 h-4 mr-2 animate-spin" />
+                            ) : (
+                                <Building2 className="w-4 h-4 mr-2" />
+                            )}
+                            {isImporting ? "Importing..." : "Import Excel"}
+                        </Button>
+                    </div>
+                    <Button
+                        onClick={handleDownloadExcel}
+                        variant="sacred"
+                        className="w-full sm:w-auto flex-shrink-0"
+                    >
+                        <Download className="w-4 h-4 mr-2" />
+                        <span className="hidden sm:inline">Export All</span>
+                        <span className="sm:hidden">Export</span>
+                    </Button>
+                </div>
             </div>
 
 
@@ -352,6 +518,22 @@ export default function DonationClient() {
                                 <option value="SUCCESS">Success</option>
                                 <option value="PENDING">Pending</option>
                                 <option value="FAILED">Failed</option>
+                            </select>
+                        </div>
+
+                        <div className="flex items-center gap-2 bg-muted/20 p-1.5 rounded-xl border border-transparent hover:border-border transition-all min-w-0">
+                            <Building2 className="w-4 h-4 text-muted-foreground ml-2 flex-shrink-0" />
+                            <select
+                                className="bg-transparent text-xs sm:text-sm font-medium focus:outline-none cursor-pointer pr-2 min-w-0 max-w-[150px]"
+                                value={selectedTempleId}
+                                onChange={(e) => setSelectedTempleId(e.target.value)}
+                            >
+                                <option value="all">All Temples</option>
+                                {temples.map((t: any) => (
+                                    <option key={t.temple?.id || t.id} value={t.temple?.id || t.id}>
+                                        {parseLocalizedValue(t.temple?.name || t.name)}
+                                    </option>
+                                ))}
                             </select>
                         </div>
 

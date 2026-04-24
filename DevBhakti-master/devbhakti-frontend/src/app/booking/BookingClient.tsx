@@ -188,12 +188,19 @@ function BookingForm() {
           }));
         }
 
-        // If a pooja is selected via URL, try to auto-select its temple
+        // If a pooja is selected via URL, try to auto-select its temple and normalize pooja ID
         const poojaId = searchParams.get("pooja");
         if (poojaId) {
           const pooja = poojasData.find((p: any) => p.id === poojaId || p.slug === poojaId);
-          if (pooja && pooja.templeId) {
-            setSelectedTemple(pooja.templeId);
+          if (pooja) {
+            if (pooja.templeId) {
+              setSelectedTemple(pooja.templeId);
+            }
+            // Normalize selectedPooja to ID even if slug was used in URL
+            if (pooja.id !== poojaId) {
+              console.log(`Normalizing pooja slug "${poojaId}" to ID "${pooja.id}"`);
+              setSelectedPooja(pooja.id);
+            }
           }
         }
       } catch (error) {
@@ -403,8 +410,9 @@ function BookingForm() {
 
       const bookingData = {
         poojaId: selectedPooja,
+        templeId: selectedTemple || undefined,
         packageName: selectedPackageData?.name || "Standard",
-        packagePrice: totalAmount,
+        packagePrice: basePrice,
         devoteeName: formData.name,
         devoteePhone: formData.phone,
         devoteeEmail: formData.email,

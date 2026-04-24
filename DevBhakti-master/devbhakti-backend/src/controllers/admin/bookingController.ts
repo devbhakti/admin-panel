@@ -141,7 +141,7 @@ export const updateBookingStatus = async (req: Request, res: Response) => {
         // Handle proof photos if status is COMPLETED
         if (status === 'COMPLETED' && req.files && Array.isArray(req.files) && req.files.length > 0) {
             const photoUrls = (req.files as Express.Multer.File[]).map(
-                (file) => `${process.env.BASE_URL || ''}/uploads/proofs/${file.filename}`
+                (file) => `/uploads/proofs/${file.filename}`
             );
             updateData.proofPhotos = photoUrls;
         }

@@ -15,7 +15,11 @@ import {
     Mail,
     Phone,
     Calendar,
+    Download,
+    Upload,
+    Loader2
 } from "lucide-react";
+import * as XLSX from 'xlsx';
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import {
@@ -37,7 +41,8 @@ import { useToast } from "@/hooks/use-toast";
 import {
     deleteSellerAdmin,
     toggleSellerStatusAdmin,
-    fetchAllSellersAdmin
+    fetchAllSellersAdmin,
+    createSellerAdmin
 } from "@/api/adminController";
 import { parseLocalizedValue } from "@/utils/textUtils";
 
@@ -137,6 +142,115 @@ export default function SellersManagementPage() {
         }
     };
 
+    // --- BULK MANAGEMENT ---
+    const downloadTemplate = () => {
+        const template = [
+            {
+                "Store_Name": "Divine Items Store",
+                "Seller_Full_Name": "Rajesh Kumar",
+                "Email": "rajesh@example.com",
+                "Phone": "9876543210",
+                "Physical_Address": "123 Temple Road, Ayodhya, UP",
+                "Status": "active"
+            }
+        ];
+        const ws = XLSX.utils.json_to_sheet(template);
+        const wb = XLSX.utils.book_new();
+        XLSX.utils.book_append_sheet(wb, ws, "Seller Template");
+        XLSX.writeFile(wb, "Sellers_Import_Template.xlsx");
+    };
+
+    const handleExportExcel = () => {
+        const exportData = sellers.map(s => ({
+            "ID": s.id,
+            "Store_Name": s.storeName,
+            "Seller_Full_Name": s.name,
+            "Email": s.email,
+            "Phone": s.phone,
+            "Physical_Address": s.address,
+            "Status": s.status,
+            "Join_Date": new Date(s.joinDate).toLocaleDateString(),
+            "Total_Products": s.totalProducts || 0
+        }));
+        const ws = XLSX.utils.json_to_sheet(exportData);
+        const wb = XLSX.utils.book_new();
+        XLSX.utils.book_append_sheet(wb, ws, "Sellers");
+        XLSX.writeFile(wb, `Sellers_Export_${new Date().toISOString().split('T')[0]}.xlsx`);
+    };
+
+    const handleImportExcel = async (e: React.ChangeEvent<HTMLInputElement>) => {
+        const file = e.target.files?.[0];
+        if (!file) return;
+
+        const reader = new FileReader();
+        reader.onload = async (evt) => {
+            try {
+                const bstr = evt.target?.result;
+                const wb = XLSX.read(bstr, { type: 'binary' });
+                const wsname = wb.SheetNames[0];
+                const ws = wb.Sheets[wsname];
+                const data = XLSX.utils.sheet_to_json(ws) as any[];
+
+                if (data.length === 0) {
+                    toast({ title: "Error", description: "Excel file is empty", variant: "destructive" });
+                    return;
+                }
+
+                toast({ title: "Import Started", description: `Importing ${data.length} sellers...`, variant: "success" });
+
+                let successCount = 0;
+                let failCount = 0;
+                const errors: string[] = [];
+
+                for (let i = 0; i < data.length; i++) {
+                    const row = data[i];
+                    const rowNum = i + 2;
+                    try {
+                        const payload = {
+                            storeName: String(row.Store_Name || "").trim(),
+                            sellerName: String(row.Seller_Full_Name || "").trim(),
+                            email: String(row.Email || "").trim(),
+                            phone: String(row.Phone || "").trim(),
+                            address: String(row.Physical_Address || "").trim(),
+                            status: String(row.Status || "active").toLowerCase(),
+                            commissionSlabs: []
+                        };
+
+                        if (!payload.storeName) throw new Error("Store Name is missing");
+                        if (!payload.email) throw new Error("Email is missing");
+                        if (!payload.phone) throw new Error("Phone is missing");
+
+                        await createSellerAdmin(payload);
+                        successCount++;
+                    } catch (err: any) {
+                        const errorMsg = err.response?.data?.message || err.message || "Unknown error";
+                        failCount++;
+                        errors.push(`Row ${rowNum}: ${errorMsg}`);
+                        console.error(`Import Error Row ${rowNum}:`, errorMsg);
+                    }
+                }
+
+                if (failCount > 0) {
+                    toast({
+                        title: "Import Partially Failed",
+                        description: `Success: ${successCount}, Failed: ${failCount}. Check console for details or fix the first few errors: ${errors.slice(0, 3).join(", ")}${errors.length > 3 ? "..." : ""}`,
+                        variant: "destructive"
+                    });
+                } else {
+                    toast({
+                        title: "Import Successful",
+                        description: `Successfully imported ${successCount} sellers.`,
+                    });
+                }
+                loadSellers();
+            } catch (error) {
+                toast({ title: "Import Failed", description: "Failed to process Excel file", variant: "destructive" });
+            }
+        };
+        reader.readAsBinaryString(file);
+        e.target.value = '';
+    };
+
     const filteredSellers = sellers.filter(
         (seller) =>
             seller.name?.toLowerCase().includes(searchTerm.toLowerCase()) ||
@@ -177,10 +291,35 @@ export default function SellersManagementPage() {
                     <h1 className="text-2xl font-bold tracking-tight text-slate-900">Seller Management</h1>
                     <p className="text-muted-foreground">Manage your marketplace sellers and their applications.</p>
                 </div>
-                <Button onClick={() => router.push('/admin/sellers/create')} className="bg-primary">
-                    <Plus className="w-4 h-4 mr-2" />
-                    Add New Seller
-                </Button>
+                <div className="flex flex-wrap items-center gap-2">
+                    <Button variant="outline" onClick={downloadTemplate} className="text-xs h-9">
+                        <Download className="w-4 h-4 mr-1.5" />
+                        Template
+                    </Button>
+
+                    <div className="relative">
+                        <input
+                            type="file"
+                            accept=".xlsx, .xls"
+                            className="absolute inset-0 opacity-0 cursor-pointer"
+                            onChange={handleImportExcel}
+                        />
+                        <Button variant="outline" className="text-xs h-9">
+                            <Upload className="w-4 h-4 mr-1.5" />
+                            Import
+                        </Button>
+                    </div>
+
+                    <Button variant="outline" onClick={handleExportExcel} className="text-xs h-9">
+                        <Download className="w-4 h-4 mr-1.5" />
+                        Export All
+                    </Button>
+
+                    <Button onClick={() => router.push('/admin/sellers/create')} className="bg-[#7b4623] hover:bg-[#5d351a] h-9">
+                        <Plus className="w-4 h-4 mr-2" />
+                        Add New Seller
+                    </Button>
+                </div>
             </div>
 
             <div className="flex flex-col md:flex-row gap-4">

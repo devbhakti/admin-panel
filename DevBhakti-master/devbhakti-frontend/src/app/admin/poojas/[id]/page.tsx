@@ -21,6 +21,7 @@ export default function ViewPoojaPage() {
     const { language, setLanguage } = useLanguage();
     const [pooja, setPooja] = useState<any>(null);
     const [isLoading, setIsLoading] = useState(true);
+    const [activeTab, setActiveTab] = useState<Language>(language);
 
     useEffect(() => {
         loadPooja();
@@ -87,7 +88,7 @@ export default function ViewPoojaPage() {
                         <ArrowLeft className="w-5 h-5" />
                     </Button>
                     <div>
-                        <h1 className="text-2xl font-bold tracking-tight">{parseLocalizedValue(pooja.name, language)}</h1>
+                        <h1 className="text-2xl font-bold tracking-tight">{parseLocalizedValue(pooja.name, activeTab)}</h1>
                         <p className="text-muted-foreground">Pooja Details</p>
                     </div>
                 </div>
@@ -105,7 +106,7 @@ export default function ViewPoojaPage() {
                     <div className="aspect-square rounded-xl overflow-hidden border bg-muted shadow-sm">
                         <img
                             src={getImageUrl(pooja.image)}
-                            alt={parseLocalizedValue(pooja.name, language)}
+                            alt={parseLocalizedValue(pooja.name, activeTab)}
                             className="w-full h-full object-cover"
                         />
                     </div>
@@ -143,7 +144,7 @@ export default function ViewPoojaPage() {
                                 <MapPin className="w-4 h-4 text-primary" />
                                 <div>
                                     <p className="text-xs text-muted-foreground">Temple</p>
-                                    <p className="font-semibold">{parseLocalizedValue(pooja.temple?.name, language) || 'N/A'}</p>
+                                    <p className="font-semibold">{parseLocalizedValue(pooja.temple?.name, activeTab) || 'N/A'}</p>
                                 </div>
                             </div>
                         </div>
@@ -151,7 +152,7 @@ export default function ViewPoojaPage() {
                         <div className="pt-3 border-t">
                             <p className="text-xs text-muted-foreground mb-2">Category</p>
                             <Badge variant="outline" className="bg-slate-50">
-                                {parseLocalizedValue(pooja.category, language)}
+                                {parseLocalizedValue(pooja.category, activeTab)}
                             </Badge>
                         </div>
                     </div>
@@ -159,7 +160,7 @@ export default function ViewPoojaPage() {
 
                 {/* Right Column - Detailed Info with Tabs */}
                 <div className="lg:col-span-2 space-y-6">
-                    <Tabs value={language} onValueChange={(v) => setLanguage(v as Language)} className="w-full">
+                    <Tabs value={activeTab} onValueChange={(v) => setActiveTab(v as Language)} className="w-full">
                         <div className="flex items-center justify-between mb-4 bg-background p-2 rounded-xl border border-orange-100 shadow-sm">
                             <div className="flex items-center gap-2 px-2 text-slate-500 font-bold text-sm">
                                 <Languages className="w-4 h-4" /> Localized Content View

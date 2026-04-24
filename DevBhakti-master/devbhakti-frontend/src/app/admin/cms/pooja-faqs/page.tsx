@@ -8,8 +8,13 @@ import {
     Trash2,
     X,
     HelpCircle,
-    Eye
+    Eye,
+    Download,
+    Upload,
+    Loader2,
+    CheckCircle
 } from "lucide-react";
+import * as XLSX from 'xlsx';
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import {
@@ -173,6 +178,118 @@ export default function PoojaFAQsPage() {
         }
     };
 
+    // --- BULK MANAGEMENT ---
+    const downloadTemplate = () => {
+        const template = [
+            {
+                "Question_EN": "How do I book a pooja?",
+                "Question_HI": "मैं पूजा कैसे बुक कर सकता हूँ?",
+                "Question_MR": "मी पूजा कशी बुक करू शकतो?",
+                "Answer_EN": "You can book via the temple page.",
+                "Answer_HI": "आप मंदिर के पेज के माध्यम से बुक कर सकते हैं।",
+                "Answer_MR": "तुम्ही मंदिर पेजद्वारे बुक करू शकता.",
+                "Is_Active": "TRUE",
+                "Order": 1
+            }
+        ];
+        const ws = XLSX.utils.json_to_sheet(template);
+        const wb = XLSX.utils.book_new();
+        XLSX.utils.book_append_sheet(wb, ws, "FAQ Template");
+        XLSX.writeFile(wb, "Pooja_FAQs_Import_Template.xlsx");
+    };
+
+    const handleExportExcel = () => {
+        const exportData = faqs.map(f => ({
+            "ID": f.id,
+            "Question_EN": f.question?.en || "",
+            "Question_HI": f.question?.hi || "",
+            "Question_MR": f.question?.mr || "",
+            "Answer_EN": f.answer?.en || "",
+            "Answer_HI": f.answer?.hi || "",
+            "Answer_MR": f.answer?.mr || "",
+            "Is_Active": f.isActive ? "TRUE" : "FALSE",
+            "Order": f.order || 0,
+            "Created_At": f.createdAt
+        }));
+        const ws = XLSX.utils.json_to_sheet(exportData);
+        const wb = XLSX.utils.book_new();
+        XLSX.utils.book_append_sheet(wb, ws, "Pooja FAQs");
+        XLSX.writeFile(wb, `Pooja_FAQs_Export_${new Date().toISOString().split('T')[0]}.xlsx`);
+    };
+
+    const handleImportExcel = async (e: React.ChangeEvent<HTMLInputElement>) => {
+        const file = e.target.files?.[0];
+        if (!file) return;
+
+        const reader = new FileReader();
+        reader.onload = async (evt) => {
+            try {
+                const bstr = evt.target?.result;
+                const wb = XLSX.read(bstr, { type: 'binary' });
+                const wsname = wb.SheetNames[0];
+                const ws = wb.Sheets[wsname];
+                const data = XLSX.utils.sheet_to_json(ws) as any[];
+
+                if (data.length === 0) {
+                    toast({ title: "Error", description: "Excel file is empty", variant: "destructive" });
+                    return;
+                }
+
+                toast({ title: "Import Started", description: `Importing ${data.length} FAQs...`, variant: "success" });
+
+                let successCount = 0;
+                let failCount = 0;
+                const errors: string[] = [];
+
+                for (let i = 0; i < data.length; i++) {
+                    const row = data[i];
+                    const rowNum = i + 2;
+                    try {
+                        if (!row.Question_EN) throw new Error("English question is required");
+                        if (!row.Answer_EN) throw new Error("English answer is required");
+
+                        const payload = {
+                            question_en: String(row.Question_EN || "").trim(),
+                            question_hi: String(row.Question_HI || "").trim(),
+                            question_mr: String(row.Question_MR || "").trim(),
+                            answer_en: String(row.Answer_EN || "").trim(),
+                            answer_hi: String(row.Answer_HI || "").trim(),
+                            answer_mr: String(row.Answer_MR || "").trim(),
+                            isActive: String(row.Is_Active || "TRUE").toUpperCase() === "TRUE",
+                            order: parseInt(row.Order) || 1
+                        };
+
+                        await createPoojaFAQAdmin(payload);
+                        successCount++;
+                    } catch (err: any) {
+                        const errorMsg = err.response?.data?.message || err.message || "Unknown error";
+                        failCount++;
+                        errors.push(`Row ${rowNum}: ${errorMsg}`);
+                        console.error(`Import Error Row ${rowNum}:`, errorMsg);
+                    }
+                }
+
+                if (failCount > 0) {
+                    toast({
+                        title: "Import Partially Failed",
+                        description: `Success: ${successCount}, Failed: ${failCount}. Check console or fix these: ${errors.slice(0, 3).join(", ")}${errors.length > 3 ? "..." : ""}`,
+                        variant: "destructive"
+                    });
+                } else {
+                    toast({
+                        title: "Import Successful",
+                        description: `Successfully imported ${successCount} FAQs.`
+                    });
+                }
+                loadFaqs();
+            } catch (error) {
+                toast({ title: "Import Failed", description: "Failed to process Excel file", variant: "destructive" });
+            }
+        };
+        reader.readAsBinaryString(file);
+        e.target.value = '';
+    };
+
     const filteredFaqs = faqs.filter(faq => {
         const s = searchTerm.toLowerCase();
         const question = faq.question;
@@ -198,10 +315,35 @@ export default function PoojaFAQsPage() {
                         Manage global FAQs that appear on every Pooja detail page.
                     </p>
                 </div>
-                <Button onClick={() => handleOpenDialog()} className="bg-primary hover:bg-primary/90">
-                    <Plus className="w-4 h-4 mr-2" />
-                    Add New FAQ
-                </Button>
+                <div className="flex flex-wrap items-center gap-2">
+                    {/* <Button variant="outline" onClick={downloadTemplate} className="text-xs h-9">
+                        <Download className="w-4 h-4 mr-1.5" />
+                        Template
+                    </Button>
+
+                    <div className="relative">
+                        <input
+                            type="file"
+                            accept=".xlsx, .xls"
+                            className="absolute inset-0 opacity-0 cursor-pointer"
+                            onChange={handleImportExcel}
+                        />
+                        <Button variant="outline" className="text-xs h-9">
+                            <Upload className="w-4 h-4 mr-1.5" />
+                            Import
+                        </Button>
+                    </div>
+
+                    <Button variant="outline" onClick={handleExportExcel} className="text-xs h-9">
+                        <Download className="w-4 h-4 mr-1.5" />
+                        Export All
+                    </Button> */}
+
+                    <Button onClick={() => handleOpenDialog()} className="bg-[#7b4623] hover:bg-[#5d351a] h-9">
+                        <Plus className="w-4 h-4 mr-2" />
+                        Add New FAQ
+                    </Button>
+                </div>
             </div>
 
             {/* Search */}
@@ -290,7 +432,7 @@ export default function PoojaFAQsPage() {
 
             {/* View FAQ Dialog */}
             <Dialog open={isViewDialogOpen} onOpenChange={setIsViewDialogOpen}>
-                <DialogContent className="sm:max-w-[700px]">
+                <DialogContent className="sm:max-w-3xl lg:max-w-4xl max-h-[90vh] overflow-y-auto w-[95vw]">
                     <DialogHeader>
                         <DialogTitle className="flex items-center gap-2">
                             <Eye className="w-5 h-5 text-green-600" />
@@ -304,60 +446,70 @@ export default function PoojaFAQsPage() {
                     {viewingFaq && (
                         <div className="space-y-6 py-4">
                             {/* FAQ Order and Status */}
-                            <div className="flex items-center justify-between">
-                                <div className="space-y-2">
-                                    <Label className="text-sm font-semibold text-muted-foreground">Order</Label>
-                                    <Badge variant="outline" className="text-base px-3 py-1">
-                                        #{viewingFaq.order}
-                                    </Badge>
-                                </div>
-                                <div className="space-y-2">
-                                    <Label className="text-sm font-semibold text-muted-foreground">Status</Label>
-                                    <Badge variant={viewingFaq.isActive ? "default" : "secondary"}>
-                                        {viewingFaq.isActive ? "Active" : "Inactive"}
-                                    </Badge>
-                                </div>
-                            </div>
-
-                            {/* Questions in all languages */}
-                            <div className="space-y-4">
-                                <Label className="text-sm font-semibold text-muted-foreground flex items-center gap-2">
-                                    <HelpCircle className="w-4 h-4" />
-                                    Questions
-                                </Label>
-                                <div className="space-y-3">
-                                    {['en', 'hi', 'mr'].map((lang) => (
-                                        <div key={lang} className="space-y-1">
-                                            <Label className="text-xs font-medium text-muted-foreground uppercase">
-                                                {lang === 'en' ? 'English' : lang === 'hi' ? 'Hindi' : 'Marathi'}
-                                            </Label>
-                                            <div className="p-3 bg-blue-50 rounded-lg border border-blue-200">
-                                                <p className="text-sm font-medium text-blue-900">
-                                                    {viewingFaq.question?.[lang] || 'Not provided'}
-                                                </p>
-                                            </div>
-                                        </div>
-                                    ))}
+                            <div className="flex items-center justify-between bg-slate-50 p-4 rounded-2xl border border-slate-100">
+                                <div className="flex items-center gap-4">
+                                    <div className="flex flex-col">
+                                        <Label className="text-[10px] font-bold text-slate-400 uppercase tracking-widest">Order</Label>
+                                        <span className="text-lg font-black text-[#7b4623]">#{viewingFaq.order}</span>
+                                    </div>
+                                    <div className="h-8 w-px bg-slate-200 mx-2" />
+                                    <div className="flex flex-col">
+                                        <Label className="text-[10px] font-bold text-slate-400 uppercase tracking-widest">Status</Label>
+                                        <Badge variant={viewingFaq.isActive ? "success" : "secondary"} className="mt-1">
+                                            {viewingFaq.isActive ? "Active" : "Inactive"}
+                                        </Badge>
+                                    </div>
                                 </div>
                             </div>
 
-                            {/* Answers in all languages */}
-                            <div className="space-y-4">
-                                <Label className="text-sm font-semibold text-muted-foreground">Answers</Label>
-                                <div className="space-y-3">
-                                    {['en', 'hi', 'mr'].map((lang) => (
-                                        <div key={lang} className="space-y-1">
-                                            <Label className="text-xs font-medium text-muted-foreground uppercase">
-                                                {lang === 'en' ? 'English' : lang === 'hi' ? 'Hindi' : 'Marathi'}
-                                            </Label>
-                                            <div className="p-3 bg-green-50 rounded-lg border border-green-200">
-                                                <p className="text-sm text-green-900 whitespace-pre-wrap">
-                                                    {viewingFaq.answer?.[lang] || 'Not provided'}
-                                                </p>
+                            {/* Q&A Paired by Language */}
+                            <div className="space-y-6">
+                                {['en', 'hi', 'mr'].map((lang) => (
+                                    <div key={lang} className="relative overflow-hidden rounded-[24px] border border-slate-100 bg-white shadow-sm">
+                                        <div className="absolute top-0 left-0 w-1 h-full bg-[#7b4623]" />
+                                        
+                                        <div className="p-5 space-y-4">
+                                            <div className="flex items-center justify-between border-b border-slate-50 pb-3">
+                                                <div className="flex items-center gap-2">
+                                                    <div className="w-8 h-8 rounded-full bg-[#7b4623]/10 flex items-center justify-center text-[#7b4623] text-xs font-bold uppercase">
+                                                        {lang}
+                                                    </div>
+                                                    <span className="font-bold text-slate-800">
+                                                        {lang === 'en' ? 'English' : lang === 'hi' ? 'Hindi' : 'Marathi'}
+                                                    </span>
+                                                </div>
+                                            </div>
+
+                                            <div className="space-y-4">
+                                                {/* Question Section */}
+                                                <div className="space-y-2">
+                                                    <div className="flex items-center gap-2 text-[10px] font-bold text-amber-600 uppercase tracking-wider">
+                                                        <HelpCircle className="w-3 h-3" />
+                                                        Question
+                                                    </div>
+                                                    <div className="p-4 bg-amber-50/50 rounded-2xl border border-amber-100/50">
+                                                        <p className="text-sm font-semibold text-slate-900 leading-relaxed">
+                                                            {viewingFaq.question?.[lang] || 'Not provided'}
+                                                        </p>
+                                                    </div>
+                                                </div>
+
+                                                {/* Answer Section */}
+                                                <div className="space-y-2">
+                                                    <div className="flex items-center gap-2 text-[10px] font-bold text-emerald-600 uppercase tracking-wider">
+                                                        <CheckCircle className="w-3 h-3" />
+                                                        Answer
+                                                    </div>
+                                                    <div className="p-4 bg-emerald-50/50 rounded-2xl border border-emerald-100/50">
+                                                        <p className="text-sm text-slate-700 whitespace-pre-wrap leading-relaxed">
+                                                            {viewingFaq.answer?.[lang] || 'Not provided'}
+                                                        </p>
+                                                    </div>
+                                                </div>
                                             </div>
                                         </div>
-                                    ))}
-                                </div>
+                                    </div>
+                                ))}
                             </div>
                         </div>
                     )}

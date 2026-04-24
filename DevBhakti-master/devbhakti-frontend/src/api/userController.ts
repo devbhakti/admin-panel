@@ -25,6 +25,9 @@ export const fetchUserFavorites = async () => {
 
 export const addFavorite = async (data: { templeId?: string; poojaId?: string; productId?: string }) => {
     const token = localStorage.getItem("token");
+    if (!token) {
+        throw { response: { status: 401, data: { message: "You need to login as a devotee to add favourites." } } };
+    }
     const response = await axios.post(`${API_URL}/favorites/add`, data, {
         headers: { Authorization: `Bearer ${token}` }
     });
@@ -33,6 +36,9 @@ export const addFavorite = async (data: { templeId?: string; poojaId?: string; p
 
 export const removeFavorite = async (data: { templeId?: string; poojaId?: string; productId?: string }) => {
     const token = localStorage.getItem("token");
+    if (!token) {
+        throw { response: { status: 401, data: { message: "You need to login as a devotee to remove favourites." } } };
+    }
     const response = await axios.post(`${API_URL}/favorites/remove`, data, {
         headers: { Authorization: `Bearer ${token}` }
     });

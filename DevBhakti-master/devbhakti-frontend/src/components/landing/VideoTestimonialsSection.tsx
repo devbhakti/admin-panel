@@ -167,7 +167,12 @@ const VideoTestimonialsSection = () => {
                                 viewport={{ once: true }}
                                 transition={{ delay: index * 0.1 }}
                                 className="flex-shrink-0 w-[280px] md:w-[310px] aspect-[9/14] relative rounded-2xl overflow-hidden snap-center cursor-pointer group/card shadow-xl"
-                                onClick={() => setPlayingId(playingId === story.id ? null : story.id)}
+                                onClick={() => {
+                                    // Only allow playback when real video data exists from CMS
+                                    if (dynamicStories.length > 0) {
+                                        setPlayingId(playingId === story.id ? null : story.id);
+                                    }
+                                }}
                             >
                                 {/* Video or Thumbnail */}
                                 <div className="absolute inset-0 bg-black">

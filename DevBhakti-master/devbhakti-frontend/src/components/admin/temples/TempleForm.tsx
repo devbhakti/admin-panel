@@ -457,6 +457,23 @@ export function TempleForm({
         }
     };
 
+    const addOperatingHour = () => {
+        setFormData(prev => ({
+            ...prev,
+            operatingHours: [
+                ...prev.operatingHours,
+                { label: "New Slot", start: "09:00 AM", end: "05:00 PM", active: true }
+            ]
+        }));
+    };
+
+    const removeOperatingHour = (index: number) => {
+        setFormData(prev => ({
+            ...prev,
+            operatingHours: prev.operatingHours.filter((_, i) => i !== index)
+        }));
+    };
+
     const handleSubmit = async (e: React.FormEvent) => {
         e.preventDefault();
         const fd = new FormData();
@@ -998,13 +1015,33 @@ export function TempleForm({
 
                     {/* Operating Hours */}
                     <div className="bg-card border rounded-xl p-8 shadow-sm space-y-6">
-                        <div className="flex items-center gap-2 text-primary font-bold">
-                            <Clock className="w-5 h-5" />
-                            <h2 className="text-xl">Operating Hours</h2>
+                        <div className="flex items-center justify-between">
+                            <div className="flex items-center gap-2 text-primary font-bold">
+                                <Clock className="w-5 h-5" />
+                                <h2 className="text-xl">Operating Hours</h2>
+                            </div>
+                            <Button 
+                                type="button" 
+                                variant="outline" 
+                                size="sm" 
+                                onClick={addOperatingHour}
+                                className="border-primary text-primary hover:bg-primary/10"
+                            >
+                                <Plus className="w-4 h-4 mr-1" /> Add Slot
+                            </Button>
                         </div>
                         <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                             {formData.operatingHours.map((slot, index) => (
-                                <div key={index} className="p-4 bg-slate-50 rounded-xl border border-slate-200 flex flex-col gap-3">
+                                <div key={index} className="p-4 bg-slate-50 rounded-xl border border-slate-200 flex flex-col gap-3 relative group">
+                                    {formData.operatingHours.length > 1 && (
+                                        <button
+                                            type="button"
+                                            onClick={() => removeOperatingHour(index)}
+                                            className="absolute -top-2 -right-2 bg-white border shadow-sm rounded-full p-1 text-destructive opacity-0 group-hover:opacity-100 transition-opacity z-10 hover:bg-red-50"
+                                        >
+                                            <X className="w-3 h-3" />
+                                        </button>
+                                    )}
                                     <div className="flex items-center justify-between">
                                         <Input
                                             value={slot.label}
@@ -1013,7 +1050,8 @@ export function TempleForm({
                                                 newHours[index].label = e.target.value;
                                                 setFormData({ ...formData, operatingHours: newHours });
                                             }}
-                                            className="h-7 w-2/3 text-xs font-bold bg-transparent border-none"
+                                            className="h-7 w-2/3 text-xs font-bold bg-transparent border-none focus-visible:ring-0 px-0"
+                                            placeholder="Label (e.g. Afternoon)"
                                         />
                                         <Switch
                                             checked={slot.active}
@@ -1025,62 +1063,70 @@ export function TempleForm({
                                         />
                                     </div>
                                     <div className="flex gap-4">
-                                        <Input 
-                                            type="time"
-                                            value={(() => {
-                                                if (!slot.start) return "";
-                                                const [time, modifier] = slot.start.split(' ');
-                                                let [hours, minutes] = time.split(':');
-                                                let h = parseInt(hours, 10);
-                                                if (modifier === 'PM' && h < 12) h += 12;
-                                                if (modifier === 'AM' && h === 12) h = 0;
-                                                return `${String(h).padStart(2, '0')}:${minutes}`;
-                                            })()}
-                                            onChange={e => {
-                                                const time24 = e.target.value;
-                                                if (!time24) return;
-                                                let [hours, minutes] = time24.split(':');
-                                                let h = parseInt(hours, 10);
-                                                const modifier = h >= 12 ? 'PM' : 'AM';
-                                                if (h > 12) h -= 12;
-                                                if (h === 0) h = 12;
-                                                const time12 = `${String(h).padStart(2, '0')}:${minutes} ${modifier}`;
-                                                
-                                                const newHours = [...formData.operatingHours];
-                                                newHours[index].start = time12;
-                                                setFormData({ ...formData, operatingHours: newHours });
-                                            }} 
-                                            className="text-xs" 
-                                            disabled={!slot.active} 
-                                        />
-                                        <Input 
-                                            type="time"
-                                            value={(() => {
-                                                if (!slot.end) return "";
-                                                const [time, modifier] = slot.end.split(' ');
-                                                let [hours, minutes] = time.split(':');
-                                                let h = parseInt(hours, 10);
-                                                if (modifier === 'PM' && h < 12) h += 12;
-                                                if (modifier === 'AM' && h === 12) h = 0;
-                                                return `${String(h).padStart(2, '0')}:${minutes}`;
-                                            })()}
-                                            onChange={e => {
-                                                const time24 = e.target.value;
-                                                if (!time24) return;
-                                                let [hours, minutes] = time24.split(':');
-                                                let h = parseInt(hours, 10);
-                                                const modifier = h >= 12 ? 'PM' : 'AM';
-                                                if (h > 12) h -= 12;
-                                                if (h === 0) h = 12;
-                                                const time12 = `${String(h).padStart(2, '0')}:${minutes} ${modifier}`;
+                                        <div className="flex-1 space-y-1">
+                                            <span className="text-[10px] text-slate-500 font-bold uppercase ml-1">Open</span>
+                                            <Input 
+                                                type="time"
+                                                value={(() => {
+                                                    if (!slot.start) return "";
+                                                    const [time, modifier] = slot.start.split(' ');
+                                                    if (!time || !modifier) return "";
+                                                    let [hours, minutes] = time.split(':');
+                                                    let h = parseInt(hours, 10);
+                                                    if (modifier === 'PM' && h < 12) h += 12;
+                                                    if (modifier === 'AM' && h === 12) h = 0;
+                                                    return `${String(h).padStart(2, '0')}:${minutes}`;
+                                                })()}
+                                                onChange={e => {
+                                                    const time24 = e.target.value;
+                                                    if (!time24) return;
+                                                    let [hours, minutes] = time24.split(':');
+                                                    let h = parseInt(hours, 10);
+                                                    const modifier = h >= 12 ? 'PM' : 'AM';
+                                                    if (h > 12) h -= 12;
+                                                    if (h === 0) h = 12;
+                                                    const time12 = `${String(h).padStart(2, '0')}:${minutes} ${modifier}`;
+                                                    
+                                                    const newHours = [...formData.operatingHours];
+                                                    newHours[index].start = time12;
+                                                    setFormData({ ...formData, operatingHours: newHours });
+                                                }} 
+                                                className="text-xs h-8" 
+                                                disabled={!slot.active} 
+                                            />
+                                        </div>
+                                        <div className="flex-1 space-y-1">
+                                            <span className="text-[10px] text-slate-500 font-bold uppercase ml-1">Close</span>
+                                            <Input 
+                                                type="time"
+                                                value={(() => {
+                                                    if (!slot.end) return "";
+                                                    const [time, modifier] = slot.end.split(' ');
+                                                    if (!time || !modifier) return "";
+                                                    let [hours, minutes] = time.split(':');
+                                                    let h = parseInt(hours, 10);
+                                                    if (modifier === 'PM' && h < 12) h += 12;
+                                                    if (modifier === 'AM' && h === 12) h = 0;
+                                                    return `${String(h).padStart(2, '0')}:${minutes}`;
+                                                })()}
+                                                onChange={e => {
+                                                    const time24 = e.target.value;
+                                                    if (!time24) return;
+                                                    let [hours, minutes] = time24.split(':');
+                                                    let h = parseInt(hours, 10);
+                                                    const modifier = h >= 12 ? 'PM' : 'AM';
+                                                    if (h > 12) h -= 12;
+                                                    if (h === 0) h = 12;
+                                                    const time12 = `${String(h).padStart(2, '0')}:${minutes} ${modifier}`;
 
-                                                const newHours = [...formData.operatingHours];
-                                                newHours[index].end = time12;
-                                                setFormData({ ...formData, operatingHours: newHours });
-                                            }} 
-                                            className="text-xs" 
-                                            disabled={!slot.active} 
-                                        />
+                                                    const newHours = [...formData.operatingHours];
+                                                    newHours[index].end = time12;
+                                                    setFormData({ ...formData, operatingHours: newHours });
+                                                }} 
+                                                className="text-xs h-8" 
+                                                disabled={!slot.active} 
+                                            />
+                                        </div>
                                     </div>
                                 </div>
                             ))}

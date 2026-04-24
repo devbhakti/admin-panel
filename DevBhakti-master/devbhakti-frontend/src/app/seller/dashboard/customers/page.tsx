@@ -10,8 +10,10 @@ import {
     IndianRupee,
     Calendar,
     ArrowUpRight,
-    UserCircle
+    UserCircle,
+    Download
 } from "lucide-react";
+import * as XLSX from 'xlsx';
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
@@ -44,6 +46,24 @@ export default function SellerCustomersPage() {
         }
     };
 
+    const handleExportExcel = () => {
+        if (customers.length === 0) return;
+
+        const exportData = filteredCustomers.map(c => ({
+            "Devotee Name": c.name,
+            "Email": c.email || "N/A",
+            "Phone": c.phone || "N/A",
+            "Total Orders": c.totalOrders,
+            "Lifetime Value": c.totalSpent,
+            "Last Order Date": format(new Date(c.lastOrderDate), "dd MMM yyyy HH:mm")
+        }));
+
+        const ws = XLSX.utils.json_to_sheet(exportData);
+        const wb = XLSX.utils.book_new();
+        XLSX.utils.book_append_sheet(wb, ws, "Customers");
+        XLSX.writeFile(wb, `Seller_Customers_Export_${new Date().toISOString().split('T')[0]}.xlsx`);
+    };
+
     const filteredCustomers = customers.filter(c =>
         c.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
         c.phone?.includes(searchQuery) ||
@@ -67,6 +87,14 @@ export default function SellerCustomersPage() {
                     <p className="text-slate-500 mt-1">Devotees who have purchased items from your store.</p>
                 </div>
                 <div className="flex items-center gap-3">
+                    <Button
+                        onClick={handleExportExcel}
+                        variant="outline"
+                        className="h-11 px-6 rounded-xl border-slate-200 hover:bg-[#794A05]/5 text-[#794A05] font-bold flex items-center gap-2"
+                    >
+                        <Download className="w-4 h-4" />
+                        Export
+                    </Button>
                     <div className="bg-white px-4 py-2 rounded-xl border border-slate-100 shadow-sm">
                         <p className="text-[10px] font-black uppercase text-slate-400 tracking-widest">Total Customers</p>
                         <p className="text-xl font-black text-[#794A05]">{customers.length}</p>

@@ -159,16 +159,8 @@ export const verifyPayment = async (req: Request, res: Response) => {
                 const poojaHi = "पूजा"; // Generic fallback or we can use poojaEn if translation parsing is complex here
                 const dateStr = new Date(updatedBooking.bookingDate as string).toLocaleDateString();
                 await notifyUser(updatedBooking.userId, 'devotee', {
-                    title: JSON.stringify({
-                        en: 'Pooja Booking Confirmed! 🙏',
-                        hi: 'पूजा बुकिंग पक्की हो गई है! 🙏',
-                        mr: 'पूजा बुकिंग निश्चित झाली! 🙏'
-                    }),
-                    body: JSON.stringify({
-                        en: `Your booking for "${poojaEn}" has been confirmed for ${dateStr}.`,
-                        hi: `आपकी "${poojaEn}" की बुकिंग ${dateStr} के लिए पक्की हो गई है।`,
-                        mr: `तुमची "${poojaEn}" ची बुकिंग ${dateStr} साठी निश्चित झाली आहे.`
-                    }),
+                    title: 'Pooja Booking Confirmed! 🙏',
+                    body: `Your booking for "${poojaEn}" has been confirmed for ${dateStr}.`,
                     data: { 
                         link: `/profile/bookings`, 
                         type: 'POOJA_BOOKING',
@@ -247,16 +239,8 @@ export const verifyPayment = async (req: Request, res: Response) => {
                     
                     if (donation.userId) {
                         await notifyUser(donation.userId, 'devotee', {
-                            title: JSON.stringify({
-                                en: 'Donation Successful! 🙏',
-                                hi: 'दान सफल रहा! 🙏',
-                                mr: 'देणगी यशस्वी! 🙏'
-                            }),
-                            body: JSON.stringify({
-                                en: `Thank you for your generous donation of ₹${donation.amount} to ${getEnglish(donation.temple?.name) || "Dev Bhakti"}.`,
-                                hi: `${getEnglish(donation.temple?.name) || "Dev Bhakti"} को ₹${donation.amount} के आपके उदार दान के लिए धन्यवाद।`,
-                                mr: `${getEnglish(donation.temple?.name) || "Dev Bhakti"} ला ₹${donation.amount} च्या तुमच्या उदार देणगीबद्दल धन्यवाद.`
-                            }),
+                            title: 'Donation Successful! 🙏',
+                            body: `Thank you for your generous donation of ₹${donation.amount} to ${getEnglish(donation.temple?.name) || "Dev Bhakti"}.`,
                             data: {
                                 link: `/profile`,
                                 type: 'DONATION_SUCCESS',
@@ -332,7 +316,7 @@ export const verifyPayment = async (req: Request, res: Response) => {
                         title: 'New Platform Donation! 🎉',
                         body: `₹${donation.amount} donated by ${donation.isAnonymous ? 'Anonymous' : donation.donorName} to ${getEnglish(donation.temple?.name) || "Dev Bhakti"}.`,
                         data: {
-                            link: `/admin/donations`,
+                            link: `/admin/donation`,
                             type: 'NEW_DONATION_ADMIN',
                             donationId: donation.id
                         }

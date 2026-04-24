@@ -48,6 +48,20 @@ export const useNotifications = ({
       const unsubscribe = await listenToForegroundMessages(({ title, body, data }) => {
         console.log("🔥 Foreground message received, showing toast:", { title, body });
         
+        const parseLocalizedString = (str: string) => {
+          try {
+            const parsed = JSON.parse(str);
+            if (typeof parsed === 'object' && parsed !== null) {
+              const lang = typeof window !== 'undefined' ? localStorage.getItem('lang') || 'en' : 'en';
+              return parsed[lang] || parsed.en || str;
+            }
+          } catch(e) {}
+          return str;
+        };
+
+        const displayTitle = parseLocalizedString(title);
+        const displayBody = parseLocalizedString(body);
+        
         // Notification Sound Play Karo
         try {
           const audio = new Audio('https://assets.mixkit.co/active_storage/sfx/2869/2869-preview.mp3');
@@ -57,9 +71,14 @@ export const useNotifications = ({
         }
 
         // Sonner toast show karo jab notification aaye
-        toast(title, {
-          description: body,
+        toast(displayTitle, {
+          description: displayBody,
           duration: Infinity, 
+          style: {
+            backgroundColor: '#16a34a',
+            color: '#ffffff',
+            border: 'none',
+          },
           cancel: {
             label: 'Close',
             onClick: () => console.log('Toast closed text'),

@@ -38,6 +38,7 @@ import AccessDeniedPage from "./access-denied/page";
 import { clearAllTokens } from "@/lib/auth-utils";
 import { NotificationBell } from "@/components/notifications/NotificationBell";
 import { AdminLanguageSwitcher } from "@/components/admin/AdminLanguageSwitcher";
+import { useLanguage } from "@/context/LanguageContext";
 
 const sidebarItems = [
   {
@@ -183,7 +184,13 @@ const sidebarItems = [
 export default function AdminLayout({ children }: { children: React.ReactNode }) {
   const pathname = usePathname();
   const router = useRouter();
+  const { setLanguage } = useLanguage();
   const [sidebarOpen, setSidebarOpen] = useState(false); // Default closed on mobile
+  
+  // Force English for Admin Panel
+  useEffect(() => {
+    setLanguage('en');
+  }, [setLanguage]);
   const [isAuthenticated, setIsAuthenticated] = useState<boolean | null>(null);
   const [user, setUser] = useState<{ id?: string; name: string; email: string; isStaff?: boolean; permissions?: string[]; role?: string } | null>(null);
   const [breadcrumbOverride, setBreadcrumbOverride] = useState<string | null>(null);

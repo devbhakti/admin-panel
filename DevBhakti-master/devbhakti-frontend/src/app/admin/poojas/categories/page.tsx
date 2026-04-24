@@ -1,7 +1,8 @@
 "use client";
 
 import React, { useState, useEffect } from "react";
-import { Plus, Search, Check, X, Trash2, MoreVertical, Loader2, AlertCircle, Pencil } from "lucide-react";
+import { Plus, Search, Check, X, Trash2, MoreVertical, Loader2, AlertCircle, Pencil, Download, Upload } from "lucide-react";
+import * as XLSX from 'xlsx';
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -272,6 +273,103 @@ export default function AdminPoojaCategoriesPage() {
         }
     };
 
+    // --- BULK MANAGEMENT ---
+    const downloadTemplate = () => {
+        const template = [
+            {
+                "Name_EN": "Special Pooja",
+                "Name_HI": "विशेष पूजा",
+                "Name_MR": "विशेष पूजा",
+                "Status": "APPROVED"
+            }
+        ];
+        const ws = XLSX.utils.json_to_sheet(template);
+        const wb = XLSX.utils.book_new();
+        XLSX.utils.book_append_sheet(wb, ws, "Category Template");
+        XLSX.writeFile(wb, "Pooja_Purpose_Template.xlsx");
+    };
+
+    const handleExportExcel = () => {
+        const exportData = categories.map(c => ({
+            "ID": c.id,
+            "Name_EN": getL(c.name_en || c.name, "en"),
+            "Name_HI": getL(c.name_hi || c.name, "hi"),
+            "Name_MR": getL(c.name_mr || c.name, "mr"),
+            "Status": c.status,
+            "Created_At": c.createdAt
+        }));
+        const ws = XLSX.utils.json_to_sheet(exportData);
+        const wb = XLSX.utils.book_new();
+        XLSX.utils.book_append_sheet(wb, ws, "Purposes");
+        XLSX.writeFile(wb, `Pooja_Purposes_Export_${new Date().toISOString().split('T')[0]}.xlsx`);
+    };
+
+    const handleImportExcel = async (e: React.ChangeEvent<HTMLInputElement>) => {
+        const file = e.target.files?.[0];
+        if (!file) return;
+
+        const reader = new FileReader();
+        reader.onload = async (evt) => {
+            try {
+                const bstr = evt.target?.result;
+                const wb = XLSX.read(bstr, { type: 'binary' });
+                const wsname = wb.SheetNames[0];
+                const ws = wb.Sheets[wsname];
+                const data = XLSX.utils.sheet_to_json(ws) as any[];
+
+                if (data.length === 0) {
+                    toast({ title: "Error", description: "Excel file is empty", variant: "destructive" });
+                    return;
+                }
+
+                toast({ title: "Import Started", description: `Importing ${data.length} purposes...`, variant: "success" });
+
+                let successCount = 0;
+                let failCount = 0;
+                const errors: string[] = [];
+
+                for (let i = 0; i < data.length; i++) {
+                    const row = data[i];
+                    const rowNum = i + 2;
+                    try {
+                        if (!row.Name_EN) throw new Error("English name is required");
+
+                        await createPoojaCategoryAdmin({
+                            name_en: String(row.Name_EN || "").trim(),
+                            name_hi: String(row.Name_HI || "").trim() || undefined,
+                            name_mr: String(row.Name_MR || "").trim() || undefined,
+                            status: String(row.Status || "APPROVED").toUpperCase()
+                        });
+                        successCount++;
+                    } catch (err: any) {
+                        const errorMsg = err.response?.data?.message || err.message || "Unknown error";
+                        failCount++;
+                        errors.push(`Row ${rowNum}: ${errorMsg}`);
+                        console.error(`Import Error Row ${rowNum}:`, errorMsg);
+                    }
+                }
+
+                if (failCount > 0) {
+                    toast({
+                        title: "Import Partially Failed",
+                        description: `Success: ${successCount}, Failed: ${failCount}. Check console or fix these: ${errors.slice(0, 3).join(", ")}${errors.length > 3 ? "..." : ""}`,
+                        variant: "destructive"
+                    });
+                } else {
+                    toast({
+                        title: "Import Successful",
+                        description: `Successfully imported ${successCount} categories.`
+                    });
+                }
+                loadCategories();
+            } catch (error) {
+                toast({ title: "Import Failed", description: "Failed to process Excel file", variant: "destructive" });
+            }
+        };
+        reader.readAsBinaryString(file);
+        e.target.value = '';
+    };
+
     const getStatusBadge = (status: string) => {
         const styles: Record<string, string> = {
             APPROVED: "bg-green-50 text-green-700 border-green-200",
@@ -371,31 +469,55 @@ export default function AdminPoojaCategoriesPage() {
                     </p>
                 </div>
 
-                {/* Add Button */}
-                <Dialog open={isAdding} onOpenChange={(o) => { setIsAdding(o); if (!o) setNewNames(emptyNames()); }}>
-                    <DialogTrigger asChild>
-                        <Button className="bg-[#7b4623] hover:bg-[#5d351a] w-full sm:w-auto h-9 sm:h-10 text-sm">
-                            <Plus className="w-4 h-4 mr-1.5" />
-                            Add Purpose
-                        </Button>
-                    </DialogTrigger>
-                    <DialogContent className="sm:max-w-md max-w-[calc(100vw-2rem)] p-4 sm:p-6 gap-4">
-                        <DialogHeader className="space-y-1.5">
-                            <DialogTitle className="text-base sm:text-lg">Add New Pooja Purpose</DialogTitle>
-                            <DialogDescription className="text-xs sm:text-sm">
-                                Enter the category name. English is required.
-                            </DialogDescription>
-                        </DialogHeader>
-                        <LangTabsInput
-                            values={newNames}
-                            onChange={setNewNames}
-                            savingLabel="Add Purpose"
-                            onSave={handleAddCategory}
-                            onCancel={() => setIsAdding(false)}
-                            saving={addSaving}
+                <div className="flex flex-wrap items-center gap-2">
+                    <Button variant="outline" onClick={downloadTemplate} className="text-xs h-9">
+                        <Download className="w-4 h-4 mr-1.5" />
+                        Template
+                    </Button>
+
+                    <div className="relative">
+                        <input
+                            type="file"
+                            accept=".xlsx, .xls"
+                            className="absolute inset-0 opacity-0 cursor-pointer"
+                            onChange={handleImportExcel}
                         />
-                    </DialogContent>
-                </Dialog>
+                        <Button variant="outline" className="text-xs h-9">
+                            <Upload className="w-4 h-4 mr-1.5" />
+                            Import
+                        </Button>
+                    </div>
+
+                    <Button variant="outline" onClick={handleExportExcel} className="text-xs h-9">
+                        <Download className="w-4 h-4 mr-1.5" />
+                        Export All
+                    </Button>
+
+                    <Dialog open={isAdding} onOpenChange={(o) => { setIsAdding(o); if (!o) setNewNames(emptyNames()); }}>
+                        <DialogTrigger asChild>
+                            <Button className="bg-[#7b4623] hover:bg-[#5d351a] w-full sm:w-auto h-9 sm:h-10 text-sm">
+                                <Plus className="w-4 h-4 mr-1.5" />
+                                Add Purpose
+                            </Button>
+                        </DialogTrigger>
+                        <DialogContent className="sm:max-w-md max-w-[calc(100vw-2rem)] p-4 sm:p-6 gap-4">
+                            <DialogHeader className="space-y-1.5">
+                                <DialogTitle className="text-base sm:text-lg">Add New Pooja Purpose</DialogTitle>
+                                <DialogDescription className="text-xs sm:text-sm">
+                                    Enter the category name. English is required.
+                                </DialogDescription>
+                            </DialogHeader>
+                            <LangTabsInput
+                                values={newNames}
+                                onChange={setNewNames}
+                                savingLabel="Add Purpose"
+                                onSave={handleAddCategory}
+                                onCancel={() => setIsAdding(false)}
+                                saving={addSaving}
+                            />
+                        </DialogContent>
+                    </Dialog>
+                </div>
             </div>
 
             {/* ── PENDING ALERT ── */}

@@ -22,8 +22,10 @@ import {
     Store,
     ArrowLeft,
     Loader2,
-    Package
+    Package,
+    Download
 } from "lucide-react";
+import * as XLSX from 'xlsx';
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -177,6 +179,29 @@ function TempleOrdersClient() {
         router.push(`/temples/dashboard/orders/print?ids=${order.id}`);
     };
 
+    const handleExportExcel = () => {
+        if (orders.length === 0) {
+            toast({ title: "No Data", description: "There are no orders to export", variant: "destructive" });
+            return;
+        }
+
+        const exportData = filteredOrders.map(o => ({
+            "Sub-Order ID": o.id,
+            "Customer": o.order?.user?.name || "N/A",
+            "Phone": o.order?.user?.phone || "N/A",
+            "Items": o.items.map((i: any) => `${parseLocalizedValue(i.product?.name)} (x${i.quantity})`).join(", "),
+            "Total Amount": o.totalAmount,
+            "Date": format(new Date(o.createdAt), "dd MMM yyyy HH:mm"),
+            "Status": o.status,
+            "Shipping Address": `${o.order?.shippingAddress?.street}, ${o.order?.shippingAddress?.city}, ${o.order?.shippingAddress?.state} - ${o.order?.shippingAddress?.pincode}`
+        }));
+
+        const ws = XLSX.utils.json_to_sheet(exportData);
+        const wb = XLSX.utils.book_new();
+        XLSX.utils.book_append_sheet(wb, ws, "Orders");
+        XLSX.writeFile(wb, `Temple_Orders_${templeData?.name?.en || 'Export'}_${new Date().toISOString().split('T')[0]}.xlsx`);
+    };
+
     const getStatusStyle = (status: string) => {
         switch (status) {
             case "PENDING": return "bg-amber-50 text-amber-700 border-amber-200";
@@ -283,6 +308,14 @@ function TempleOrdersClient() {
                         className="pl-12 h-12 rounded-xl border-slate-200 bg-white shadow-sm focus:border-[#794A05] transition-all"
                     />
                 </div>
+                <Button
+                    onClick={handleExportExcel}
+                    variant="outline"
+                    className="h-12 px-6 rounded-xl border-slate-200 hover:bg-[#794A05]/5 text-[#794A05] font-bold flex items-center gap-2"
+                >
+                    <Download className="w-4 h-4" />
+                    Export Orders
+                </Button>
             </div>
 
             {/* Orders Table */}

@@ -5,7 +5,16 @@ import { getLang, localize } from '../../utils/localization';
 // 1. Add Favorite
 export const addFavorite = async (req: Request, res: Response) => {
     try {
-        const { userId } = (req as any).user;
+        const user = (req as any).user;
+
+        if (!user || user.role !== 'DEVOTEE') {
+            return res.status(403).json({
+                success: false,
+                message: 'Please login as devotee to favorite this'
+            });
+        }
+
+        const { userId } = user;
         const { templeId, poojaId, productId } = req.body;
 
         if (!templeId && !poojaId && !productId) {
@@ -48,7 +57,16 @@ export const addFavorite = async (req: Request, res: Response) => {
 // 2. Remove Favorite
 export const removeFavorite = async (req: Request, res: Response) => {
     try {
-        const { userId } = (req as any).user;
+        const user = (req as any).user;
+
+        if (!user || user.role !== 'DEVOTEE') {
+            return res.status(403).json({
+                success: false,
+                message: 'Please login as devotee to remove this'
+            });
+        }
+
+        const { userId } = user;
         const { templeId, poojaId, productId } = req.body;
 
         if (!templeId && !poojaId && !productId) {
@@ -92,7 +110,16 @@ export const removeFavorite = async (req: Request, res: Response) => {
 // 3. List Favorites
 export const getFavorites = async (req: Request, res: Response) => {
     try {
-        const { userId } = (req as any).user;
+        const user = (req as any).user;
+
+        if (!user || user.role !== 'DEVOTEE') {
+            return res.status(403).json({
+                success: false,
+                message: 'Please login as devotee to view favorites'
+            });
+        }
+
+        const { userId } = user;
 
         const favorites = await prisma.favorite.findMany({
             where: { userId },

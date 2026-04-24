@@ -203,31 +203,31 @@ export default function ProductDetailsPage() {
   const toggleFavorite = async () => {
     if (!product) return;
 
-    const savedUser = localStorage.getItem("user");
-    if (!savedUser) {
-      toast({
-        title: "Please Login",
-        description: "You need to login as a devotee to add favourites.",
-        variant: "destructive",
-      });
-      return;
-    }
-
     // Optimistic Update
+    const previousFavoriteState = isFavorite;
     setIsFavorite(!isFavorite);
 
     try {
-      if (isFavorite) {
+      if (previousFavoriteState) {
         await removeFavorite({ productId: product.id });
         toast({ title: t('marketplace.cart.removed'), variant: "destructive", description: getLocalized(product, 'name', language) });
       } else {
         await addFavorite({ productId: product.id });
         toast({ title: t('marketplace.cart.added'), variant: "success", description: getLocalized(product, 'name', language) });
       }
-    } catch (error) {
+    } catch (error: any) {
       // Revert
-      setIsFavorite(!isFavorite);
-      toast({ title: t('marketplace.cart.failed'), variant: "destructive" });
+      setIsFavorite(previousFavoriteState);
+      
+      if (error.response?.status === 401) {
+        toast({
+          title: "Please Login",
+          description: error.response?.data?.message || "You need to login to perform this action.",
+          variant: "destructive",
+        });
+      } else {
+        toast({ title: t('marketplace.cart.failed'), variant: "destructive" });
+      }
     }
   };
 

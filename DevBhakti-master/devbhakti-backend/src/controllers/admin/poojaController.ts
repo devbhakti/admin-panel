@@ -133,6 +133,14 @@ export const createPooja = async (req: Request, res: Response) => {
             }
         }
 
+        // Validate category exists if provided
+        if (categoryId && categoryId !== 'null' && categoryId !== 'undefined') {
+            const category = await prisma.poojaCategory.findUnique({ where: { id: String(categoryId) } });
+            if (!category) {
+                return res.status(400).json({ error: 'Invalid categoryId: Category does not exist' });
+            }
+        }
+
         // Handle image path
         let imagePath = '';
         if (req.file) {
@@ -190,9 +198,13 @@ export const createPooja = async (req: Request, res: Response) => {
         });
 
         res.status(201).json(pooja);
-    } catch (error) {
+    } catch (error: any) {
         console.error('Create pooja error:', error);
-        res.status(500).json({ error: 'Failed to create pooja' });
+        res.status(500).json({ 
+            error: 'Failed to create pooja', 
+            message: error.message,
+            details: error.code || undefined
+        });
     }
 };
 
@@ -286,9 +298,13 @@ export const updatePooja = async (req: Request, res: Response) => {
         });
 
         res.json(pooja);
-    } catch (error) {
+    } catch (error: any) {
         console.error('Update pooja error:', error);
-        res.status(500).json({ error: 'Failed to update pooja' });
+        res.status(500).json({ 
+            error: 'Failed to update pooja',
+            message: error.message,
+            details: error.code || undefined
+        });
     }
 };
 

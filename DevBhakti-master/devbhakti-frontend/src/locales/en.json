@@ -622,10 +622,12 @@
       "subtitle": "Fill out the form below and we'll get back to you shortly.",
       "name": "Full Name",
       "email": "Email Address",
+      "mobile": "Mobile Number",
       "subject": "Subject",
       "message": "Message",
       "placeholder_name": "Your Name",
       "placeholder_email": "email@example.com",
+      "placeholder_mobile": "10-digit Mobile Number",
       "placeholder_subject": "How can we help?",
       "placeholder_message": "Your message...",
       "submit": "Send Inquiry"
@@ -1951,6 +1953,8 @@
       "error_create": "Error Creating Category",
       "error_update": "Error Updating Category",
       "error_loading": "Error Loading Category",
+      "success": "Success",
+      "no_cancel": "No, Cancel",
       "back": "Back",
       "file_hint": "JPG, PNG, GIF up to 5MB",
       "rec_size": "Recommended: 800x800 px (Square)",
@@ -1991,8 +1995,33 @@
       "delivery_process_hint": "Sacred Delivery Processed by DevBhakti",
       "confirm_status_update": "Confirm Status Update",
       "status_change_warning": "Are you sure you want to change the order status to {status}? This will notify the customer and potentially trigger shipping processes.",
+      "yes_update": "Yes, Update",
       "update_success": "Status Updated",
+      "update_success_msg": "Order status changed to {status}",
       "update_error": "Update Failed",
+      "update_error_msg": "Could not update order status",
+      "item_payment_mode": "Payment Mode",
+      "sub_order_id": "Sub-Order ID",
+      "marketplace_commission": "Marketplace Commission (Expected)",
+      "consignment_total": "Consignment Total",
+      "includes_marketplace_fee": "Includes ₹{amount} Marketplace Fee",
+      "via_method": "via {method}",
+      "loading": "Loading Orders...",
+      "exporting": "Exporting...",
+      "export_msg": "Please wait while we prepare the Excel file.",
+      "export_success": "Orders exported successfully!",
+      "export_failed": "Failed to download Excel.",
+      "status_accepted": "Accepted",
+      "status_shipped": "Shipped",
+      "status_delivered": "Delivered",
+      "status_cancelled": "Cancelled",
+      "status_paid": "Paid",
+      "status_failed": "Failed",
+      "status_refunded": "Refunded",
+      "status_picked_up": "Picked Up",
+      "status_out_delivery": "Out for Delivery",
+      "status_rto_initiated": "RTO Initiated",
+      "status_rto_delivered": "RTO Delivered",
       "prev": "Prev",
       "next": "Next",
       "page_of": "Page {current} of {total}",
@@ -2172,6 +2201,15 @@
         "alert_images": "Please select both image and icon",
         "fill_details": "Enter the details for the feature card."
       }
+    }
+  },
+  "temple_dashboard": {
+    "profile": {
+      "add_slot": "Add Slot",
+      "remove_slot": "Remove Slot",
+      "divine_hours": "Divine Operating Hours",
+      "slot_label": "Slot Label",
+      "new_slot_default": "New Slot"
     }
   }
 }

@@ -128,14 +128,7 @@ export const getAllTemples = async (req: Request, res: Response) => {
       user: { isVerified: true }
     };
 
-    // Search: JSON fields use path query in PostgreSQL
-    if (search) {
-      whereClause.OR = [
-        { name: { path: ['en'], string_contains: String(search) } },
-        { name: { path: ['hi'], string_contains: String(search) } },
-        { location: { path: ['en'], string_contains: String(search) } },
-      ];
-    }
+    // Search: Handled in JS for case-insensitivity on Json fields
 
     // Category filter — match English value (stored in JSON)
     if (category && category !== 'All') {
@@ -176,9 +169,24 @@ export const getAllTemples = async (req: Request, res: Response) => {
         poojas: {
           where: { status: true }
         }
-      },
-      take: search ? 50 : undefined
+      }
     });
+
+    // Case-insensitive filtering in JS
+    if (search) {
+      const lowQuery = String(search).toLowerCase();
+      temples = temples.filter((t: any) => {
+        const nameEn = (t.name?.en || '').toLowerCase();
+        const nameHi = (t.name?.hi || '').toLowerCase();
+        const locEn = (t.location?.en || '').toLowerCase();
+        const locHi = (t.location?.hi || '').toLowerCase();
+        
+        return nameEn.includes(lowQuery) || 
+               nameHi.includes(lowQuery) || 
+               locEn.includes(lowQuery) || 
+               locHi.includes(lowQuery);
+      });
+    }
 
     // Rank results if searching — compare English name
     if (search) {
@@ -423,13 +431,7 @@ export const getAllPoojas = async (req: Request, res: Response) => {
       status: true
     };
 
-    if (search) {
-      where.OR = [
-        { name: { path: ['en'], string_contains: String(search) } },
-        { name: { path: ['hi'], string_contains: String(search) } },
-        { about: { path: ['en'], string_contains: String(search) } },
-      ];
-    }
+    // Search: Handled in JS for case-insensitivity on Json fields
 
     if (templeId) {
       where.templeId = String(templeId);
@@ -497,6 +499,22 @@ export const getAllPoojas = async (req: Request, res: Response) => {
     });
 
     let finalPoojas = poojas;
+
+    // Case-insensitive filtering in JS
+    if (search) {
+      const lowQuery = String(search).toLowerCase();
+      finalPoojas = poojas.filter((p: any) => {
+        const nameEn = (p.name?.en || '').toLowerCase();
+        const nameHi = (p.name?.hi || '').toLowerCase();
+        const aboutEn = (p.about?.en || '').toLowerCase();
+        const aboutHi = (p.about?.hi || '').toLowerCase();
+
+        return nameEn.includes(lowQuery) || 
+               nameHi.includes(lowQuery) || 
+               aboutEn.includes(lowQuery) || 
+               aboutHi.includes(lowQuery);
+      });
+    }
 
     // Deduplicate Poojas in the backend API for Global View
     if (!templeId) {

@@ -1952,6 +1952,8 @@
       "error_create": "श्रेणी तयार करताना त्रुटी",
       "error_update": "श्रेणी अपडेट करताना त्रुटी",
       "error_loading": "श्रेणी लोड करताना त्रुटी",
+      "success": "यश",
+      "no_cancel": "नाही, रद्द करा",
       "back": "मागे",
       "file_hint": "JPG, PNG, GIF कमाल 5MB",
       "rec_size": "शिफारस: 800x800 px (चौरस)",
@@ -1992,8 +1994,22 @@
       "delivery_process_hint": "देवभक्ती द्वारे पवित्र वितरण",
       "confirm_status_update": "स्थिती अपडेटची पुष्टी करा",
       "status_change_warning": "तुम्हाला खात्री आहे की तुम्हाला आदेशाची स्थिती {status} मध्ये बदलायची आहे? हे ग्राहकाला सूचित करेल आणि शिपिंग प्रक्रिया सुरू करू शकते.",
+      "yes_update": "हो, अपडेट करा",
       "update_success": "स्थिती अपडेट झाली",
+      "update_success_msg": "ऑर्डरची स्थिती बदलून {status} करण्यात आली आहे",
       "update_error": "अपडेट अयशस्वी",
+      "update_error_msg": "ऑर्डरची स्थिती अपडेट करता आली नाही",
+      "item_payment_mode": "पेमेंट पद्धत",
+      "sub_order_id": "उप-ऑर्डर आयडी",
+      "marketplace_commission": "मार्केटप्लेस कमिशन (अपेक्षित)",
+      "consignment_total": "खेप एकूण",
+      "includes_marketplace_fee": "यामध्ये ₹{amount} मार्केटप्लेस फी समाविष्ट आहे",
+      "via_method": "{method} द्वारे",
+      "loading": "ऑर्डर लोड होत आहेत...",
+      "exporting": "निर्यात होत आहे...",
+      "export_msg": "आम्ही एक्सेल फाईल तयार करत असताना कृपया प्रतीक्षा करा.",
+      "export_success": "ऑर्डर यशस्वीरित्या निर्यात केल्या!",
+      "export_failed": "एक्सेल डाउनलोड करण्यात अयशस्वी.",
       "prev": "मागील",
       "next": "पुढील",
       "page_of": "पेज {current} / {total}",
@@ -2251,6 +2267,15 @@
         "alert_images": "कृपया चित्र आणि आयकॉन दोन्ही निवडा",
         "fill_details": "वैशिष्ट्य कार्डचे तपशील प्रविष्ट करा."
       }
+    }
+  },
+  "temple_dashboard": {
+    "profile": {
+      "add_slot": "स्लॉट जोडा",
+      "remove_slot": "स्लॉट काढा",
+      "divine_hours": "दिव्य कार्य वेळ",
+      "slot_label": "स्लॉट लेबल",
+      "new_slot_default": "नवीन स्लॉट"
     }
   }
 }

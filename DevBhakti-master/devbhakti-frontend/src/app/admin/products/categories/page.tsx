@@ -12,7 +12,12 @@ import {
   ToggleLeft,
   ToggleRight,
   Image as ImageIcon,
+  Download,
+  Upload,
+  Loader2
 } from "lucide-react";
+import * as XLSX from 'xlsx';
+import { createCategoryAdmin } from "@/api/adminController";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import {
@@ -151,6 +156,111 @@ export default function CategoriesManagementPage() {
     }
   };
 
+  // --- BULK MANAGEMENT ---
+  const downloadTemplate = () => {
+    const template = [
+      {
+        "Name_EN": "Spices",
+        "Name_HI": "मसाले",
+        "Name_MR": "मसाले",
+        "Is_Active": "TRUE",
+        "Image_URL": ""
+      }
+    ];
+    const ws = XLSX.utils.json_to_sheet(template);
+    const wb = XLSX.utils.book_new();
+    XLSX.utils.book_append_sheet(wb, ws, "Category Template");
+    XLSX.writeFile(wb, "Product_Category_Template.xlsx");
+  };
+
+  const handleExportExcel = () => {
+    const exportData = categories.map(c => ({
+      "ID": c.id,
+      "Name_EN": getL(c.name, "en"),
+      "Name_HI": getL(c.name, "hi"),
+      "Name_MR": getL(c.name, "mr"),
+      "Is_Active": c.isActive ? "TRUE" : "FALSE",
+      "Image": c.image || "",
+      "Products_Count": c._count?.products || 0,
+      "Created_At": c.createdAt
+    }));
+    const ws = XLSX.utils.json_to_sheet(exportData);
+    const wb = XLSX.utils.book_new();
+    XLSX.utils.book_append_sheet(wb, ws, "Categories");
+    XLSX.writeFile(wb, `Product_Categories_Export_${new Date().toISOString().split('T')[0]}.xlsx`);
+  };
+
+  const handleImportExcel = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+
+    const reader = new FileReader();
+    reader.onload = async (evt) => {
+      try {
+        const bstr = evt.target?.result;
+        const wb = XLSX.read(bstr, { type: 'binary' });
+        const wsname = wb.SheetNames[0];
+        const ws = wb.Sheets[wsname];
+        const data = XLSX.utils.sheet_to_json(ws) as any[];
+
+        if (data.length === 0) {
+          toast({ title: "Error", description: "Excel file is empty", variant: "destructive" });
+          return;
+        }
+
+        toast({ title: "Import Started", description: `Importing ${data.length} categories...`, variant: "success" });
+
+        let successCount = 0;
+        let failCount = 0;
+        const errors: string[] = [];
+
+        for (let i = 0; i < data.length; i++) {
+          const row = data[i];
+          const rowNum = i + 2;
+          try {
+            if (!row.Name_EN) throw new Error("English name is required");
+
+            const formData = new FormData();
+            formData.append("name_en", String(row.Name_EN || "").trim());
+            formData.append("name_hi", String(row.Name_HI || "").trim());
+            formData.append("name_mr", String(row.Name_MR || "").trim());
+            formData.append("isActive", String(row.Is_Active || "TRUE").toUpperCase() === "TRUE" ? "true" : "false");
+            
+            if (row.Image_URL) {
+                formData.append("image_url", row.Image_URL);
+            }
+
+            await createCategoryAdmin(formData);
+            successCount++;
+          } catch (err: any) {
+            const errorMsg = err.response?.data?.message || err.message || "Unknown error";
+            failCount++;
+            errors.push(`Row ${rowNum}: ${errorMsg}`);
+            console.error(`Import Error Row ${rowNum}:`, errorMsg);
+          }
+        }
+
+        if (failCount > 0) {
+          toast({
+            title: "Import Partially Failed",
+            description: `Success: ${successCount}, Failed: ${failCount}. Check console or fix these: ${errors.slice(0, 3).join(", ")}${errors.length > 3 ? "..." : ""}`,
+            variant: "destructive"
+          });
+        } else {
+          toast({
+            title: "Import Successful",
+            description: `Successfully imported ${successCount} categories.`
+          });
+        }
+        loadCategories();
+      } catch (error) {
+        toast({ title: "Import Failed", description: "Failed to process Excel file", variant: "destructive" });
+      }
+    };
+    reader.readAsBinaryString(file);
+    e.target.value = '';
+  };
+
   const getStatusBadge = (isActive: boolean) => {
     return (
       <div className={`inline-flex items-center justify-center gap-1.5 px-2.5 py-1 rounded-full border text-[10px] sm:text-xs font-medium whitespace-nowrap ${isActive
@@ -170,15 +280,40 @@ export default function CategoriesManagementPage() {
           <h1 className="text-2xl font-bold tracking-tight text-slate-900">{t("admin.categories.title")}</h1>
           <p className="text-muted-foreground">{t("admin.categories.desc")}</p>
         </div>
-        {hasPermission("categories.create") && (
-          <Button
-            onClick={() => router.push("/admin/products/categories/create")}
-            className="bg-[#7b4623] hover:bg-[#5d351a]"
-          >
-            <Plus className="w-4 h-4 mr-2" />
-            {t("admin.categories.add_new")}
+        <div className="flex flex-wrap items-center gap-2">
+          <Button variant="outline" onClick={downloadTemplate} className="text-xs h-9">
+            <Download className="w-4 h-4 mr-1.5" />
+            Template
           </Button>
-        )}
+
+          <div className="relative">
+            <input
+              type="file"
+              accept=".xlsx, .xls"
+              className="absolute inset-0 opacity-0 cursor-pointer"
+              onChange={handleImportExcel}
+            />
+            <Button variant="outline" className="text-xs h-9">
+              <Upload className="w-4 h-4 mr-1.5" />
+              Import
+            </Button>
+          </div>
+
+          <Button variant="outline" onClick={handleExportExcel} className="text-xs h-9">
+            <Download className="w-4 h-4 mr-1.5" />
+            Export All
+          </Button>
+
+          {hasPermission("categories.create") && (
+            <Button
+              onClick={() => router.push("/admin/products/categories/create")}
+              className="bg-[#7b4623] hover:bg-[#5d351a] h-9"
+            >
+              <Plus className="w-4 h-4 mr-2" />
+              {t("admin.categories.add_new")}
+            </Button>
+          )}
+        </div>
       </div>
 
       <Card>

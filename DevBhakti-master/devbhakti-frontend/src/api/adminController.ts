@@ -1202,3 +1202,43 @@ export const notifyFailedPayment = async (data: {
     const response = await axios.post(`${API_URL}/payments/failed`, data);
     return response.data;
 };
+export const fetchAllDonationsAdmin = async (params?: {
+    page?: number;
+    limit?: number;
+    search?: string;
+    status?: string;
+    startDate?: string;
+    endDate?: string;
+    templeId?: string;
+    sortBy?: string;
+    sortOrder?: string;
+}) => {
+    const token = getAdminToken();
+    let url = `${API_URL}/admin/donations`;
+    if (params) {
+        const query = new URLSearchParams();
+        if (params.page) query.append('page', params.page.toString());
+        if (params.limit) query.append('limit', params.limit.toString());
+        if (params.search) query.append('search', params.search);
+        if (params.status) query.append('status', params.status);
+        if (params.startDate) query.append('startDate', params.startDate);
+        if (params.endDate) query.append('endDate', params.endDate);
+        if (params.templeId && params.templeId !== 'all') query.append('templeId', params.templeId);
+        if (params.sortBy) query.append('sortBy', params.sortBy);
+        if (params.sortOrder) query.append('sortOrder', params.sortOrder);
+        const qs = query.toString();
+        if (qs) url += `?${qs}`;
+    }
+    const response = await axios.get(url, {
+        headers: { Authorization: `Bearer ${token}` }
+    });
+    return response.data;
+};
+
+export const createDonationAdmin = async (data: any) => {
+    const token = getAdminToken();
+    const response = await axios.post(`${API_URL}/admin/donations`, data, {
+        headers: { Authorization: `Bearer ${token}` }
+    });
+    return response.data;
+};

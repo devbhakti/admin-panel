@@ -19,8 +19,10 @@ import {
     Store,
     ArrowLeft,
     Loader2,
-    Package
+    Package,
+    Download
 } from "lucide-react";
+import * as XLSX from 'xlsx';
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -113,6 +115,29 @@ export default function SellerOrdersPage() {
         }
     };
 
+    const handleExportExcel = () => {
+        if (orders.length === 0) {
+            toast({ title: "No Data", description: "There are no orders to export", variant: "destructive" });
+            return;
+        }
+
+        const exportData = filteredOrders.map(o => ({
+            "Sub-Order ID": o.id,
+            "Customer": o.order?.user?.name || "N/A",
+            "Phone": o.order?.user?.phone || "N/A",
+            "Items": o.items.map((i: any) => `${i.product?.name} (x${i.quantity})`).join(", "),
+            "Total Amount": o.totalAmount,
+            "Date": format(new Date(o.createdAt), "dd MMM yyyy HH:mm"),
+            "Status": o.status,
+            "Shipping Address": `${o.order?.shippingAddress?.street}, ${o.order?.shippingAddress?.city}, ${o.order?.shippingAddress?.state} - ${o.order?.shippingAddress?.pincode}`
+        }));
+
+        const ws = XLSX.utils.json_to_sheet(exportData);
+        const wb = XLSX.utils.book_new();
+        XLSX.utils.book_append_sheet(wb, ws, "Orders");
+        XLSX.writeFile(wb, `Seller_Orders_Export_${new Date().toISOString().split('T')[0]}.xlsx`);
+    };
+
     const filteredOrders = orders.filter((o) => {
         const matchesSearch = (o.id || "").toLowerCase().includes(searchQuery.toLowerCase()) ||
             (o.order?.user?.name || "").toLowerCase().includes(searchQuery.toLowerCase());
@@ -151,7 +176,6 @@ export default function SellerOrdersPage() {
 
     return (
         <div className="space-y-8 pb-12 overflow-x-hidden">
-            {/* Page header */}
             <div className="flex flex-col md:flex-row md:items-center justify-between gap-6">
                 <div>
                     <h1 className="text-3xl font-serif font-bold text-slate-900 flex items-center gap-3">
@@ -161,6 +185,16 @@ export default function SellerOrdersPage() {
                     <p className="text-slate-500 mt-1 font-medium">
                         Track and fulfill marketplace orders for your store products.
                     </p>
+                </div>
+                <div className="flex gap-3">
+                    <Button
+                        onClick={handleExportExcel}
+                        variant="outline"
+                        className="h-11 px-6 rounded-xl border-slate-200 hover:bg-[#794A05]/5 text-[#794A05] font-bold flex items-center gap-2"
+                    >
+                        <Download className="w-4 h-4" />
+                        Export
+                    </Button>
                 </div>
             </div>
 

@@ -63,6 +63,7 @@ import { getLocalized } from "@/utils/localization";
 
 
 export function TemplesList() {
+  const [searchInput, setSearchInput] = useState("");
   const [searchQuery, setSearchQuery] = useState("");
   const [selectedCategory, setSelectedCategory] = useState("All");
   const [selectedLocation, setSelectedLocation] = useState("All");
@@ -118,6 +119,15 @@ export function TemplesList() {
     }
   };
 
+  // Debounce search query
+  React.useEffect(() => {
+    const timer = setTimeout(() => {
+      setSearchQuery(searchInput);
+    }, 500); // 500ms delay
+
+    return () => clearTimeout(timer);
+  }, [searchInput]);
+
   React.useEffect(() => {
     loadTemples();
   }, [searchQuery, selectedCategory, selectedLocation, selectedPooja, language]);
@@ -145,6 +155,10 @@ export function TemplesList() {
     const data = await fetchPublicTemples(params);
     setTemples(data || []);
     setLoading(false);
+  };
+
+  const handleManualSearch = () => {
+    setSearchQuery(searchInput);
   };
 
   const getFullImageUrl = (path: string) => {
@@ -258,11 +272,19 @@ export function TemplesList() {
                   <input
                     type="text"
                     placeholder={t('temples.search_placeholder_long')}
-                    value={searchQuery}
-                    onChange={(e) => setSearchQuery(e.target.value)}
+                    value={searchInput}
+                    onChange={(e) => setSearchInput(e.target.value)}
+                    onKeyDown={(e) => {
+                      if (e.key === 'Enter') {
+                        handleManualSearch();
+                      }
+                    }}
                     className="w-full pl-14 pr-32 py-5 text-lg outline-none bg-transparent text-zinc-800 placeholder:text-zinc-400"
                   />
-                  <Button className="absolute right-2 h-12 px-8 rounded-xl bg-primary hover:bg-primary/90 text-white hidden sm:flex font-bold">
+                  <Button 
+                    onClick={handleManualSearch}
+                    className="absolute right-2 h-12 px-8 rounded-xl bg-primary hover:bg-primary/90 text-white hidden sm:flex font-bold"
+                  >
                     {t('marketplace.explore')}
                   </Button>
                 </div>
@@ -293,6 +315,7 @@ export function TemplesList() {
                       setSelectedCategory("All");
                       setSelectedLocation("All");
                       setSelectedPooja("All");
+                      setSearchInput("");
                       setSearchQuery("");
                     }}
                     className="flex items-center gap-1.5 text-[10px] font-bold text-amber-200 hover:text-white transition-all bg-black/20 px-3 py-1.5 rounded-full border border-amber-500/30"
@@ -479,7 +502,10 @@ export function TemplesList() {
                     <Badge variant="secondary" className="bg-primary/10 text-primary border-primary/20 rounded-full px-4 py-1.5 text-xs flex items-center gap-2 group cursor-pointer hover:bg-primary/20 transition-colors">
                       <Search className="w-3 h-3 text-primary/60" />
                       "{searchQuery}"
-                      <X className="w-3 h-3 opacity-40 group-hover:opacity-100 transition-opacity" onClick={() => setSearchQuery("")} />
+                      <X className="w-3 h-3 opacity-40 group-hover:opacity-100 transition-opacity" onClick={() => {
+                        setSearchInput("");
+                        setSearchQuery("");
+                      }} />
                     </Badge>
                   )}
                   {selectedCategory !== "All" && (

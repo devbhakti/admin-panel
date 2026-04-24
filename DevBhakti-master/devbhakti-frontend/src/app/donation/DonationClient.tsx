@@ -132,8 +132,7 @@ function DonationForm() {
                 toast({
                     title: t("toasts.login_title"),
                     description: t("toasts.login_desc"),
-                    variant: "default",
-                    className: "bg-[#794A05] text-white border-none font-bold"
+                    variant: "destructive"
                 });
 
                 // Redirecting to correct /auth path instead of 404 /login
@@ -269,7 +268,7 @@ function DonationForm() {
                             setStep(5); // Success Step
                             toast({
                                 title: t("toasts.success_title"),
-                                description: t("toasts.success_desc"),
+                                description: verifyData.message || t("toasts.success_desc"),
                                 variant: "success"
                             });
                         } else {
@@ -806,9 +805,9 @@ function DonationForm() {
                                 </div>
 
                                 <div className="bg-muted/30 p-6 rounded-xl max-w-sm mx-auto mb-8 space-y-2 text-sm">
-                                    <div className="flex justify-between">
-                                        <span className="text-muted-foreground">{t("step5.txn_id")}</span>
-                                        <span className="font-mono">{transactionId || `TXN${Math.floor(Math.random() * 10000000)}`}</span>
+                                    <div className="flex justify-between items-start gap-4">
+                                        <span className="text-muted-foreground shrink-0">{t("step5.txn_id")}</span>
+                                        <span className="font-mono break-all text-right">{transactionId || `TXN${Math.floor(Math.random() * 10000000)}`}</span>
                                     </div>
                                     <div className="flex justify-between">
                                         <span className="text-muted-foreground">{t("step5.date")}</span>
