@@ -25,13 +25,18 @@ import {
     Sparkles,
     FileText,
     MapPin,
-    Calendar,
+    Calendar as CalendarIcon,
     ShieldCheck
 } from "lucide-react";
 import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Badge } from "@/components/ui/badge";
+import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
+import { Calendar } from "@/components/ui/calendar";
+import { DateRange } from "react-day-picker";
+import { format } from "date-fns";
+import { cn } from "@/lib/utils";
 import { useToast } from "@/hooks/use-toast";
 import {
     Pagination,
@@ -86,6 +91,7 @@ export default function DonationClient() {
     
     const [temples, setTemples] = useState<any[]>([]);
     const [selectedTempleId, setSelectedTempleId] = useState("all");
+    const [dateRange, setDateRange] = useState<DateRange | undefined>(undefined);
     const [isImporting, setIsImporting] = useState(false);
     const [importProgress, setImportProgress] = useState({ total: 0, current: 0, success: 0, failed: 0 });
     const { toast } = useToast();
@@ -158,6 +164,19 @@ export default function DonationClient() {
     useEffect(() => {
         fetchDonations();
     }, [debouncedSearch, statusFilter, selectedTempleId, currentPage, startDate, endDate, sortBy, sortOrder]);
+
+    useEffect(() => {
+        if (dateRange?.from) {
+            setStartDate(format(dateRange.from, "yyyy-MM-dd"));
+        } else {
+            setStartDate("");
+        }
+        if (dateRange?.to) {
+            setEndDate(format(dateRange.to, "yyyy-MM-dd"));
+        } else {
+            setEndDate("");
+        }
+    }, [dateRange]);
 
     useEffect(() => {
         fetchStats();
@@ -389,15 +408,15 @@ export default function DonationClient() {
                     </p>
                 </div>
                 <div className="flex flex-wrap items-center gap-2 sm:gap-3">
-                    <Button
+                    {/* <Button
                         onClick={downloadTemplate}
                         variant="outline"
                         className="w-full sm:w-auto flex-shrink-0 border-primary/20 hover:bg-primary/5"
                     >
                         <FileText className="w-4 h-4 mr-2" />
                         Template
-                    </Button>
-                    <div className="relative w-full sm:w-auto">
+                    </Button> */}
+                    {/* <div className="relative w-full sm:w-auto">
                         <input
                             type="file"
                             accept=".xlsx, .xls"
@@ -419,7 +438,7 @@ export default function DonationClient() {
                             )}
                             {isImporting ? "Importing..." : "Import Excel"}
                         </Button>
-                    </div>
+                    </div> */}
                     <Button
                         onClick={handleDownloadExcel}
                         variant="sacred"
@@ -537,24 +556,53 @@ export default function DonationClient() {
                             </select>
                         </div>
 
-                        <div className="flex items-center gap-2 bg-muted/20 p-1.5 rounded-xl border border-transparent hover:border-border transition-all min-w-0">
-                            <Calendar className="w-4 h-4 text-muted-foreground ml-2 flex-shrink-0" />
-                            <div className="flex items-center gap-1">
-                                <Input
-                                    type="date"
-                                    className="h-7 sm:h-8 bg-transparent border-none text-xs focus-visible:ring-0 p-0 w-20 sm:w-24"
-                                    value={startDate}
-                                    onChange={(e) => setStartDate(e.target.value)}
+                        <Popover>
+                            <PopoverTrigger asChild>
+                                <Button
+                                    variant="outline"
+                                    className={cn(
+                                        "h-10 sm:h-11 justify-start text-left font-normal bg-muted/20 border-none rounded-xl w-full lg:w-64",
+                                        !dateRange && "text-muted-foreground"
+                                    )}
+                                >
+                                    <CalendarIcon className="mr-2 h-4 w-4" />
+                                    {dateRange?.from ? (
+                                        dateRange.to ? (
+                                            <>
+                                                {format(dateRange.from, "LLL dd, y")} -{" "}
+                                                {format(dateRange.to, "LLL dd, y")}
+                                            </>
+                                        ) : (
+                                            format(dateRange.from, "LLL dd, y")
+                                        )
+                                    ) : (
+                                        <span>Pick a date range</span>
+                                    )}
+                                </Button>
+                            </PopoverTrigger>
+                            <PopoverContent className="w-auto p-0" align="end">
+                                <Calendar
+                                    initialFocus
+                                    mode="range"
+                                    defaultMonth={dateRange?.from}
+                                    selected={dateRange}
+                                    onSelect={setDateRange}
+                                    numberOfMonths={2}
                                 />
-                                <span className="text-muted-foreground font-bold flex-shrink-0">-</span>
-                                <Input
-                                    type="date"
-                                    className="h-7 sm:h-8 bg-transparent border-none text-xs focus-visible:ring-0 p-0 w-20 sm:w-24"
-                                    value={endDate}
-                                    onChange={(e) => setEndDate(e.target.value)}
-                                />
-                            </div>
-                        </div>
+                                {dateRange && (
+                                    <div className="p-3 border-t flex justify-end">
+                                        <Button 
+                                            variant="ghost" 
+                                            size="sm" 
+                                            className="text-xs"
+                                            onClick={() => setDateRange(undefined)}
+                                        >
+                                            Clear
+                                        </Button>
+                                    </div>
+                                )}
+                            </PopoverContent>
+                        </Popover>
 
                         <div className="flex items-center gap-2 bg-muted/20 p-1.5 rounded-xl border border-transparent hover:border-border transition-all min-w-0">
                             <Clock className="w-4 h-4 text-muted-foreground ml-2 flex-shrink-0" />

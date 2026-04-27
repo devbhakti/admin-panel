@@ -25,6 +25,7 @@ import {
     X,
     Play,
     Phone,
+    Info,
 } from "lucide-react";
 import {
     Dialog,
@@ -89,7 +90,7 @@ export default function TempleDetail() {
             getLocalizedArray(p, 'benefits', language)?.some((b: string) => eventNameLower.includes(b.toLowerCase()))
         );
         return filtered.length > 0 ? filtered.slice(0, 3) : temple.poojas.slice(0, 3);
-    }, [selectedEvent, temple]);
+    }, [selectedEvent, temple, language]);
 
     useEffect(() => {
         const savedUser = localStorage.getItem("user");
@@ -399,9 +400,15 @@ export default function TempleDetail() {
                                     <CardContent className="p-6 space-y-6">
                                         <div>
                                             <h3 className="text-xl font-display font-semibold mb-3">{t('temple_detail.description')}</h3>
-                                            <p className="text-muted-foreground leading-relaxed">
-                                                {temple.description}
-                                            </p>
+                                            <div className="flex items-center gap-2 text-[#794A05] bg-[#794A05]/5 px-3 py-1.5 rounded-full w-fit mb-4">
+                                                <Info className="h-3.5 w-3.5" />
+                                                <span className="text-[10px] font-black uppercase tracking-widest">Divine History</span>
+                                            </div>
+                                            <div className="prose prose-orange max-w-none">
+                                                <p className="text-foreground/80 leading-relaxed text-lg font-medium italic">
+                                                    {getLocalized(temple, 'description', language)}
+                                                </p>
+                                            </div>
                                         </div>
                                         {temple.history && (
                                             <div>
@@ -920,7 +927,7 @@ export default function TempleDetail() {
                         <div className="relative">
                             {/* Header Gradient */}
                             <div className="h-32 bg-gradient-to-br from-primary via-[#a05a2c] to-[#7c4624] p-6 flex flex-col justify-end">
-                                <h2 className="text-2xl font-black text-white leading-tight">{selectedEvent.name}</h2>
+                                <h2 className="text-2xl font-black text-white leading-tight">{getLocalized(selectedEvent, 'name', language)}</h2>
                                 <div className="flex items-center gap-2 text-white/80 text-sm mt-1">
                                     <Calendar className="h-4 w-4" />
                                     <span className="font-medium">{selectedEvent.date}</span>

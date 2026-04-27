@@ -41,6 +41,7 @@ import {
     PopoverTrigger,
 } from "@/components/ui/popover";
 import { format } from "date-fns";
+import { DateRange } from "react-day-picker";
 import { cn } from "@/lib/utils";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -106,7 +107,7 @@ function TemplesContent() {
     const [searchTerm, setSearchTerm] = useState("");
     const [selectedTemple, setSelectedTemple] = useState<any>(null);
     const [selectedTempleFilter, setSelectedTempleFilter] = useState<string>("all");
-    const [date, setDate] = useState<Date | undefined>(undefined);
+    const [date, setDate] = useState<DateRange | undefined>(undefined);
     const [updateRequestsCount, setUpdateRequestsCount] = useState(0);
     const { toast } = useToast();
     const { hasPermission } = useAdminAuth();
@@ -531,7 +532,8 @@ function TemplesContent() {
                 fetchAllTemplesAdmin({
                     page: 1, limit: 1, search: debouncedSearch, isVerified: true,
                     templeId: idParam || (selectedTempleFilter === "all" ? undefined : selectedTempleFilter),
-                    date: date ? date.toISOString() : undefined,
+                    startDate: date?.from ? date.from.toISOString() : undefined,
+                    endDate: date?.to ? date.to.toISOString() : undefined,
                     category: selectedCategory === "all" ? undefined : selectedCategory,
                     transactionRange: transactionRange === "all" ? undefined : transactionRange,
                     location: selectedLocation === "all" ? undefined : selectedLocation,
@@ -540,7 +542,8 @@ function TemplesContent() {
                 fetchAllTemplesAdmin({
                     page: 1, limit: 1, search: debouncedSearch, isVerified: false,
                     templeId: idParam || (selectedTempleFilter === "all" ? undefined : selectedTempleFilter),
-                    date: date ? date.toISOString() : undefined,
+                    startDate: date?.from ? date.from.toISOString() : undefined,
+                    endDate: date?.to ? date.to.toISOString() : undefined,
                     category: selectedCategory === "all" ? undefined : selectedCategory,
                     transactionRange: transactionRange === "all" ? undefined : transactionRange,
                     location: selectedLocation === "all" ? undefined : selectedLocation,
@@ -557,7 +560,8 @@ function TemplesContent() {
                 search: debouncedSearch,
                 isVerified: activeTab === "verified",
                 templeId: idParam || (selectedTempleFilter === "all" ? undefined : selectedTempleFilter),
-                date: date ? date.toISOString() : undefined,
+                startDate: date?.from ? date.from.toISOString() : undefined,
+                endDate: date?.to ? date.to.toISOString() : undefined,
                 category: selectedCategory === "all" ? undefined : selectedCategory,
                 transactionRange: transactionRange === "all" ? undefined : transactionRange,
                 location: selectedLocation === "all" ? undefined : selectedLocation,
@@ -864,24 +868,24 @@ function TemplesContent() {
             </div>
 
             <div className="flex flex-col gap-4">
-                <div className="relative flex-1 w-full">
-                    <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
+                <div className="relative flex-1 w-full max-w-2xl group">
+                    <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-primary/40 group-focus-within:text-primary transition-colors" />
                     <Input
-                        placeholder="Search by owner, temple, or location..."
-                        className="pl-10 h-10 w-full"
+                        placeholder="Search by owner, temple name or ID..."
+                        className="pl-10 h-10 w-full bg-white/50 border-primary/10 focus:border-primary/30 focus:ring-primary/10 rounded-xl transition-all shadow-sm"
                         value={searchTerm}
                         onChange={(e) => setSearchTerm(e.target.value)}
                     />
                 </div>
 
-                <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-6 gap-2">
+                <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-5 gap-3">
                     {/* Divine Category Filter */}
                     <div className="w-full">
                         <Select value={selectedCategory} onValueChange={setSelectedCategory}>
-                            <SelectTrigger className="h-10 w-full">
+                            <SelectTrigger className="h-10 w-full bg-white/50 border-primary/10 rounded-xl">
                                 <SelectValue placeholder="Divine Category" />
                             </SelectTrigger>
-                            <SelectContent>
+                            <SelectContent className="rounded-xl">
                                 <SelectItem value="all">All Categories</SelectItem>
                                 {dynamicCategories.map(cat => (
                                     <SelectItem key={cat} value={cat}>{cat}</SelectItem>
@@ -893,10 +897,10 @@ function TemplesContent() {
                     {/* Sanctum Location Filter */}
                     <div className="w-full">
                         <Select value={selectedLocation} onValueChange={setSelectedLocation}>
-                            <SelectTrigger className="h-10 w-full">
+                            <SelectTrigger className="h-10 w-full bg-white/50 border-primary/10 rounded-xl">
                                 <SelectValue placeholder="Sanctum Location" />
                             </SelectTrigger>
-                            <SelectContent>
+                            <SelectContent className="rounded-xl">
                                 <SelectItem value="all">All Locations</SelectItem>
                                 {dynamicLocations.map(loc => (
                                     <SelectItem key={loc} value={loc}>{loc}</SelectItem>
@@ -908,10 +912,10 @@ function TemplesContent() {
                     {/* Ritual Type Filter */}
                     <div className="w-full">
                         <Select value={selectedRitual} onValueChange={setSelectedRitual}>
-                            <SelectTrigger className="h-10 w-full">
+                            <SelectTrigger className="h-10 w-full bg-white/50 border-primary/10 rounded-xl">
                                 <SelectValue placeholder="Ritual Type" />
                             </SelectTrigger>
-                            <SelectContent>
+                            <SelectContent className="rounded-xl">
                                 <SelectItem value="all">All Poojas</SelectItem>
                                 {ritualTypes.map(ritual => (
                                     <SelectItem key={ritual.id} value={parseLocalizedValue(ritual.name)}>
@@ -925,40 +929,52 @@ function TemplesContent() {
                     {/* Transactions Filter - KEPT */}
                     <div className="w-full">
                         <Select value={transactionRange} onValueChange={setTransactionRange}>
-                            <SelectTrigger className="h-10 w-full">
+                            <SelectTrigger className="h-10 w-full bg-white/50 border-primary/10 rounded-xl">
                                 <SelectValue placeholder="Transactions" />
                             </SelectTrigger>
-                            <SelectContent>
+                            <SelectContent className="rounded-xl">
                                 <SelectItem value="all">All Trans.</SelectItem>
-                                <SelectItem value="less_100">Less than 100 PM</SelectItem>
-                                <SelectItem value="101_250">101 to 250 PM</SelectItem>
-                                <SelectItem value="251_500">251 to 500 PM</SelectItem>
-                                <SelectItem value="501_1000">501 to 1000 PM</SelectItem>
-                                <SelectItem value="more_1000">1000+ PM</SelectItem>
+                                <SelectItem value="0_5">0 to 5</SelectItem>
+                                <SelectItem value="5_10">5 to 10</SelectItem>
+                                <SelectItem value="10_25">10 to 25</SelectItem>
                             </SelectContent>
                         </Select>
                     </div>
 
-                    <div className="flex flex-col sm:flex-row gap-2 sm:col-span-2 lg:col-span-2 xl:col-span-1">
+                    <div className="flex items-center gap-2 w-full lg:col-span-3 xl:col-span-1">
                         <Popover>
                             <PopoverTrigger asChild>
                                 <Button
                                     variant="outline"
                                     className={cn(
-                                        "w-full sm:w-[190px] h-10 justify-start text-left font-normal",
+                                        "flex-1 h-10 justify-start text-left font-normal border-primary/10 bg-white/50 hover:bg-white hover:border-primary/30 rounded-xl transition-all shadow-sm",
                                         !date && "text-muted-foreground"
                                     )}
                                 >
-                                    <CalendarIcon className=" h-4 w-4" />
-                                    {date ? format(date, "PPP") : <span>Filter by Created Date</span>}
+                                    <CalendarIcon className="mr-2 h-4 w-4 text-primary/60" />
+                                    <span className="truncate">
+                                        {date?.from ? (
+                                            date.to ? (
+                                                <>
+                                                    {format(date.from, "LLL dd, y")} - {format(date.to, "LLL dd, y")}
+                                                </>
+                                            ) : (
+                                                format(date.from, "LLL dd, y")
+                                            )
+                                        ) : (
+                                            "Filter by Date"
+                                        )}
+                                    </span>
                                 </Button>
                             </PopoverTrigger>
-                            <PopoverContent className="w-auto p-0" align="end">
+                            <PopoverContent className="w-auto p-0 rounded-2xl shadow-xl border-primary/5" align="end">
                                 <Calendar
-                                    mode="single"
+                                    initialFocus
+                                    mode="range"
+                                    defaultMonth={date?.from}
                                     selected={date}
                                     onSelect={setDate}
-                                    initialFocus
+                                    numberOfMonths={2}
                                 />
                             </PopoverContent>
                         </Popover>

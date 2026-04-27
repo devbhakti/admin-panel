@@ -42,6 +42,15 @@ export const getAllOrdersAdmin = async (req: Request, res: Response) => {
       };
     }
 
+    const templeId = req.query.templeId as string;
+    if (templeId && templeId !== "ALL") {
+      where.subOrders = {
+        some: {
+          templeId: templeId === "general" ? null : templeId
+        }
+      };
+    }
+
     const [orders, totalRecords] = await Promise.all([
       prisma.order.findMany({
         where,

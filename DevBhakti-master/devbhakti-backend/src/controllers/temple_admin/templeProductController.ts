@@ -7,7 +7,7 @@ export const getMyProducts = async (req: Request, res: Response) => {
   try {
     const templeId = (req as any).owner.ownerId;
 
-    const { page = 1, limit = 10, search, status } = req.query;
+    const { page = 1, limit = 10, search, status, categoryId, stockStatus } = req.query;
     const skip = (parseInt(String(page), 10) - 1) * parseInt(String(limit), 10);
 
     const where: any = { templeId };
@@ -21,6 +21,20 @@ export const getMyProducts = async (req: Request, res: Response) => {
 
     if (status) {
       where.status = status as string;
+    }
+
+    if (categoryId && categoryId !== 'all') {
+      where.categoryId = categoryId as string;
+    }
+
+    if (stockStatus === 'out_of_stock') {
+      where.variants = {
+        every: { stock: 0 }
+      };
+    } else if (stockStatus === 'in_stock') {
+      where.variants = {
+        some: { stock: { gt: 0 } }
+      };
     }
 
     const [products, total] = await Promise.all([

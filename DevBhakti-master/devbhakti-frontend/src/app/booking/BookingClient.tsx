@@ -93,6 +93,7 @@ function BookingForm() {
   const [unavailableDates, setUnavailableDates] = useState<string[]>([]);
   const [isCalendarOpen, setIsCalendarOpen] = useState(false);
   const [bookingId, setBookingId] = useState("");
+  const requestedPoojaParam = searchParams.get("pooja");
 
 
   useEffect(() => {
@@ -160,13 +161,17 @@ function BookingForm() {
     const loadData = async () => {
       try {
         const poojaIdInUrl = searchParams.get("pooja");
-        const [templesData, poojasData] = await Promise.all([
-          fetchPublicTemples({ 
-            ...(poojaIdInUrl ? { poojaId: poojaIdInUrl } : {}),
-            lang: language 
-          }),
-          fetchPublicPoojas({ lang: language })
-        ]);
+        const poojasData = await fetchPublicPoojas({ lang: language });
+        const requestedPooja = poojaIdInUrl
+          ? poojasData.find((p: any) => p.id === poojaIdInUrl || p.slug === poojaIdInUrl)
+          : null;
+        const poojaFamilyId = requestedPooja?.isMaster
+          ? requestedPooja.id
+          : requestedPooja?.masterPoojaId || poojaIdInUrl || undefined;
+        const templesData = await fetchPublicTemples({
+          ...(poojaFamilyId ? { poojaId: poojaFamilyId } : {}),
+          lang: language
+        });
         setAllTemples(templesData);
         setAllPoojas(poojasData);
 
@@ -238,17 +243,25 @@ function BookingForm() {
 
   // ID Resolution: When temple changes or poojas are loaded, sync the selected pooja with its temple-specific version
   useEffect(() => {
-    if (!selectedTemple || !selectedPooja) return;
-
     const currentPoojaData = allPoojas.find(p => p.id === selectedPooja || p.slug === selectedPooja);
     if (!currentPoojaData) return;
-
-    // If it's already a temple-specific pooja for the CORRECT temple, do nothing
-    if (currentPoojaData.templeId === selectedTemple) return;
 
     // Resolve master ID (it's either the pooja itself if it'sMaster, or its masterPoojaId)
     const masterId = currentPoojaData.isMaster ? currentPoojaData.id : currentPoojaData.masterPoojaId;
     if (!masterId) return;
+
+    if (!selectedTemple) {
+      if (!currentPoojaData.isMaster) {
+        const masterPooja = allPoojas.find(p => p.id === masterId);
+        if (masterPooja && masterPooja.id !== selectedPooja) {
+          setSelectedPooja(masterPooja.id);
+        }
+      }
+      return;
+    }
+
+    // If it's already a temple-specific pooja for the CORRECT temple, do nothing
+    if (currentPoojaData.templeId === selectedTemple) return;
 
     // Look for this master pooja's copy in the currently selected temple
     const templeSpecificPooja = allPoojas.find(p => p.templeId === selectedTemple && p.masterPoojaId === masterId);
@@ -257,13 +270,91 @@ function BookingForm() {
       console.log(`Switching selection to temple-specific pooja: ${templeSpecificPooja.id}`);
       setSelectedPooja(templeSpecificPooja.id);
     }
-  }, [selectedTemple, allPoojas]);
+  }, [selectedTemple, selectedPooja, allPoojas]);
 
   const availablePoojas = selectedTemple
     ? allPoojas.filter(p => p.templeId === selectedTemple)
     : allPoojas.filter(p => p.isMaster);
 
   const selectedPoojaData = allPoojas.find(p => p.id === selectedPooja || p.slug === selectedPooja);
+  const poojaFamilyId = selectedPoojaData?.isMaster
+    ? selectedPoojaData.id
+    : selectedPoojaData?.masterPoojaId || null;
+  const platformPoojaOption = React.useMemo(() => {
+    if (!poojaFamilyId) return null;
+    return allPoojas.find((p: any) => p.id === poojaFamilyId && p.isMaster) || null;
+  }, [allPoojas, poojaFamilyId]);
+  const sourceOptions = React.useMemo(() => {
+    if (!requestedPoojaParam || !selectedPoojaData) return [];
+
+    const options: Array<{
+      key: string;
+      label: string;
+      description: string;
+      templeId: string;
+      poojaId: string | null;
+      isPlatform: boolean;
+    }> = [];
+
+    if (platformPoojaOption) {
+      options.push({
+        key: "platform",
+        label: "DevBhakti (Platform Pooja)",
+        description: "This pooja is managed directly by the DevBhakti platform",
+        templeId: "",
+        poojaId: platformPoojaOption.id,
+        isPlatform: true,
+      });
+    }
+
+    allTemples.forEach((temple: any) => {
+      const templeSpecificPooja = allPoojas.find((p: any) => {
+        if (p.templeId !== temple.id) return false;
+        if (poojaFamilyId) {
+          return p.masterPoojaId === poojaFamilyId || p.id === poojaFamilyId;
+        }
+        return p.id === selectedPoojaData.id;
+      });
+
+      options.push({
+        key: temple.id,
+        label: parseLocalizedValue(temple.name, language),
+        description: parseLocalizedValue(temple.location || temple.fullAddress || temple.city || temple.category, language),
+        templeId: temple.id,
+        poojaId: templeSpecificPooja?.id || null,
+        isPlatform: false,
+      });
+    });
+
+    return options;
+  }, [allPoojas, allTemples, language, platformPoojaOption, poojaFamilyId, requestedPoojaParam, selectedPoojaData]);
+  const selectedSourceKey = selectedTemple || (selectedPoojaData?.isMaster ? "platform" : "");
+
+  // If selected pooja is a Master Pooja, show DevBhakti as the platform instead of temple dropdown
+  const isMasterPoojaSelected = selectedPoojaData?.isMaster === true;
+
+  const handleSourceSelect = (option: {
+    templeId: string;
+    poojaId: string | null;
+    isPlatform: boolean;
+  }) => {
+    setSelectedDate("");
+    setSelectedPackage("");
+    setAvailabilityStatus(null);
+
+    if (option.isPlatform) {
+      setSelectedTemple("");
+      if (option.poojaId && option.poojaId !== selectedPooja) {
+        setSelectedPooja(option.poojaId);
+      }
+      return;
+    }
+
+    setSelectedTemple(option.templeId);
+    if (option.poojaId && option.poojaId !== selectedPooja) {
+      setSelectedPooja(option.poojaId);
+    }
+  };
 
   // Extract packages from pooja data if available, or use defaults
   const poojaPackages = selectedPoojaData?.packages ?
@@ -601,18 +692,52 @@ function BookingForm() {
                   </CardTitle>
                 </CardHeader>
                 <CardContent>
-                  <Select value={selectedTemple} onValueChange={setSelectedTemple}>
-                    <SelectTrigger className="w-full">
-                      <SelectValue placeholder={t("booking_client.choose_temple")} />
-                    </SelectTrigger>
-                    <SelectContent>
-                      {allTemples.map((temple) => (
-                        <SelectItem key={temple.id} value={temple.id}>
-                          {temple.name} - {temple.location}
-                        </SelectItem>
-                      ))}
-                    </SelectContent>
-                  </Select>
+                  {requestedPoojaParam && sourceOptions.length > 0 ? (
+                    <Select
+                      value={selectedSourceKey}
+                      onValueChange={(value) => {
+                        const option = sourceOptions.find((item) => item.key === value);
+                        if (option) {
+                          handleSourceSelect(option);
+                        }
+                      }}
+                    >
+                      <SelectTrigger className="w-full">
+                        <SelectValue placeholder={t("booking_client.choose_temple")} />
+                      </SelectTrigger>
+                      <SelectContent>
+                        {sourceOptions.map((option) => (
+                          <SelectItem key={option.key} value={option.key}>
+                            {option.label}
+                          </SelectItem>
+                        ))}
+                      </SelectContent>
+                    </Select>
+                  ) : isMasterPoojaSelected ? (
+                    // Master Pooja — show only DevBhakti as the platform option
+                    <div className="flex items-center gap-3 p-3 rounded-lg border border-primary bg-primary/5">
+                      <div className="h-9 w-9 rounded-full bg-primary flex items-center justify-center shrink-0">
+                        <span className="text-white text-xs font-bold">DB</span>
+                      </div>
+                      <div>
+                        <p className="font-semibold text-primary text-sm">DevBhakti (Platform Pooja)</p>
+                        <p className="text-xs text-muted-foreground">This pooja is managed directly by the DevBhakti platform</p>
+                      </div>
+                    </div>
+                  ) : (
+                    <Select value={selectedTemple} onValueChange={setSelectedTemple}>
+                      <SelectTrigger className="w-full">
+                        <SelectValue placeholder={t("booking_client.choose_temple")} />
+                      </SelectTrigger>
+                      <SelectContent>
+                        {allTemples.map((temple) => (
+                          <SelectItem key={temple.id} value={temple.id}>
+                            {temple.name} - {temple.location}
+                          </SelectItem>
+                        ))}
+                      </SelectContent>
+                    </Select>
+                  )}
                 </CardContent>
               </Card>
 
@@ -1119,12 +1244,12 @@ function BookingForm() {
                     <span className="text-muted-foreground">{t("booking_client.summary_package")}</span>
                     <span className="font-medium">{selectedPackageData?.name}</span>
                   </div>
-                  <div className="flex justify-between py-2 border-b border-border">
+                  {/* <div className="flex justify-between py-2 border-b border-border">
                     <span className="text-muted-foreground">{t("booking_client.summary_service_price")}</span>
                     <span className="font-medium flex items-center">
                       <IndianRupee className="h-4 w-4" />{selectedPoojaData?.price}
                     </span>
-                  </div>
+                  </div> */}
                   <div className="flex justify-between py-2 border-b border-border">
                     <span className="text-muted-foreground">{t("booking_client.summary_package_price")}</span>
                     <span className="font-medium flex items-center">
@@ -1132,7 +1257,7 @@ function BookingForm() {
                     </span>
                   </div>
                   <div className="flex justify-between py-2 border-b border-border text-primary font-semibold">
-                    <span className="flex items-center gap-1">{t("booking_client.summary_platform_fee")} <Badge variant="outline" className="text-[10px] h-4 py-0">{t("booking_client.slab_based")}</Badge></span>
+                    <span className="flex items-center gap-1">{t("booking_client.summary_platform_fee")} </span>
                     <span className="flex items-center">
                       + <IndianRupee className="h-4 w-4" />{platformFee}
                     </span>
@@ -1146,7 +1271,7 @@ function BookingForm() {
                 </CardContent>
               </Card>
 
-              <Card className="border-border/50">
+              {/* <Card className="border-border/50">
                 <CardHeader>
                   <CardTitle>{t("booking_client.payment_method")}</CardTitle>
                 </CardHeader>
@@ -1162,7 +1287,7 @@ function BookingForm() {
                     </div>
                   </div>
                 </CardContent>
-              </Card>
+              </Card> */}
             </div>
           )}
 
@@ -1210,6 +1335,12 @@ function BookingForm() {
                       <span className="font-medium">{formData.nativePlace}</span>
                     </div>
                   )}
+                    <div className="flex justify-between py-2 border-b border-border">
+                    <span className="text-muted-foreground">{t("booking_client.summary_package_price")}</span>
+                    <span className="font-medium flex items-center">
+                      <IndianRupee className="h-4 w-4" />{basePrice}
+                    </span>
+                  </div>
                   <div className="flex justify-between">
                     <span className="text-muted-foreground">{t("booking_client.confirmed_platform_fee")}</span>
                     <span className="font-medium text-primary">₹{platformFee}</span>

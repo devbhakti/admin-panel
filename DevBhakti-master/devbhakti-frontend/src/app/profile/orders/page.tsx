@@ -279,10 +279,10 @@ export default function MyOrdersPage() {
                                                                         <p className="text-[10px] text-slate-400 font-bold uppercase tracking-tighter">{t("orders.packages")}</p>
                                                                         <p className="text-sm font-bold text-slate-700">{order.subOrders.length} {t("orders.parcel")}</p>
                                                                     </div>
-                                                                    <div className="flex justify-between items-center pt-2 border-t border-orange-200/30">
+                                                                    {/* <div className="flex justify-between items-center pt-2 border-t border-orange-200/30">
                                                                         <p className="text-[10px] text-slate-400 font-bold uppercase tracking-tighter">{t("orders.support_pin")}</p>
                                                                         <p className="text-sm font-bold text-[#794A05]">#SPD-{order.id.slice(-4).toUpperCase()}</p>
-                                                                    </div>
+                                                                    </div> */}
                                                                 </div>
                                                             </div>
                                                         </div>

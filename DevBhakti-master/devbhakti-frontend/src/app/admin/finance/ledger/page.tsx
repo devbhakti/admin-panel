@@ -281,7 +281,7 @@ function LedgerContent() {
                     )}
                     <Button
                         onClick={handleExportExcel}
-                        className="bg-primary hover:bg-primary text-white rounded-xl flex items-center gap-2"
+                        className="bg-[#8B5E3C] hover:bg-[#7A5234] text-white rounded-xl flex items-center gap-2"
                     >
                         <Download className="w-4 h-4" />
                         Export to Excel
@@ -304,12 +304,12 @@ function LedgerContent() {
                 </div>
                 <div className="grid grid-cols-1 md:grid-cols-4 gap-4 mb-4">
                     {[
-                        { label: "Total Sales (GMV)", count: platformSummary?.totalPlatformGross || 0, info: "Total Gross Merchandise Value — sum of all payments processed across Poojas, Products, and Donations.", highlight: true },
+                        { label: "Total Sales (GMV)", count: platformSummary?.totalPlatformGross || 0, info: "Total Gross Merchandise Value — sum of all payments processed across Poojas, Products, and Donations.", highlight: true, customBg: "bg-[#8B5E3C]" },
                         { label: "Pooja & Seva Bookings", count: platformSummary?.totalPoojaBookings || 0, info: "Total revenue from Pooja and Seva ritual bookings made by devotees.", icon: <Zap className="w-4 h-4 text-purple-600" />, bg: "bg-purple-50" },
                         { label: "Product Sales", count: platformSummary?.totalProductSales || 0, info: "Total revenue generated from marketplace product orders.", icon: <ShoppingBag className="w-4 h-4 text-blue-600" />, bg: "bg-blue-50" },
                         { label: "Sacred Donations", count: platformSummary?.totalDonations || 0, info: "Total donation contributions received by temples from devotees.", icon: <Heart className="w-4 h-4 text-rose-600" />, bg: "bg-rose-50" },
                     ].map((stat, i) => (
-                        <Card key={i} className={cn("border-none shadow-xl rounded-[1.5rem] overflow-hidden relative group", stat.highlight ? "bg-slate-900 text-white" : "bg-white text-slate-900 border border-slate-100")}>
+                        <Card key={i} className={cn("border-none shadow-xl rounded-[1.5rem] overflow-hidden relative group", stat.customBg || (stat.highlight ? "bg-slate-900" : "bg-white"), stat.customBg ? "text-white" : (stat.highlight ? "text-white" : "text-slate-900"), !stat.customBg && !stat.highlight && "border border-slate-100")}>
                             <CardContent className="p-6">
                                 <div className="flex items-center justify-between mb-2">
                                     <div className="flex items-center gap-1.5">

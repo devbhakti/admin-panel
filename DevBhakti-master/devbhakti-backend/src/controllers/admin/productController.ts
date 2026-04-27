@@ -218,7 +218,7 @@ export const createProduct = async (req: Request, res: Response) => {
 // Get All Products (Admin)
 export const getAllProducts = async (req: Request, res: Response) => {
   try {
-    const { page = 1, limit = 10, search, category, status, templeId, date, productId } = req.query;
+    const { page = 1, limit = 10, search, category, categoryId, status, templeId, date, productId } = req.query;
 
     const skip = search ? 0 : (Number(page) - 1) * Number(limit);
     const take = search ? 100 : Number(limit);
@@ -241,7 +241,11 @@ export const getAllProducts = async (req: Request, res: Response) => {
       });
     }
 
-    if (category) {
+    // Filter by categoryId (from the Category dropdown — uses DB category record ID)
+    if (categoryId) {
+      where.AND.push({ categoryId: categoryId as string });
+    } else if (category) {
+      // Legacy text-based category filter
       where.AND.push({ category });
     }
 

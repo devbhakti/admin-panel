@@ -97,11 +97,11 @@ export const GlobalSearch = ({ isOpen, onClose }: { isOpen: boolean; onClose: ()
         let minDistance = Infinity;
         let bestMatch = "";
 
-        // Common terms across all categories
+        // Common terms across all categories for suggestions
         const commonTerms = [
             "Jyotirlinga", "Rudra Abhishek", "Maha Shivratri", "Ganesh Seva", 
             "Rudraksha", "Shakti Peeth", "Varanasi", "Kedarnath", "Idols", "Incense",
-            "Bhagavad Gita", "Panchamrut", "Ayodhya", "Rishikesh"
+            "Bhagavad Gita", "Panchamrut", "Ayodhya", "Rishikesh", "Saligram", "Tulsi Mala"
         ];
 
         commonTerms.forEach(term => {
@@ -134,6 +134,13 @@ export const GlobalSearch = ({ isOpen, onClose }: { isOpen: boolean; onClose: ()
             default: return Search;
         }
     };
+
+    const popularSearches = [
+        { title: "Maha Mrityunjaya", category: "Pooja" },
+        { title: "Kashi Vishwanath", category: "Temple" },
+        { title: "Ganesh Idol", category: "Product" },
+        { title: "Rudra Abhishek", category: "Pooja" }
+    ];
 
     return (
         <AnimatePresence>
@@ -189,10 +196,17 @@ export const GlobalSearch = ({ isOpen, onClose }: { isOpen: boolean; onClose: ()
                         <div className="max-h-[60vh] overflow-y-auto p-3 premium-scrollbar pattern-sacred">
                             {results.length > 0 ? (
                                 <div className="space-y-2">
-                                    <div className="px-4 py-2 text-[12px] font-bold text-primary/70 uppercase tracking-[0.2em] font-sans">
-                                        {query.trim() 
-                                            ? t('landing.landing_search.results')
-                                            : t('landing.landing_search.suggestions')}
+                                    <div className="px-4 py-2 text-[12px] font-bold text-primary/70 uppercase tracking-[0.2em] font-sans flex justify-between items-center">
+                                        <span>
+                                            {query.trim() 
+                                                ? t('landing.landing_search.results')
+                                                : t('landing.landing_search.suggestions')}
+                                        </span>
+                                        {query.trim() && (
+                                            <span className="text-[10px] font-medium normal-case text-muted-foreground opacity-60">
+                                                Showing {results.length} results
+                                            </span>
+                                        )}
                                     </div>
                                     {results.map((item, idx) => {
                                         const Icon = getIcon(item.category);
@@ -260,32 +274,56 @@ export const GlobalSearch = ({ isOpen, onClose }: { isOpen: boolean; onClose: ()
                                     <h3 className="text-xl font-serif text-foreground mb-2">
                                         {t('landing.landing_search.no_match')}
                                     </h3>
-                                    <p className="text-muted-foreground font-sans">
+                                    <div className="text-muted-foreground font-sans">
                                         {suggestion ? (
-                                            <>
-                                                {t('landing.landing_search.no_results_for')} "{query}". {t('landing.landing_search.did_you_mean')} <button 
+                                            <div className="bg-primary/5 p-6 rounded-[2rem] border border-primary/10 inline-block animate-in fade-in slide-in-from-bottom-2">
+                                                <p className="mb-3 text-sm">{t('landing.landing_search.no_results_for')} "{query}"</p>
+                                                <p className="text-foreground font-bold">{t('landing.landing_search.did_you_mean')}</p>
+                                                <button 
                                                     onClick={() => setQuery(suggestion)}
-                                                    className="text-primary font-bold hover:underline"
+                                                    className="mt-2 text-2xl font-serif text-primary font-bold hover:scale-105 transition-transform"
                                                 >
                                                     {suggestion}
-                                                </button>?
-                                            </>
+                                                </button>
+                                            </div>
                                         ) : (
                                             `${t('landing.landing_search.no_results_for')} "${query}". ${t('landing.landing_search.try_another')}`
                                         )}
-                                    </p>
+                                    </div>
                                 </div>
                             ) : (
-                                <div className="p-16 text-center">
-                                    <div className="w-20 h-20 bg-primary/5 rounded-full flex items-center justify-center mx-auto mb-6 border border-primary/10">
-                                        <Command className="w-10 h-10 text-primary/20" />
+                                <div className="p-8">
+                                    <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
+                                        <div className="space-y-4">
+                                            <div className="px-4 py-2 text-[12px] font-bold text-primary/70 uppercase tracking-[0.2em] font-sans">
+                                                Popular Rituals
+                                            </div>
+                                            <div className="space-y-2">
+                                                {popularSearches.map((pop, i) => (
+                                                    <button
+                                                        key={i}
+                                                        onClick={() => setQuery(pop.title)}
+                                                        className="w-full flex items-center gap-3 p-3 hover:bg-primary/5 rounded-2xl transition-colors group"
+                                                    >
+                                                        <div className="w-8 h-8 rounded-full bg-primary/10 flex items-center justify-center text-primary group-hover:bg-primary group-hover:text-white transition-all">
+                                                            <Search size={14} />
+                                                        </div>
+                                                        <span className="text-sm font-medium text-foreground">{pop.title}</span>
+                                                        <span className="text-[9px] ml-auto font-bold uppercase text-muted-foreground opacity-40">{pop.category}</span>
+                                                    </button>
+                                                ))}
+                                            </div>
+                                        </div>
+                                        <div className="bg-primary/5 rounded-[2.5rem] p-8 flex flex-col items-center justify-center text-center border border-primary/10">
+                                            <div className="w-16 h-16 bg-white rounded-2xl flex items-center justify-center text-primary shadow-soft mb-4 rotate-3">
+                                                <Command className="w-8 h-8" />
+                                            </div>
+                                            <h4 className="text-lg font-serif font-bold text-foreground mb-2">Sacred Search</h4>
+                                            <p className="text-xs text-muted-foreground leading-relaxed">
+                                                Find Temples, Poojas, and Sacred Products across India instantly.
+                                            </p>
+                                        </div>
                                     </div>
-                                    <h3 className="text-xl font-serif text-foreground mb-2">
-                                        {t('landing.landing_search.omnipresent')}
-                                    </h3>
-                                    <p className="text-muted-foreground/60 font-sans max-w-sm mx-auto">
-                                        {t('landing.landing_search.start_typing')}
-                                    </p>
                                 </div>
                             )}
                         </div>
@@ -298,7 +336,7 @@ export const GlobalSearch = ({ isOpen, onClose }: { isOpen: boolean; onClose: ()
                             </div>
                             <div className="flex items-center gap-1.5 opacity-60">
                                 <span className="w-1.5 h-1.5 rounded-full bg-primary animate-pulse" />
-                                DevBhakti Sacred Search Engine v2.5
+                                DevBhakti Sacred Search Engine v3.0
                             </div>
                         </div>
                     </motion.div>

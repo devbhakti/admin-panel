@@ -1,10 +1,11 @@
 import { Router } from "express";
-import { initiateDonation, getDonationReceipt, getMyDonations } from "../../controllers/devotee/donationController";
+import { initiateDonation, getDonationReceipt, getMyDonations, calculateDonationCommission } from "../../controllers/devotee/donationController";
 import { authenticate } from "../../middleware/authMiddleware";
 
 const router = Router();
 
-// Public routes (if any)
+// Public routes
+router.get("/calculate-fee", calculateDonationCommission);
 router.post("/", initiateDonation);
 
 // Protected routes

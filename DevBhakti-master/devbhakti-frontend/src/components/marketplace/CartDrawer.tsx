@@ -106,7 +106,7 @@ const CartDrawer: React.FC<CartDrawerProps> = ({
                 <div key={item.variantId} className="flex gap-4 p-4 bg-white rounded-2xl border border-[#794A05]/5 shadow-sm hover:shadow-md transition-shadow">
                   <div className="w-20 h-20 rounded-xl overflow-hidden shadow-inner bg-slate-50 flex-shrink-0">
                     <img
-                      src={item.image.startsWith('http') ? item.image : `${BASE_URL}${item.image}`}
+                      src={item.image ? (item.image.startsWith('http') ? item.image : `${BASE_URL}${item.image}`) : '/placeholder.jpg'}
                       alt={item.name}
                       className={`w-full h-full object-cover ${item.isActive === false ? 'grayscale opacity-50' : ''}`}
                     />

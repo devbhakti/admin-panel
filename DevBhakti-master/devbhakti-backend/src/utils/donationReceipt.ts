@@ -13,6 +13,7 @@ export interface DonationReceiptData {
     message?: string;
     templeName?: string;
     displayId?: string;
+    commissionAmount?: number;
 }
 
 export const generateReceiptHTML = (donation: DonationReceiptData) => {
@@ -118,10 +119,21 @@ export const generateReceiptHTML = (donation: DonationReceiptData) => {
                 </div>
 
                 <div class="amount-box">
-                    <div class="amount-label">Contribution Amount</div>
+                    <div class="amount-label">Contribution to Temple</div>
                     <div class="amount-value">₹ ${donation.amount.toLocaleString('en-IN')}</div>
-                    <div style="margin-top: 10px; font-size: 14px; font-style: italic; color: #666;">
-                        (Rupees ${numberToWords(donation.amount)} Only)
+                    ${donation.commissionAmount && donation.commissionAmount > 0 ? `
+                    <div style="margin-top: 15px; border-top: 1px dashed #7c4624; padding-top: 15px;">
+                        <div style="display: flex; justify-content: space-between; font-size: 14px; margin-bottom: 5px;">
+                            <span>Platform Support Fee:</span>
+                            <span>₹ ${donation.commissionAmount.toLocaleString('en-IN')}</span>
+                        </div>
+                        <div style="display: flex; justify-content: space-between; font-weight: bold; font-size: 16px;">
+                            <span>Total Amount Paid:</span>
+                            <span>₹ ${(donation.amount + donation.commissionAmount).toLocaleString('en-IN')}</span>
+                        </div>
+                    </div>` : ''}
+                    <div style="margin-top: 15px; font-size: 14px; font-style: italic; color: #666;">
+                        (Rupees ${numberToWords(donation.amount + (donation.commissionAmount || 0))} Only)
                     </div>
                 </div>
 

@@ -37,6 +37,13 @@ import {
     DropdownMenuItem,
     DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
+import {
+    Select,
+    SelectContent,
+    SelectItem,
+    SelectTrigger,
+    SelectValue,
+} from "@/components/ui/select";
 import { Separator } from "@/components/ui/separator";
 import { fetchMyProducts, deleteMyProduct, createMyProduct, fetchCategories } from "@/api/templeAdminController";
 import { useToast } from "@/hooks/use-toast";
@@ -51,6 +58,8 @@ export default function TempleProductsPage() {
     const [products, setProducts] = useState<any[]>([]);
     const [isLoading, setIsLoading] = useState(true);
     const [searchQuery, setSearchQuery] = useState("");
+    const [selectedCategory, setSelectedCategory] = useState("all");
+    const [stockStatus, setStockStatus] = useState("all");
     const [selectedProduct, setSelectedProduct] = useState<any>(null);
     const [isViewOpen, setIsViewOpen] = useState(false);
 
@@ -68,9 +77,12 @@ export default function TempleProductsPage() {
     const [categories, setCategories] = useState<any[]>([]);
 
     useEffect(() => {
-        loadProducts();
         loadCategories();
     }, []);
+
+    useEffect(() => {
+        loadProducts();
+    }, [selectedCategory, stockStatus, searchQuery]);
 
     const loadCategories = async () => {
         try {
@@ -84,7 +96,12 @@ export default function TempleProductsPage() {
     const loadProducts = async () => {
         setIsLoading(true);
         try {
-            const data = await fetchMyProducts();
+            const params: any = {};
+            if (searchQuery) params.search = searchQuery;
+            if (selectedCategory !== "all") params.categoryId = selectedCategory;
+            if (stockStatus !== "all") params.stockStatus = stockStatus;
+
+            const data = await fetchMyProducts(params);
             if (data.success) {
                 setProducts(data.data.products);
             }
@@ -112,10 +129,7 @@ export default function TempleProductsPage() {
         router.push(`/temples/dashboard/products/${product.id}/view`);
     };
 
-    const filteredProducts = products.filter((p) =>
-        parseLocalizedValue(p.name).toLowerCase().includes(searchQuery.toLowerCase()) ||
-        parseLocalizedValue(p.categoryObj?.name || "").toLowerCase().includes(searchQuery.toLowerCase())
-    );
+    const filteredProducts = products;
 
     // --- BULK MANAGEMENT ---
     const downloadTemplate = () => {
@@ -376,13 +390,53 @@ export default function TempleProductsPage() {
                 <div className="relative flex-1 w-full">
                     <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-400" />
                     <Input
-                        placeholder="Search products by name or category..."
+                        placeholder="Search products by name..."
                         value={searchQuery}
                         onChange={(e) => setSearchQuery(e.target.value)}
                         className="pl-10 h-11 bg-slate-50 border-slate-200 focus:bg-white transition-colors"
                     />
                 </div>
-                {/* Future: Add more sophisticated filters here */}
+                
+                <div className="flex flex-col sm:flex-row gap-3 w-full md:w-auto">
+                    <Select value={selectedCategory} onValueChange={setSelectedCategory}>
+                        <SelectTrigger className="w-full sm:w-[180px] h-11 border-slate-200 bg-slate-50 focus:ring-[#7b4623]">
+                            <SelectValue placeholder="Category" />
+                        </SelectTrigger>
+                        <SelectContent>
+                            <SelectItem value="all">All Categories</SelectItem>
+                            {categories.map((cat) => (
+                                <SelectItem key={cat.id} value={cat.id}>
+                                    {cat.name}
+                                </SelectItem>
+                            ))}
+                        </SelectContent>
+                    </Select>
+
+                    <Select value={stockStatus} onValueChange={setStockStatus}>
+                        <SelectTrigger className="w-full sm:w-[180px] h-11 border-slate-200 bg-slate-50 focus:ring-[#7b4623]">
+                            <SelectValue placeholder="Stock Status" />
+                        </SelectTrigger>
+                        <SelectContent>
+                            <SelectItem value="all">All Stock</SelectItem>
+                            <SelectItem value="in_stock">In Stock</SelectItem>
+                            <SelectItem value="out_of_stock">Out of Stock</SelectItem>
+                        </SelectContent>
+                    </Select>
+
+                    {(selectedCategory !== "all" || stockStatus !== "all" || searchQuery) && (
+                        <Button 
+                            variant="ghost" 
+                            onClick={() => {
+                                setSelectedCategory("all");
+                                setStockStatus("all");
+                                setSearchQuery("");
+                            }}
+                            className="h-11 px-4 text-slate-500 hover:text-[#7b4623]"
+                        >
+                            Reset
+                        </Button>
+                    )}
+                </div>
             </div>
 
             {/* Products Grid */}

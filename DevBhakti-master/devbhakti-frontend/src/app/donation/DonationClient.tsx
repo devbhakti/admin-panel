@@ -48,7 +48,7 @@ interface Temple {
 
 
 const suggestedAmounts = [101, 251, 501, 1100, 2100, 5001, 11000, 21000];
-import { fetchPublicTemples } from "@/api/publicController";
+import { fetchPublicTemples, calculateDonationFee } from "@/api/publicController";
 import { API_URL } from "@/config/apiConfig";
 import axios from "axios";
 import { downloadDonationReceipt } from "@/api/userController";
@@ -94,6 +94,8 @@ function DonationForm() {
     const [donationId, setDonationId] = useState("");
     const [searchQuery, setSearchQuery] = useState("");
     const [errors, setErrors] = useState<Record<string, string>>({});
+    const [platformFee, setPlatformFee] = useState(0);
+    const [totalPayable, setTotalPayable] = useState(0);
 
     const RAZORPAY_KEY = process.env.NEXT_PUBLIC_RAZORPAY_KEY_ID || "";
 
@@ -120,7 +122,7 @@ function DonationForm() {
 
     const finalAmount = customAmount || amount;
 
-    const nextStep = () => {
+    const nextStep = async () => {
         if (step === 1) {
             if (!selectedTemple) {
                 toast({ title: t("toasts.select_temple"), variant: "destructive" });
@@ -191,6 +193,19 @@ function DonationForm() {
                 });
                 return;
             }
+            
+            // Calculate fee before going to step 4
+            setLoading(true);
+            try {
+                const feeData = await calculateDonationFee(parseFloat(finalAmount));
+                setPlatformFee(feeData.platformFee);
+                setTotalPayable(feeData.totalPayable);
+            } catch (err) {
+                console.error("Failed to calculate fee", err);
+                setPlatformFee(0);
+                setTotalPayable(parseFloat(finalAmount));
+            }
+            setLoading(false);
         }
         setErrors({});
 
@@ -732,12 +747,22 @@ function DonationForm() {
                                                     <p className="text-sm text-[#7c4624]">{temples.find(t => t.id === selectedTemple)?.location}</p>
                                                 </div>
                                                 <div className="text-left md:text-right">
-                                                    <p className="text-sm text-muted-foreground uppercase tracking-widest font-semibold mb-1">{t("step4.amount")}</p>
-                                                    <p className="text-3xl font-display font-bold text-[#7c4624]">₹ {parseInt(finalAmount).toLocaleString()}</p>
+                                                    <p className="text-sm text-muted-foreground uppercase tracking-widest font-semibold mb-1">Total Payable</p>
+                                                    <p className="text-3xl font-display font-bold text-[#7c4624]">₹ {totalPayable.toLocaleString('en-IN')}</p>
                                                 </div>
                                             </div>
 
                                             <div className="space-y-3 text-sm py-6 border-t border-dashed border-[#e6d5c8] dark:border-zinc-800">
+                                                <div className="flex justify-between">
+                                                    <span className="text-muted-foreground">Donation Amount</span>
+                                                    <span className="font-medium">₹ {parseInt(finalAmount).toLocaleString('en-IN')}</span>
+                                                </div>
+                                                {platformFee > 0 && (
+                                                    <div className="flex justify-between">
+                                                        <span className="text-muted-foreground">Platform Support Fee</span>
+                                                        <span className="font-medium">₹ {platformFee.toLocaleString('en-IN')}</span>
+                                                    </div>
+                                                )}
 
                                                 {!isAnonymous && (
                                                     <>
@@ -773,7 +798,7 @@ function DonationForm() {
                                         onClick={handleConfirmDonation} 
                                         disabled={loading}
                                     >
-                                        {loading ? t("step4.processing") : `${t("step4.pay_button")} ₹${parseInt(finalAmount).toLocaleString()}`}
+                                        {loading ? t("step4.processing") : `${t("step4.pay_button")} ₹${totalPayable.toLocaleString('en-IN')}`}
                                     </Button>
                                     <p className="text-xs text-muted-foreground mt-4 text-center font-medium">
                                         {t("step4.secure_note")}
@@ -796,10 +821,10 @@ function DonationForm() {
                                 </div>
                                 <h2 className="text-3xl font-display font-bold text-foreground mb-4">{t("step5.title")}</h2>
                                 <div className="max-w-md mx-auto mb-8">
-                                    <p className="text-muted-foreground text-lg">
-                                        {t("step5.thank_you")}, <span className="font-semibold text-foreground">{isAnonymous ? t("step5.devotee") : formData.name.split(' ')[0]}</span>.
+                                    <p className="text-dark text-lg">
+                                        {t("step5.thank_you")}, <span className="font-semibold text-white">{isAnonymous ? t("step5.devotee") : formData.name.split(' ')[0]}</span>.
                                     </p>
-                                    <p className="text-muted-foreground mt-2">
+                                    <p className="text-dark mt-2">
                                         {t("step5.contribution_received")} <span className="font-bold text-green-600">₹{parseInt(finalAmount).toLocaleString()}</span> {t("step5.has_been_received")}
                                     </p>
                                 </div>

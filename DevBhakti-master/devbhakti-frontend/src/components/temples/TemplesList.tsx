@@ -69,6 +69,7 @@ export function TemplesList() {
   const [selectedLocation, setSelectedLocation] = useState("All");
   const [selectedPooja, setSelectedPooja] = useState("All");
   const [temples, setTemples] = useState<any[]>([]);
+  const [allTemples, setAllTemples] = useState<any[]>([]); // For suggestions source
   const [loading, setLoading] = useState(true);
   const [favorites, setFavorites] = useState<any[]>([]);
   const { toast } = useToast();
@@ -76,6 +77,10 @@ export function TemplesList() {
   const [user, setUser] = useState<any>(null);
   const [showRatings, setShowRatings] = useState(false);
   const { language, t } = useLanguage();
+
+  // Suggestions state
+  const [isSearchFocused, setIsSearchFocused] = useState(false);
+  const [suggestions, setSuggestions] = useState<any[]>([]);
 
   React.useEffect(() => {
     const savedUser = localStorage.getItem("user");
@@ -99,6 +104,10 @@ export function TemplesList() {
           poojas: ["All", ...(data.poojas || [])]
         });
       }
+
+      // Also fetch all temples once for suggestions source
+      const allTemps = await fetchPublicTemples({ lang: language });
+      setAllTemples(allTemps || []);
     } catch (error) {
       console.error("Error fetching initial options:", error);
     }
@@ -200,19 +209,83 @@ export function TemplesList() {
     }
   };
 
+  // Levenshtein Distance Helper for Fuzzy Search
+  const getLevenshteinDistance = (a: string, b: string): number => {
+    const matrix = Array.from({ length: b.length + 1 }, (_, i) => [i]);
+    for (let j = 0; j <= a.length; j++) matrix[0][j] = j;
+
+    for (let i = 1; i <= b.length; i++) {
+      for (let j = 1; j <= a.length; j++) {
+        if (b.charAt(i - 1) === a.charAt(j - 1)) {
+          matrix[i][j] = matrix[i - 1][j - 1];
+        } else {
+          matrix[i][j] = Math.min(
+            matrix[i - 1][j - 1] + 1, // substitution
+            matrix[i][j - 1] + 1,     // insertion
+            matrix[i - 1][j] + 1      // deletion
+          );
+        }
+      }
+    }
+    return matrix[b.length][a.length];
+  };
+
   // Use the fetched temples directly as they are already filtered by the backend
   const filteredTemples = temples;
 
-  if (loading) {
-    return (
-      <div className="min-h-screen bg-background">
-        <Navbar />
-        <div className="pt-32 flex justify-center items-center">
-          <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary"></div>
-        </div>
-      </div>
-    );
-  }
+  // Suggestions helper for autocomplete dropdown
+  const getFuzzySuggestions = (query: string) => {
+    if (query.length < 2) return [];
+    
+    // Check against ALL temples list for close matches
+    const matches: any[] = [];
+    allTemples.forEach(temple => {
+      const name = getLocalized(temple, 'name', language) || "";
+      const queryLower = query.toLowerCase();
+      const nameLower = name.toLowerCase();
+      const distance = getLevenshteinDistance(queryLower, nameLower);
+      
+      // If it's an exact match, we don't need to suggest it
+      if (nameLower === queryLower) return;
+
+      if (distance < 3 || nameLower.includes(queryLower)) {
+        matches.push({
+          title: name,
+          category: getLocalized(temple, 'category', language)
+        });
+      }
+    });
+
+    // Remove duplicates and limit
+    return Array.from(new Set(matches.map(m => m.title)))
+      .map(title => matches.find(m => m.title === title))
+      .slice(0, 5);
+  };
+
+  React.useEffect(() => {
+    if (searchInput.trim() && isSearchFocused) {
+      setSuggestions(getFuzzySuggestions(searchInput));
+    } else {
+      setSuggestions([]);
+    }
+  }, [searchInput, isSearchFocused, allTemples]);
+
+  // "Did you mean?" suggestion for empty results
+  const resultSuggestion = React.useMemo(() => {
+    if (searchQuery.length < 2 || filteredTemples.length > 0) return null;
+
+    let minDistance = Infinity;
+    let bestMatch = "";
+
+    // We need a list of all possible temple names to suggest from
+    // Since 'temples' is filtered, we might need a broader list or just use what we have
+    // For now, let's assume we use the temples list which might be empty if search failed
+    // If it's empty, we can't suggest from it. We'd need the full list.
+    // In PoojaListClient, it uses the full poojas list.
+    // Here, temples is already filtered by backend.
+    
+    return null; // For now, autocomplete is more important.
+  }, [searchQuery, filteredTemples]);
 
   return (
     <>
@@ -267,26 +340,34 @@ export function TemplesList() {
                 className="relative max-w-2xl mx-auto group"
               >
                 <div className="absolute -inset-1 bg-gradient-to-r from-primary to-orange-400 rounded-2xl blur opacity-25 group-hover:opacity-40 transition duration-1000 group-hover:duration-200" />
-                <div className="relative flex items-center bg-white/90 backdrop-blur-sm rounded-2xl shadow-xl overflow-hidden border border-primary/10">
-                  <Search className="absolute left-5 h-5 w-5 text-primary/50" />
-                  <input
-                    type="text"
-                    placeholder={t('temples.search_placeholder_long')}
-                    value={searchInput}
-                    onChange={(e) => setSearchInput(e.target.value)}
-                    onKeyDown={(e) => {
-                      if (e.key === 'Enter') {
+                <div className="relative bg-white/90 backdrop-blur-sm rounded-2xl shadow-xl border border-primary/10">
+                  <div className="relative flex items-center overflow-hidden">
+                    <Search className="absolute left-5 h-5 w-5 text-primary/50" />
+                    <input
+                      type="text"
+                      placeholder={t('temples.search_placeholder_long')}
+                      value={searchInput}
+                      onChange={(e) => setSearchInput(e.target.value)}
+                      onFocus={() => setIsSearchFocused(true)}
+                      onKeyDown={(e) => {
+                        if (e.key === 'Enter') {
+                          handleManualSearch();
+                          setIsSearchFocused(false);
+                        }
+                      }}
+                      className="w-full pl-14 pr-32 py-5 text-lg outline-none bg-transparent text-zinc-800 placeholder:text-zinc-400"
+                    />
+                    <Button 
+                      onClick={() => {
                         handleManualSearch();
-                      }
-                    }}
-                    className="w-full pl-14 pr-32 py-5 text-lg outline-none bg-transparent text-zinc-800 placeholder:text-zinc-400"
-                  />
-                  <Button 
-                    onClick={handleManualSearch}
-                    className="absolute right-2 h-12 px-8 rounded-xl bg-primary hover:bg-primary/90 text-white hidden sm:flex font-bold"
-                  >
-                    {t('marketplace.explore')}
-                  </Button>
+                        setIsSearchFocused(false);
+                      }}
+                      className="absolute right-2 h-12 px-8 rounded-xl bg-primary hover:bg-primary/90 text-white hidden sm:flex font-bold"
+                    >
+                      {t('marketplace.explore')}
+                    </Button>
+                  </div>
+
                 </div>
               </motion.div>
             </div>
@@ -536,7 +617,7 @@ export function TemplesList() {
         </section>
 
         {/* Temple Grid */}
-        <section className="py-6">
+        <section className="py-6 min-h-[400px]">
           <div className="container mx-auto px-4">
             <div className="flex justify-between items-center mb-4">
               <p className="text-foreground">
@@ -544,76 +625,118 @@ export function TemplesList() {
               </p>
             </div>
 
-            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-              {filteredTemples.map((temple) => (
-                <div key={temple.id} className="relative group/card h-full">
-                  <Link href={getTempleUrl(temple)}>
-                    <Card className="group overflow-hidden hover:shadow-xl transition-all duration-300 border-border/50 hover:border-primary/30 h-full">
-                      <div className="relative aspect-[4/3] overflow-hidden">
-                        <img
-                          src={getFullImageUrl(temple.image)}
-                          alt={getLocalized(temple, 'name', language)}
-                          className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-500"
-                          onError={(e) => {
-                            (e.target as any).src = "https://via.placeholder.com/400x300?text=Temple"
-                          }}
-                        />
-                        {temple.liveStatus && (
-                          <Badge className="absolute top-3 left-3 bg-red-500 text-white animate-pulse">
-                            <span className="w-2 h-2 bg-white rounded-full mr-2" />
-                            {t('temples.live_now')}
-                          </Badge>
-                        )}
-                        <Badge
-                          variant="secondary"
-                          className="absolute bottom-3 right-3 bg-background/90 backdrop-blur-sm"
-                        >
-                          {getLocalized(temple, 'category', language)}
-                        </Badge>
-
-                      </div>
-                      <CardContent className="p-5">
-                        <h3 className="text-xl font-display font-semibold text-foreground mb-2 group-hover:text-primary transition-colors">
-                          {getLocalized(temple, 'name', language)}
-                        </h3>
-                        <p className="text-sm text-foreground mb-3 line-clamp-2">
-                          {getLocalized(temple, 'description', language)}
-                        </p>
-
-                        <div className="flex items-center gap-2 text-foreground mb-3">
-                          <MapPin className="h-4 w-4" />
-                          <span className="text-sm">{getLocalized(temple, 'location', language)}</span>
-                        </div>
-                        <div className="flex items-center justify-between">
-                          {showRatings && (
-                            <div className="flex items-center gap-1">
-                              <Star className="h-4 w-4 text-amber-500 fill-amber-500" />
-                              <span className="font-medium text-foreground">{temple.rating}</span>
-                              <span className="text-muted-foreground text-sm">
-                                ({(temple.reviewsCount || 0).toLocaleString()})
-                              </span>
-                            </div>
+            {loading ? (
+              <div className="flex justify-center items-center py-20">
+                <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-primary"></div>
+              </div>
+            ) : filteredTemples.length > 0 ? (
+              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+                {filteredTemples.map((temple) => (
+                  <div key={temple.id} className="relative group/card h-full">
+                    <Link href={getTempleUrl(temple)}>
+                      <Card className="group overflow-hidden hover:shadow-xl transition-all duration-300 border-border/50 hover:border-primary/30 h-full">
+                        <div className="relative aspect-[4/3] overflow-hidden">
+                          <img
+                            src={getFullImageUrl(temple.image)}
+                            alt={getLocalized(temple, 'name', language)}
+                            className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-500"
+                            onError={(e) => {
+                              (e.target as any).src = "https://via.placeholder.com/400x300?text=Temple"
+                            }}
+                          />
+                          {temple.liveStatus && (
+                            <Badge className="absolute top-3 left-3 bg-red-500 text-white animate-pulse">
+                              <span className="w-2 h-2 bg-white rounded-full mr-2" />
+                              {t('temples.live_now')}
+                            </Badge>
                           )}
-                        </div>
-                      </CardContent>
-                    </Card>
-                  </Link>
+                          <Badge
+                            variant="secondary"
+                            className="absolute bottom-3 right-3 bg-background/90 backdrop-blur-sm"
+                          >
+                            {getLocalized(temple, 'category', language)}
+                          </Badge>
 
-                  {/* Favorite Button - Outside Link */}
-                  <button
-                    onClick={(e) => toggleFavorite(e, temple.id)}
-                    className="absolute top-3 right-1 z-30 p-2 rounded-full bg-background/50 backdrop-blur-md border border-border hover:bg-background/80 transition-all group/fav"
-                  >
-                    <Heart
-                      className={`w-4 h-4 transition-all ${favorites.some((f) => f.templeId === temple.id)
-                        ? "fill-red-500 text-red-500"
-                        : "text-muted-foreground group-hover/fav:text-red-500"
-                        }`}
-                    />
-                  </button>
+                        </div>
+                        <CardContent className="p-5">
+                          <h3 className="text-xl font-display font-semibold text-foreground mb-2 group-hover:text-primary transition-colors">
+                            {getLocalized(temple, 'name', language)}
+                          </h3>
+                          <p className="text-sm text-foreground mb-3 line-clamp-2">
+                            {getLocalized(temple, 'description', language)}
+                          </p>
+
+                          <div className="flex items-center gap-2 text-foreground mb-3">
+                            <MapPin className="h-4 w-4" />
+                            <span className="text-sm">{getLocalized(temple, 'location', language)}</span>
+                          </div>
+                          <div className="flex items-center justify-between">
+                            {showRatings && (
+                              <div className="flex items-center gap-1">
+                                <Star className="h-4 w-4 text-amber-500 fill-amber-500" />
+                                <span className="font-medium text-foreground">{temple.rating}</span>
+                                <span className="text-muted-foreground text-sm">
+                                  ({(temple.reviewsCount || 0).toLocaleString()})
+                                </span>
+                              </div>
+                            )}
+                          </div>
+                        </CardContent>
+                      </Card>
+                    </Link>
+
+                    {/* Favorite Button - Outside Link */}
+                    <button
+                      onClick={(e) => toggleFavorite(e, temple.id)}
+                      className="absolute top-3 right-1 z-30 p-2 rounded-full bg-background/50 backdrop-blur-md border border-border hover:bg-background/80 transition-all group/fav"
+                    >
+                      <Heart
+                        className={`w-4 h-4 transition-all ${favorites.some((f) => f.templeId === temple.id)
+                          ? "fill-red-500 text-red-500"
+                          : "text-muted-foreground group-hover/fav:text-red-500"
+                          }`}
+                      />
+                    </button>
+                  </div>
+                ))}
+              </div>
+            ) : (
+              <div className="text-center py-20">
+                <div className="max-w-md mx-auto">
+                  <div className="w-20 h-20 bg-muted/30 rounded-full flex items-center justify-center mx-auto mb-6">
+                    <Search className="w-10 h-10 text-muted-foreground/30" />
+                  </div>
+                  <h3 className="text-xl font-serif text-foreground mb-2">
+                    {t('temples.no_temple_found')}
+                  </h3>
+                  <p className="text-muted-foreground mb-8">
+                    {t('landing.landing_search.no_results_for')} "{searchQuery}". {t('landing.landing_search.try_another')}
+                  </p>
+                  
+                  {/* Local Fuzzy Suggestion for results area */}
+                  {searchInput.length >= 2 && getFuzzySuggestions(searchInput).length > 0 && (
+                    <div className="bg-primary/5 p-8 rounded-[2.5rem] border border-primary/10 animate-in fade-in slide-in-from-bottom-4">
+                      <p className="text-foreground font-bold mb-4">{t('landing.landing_search.did_you_mean')}?</p>
+                      <div className="flex flex-wrap justify-center gap-2">
+                        {getFuzzySuggestions(searchInput).map((s: any, idx: number) => (
+                          <Button
+                            key={idx}
+                            variant="outline"
+                            onClick={() => {
+                              setSearchInput(s.title);
+                              setSearchQuery(s.title);
+                            }}
+                            className="rounded-full bg-white border-primary/20 hover:bg-primary hover:text-white transition-all font-serif italic"
+                          >
+                            {s.title}
+                          </Button>
+                        ))}
+                      </div>
+                    </div>
+                  )}
                 </div>
-              ))}
-            </div>
+              </div>
+            )}
           </div>
         </section>
 

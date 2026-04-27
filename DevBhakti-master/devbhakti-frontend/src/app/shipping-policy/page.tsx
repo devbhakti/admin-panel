@@ -6,6 +6,8 @@ import Navbar from "@/components/landing/Navbar";
 import Footer from "@/components/landing/Footer";
 import { Truck, Package, Clock, Globe, ShieldCheck, MapPin } from "lucide-react";
 import { useLanguage } from "@/context/LanguageContext";
+import Image from "next/image";
+import shippingImage from "@/assets/temple-somnath.jpg";
 
 export default function ShippingPolicyPage() {
     const { t, tRaw } = useLanguage();
@@ -110,44 +112,40 @@ export default function ShippingPolicyPage() {
             <Navbar />
 
             {/* Hero Header */}
-            {/* FIX 2: 'overflow-hidden' hata diya aur 'pt'/'pb' padding badha diya hai taaki text na kate. */}
-            <section className="relative pt-32 sm:pt-40 pb-20 sm:pb-24">
-                <div className="absolute inset-0 z-0 bg-gradient-to-b from-primary/5 via-transparent to-background" />
-                <div className="container mx-auto px-4 sm:px-6 relative z-10 text-center">
+            <section className="relative min-h-[480px] flex items-center justify-center overflow-hidden">
+                {/* Background image */}
+                <div className="absolute inset-0">
+                    <Image
+                        src={shippingImage}
+                        alt="Shipping Policy"
+                        fill
+                        priority
+                        className="object-cover"
+                    />
+                    <div className="absolute inset-0 bg-gradient-to-b from-background/80 via-background/60 to-background/90" />
+                </div>
+
+                <div className="container mx-auto px-4 sm:px-6 pt-28 pb-12 relative z-10 text-center">
                     <motion.div
                         initial={{ opacity: 0, y: -20 }}
                         animate={{ opacity: 1, y: 0 }}
-                        className="flex justify-center mb-4 sm:mb-6"
+                        className="max-w-4xl mx-auto"
                     >
-                        <div className="p-3 sm:p-4 bg-primary/10 backdrop-blur-md rounded-xl sm:rounded-2xl">
-                            <Truck className="w-8 h-8 sm:w-12 sm:h-12 text-primary" />
+                        <div className="inline-flex p-3 sm:p-4 bg-primary/10 backdrop-blur-md rounded-xl sm:rounded-2xl text-primary mb-6 border border-primary/20">
+                            <Truck className="w-8 h-8 sm:w-10 sm:h-10" />
+                        </div>
+                        <h1 className="text-4xl md:text-5xl lg:text-7xl font-serif font-bold mb-4 text-foreground leading-tight">
+                            {t('shipping_policy.title')}
+                        </h1>
+                        <p className="text-sm font-bold text-primary mb-8 uppercase tracking-widest">
+                            {t('shipping_policy.effective_date')}
+                        </p>
+                        <div className="text-lg md:text-xl text-foreground/80 max-w-3xl mx-auto leading-relaxed">
+                            <p>
+                                {t('shipping_policy.intro')}
+                            </p>
                         </div>
                     </motion.div>
-                    <motion.h1
-                        initial={{ opacity: 0, scale: 0.95 }}
-                        animate={{ opacity: 1, scale: 1 }}
-                        transition={{ duration: 0.8 }}
-                        // FIX 3: 'leading-[1.15]', 'py-2', aur 'break-words' add kiye hain. 'break-normal' ko hata diya.
-                        className="text-3xl sm:text-4xl md:text-5xl lg:text-7xl font-serif font-bold mb-4 sm:mb-6 text-gradient-sacred py-2 break-words leading-[1.15]"
-                    >
-                        {t('shipping_policy.title')}
-                    </motion.h1>
-                    <motion.p
-                        initial={{ opacity: 0 }}
-                        animate={{ opacity: 1 }}
-                        transition={{ delay: 0.2 }}
-                        className="text-xs sm:text-sm font-bold text-primary mb-4 sm:mb-6 uppercase tracking-widest break-words"
-                    >
-                        {t('shipping_policy.effective_date')}
-                    </motion.p>
-                    <motion.p
-                        initial={{ opacity: 0 }}
-                        animate={{ opacity: 1 }}
-                        transition={{ delay: 0.3 }}
-                        className="text-base sm:text-lg md:text-xl text-muted-foreground max-w-3xl mx-auto leading-relaxed break-words"
-                    >
-                        {t('shipping_policy.intro')}
-                    </motion.p>
                 </div>
             </section>
 

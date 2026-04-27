@@ -2,7 +2,6 @@
 
 import React, { useState, useEffect } from "react";
 import { Plus, X, Upload, Layout, Languages, FileText, HelpCircle, Package, ArrowRight, Save, Clock } from "lucide-react";
-import { Switch } from "@/components/ui/switch";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -66,7 +65,6 @@ export const PoojaForm: React.FC<PoojaFormProps> = ({
     const { t } = useLanguage();
     // Local language tab — independent of global app language
     const [activeTab, setActiveTab] = useState<Language>("en");
-    const [isMaster, setIsMaster] = useState(false);
 
     const [formData, setFormData] = useState({
         price: 0,
@@ -95,10 +93,10 @@ export const PoojaForm: React.FC<PoojaFormProps> = ({
     const [imagePreview, setImagePreview] = useState<string>("");
     const [showCropper, setShowCropper] = useState(false);
     const [tempImage, setTempImage] = useState<string | null>(null);
+    const isMaster = formData.templeId === "platform";
 
     useEffect(() => {
         if (mode === "edit" && initialData) {
-            setIsMaster(initialData.isMaster || false);
             const parseArray = (val: any) => {
                 if (!val) return [];
                 if (Array.isArray(val)) return val;
@@ -137,7 +135,7 @@ export const PoojaForm: React.FC<PoojaFormProps> = ({
             setFormData({
                 price: initialData.price || 0,
                 time: initialData.time || "",
-                templeId: initialData.templeId || "",
+                templeId: initialData.isMaster ? "platform" : (initialData.templeId || ""),
                 categoryId: initialData.categoryId || "",
                 categoryIds: initialData.categoryIds || (initialData.categoryId ? [initialData.categoryId] : []),
                 category_en: getL(initialData.category, "en"),
@@ -202,9 +200,7 @@ export const PoojaForm: React.FC<PoojaFormProps> = ({
                 setImagePreview(imageUrl);
             }
         } else if (mode === "create") {
-            if (temples.length > 0) {
-                setFormData(prev => ({ ...prev, templeId: temples[0].id }));
-            }
+            setFormData(prev => ({ ...prev, templeId: "" }));
         }
     }, [mode, initialData, temples]);
 
@@ -372,21 +368,6 @@ export const PoojaForm: React.FC<PoojaFormProps> = ({
                         {/* Left Side: Core Meta */}
                         <div className="flex-1 space-y-8">
                             <div className="bg-white border rounded-2xl p-6 shadow-sm space-y-6">
-                                <div className="flex items-center justify-between p-4 bg-blue-50/50 border border-blue-100 rounded-xl">
-                                    <div className="space-y-0.5">
-                                        <Label htmlFor="master-toggle" className="text-sm font-bold text-blue-900 cursor-pointer">
-                                            {t('admin_pooja_form.labels.is_master')}
-                                        </Label>
-                                        <p className="text-[11px] text-blue-600/80 font-medium">{t('admin_pooja_form.help.is_master')}</p>
-                                    </div>
-                                    <Switch
-                                        id="master-toggle"
-                                        checked={isMaster}
-                                        onCheckedChange={setIsMaster}
-                                        className="data-[state=checked]:bg-primary"
-                                    />
-                                </div>
-
                                 <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                                     <div className="space-y-2.5">
                                         <Label className="text-sm font-bold text-slate-700">{t('admin_pooja_form.labels.assigned_temple')} <span className="text-destructive">*</span></Label>
@@ -394,10 +375,10 @@ export const PoojaForm: React.FC<PoojaFormProps> = ({
                                             className="w-full h-12 px-4 rounded-xl border border-slate-200 bg-white text-sm focus:ring-2 focus:ring-primary/20 outline-none disabled:opacity-50 transition-all font-medium"
                                             value={formData.templeId}
                                             onChange={e => handleInputChange("templeId", e.target.value)}
-                                            disabled={isMaster}
                                             required={!isMaster}
                                         >
-                                            <option value="">{isMaster ? t('admin_pooja_form.placeholders.not_applicable') : t('admin_pooja_form.placeholders.select_temple')}</option>
+                                            <option value="">{t('admin_pooja_form.placeholders.select_temple')}</option>
+                                            <option value="platform">DevBhakti Platform Pooja</option>
                                             {temples.map(t => (
                                                 <option key={t.id} value={t.id}>
                                                     {parseLocalizedValue(t[`name_${activeTab}`] || t.name_en || t.name, activeTab) || 'Unnamed'}

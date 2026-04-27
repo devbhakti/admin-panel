@@ -441,7 +441,7 @@ function CheckoutContent() {
                         </Card>
 
                         {/* Payment Mode Info */}
-                        <div className="p-5 bg-[#794A05]/5 border border-[#794A05]/10 rounded-2xl flex items-center justify-between">
+                        {/* <div className="p-5 bg-[#794A05]/5 border border-[#794A05]/10 rounded-2xl flex items-center justify-between">
                             <div className="flex items-center gap-3">
                                 <div className="w-10 h-10 rounded-full bg-white flex items-center justify-center shadow-sm">
                                     <ShieldCheck className="w-6 h-6 text-[#794A05]" />
@@ -452,7 +452,7 @@ function CheckoutContent() {
                                 </div>
                             </div>
                             <img src="https://razorpay.com/favicon.png" alt="Razorpay" className="w-5 h-5 opacity-60" />
-                        </div>
+                        </div> */}
                     </div>
 
                     {/* Right Column: Order Summary */}
@@ -467,7 +467,7 @@ function CheckoutContent() {
                                         <div key={item.variantId} className={`flex gap-4 ${item.isActive === false ? 'opacity-50' : ''}`}>
                                             <div className="w-16 h-16 rounded-lg overflow-hidden flex-shrink-0 bg-slate-100 relative">
                                                 <img
-                                                    src={item.image.startsWith('http') ? item.image : `${BASE_URL}${item.image}`}
+                                                    src={item.image ? (item.image.startsWith('http') ? item.image : `${BASE_URL}${item.image}`) : '/placeholder.jpg'}
                                                     alt={item.name}
                                                     className={`w-full h-full object-cover ${item.isActive === false ? 'grayscale' : ''}`}
                                                 />

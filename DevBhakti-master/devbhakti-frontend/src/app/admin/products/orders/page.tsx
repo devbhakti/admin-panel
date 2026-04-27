@@ -4,7 +4,9 @@ import React, { useState, useEffect } from "react";
 import { useSearchParams, useRouter } from "next/navigation";
 import {
     fetchAllOrdersAdmin,
-    updateSubOrderStatusAdmin
+    updateSubOrderStatusAdmin,
+    fetchAllTemplesAdmin,
+    fetchAllSellersAdmin
 } from "@/api/adminController";
 import {
     Table,
@@ -25,6 +27,14 @@ import {
     SelectTrigger,
     SelectValue
 } from "@/components/ui/select";
+import {
+    Command,
+    CommandEmpty,
+    CommandGroup,
+    CommandInput,
+    CommandItem,
+    CommandList,
+} from "@/components/ui/command";
 import {
     Dialog,
     DialogContent,
@@ -61,7 +71,10 @@ import {
     Printer,
     Download,
     Calendar as CalendarIcon,
-    X
+    X,
+    Check,
+    ChevronsUpDown,
+    ShieldCheck
 } from "lucide-react";
 import { Calendar } from "@/components/ui/calendar";
 import {
@@ -90,6 +103,10 @@ function AdminOrdersContent() {
     const [statusFilter, setStatusFilter] = useState("ALL");
     const [paymentStatusFilter, setPaymentStatusFilter] = useState("ALL");
     const [dateFilter, setDateFilter] = useState<Date | undefined>(undefined);
+    const [vendorFilter, setVendorFilter] = useState("ALL");
+    const [vendors, setVendors] = useState<any[]>([]);
+    const [isLoadingVendors, setIsLoadingVendors] = useState(true);
+    const [openVendor, setOpenVendor] = useState(false);
 
     const [selectedOrder, setSelectedOrder] = useState<any>(null);
     const [selectedOrders, setSelectedOrders] = useState<Set<string>>(new Set());
@@ -122,11 +139,53 @@ function AdminOrdersContent() {
         if (idParam) {
             setSearchQuery(idParam);
         }
+        loadVendors();
     }, [idParam]);
+
+    const loadVendors = async () => {
+        setIsLoadingVendors(true);
+        try {
+            const [templesData, sellersData] = await Promise.all([
+                fetchAllTemplesAdmin(),
+                fetchAllSellersAdmin()
+            ]);
+            const formattedTemples = (templesData || [])
+                .filter((user: any) => user?.temple?.id)
+                .map((user: any) => ({
+                    id: user.temple.id,
+                    name: parseLocalizedValue(user.temple.name_en || user.temple.name, "en"),
+                    role: "TEMPLE",
+                    icon: <Building2 className="w-4 h-4 text-primary" />,
+                    searchText: `${user.temple.name_en || user.temple.name} temple institution`
+                }));
+
+            const formattedSellers = (sellersData || [])
+                .filter((seller: any) => seller?.sellerId)
+                .map((seller: any) => ({
+                    id: seller.sellerId,
+                    name: parseLocalizedValue(seller.storeName, "en"),
+                    role: "SELLER",
+                    icon: <Store className="w-4 h-4 text-blue-600" />,
+                    searchText: `${seller.storeName} seller vendor store`
+                }));
+
+            setVendors([
+                { id: "ALL", name: "All Vendors & Temples", role: "FILTER", icon: <Store className="w-4 h-4 text-slate-500" /> },
+                { id: "general", name: "DevBhakti Exclusive", role: "ADMIN", icon: <ShieldCheck className="w-4 h-4 text-amber-600" />, searchText: "devbhakti exclusive admin general" },
+                ...formattedTemples,
+                ...formattedSellers
+            ]);
+        } catch (error) {
+            console.error("Load Vendors Error:", error);
+            setVendors([{ id: "ALL", name: "All Vendors & Temples", role: "FILTER", icon: <Store className="w-4 h-4 text-slate-500" /> }]);
+        } finally {
+            setIsLoadingVendors(false);
+        }
+    };
 
     useEffect(() => {
         loadOrders(currentPage);
-    }, [debouncedSearch, statusFilter, paymentStatusFilter, dateFilter, currentPage]);
+    }, [debouncedSearch, statusFilter, paymentStatusFilter, dateFilter, vendorFilter, currentPage]);
 
 
     useEffect(() => {
@@ -147,7 +206,8 @@ function AdminOrdersContent() {
                 search: debouncedSearch,
                 status: statusFilter,
                 paymentStatus: paymentStatusFilter,
-                date: dateFilter ? format(dateFilter, "yyyy-MM-dd") : undefined
+                date: dateFilter ? format(dateFilter, "yyyy-MM-dd") : undefined,
+                templeId: vendorFilter !== "ALL" ? vendorFilter : undefined
             });
 
 
@@ -191,7 +251,8 @@ function AdminOrdersContent() {
                         search: debouncedSearch,
                         status: statusFilter,
                         paymentStatus: paymentStatusFilter,
-                        date: dateFilter ? format(dateFilter, "yyyy-MM-dd") : undefined
+                        date: dateFilter ? format(dateFilter, "yyyy-MM-dd") : undefined,
+                        templeId: vendorFilter !== "ALL" ? vendorFilter : undefined
                     });
 
 
@@ -347,6 +408,7 @@ function AdminOrdersContent() {
                                     selected={dateFilter}
                                     onSelect={(date) => { setDateFilter(date); setCurrentPage(1); }}
                                     initialFocus
+                                    numberOfMonths={2}
                                 />
                             </PopoverContent>
                         </Popover>
@@ -361,6 +423,55 @@ function AdminOrdersContent() {
                             </Button>
                         )}
                     </div>
+
+                    <Popover open={openVendor} onOpenChange={setOpenVendor}>
+                        <PopoverTrigger asChild>
+                            <Button
+                                variant="outline"
+                                role="combobox"
+                                aria-expanded={openVendor}
+                                className="w-[200px] h-10 justify-between font-bold rounded-xl border-slate-300 bg-white"
+                            >
+                                {vendorFilter === "ALL" ? (
+                                    <span>All Vendors & Temples</span>
+                                ) : (
+                                    <div className="flex items-center gap-2 truncate">
+                                        {vendors.find(v => v.id === vendorFilter)?.icon}
+                                        <span className="truncate">{vendors.find(v => v.id === vendorFilter)?.name}</span>
+                                    </div>
+                                )}
+                                <ChevronsUpDown className="ml-2 h-4 w-4 shrink-0 opacity-50" />
+                            </Button>
+                        </PopoverTrigger>
+                        <PopoverContent className="w-[300px] p-0 rounded-xl" align="start">
+                            <Command>
+                                <CommandInput placeholder="Search temples, sellers..." className="h-9" />
+                                <CommandList>
+                                    <CommandEmpty>No vendor found.</CommandEmpty>
+                                    <CommandGroup>
+                                        {vendors.map((vendor) => (
+                                            <CommandItem
+                                                key={vendor.id}
+                                                value={vendor.searchText || vendor.name}
+                                                onSelect={() => {
+                                                    setVendorFilter(vendor.id);
+                                                    setOpenVendor(false);
+                                                    setCurrentPage(1);
+                                                }}
+                                            >
+                                                <div className="flex items-center gap-2 w-full">
+                                                    {vendor.icon}
+                                                    <span className="flex-1 truncate">{vendor.name}</span>
+                                                    <span className="text-[10px] font-bold uppercase py-0.5 px-1 bg-slate-100 rounded text-slate-500 flex-shrink-0">{vendor.role}</span>
+                                                    <Check className={cn("ml-2 h-4 w-4 shrink-0", vendorFilter === vendor.id ? "opacity-100" : "opacity-0")} />
+                                                </div>
+                                            </CommandItem>
+                                        ))}
+                                    </CommandGroup>
+                                </CommandList>
+                            </Command>
+                        </PopoverContent>
+                    </Popover>
 
                      <Select value={statusFilter} onValueChange={(val) => { setStatusFilter(val); setCurrentPage(1); }}>
 
@@ -387,7 +498,6 @@ function AdminOrdersContent() {
                             <SelectItem value="PENDING">{t("admin.orders.status_pending")}</SelectItem>
                             <SelectItem value="PAID">{t("admin.orders.status_paid")}</SelectItem>
                             <SelectItem value="FAILED">{t("admin.orders.status_failed")}</SelectItem>
-                            <SelectItem value="REFUNDED">{t("admin.orders.status_refunded")}</SelectItem>
                         </SelectContent>
                     </Select>
                     {selectedOrders.size > 0 && (

@@ -7,88 +7,75 @@ export const searchGlobal = async (req: Request, res: Response) => {
         const { query } = req.query;
         const lang = getLang(req);
         const searchQuery = typeof query === "string" ? query.trim() : "";
+        const ilikeQuery = `%${searchQuery}%`;
 
+        // We use raw queries for case-insensitive JSON search in PostgreSQL
         const [temples, poojas, products] = await Promise.all([
-            // Search Temples — JSON path query
-            prisma.temple.findMany({
-                where: (searchQuery ? {
-                    OR: [
-                        { name: { path: ['en'], string_contains: searchQuery } },
-                        { name: { path: ['hi'], string_contains: searchQuery } },
-                        { location: { path: ['en'], string_contains: searchQuery } },
-                        { category: { path: ['en'], string_contains: searchQuery } },
-                    ],
-                    isActive: true,
-                    user: { isVerified: true }
-                } : {
-                    isActive: true,
-                    user: { isVerified: true }
-                }) as any,
-                select: {
-                    id: true,
-                    name: true,
-                    location: true,
-                    image: true,
-                    category: true,
-                    slug: true
-                },
-                take: searchQuery ? 20 : 6,
+            // Search Temples - Only verified ones
+            searchQuery ? prisma.$queryRaw`
+                SELECT t.id, t.name, t.location, t.image, t.category, t.slug 
+                FROM "Temple" t
+                INNER JOIN "User" u ON t."userId" = u.id
+                WHERE (
+                    (t.name->>'en' ILIKE ${ilikeQuery}) OR 
+                    (t.name->>'hi' ILIKE ${ilikeQuery}) OR 
+                    (t.location->>'en' ILIKE ${ilikeQuery}) OR 
+                    (t.category->>'en' ILIKE ${ilikeQuery})
+                ) AND t."isActive" = true AND u."isVerified" = true
+                LIMIT 20
+            ` : prisma.temple.findMany({
+                where: { isActive: true, user: { isVerified: true } },
+                select: { id: true, name: true, location: true, image: true, category: true, slug: true },
+                take: 6,
                 orderBy: { createdAt: "desc" }
             }),
 
-            // Search Poojas
-            searchQuery ? prisma.pooja.findMany({
-                where: {
-                    OR: [
-                        { name: { path: ['en'], string_contains: searchQuery } },
-                        { name: { path: ['hi'], string_contains: searchQuery } },
-                        { category: { path: ['en'], string_contains: searchQuery } },
-                        { about: { path: ['en'], string_contains: searchQuery } }
-                    ],
-                    status: true
-                } as any,
-                select: {
-                    id: true,
-                    name: true,
-                    image: true,
-                    category: true,
-                    isMaster: true,
-                    masterPoojaId: true,
-                    slug: true,
-                    temple: {
-                        select: { name: true }
-                    }
-                },
-                take: 20
-            }) : Promise.resolve([]),
+            // Search Poojas - Master poojas OR Verified Temple poojas
+            searchQuery ? prisma.$queryRaw`
+                SELECT p.id, p.name, p.image, p.category, p."isMaster", p."masterPoojaId", p.slug,
+                       jsonb_build_object('name', t.name) as temple
+                FROM "Pooja" p
+                LEFT JOIN "Temple" t ON p."templeId" = t.id
+                LEFT JOIN "User" u ON t."userId" = u.id
+                WHERE (
+                    (p.name->>'en' ILIKE ${ilikeQuery}) OR 
+                    (p.name->>'hi' ILIKE ${ilikeQuery}) OR 
+                    (p.category->>'en' ILIKE ${ilikeQuery}) OR 
+                    (p.about->>'en' ILIKE ${ilikeQuery})
+                ) AND p.status = true 
+                AND (p."isMaster" = true OR (t."isActive" = true AND u."isVerified" = true))
+                LIMIT 20
+            ` : Promise.resolve([]),
 
-            // Search Products
-            searchQuery ? prisma.product.findMany({
-                where: {
-                    OR: [
-                        { name: { path: ['en'], string_contains: searchQuery } },
-                        { name: { path: ['hi'], string_contains: searchQuery } },
-                        { category: { path: ['en'], string_contains: searchQuery } },
-                        { description: { path: ['en'], string_contains: searchQuery } }
-                    ],
-                    status: "approved"
-                } as any,
-                select: {
-                    id: true,
-                    name: true,
-                    image: true,
-                    category: true
-                },
-                take: 20
-            }) : Promise.resolve([])
+            // Search Products - Only approved ones from verified sellers/temples
+            searchQuery ? prisma.$queryRaw`
+                SELECT p.id, p.name, p.image, p.category 
+                FROM "Product" p
+                LEFT JOIN "Temple" t ON p."templeId" = t.id
+                LEFT JOIN "SellerProfile" s ON p."sellerId" = s.id
+                LEFT JOIN "User" ut ON t."userId" = ut.id
+                LEFT JOIN "User" us ON s."userId" = us.id
+                WHERE (
+                    (p.name->>'en' ILIKE ${ilikeQuery}) OR 
+                    (p.name->>'hi' ILIKE ${ilikeQuery}) OR 
+                    (p.category->>'en' ILIKE ${ilikeQuery}) OR 
+                    (p.description->>'en' ILIKE ${ilikeQuery})
+                ) AND p.status = 'approved'
+                AND (
+                    (p."templeId" IS NOT NULL AND t."isActive" = true AND ut."isVerified" = true) OR
+                    (p."sellerId" IS NOT NULL AND s."isActive" = true AND us."isVerified" = true) OR
+                    (p."templeId" IS NULL AND p."sellerId" IS NULL)
+                )
+                LIMIT 20
+            ` : Promise.resolve([])
         ]);
 
-        // Localize results — JSON fields → selected lang
-        const locTemples = localize(temples, lang);
-        const locPoojas = localize(poojas, lang);
-        const locProducts = localize(products, lang);
+        // Localize results
+        const locTemples = localize(temples as any[], lang);
+        const locPoojas = localize(poojas as any[], lang);
+        const locProducts = localize(products as any[], lang);
 
-        // Deduplicate Poojas by name, preferring Master poojas
+        // Deduplicate Poojas by name
         const uniquePoojasMap = new Map();
         (locPoojas as any[]).forEach((p: any) => {
             const key = (p.name || '').toLowerCase().trim();
@@ -97,9 +84,7 @@ export const searchGlobal = async (req: Request, res: Response) => {
             const isBetter = !existing || 
                              (p.isMaster && !existing.isMaster) || 
                              (!p.masterPoojaId && existing.masterPoojaId && !p.isMaster);
-            if (isBetter) {
-                uniquePoojasMap.set(key, p);
-            }
+            if (isBetter) uniquePoojasMap.set(key, p);
         });
         const deduplicatedPoojas = Array.from(uniquePoojasMap.values());
 
@@ -117,7 +102,7 @@ export const searchGlobal = async (req: Request, res: Response) => {
                 id: p.id,
                 title: p.name,
                 category: "Pooja" as const,
-                location: p.temple?.name,
+                location: p.temple?.name || undefined,
                 image: p.image,
                 type: p.category,
                 slug: p.slug
@@ -131,7 +116,7 @@ export const searchGlobal = async (req: Request, res: Response) => {
             }))
         ];
 
-        // Rank results if searching
+        // Rank results
         if (searchQuery) {
             const lowQuery = searchQuery.toLowerCase();
             unifiedResults.sort((a, b) => {

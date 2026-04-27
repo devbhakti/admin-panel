@@ -8,6 +8,8 @@ import { Mail, Phone, MapPin, MessageSquare, Clock, Send, Loader2 } from "lucide
 import { useLanguage } from "@/context/LanguageContext";
 import { submitContactForm } from "@/api/publicController";
 import { useToast } from "@/hooks/use-toast";
+import Image from "next/image";
+import contactImage from "@/assets/temple-somnath.jpg";
 
 export default function ContactClient() {
     const { t } = useLanguage();
@@ -133,50 +135,56 @@ export default function ContactClient() {
             <Navbar />
 
             {/* Hero Header */}
-          {/* Hero Header */}
-{/* 1. 'pt-32' ko 'pt-40' kar diya hai space ke liye */}
-<section className="relative pt-40 pb-20">
-    <div className="absolute inset-0 z-0 bg-gradient-to-b from-primary/5 via-transparent to-background" />
-    <div className="container mx-auto px-4 relative z-10 text-center">
-        <motion.div
-            initial={{ opacity: 0, y: -20 }}
-            animate={{ opacity: 1, y: 0 }}
-            className="flex justify-center mb-6"
-        >
-            <div className="p-4 bg-primary/10 backdrop-blur-md rounded-2xl">
-                <MessageSquare className="w-12 h-12 text-primary" />
-            </div>
-        </motion.div>
+            <section className="relative min-h-[480px] flex items-center justify-center overflow-hidden">
+                {/* Background image */}
+                <div className="absolute inset-0">
+                    <Image
+                        src={contactImage}
+                        alt="Contact DevBhakti"
+                        fill
+                        priority
+                        className="object-cover"
+                    />
+                    <div className="absolute inset-0 bg-gradient-to-b from-background/80 via-background/60 to-background/90" />
+                </div>
 
-        {/* 2. H1 Title Fix: Formula Applied */}
-        <motion.h1
-            // 'scale' hata ke 'y' (slide) lagaya
-            initial={{ opacity: 0, y: 20 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ duration: 0.8 }}
-            // 'py-4', 'leading-[1.3]', 'break-words' add kiya
-            className="text-5xl md:text-7xl font-serif font-bold mb-6 text-gradient-sacred pb-2 py-4 leading-[1.3] break-words"
-        >
-            {t('contact.title')}
-        </motion.h1>
+                <div className="container mx-auto px-4 pt-28 pb-12 relative z-10 text-center">
+                    <motion.div
+                        initial={{ opacity: 0, y: -20 }}
+                        animate={{ opacity: 1, y: 0 }}
+                        className="flex justify-center mb-6"
+                    >
+                        <div className="p-4 bg-primary/10 backdrop-blur-md rounded-2xl">
+                            <MessageSquare className="w-12 h-12 text-primary" />
+                        </div>
+                    </motion.div>
 
-        <motion.div
-            initial={{ opacity: 0 }}
-            animate={{ opacity: 1 }}
-            transition={{ delay: 0.2 }}
-            className="text-xl text-muted-foreground max-w-2xl mx-auto leading-relaxed space-y-4"
-        >
-            <p>
-                {t('contact.subtitle.p1')}<br />
-                <span className="font-bold">{t('contact.subtitle.company')}</span><br />
-                {t('contact.subtitle.p2')}
-            </p>
-            <p>
-                {t('contact.subtitle.p3')}
-            </p>
-        </motion.div>
-    </div>
-</section>
+                    <motion.h1
+                        initial={{ opacity: 0, y: 20 }}
+                        animate={{ opacity: 1, y: 0 }}
+                        transition={{ duration: 0.8 }}
+                        className="text-4xl md:text-5xl lg:text-7xl font-serif font-bold mb-6 text-foreground leading-tight"
+                    >
+                        {t('contact.title')}
+                    </motion.h1>
+
+                    <motion.div
+                        initial={{ opacity: 0 }}
+                        animate={{ opacity: 1 }}
+                        transition={{ delay: 0.2 }}
+                        className="text-lg md:text-xl text-foreground/80 max-w-2xl mx-auto leading-relaxed space-y-4"
+                    >
+                        <p>
+                            {t('contact.subtitle.p1')}<br />
+                            <span className="font-bold text-foreground">{t('contact.subtitle.company')}</span><br />
+                            {t('contact.subtitle.p2')}
+                        </p>
+                        <p>
+                            {t('contact.subtitle.p3')}
+                        </p>
+                    </motion.div>
+                </div>
+            </section>
 
             {/* Contact Grid */}
             <section className="py-20 container mx-auto px-4">

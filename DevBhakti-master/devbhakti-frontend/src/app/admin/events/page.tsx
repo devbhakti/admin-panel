@@ -1089,7 +1089,7 @@ export default function AdminEventsPage() {
                                 </Popover>
                             </div>
 
-                            <div className="space-y-2">
+                            {/* <div className="space-y-2">
                                 <Label className="font-medium">{t('admin.events.time_label')} *</Label>
 
                                 <div className="flex gap-1">
@@ -1120,7 +1120,7 @@ export default function AdminEventsPage() {
                                         <option value="PM">PM</option>
                                     </select>
                                 </div>
-                            </div>
+                            </div> */}
                         </div>
 
 

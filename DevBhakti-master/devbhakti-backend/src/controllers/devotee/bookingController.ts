@@ -736,15 +736,30 @@ export const getBookingReceipt = async (req: Request, res: Response) => {
 
         if (booking.devoteeEmail) doc.text(`Email: ${booking.devoteeEmail}`);
 
+
+
         // Spiritual Details Below Devotee Initials
+
         doc.moveDown(1);
+
         doc.fillColor(primaryColor).fontSize(10).font('Helvetica-Bold').text('SPIRITUAL DETAILS', 50, doc.y);
+
         doc.fillColor(textColor).font('Helvetica').fontSize(9);
+
         if (booking.gothra) doc.text(`Gothra: ${booking.gothra}`);
+
         if (booking.kuldevi) doc.text(`Kuldevi: ${booking.kuldevi}`);
+
         if (booking.kuldevta) doc.text(`Kuldevta: ${booking.kuldevta}`);
+
         if (booking.dob) doc.text(`DOB: ${booking.dob}`);
+
         if (booking.nativePlace) doc.text(`Native Place: ${booking.nativePlace}`);
+
+
+
+        const leftColumnBottom = doc.y;
+
 
 
         // Booking Status Column (Right)
@@ -761,7 +776,13 @@ export const getBookingReceipt = async (req: Request, res: Response) => {
 
 
 
-        doc.moveDown(4);
+        const rightColumnBottom = doc.y;
+
+
+
+        // Start table after the longest column
+
+        doc.y = Math.max(leftColumnBottom, rightColumnBottom) + 40;
 
 
 
@@ -770,7 +791,6 @@ export const getBookingReceipt = async (req: Request, res: Response) => {
         doc.fillColor(lightGray).rect(50, doc.y, 500, 25).fill();
 
         doc.fillColor(primaryColor).fontSize(10).font('Helvetica-Bold').text('RITUAL DESCRIPTION', 60, doc.y + 7);
-
         doc.text('AMOUNT', 400, doc.y, { align: 'right', width: 140 });
 
 
@@ -805,26 +825,19 @@ export const getBookingReceipt = async (req: Request, res: Response) => {
 
 
         // --- Summary Section ---
-
         const summaryY = doc.y;
-
         doc.fillColor(textColor).font('Helvetica').fontSize(10).text('Subtotal:', 350, summaryY);
-
         doc.font('Helvetica-Bold').text(`Rs. ${booking.packagePrice}`, 400, summaryY, { align: 'right', width: 140 });
 
         doc.moveDown(1);
-        
-        doc.fillColor(textColor).font('Helvetica').fontSize(10).text('Platform Fee:', 350, doc.y);
+        const feeY = doc.y;
+        doc.fillColor(textColor).font('Helvetica').fontSize(10).text('Platform Fee:', 350, feeY);
+        doc.font('Helvetica-Bold').text(`Rs. ${booking.platformFee || 0}`, 400, feeY, { align: 'right', width: 140 });
 
-        doc.font('Helvetica-Bold').text(`Rs. ${booking.platformFee || 0}`, 400, doc.y - 12, { align: 'right', width: 140 });
-
-
-
-        doc.moveDown(1);
-
-        doc.font('Helvetica-Bold').fontSize(13).text('Total Amount Paid:', 280, doc.y);
-
-        doc.fillColor(primaryColor).text(`Rs. ${booking.packagePrice + (booking.platformFee || 0)}`, 400, doc.y - 13, { align: 'right', width: 140 });
+        doc.moveDown(1.5);
+        const totalY = doc.y;
+        doc.font('Helvetica-Bold').fontSize(13).text('Total Amount Paid:', 280, totalY);
+        doc.fillColor(primaryColor).text(`Rs. ${booking.packagePrice + (booking.platformFee || 0)}`, 400, totalY, { align: 'right', width: 140 });
 
 
 

@@ -26,6 +26,10 @@ import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Badge } from "@/components/ui/badge";
+import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
+import { Calendar as UICalendar } from "@/components/ui/calendar";
+import { DateRange } from "react-day-picker";
+import { format } from "date-fns";
 import { fetchAllBookingsAdmin, deleteBookingAdmin, updateBookingStatusAdmin } from "@/api/adminController";
 import { useToast } from "@/hooks/use-toast";
 import { useDebounce } from "@/hooks/use-debounce";
@@ -101,8 +105,7 @@ function BookingsContent() {
     const [stats, setStats] = useState({ booked: 0, completed: 0, cancelled: 0, rejected: 0 });
 
     const [dateRange, setDateRange] = useState<"all" | "week" | "month" | "year" | "custom">("all");
-    const [customStartDate, setCustomStartDate] = useState("");
-    const [customEndDate, setCustomEndDate] = useState("");
+    const [selectedDateRange, setSelectedDateRange] = useState<DateRange | undefined>(undefined);
     const [showCustomDate, setShowCustomDate] = useState(false);
 
     // New filters
@@ -114,20 +117,18 @@ function BookingsContent() {
         setLoading(true);
         try {
             let startDate, endDate;
-            if (dateRange !== "all") {
-                if (dateRange === "custom") {
-                    startDate = customStartDate ? new Date(customStartDate).toISOString() : undefined;
-                    endDate = customEndDate ? new Date(customEndDate).toISOString() : undefined;
-                } else {
-                    const now = new Date();
-                    const end = new Date();
-                    const start = new Date();
-                    if (dateRange === "week") start.setDate(now.getDate() - 7);
-                    else if (dateRange === "month") start.setMonth(now.getMonth() - 1);
-                    else if (dateRange === "year") start.setFullYear(now.getFullYear() - 1);
-                    startDate = start.toISOString();
-                    endDate = end.toISOString();
-                }
+            if (selectedDateRange?.from) startDate = selectedDateRange.from.toISOString();
+            if (selectedDateRange?.to) endDate = selectedDateRange.to.toISOString();
+
+            if (!startDate && !endDate && dateRange !== "all") {
+                const now = new Date();
+                const end = new Date();
+                const start = new Date();
+                if (dateRange === "week") start.setDate(now.getDate() - 7);
+                else if (dateRange === "month") start.setMonth(now.getMonth() - 1);
+                else if (dateRange === "year") start.setFullYear(now.getFullYear() - 1);
+                startDate = start.toISOString();
+                endDate = end.toISOString();
             }
 
             const res = await fetchAllBookingsAdmin({
@@ -165,7 +166,7 @@ function BookingsContent() {
 
     useEffect(() => {
         loadBookings(currentPage);
-    }, [debouncedSearch, statusFilter, dateRange, customStartDate, customEndDate, currentPage, filterDateType, sortBy, sortOrder]);
+    }, [debouncedSearch, statusFilter, dateRange, selectedDateRange, currentPage, filterDateType, sortBy, sortOrder]);
 
     const handleDelete = async (id: string) => {
         if (!confirm("Are you sure you want to delete this booking?")) return;
@@ -341,36 +342,83 @@ function BookingsContent() {
                                 <option value="ritualDate">Ritual Date</option>
                             </select>
                             <span className="text-slate-300">|</span>
-                            <select
-                                className="h-8 bg-transparent text-sm font-medium focus:outline-none text-slate-700 cursor-pointer pl-1 pr-2"
-                                value={dateRange}
-                                onChange={(e) => setDateRange(e.target.value as any)}
-                            >
-                                <option value="all">All Time</option>
-                                <option value="week">Past Week</option>
-                                <option value="month">Past Month</option>
-                                <option value="year">Past Year</option>
-                                <option value="custom">Custom Range</option>
-                            </select>
+                            <Popover>
+                                <PopoverTrigger asChild>
+                                    <Button
+                                        variant="ghost"
+                                        className={cn(
+                                            "h-8 px-2 justify-start text-left font-medium text-slate-700 hover:bg-transparent text-sm",
+                                            !selectedDateRange && "text-slate-500"
+                                        )}
+                                    >
+                                        <span className="truncate">
+                                            {selectedDateRange?.from ? (
+                                                selectedDateRange.to ? (
+                                                    <>
+                                                        {format(selectedDateRange.from, "LLL dd, y")} - {format(selectedDateRange.to, "LLL dd, y")}
+                                                    </>
+                                                ) : (
+                                                    format(selectedDateRange.from, "LLL dd, y")
+                                                )
+                                            ) : (
+                                                "Filter by Date"
+                                            )}
+                                        </span>
+                                        <ChevronDown className="ml-2 h-4 w-4 opacity-50" />
+                                    </Button>
+                                </PopoverTrigger>
+                                <PopoverContent className="w-auto p-0 rounded-2xl shadow-xl border-primary/5" align="start">
+                                    <div className="p-3 border-b flex items-center justify-between bg-slate-50/50">
+                                        <span className="text-xs font-bold text-slate-500 uppercase tracking-wider">Quick Select</span>
+                                        <div className="flex gap-1.5">
+                                            {["all", "week", "month", "year"].map((r) => (
+                                                <Button
+                                                    key={r}
+                                                    variant="ghost"
+                                                    size="sm"
+                                                    onClick={() => {
+                                                        setDateRange(r as any);
+                                                        setSelectedDateRange(undefined);
+                                                    }}
+                                                    className={cn(
+                                                        "h-7 px-2.5 text-[10px] font-bold rounded-lg transition-all",
+                                                        dateRange === r ? "bg-[#794A05] text-white" : "text-slate-500 hover:bg-slate-100"
+                                                    )}
+                                                >
+                                                    {r === "all" ? "All" : r === "week" ? "Week" : r === "month" ? "Month" : "Year"}
+                                                </Button>
+                                            ))}
+                                        </div>
+                                    </div>
+                                    <UICalendar
+                                        initialFocus
+                                        mode="range"
+                                        defaultMonth={selectedDateRange?.from}
+                                        selected={selectedDateRange}
+                                        onSelect={(range) => {
+                                            setSelectedDateRange(range);
+                                            if (range) setDateRange("custom");
+                                        }}
+                                        numberOfMonths={2}
+                                    />
+                                    {selectedDateRange && (
+                                        <div className="p-3 border-t flex justify-end bg-slate-50/50 rounded-b-2xl">
+                                            <Button 
+                                                variant="ghost" 
+                                                size="sm" 
+                                                className="h-8 text-xs font-bold text-rose-500 hover:text-rose-600 hover:bg-rose-50 rounded-lg" 
+                                                onClick={() => {
+                                                    setSelectedDateRange(undefined);
+                                                    setDateRange("all");
+                                                }}
+                                            >
+                                                Clear Filter
+                                            </Button>
+                                        </div>
+                                    )}
+                                </PopoverContent>
+                            </Popover>
                         </div>
-
-                        {dateRange === "custom" && (
-                            <div className="flex gap-2 items-center bg-slate-50 p-1.5 rounded-xl border border-slate-200/60 shadow-sm">
-                                <input
-                                    type="date"
-                                    className="text-sm h-8 bg-transparent border-none focus:ring-0 cursor-pointer text-slate-700 font-medium px-2"
-                                    value={customStartDate}
-                                    onChange={(e) => setCustomStartDate(e.target.value)}
-                                />
-                                <span className="text-slate-400 text-sm font-medium">to</span>
-                                <input
-                                    type="date"
-                                    className="text-sm h-8 bg-transparent border-none focus:ring-0 cursor-pointer text-slate-700 font-medium px-2"
-                                    value={customEndDate}
-                                    onChange={(e) => setCustomEndDate(e.target.value)}
-                                />
-                            </div>
-                        )}
                     </div>
 
                     <div className="flex items-center gap-2 bg-slate-50 p-1.5 rounded-xl border border-slate-200/60 shadow-sm transition-all hover:border-slate-300 w-full lg:w-auto justify-end">

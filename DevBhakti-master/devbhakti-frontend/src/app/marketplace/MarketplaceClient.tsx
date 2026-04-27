@@ -104,7 +104,7 @@ export default function MarketplaceClient() {
   const [searchQuery, setSearchQuery] = useState("");
   const [debouncedSearchQuery, setDebouncedSearchQuery] = useState("");
   const [selectedCategory, setSelectedCategory] = useState("All");
-  const [priceRange, setPriceRange] = useState([0, 5000]);
+  const [priceRange, setPriceRange] = useState([0, 50000]);
   const [sortBy, setSortBy] = useState("newest");
   const { cartItems, addToCart: addToCartGlobal, updateQuantity, removeFromCart } = useCart();
   const [favorites, setFavorites] = useState<string[]>([]);
@@ -113,6 +113,9 @@ export default function MarketplaceClient() {
   const [categories, setCategories] = useState<Category[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
+  const [isSearchFocused, setIsSearchFocused] = useState(false);
+  const [suggestions, setSuggestions] = useState<any[]>([]);
+  const [allProducts, setAllProducts] = useState<Product[]>([]);
   const [showRatings, setShowRatings] = useState(false);
   const [currentPage, setCurrentPage] = useState(1);
   const [showAllProducts, setShowAllProducts] = useState(false);
@@ -136,10 +139,30 @@ export default function MarketplaceClient() {
 
   useEffect(() => {
     loadCategories();
-    loadProducts(1);
     loadFavorites();
     loadRatingsSettings();
-  }, [debouncedSearchQuery, selectedCategory, showAllProducts, priceRange, sortBy, language]);
+    loadAllProducts();
+  }, [language]);
+
+  useEffect(() => {
+    setCurrentPage(1);
+  }, [searchQuery, selectedCategory, priceRange, sortBy]);
+
+  const loadAllProducts = async () => {
+    setIsLoading(true);
+    try {
+      // Fetch a large enough set of products for client-side filtering
+      const data = await fetchPublicProducts({ lang: language, limit: 1000 });
+      if (data && data.products) {
+        setAllProducts(data.products);
+        setTotalProducts(data.products.length);
+      }
+    } catch (err) {
+      console.error("Error loading all products:", err);
+    } finally {
+      setIsLoading(false);
+    }
+  };
 
   const loadRatingsSettings = async () => {
     try {
@@ -175,46 +198,45 @@ export default function MarketplaceClient() {
     }
   };
 
-  const loadProducts = async (page = 1, limit = showAllProducts ? undefined : productsPerPage) => {
-    setIsLoading(true);
-    setError(null);
-    try {
-      const params: any = {
-        search: debouncedSearchQuery || undefined,
-        page: showAllProducts ? undefined : page,
-        limit: limit,
-        category: selectedCategory !== "All" ? selectedCategory : undefined,
-        minPrice: priceRange[0],
-        maxPrice: priceRange[1],
-        sort: sortBy,
-        lang: language
-      };
-
-      params.sort = sortBy;
-
-      const data = await fetchPublicProducts(params);
-      setProducts(data.products || []);
-      setTotalProducts(data.pagination?.total || 0);
+  // Client-side filtering and sorting (Same as Poojas and Sevas)
+  const filteredProducts = React.useMemo(() => {
+    let result = allProducts.filter(product => {
+      const name = getLocalized(product, 'name', language).toLowerCase();
+      const categoryMatch = selectedCategory === "All" || product.categoryId === selectedCategory || product.category === selectedCategory;
+      const searchMatch = searchQuery === "" || name.includes(searchQuery.toLowerCase());
       
-      if (!showAllProducts) {
-        setTotalPages(data.pagination?.pages || 1);
-      } else {
-        setTotalPages(1);
-      }
-    } catch (err: any) {
-      console.error("Error loading products:", err);
-      setError(err.message || "Failed to load products");
-    } finally {
-      setIsLoading(false);
-    }
-  };
+      // Price Range check
+      const productPrice = product.variants?.[0]?.price || 0;
+      const priceMatch = productPrice >= priceRange[0] && productPrice <= priceRange[1];
 
-  // Server-side filtering is now used, so we use products directly
-  const filteredProducts = products;
+      return categoryMatch && searchMatch && priceMatch;
+    });
+
+    // Sorting
+    if (sortBy === "price_asc") {
+      result.sort((a, b) => (a.variants?.[0]?.price || 0) - (b.variants?.[0]?.price || 0));
+    } else if (sortBy === "price_desc") {
+      result.sort((a, b) => (b.variants?.[0]?.price || 0) - (a.variants?.[0]?.price || 0));
+    } else if (sortBy === "newest") {
+      // Assuming ID or some other property for newest if date not present
+      result.sort((a, b) => b.id.localeCompare(a.id));
+    }
+
+    return result;
+  }, [allProducts, searchQuery, selectedCategory, priceRange, sortBy, language]);
+
+  // Paginated view of filtered products
+  const paginatedProducts = React.useMemo(() => {
+    if (showAllProducts) return filteredProducts;
+    const startIndex = (currentPage - 1) * productsPerPage;
+    return filteredProducts.slice(startIndex, startIndex + productsPerPage);
+  }, [filteredProducts, currentPage, showAllProducts]);
+
+  const totalPagesCount = Math.ceil(filteredProducts.length / productsPerPage);
 
   const handlePageChange = (page: number) => {
     setCurrentPage(page);
-    loadProducts(page);
+    window.scrollTo({ top: 0, behavior: 'smooth' });
   };
 
   const handleShowAllToggle = () => {
@@ -237,11 +259,42 @@ export default function MarketplaceClient() {
     return matrix[b.length][a.length];
   };
 
+  const getFuzzySuggestions = (query: string) => {
+    if (query.length < 2) return [];
+    const matches: any[] = [];
+    allProducts.forEach(product => {
+      const name = getLocalized(product, 'name', language) || "";
+      const queryLower = query.toLowerCase();
+      const nameLower = name.toLowerCase();
+      const distance = getLevenshteinDistance(queryLower, nameLower);
+      
+      if (nameLower === queryLower) return;
+
+      if (distance < 3 || nameLower.includes(queryLower)) {
+        matches.push({
+          title: name,
+          category: getLocalized(product.categoryObj, 'name', language) || product.category || t('marketplace.exclusive')
+        });
+      }
+    });
+    return Array.from(new Set(matches.map(m => m.title)))
+      .map(title => matches.find(m => m.title === title))
+      .slice(0, 5);
+  };
+
+  useEffect(() => {
+    if (searchQuery.trim() && isSearchFocused) {
+      setSuggestions(getFuzzySuggestions(searchQuery));
+    } else {
+      setSuggestions([]);
+    }
+  }, [searchQuery, isSearchFocused, allProducts]);
+
   const suggestion = React.useMemo(() => {
     if (searchQuery.length < 2 || filteredProducts.length > 0) return null;
     let minDistance = Infinity;
     let bestMatch = "";
-    products.forEach(product => {
+    allProducts.forEach(product => {
       const productName = (getLocalized(product, 'name', language) || "");
       const distance = getLevenshteinDistance(searchQuery.toLowerCase(), productName.toLowerCase());
       if (distance < minDistance && distance < 4) {
@@ -250,7 +303,7 @@ export default function MarketplaceClient() {
       }
     });
     return bestMatch;
-  }, [searchQuery, filteredProducts, products]);
+  }, [searchQuery, filteredProducts, allProducts]);
 
   const toggleFavorite = async (id: string) => {
     const savedUser = localStorage.getItem("user");
@@ -325,20 +378,27 @@ export default function MarketplaceClient() {
           <motion.p initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.1 }} className="text-lg text-slate-800 mb-10">
             {t('marketplace.subtitle')}
           </motion.p>
-          <div className="relative max-w-2xl mx-auto">
-            <div className="relative flex items-center bg-white/90 backdrop-blur-sm rounded-2xl shadow-xl overflow-hidden border border-[#794A05]/10">
+          <div className="relative max-w-2xl mx-auto group">
+            <div className="absolute -inset-1 bg-gradient-to-r from-primary to-orange-400 rounded-2xl blur opacity-25 group-hover:opacity-40 transition duration-1000 group-hover:duration-200" />
+            <div className="relative flex items-center bg-white rounded-2xl shadow-xl overflow-hidden border border-[#794A05]/10">
               <Search className="absolute left-5 h-5 w-5 text-[#794A05]/50" />
               <input 
                 type="text" 
                 placeholder={t('marketplace.search_placeholder')} 
                 value={searchQuery} 
                 onChange={(e) => setSearchQuery(e.target.value)} 
-                className="w-full pl-14 pr-32 py-5 text-lg outline-none bg-transparent" 
+                onFocus={() => setIsSearchFocused(true)}
+                className="w-full pl-14 pr-32 py-5 text-lg outline-none bg-transparent text-zinc-800" 
               />
-              <Button className="absolute right-2 h-12 px-8 rounded-xl bg-[#794A05] text-white font-bold">
+              <Button 
+                onClick={() => setIsSearchFocused(false)}
+                className="absolute right-2 h-12 px-8 rounded-xl bg-[#794A05] text-white font-bold"
+              >
                 {t('marketplace.explore')}
               </Button>
             </div>
+
+            {/* Overlay to close suggestions is no longer needed since dropdown is removed */}
           </div>
         </div>
       </section>
@@ -351,9 +411,9 @@ export default function MarketplaceClient() {
                 <h3 className="font-semibold text-foreground mb-4 flex items-center gap-2">
                     <Filter className="h-4 w-4" /> 
                     {t('marketplace.filters')}
-                    {(selectedCategory !== "All" || priceRange[0] !== 0 || priceRange[1] !== 5000) && (
+                    {(selectedCategory !== "All" || priceRange[0] !== 0 || priceRange[1] !== 50000) && (
                       <button 
-                        onClick={() => { setSelectedCategory("All"); setPriceRange([0, 5000]); setCurrentPage(1); setSearchQuery(""); }}
+                        onClick={() => { setSelectedCategory("All"); setPriceRange([0, 50000]); setCurrentPage(1); setSearchQuery(""); }}
                         className="ml-auto text-xs font-medium text-primary hover:underline"
                       >
                         {t('reset')}
@@ -399,23 +459,45 @@ export default function MarketplaceClient() {
                 
                 <div className="px-2">
                   <Slider
-                    defaultValue={[0, 5000]}
-                    max={5000}
+                    defaultValue={[0, 50000]}
+                    max={50000}
                     step={100}
                     value={priceRange}
                     onValueChange={(value) => setPriceRange(value)}
                     className="mb-6"
                   />
                   
-                  <div className="flex items-center justify-between mt-4">
-                    <div className="flex flex-col">
+                  <div className="flex items-center justify-between mt-4 gap-3">
+                    <div className="flex flex-col flex-1">
                       <span className="text-[10px] uppercase font-bold text-muted-foreground mb-1">{t('marketplace.min')}</span>
-                      <span className="text-sm font-bold text-foreground">₹{priceRange[0]}</span>
+                      <div className="relative">
+                        <span className="absolute left-3 top-1/2 -translate-y-1/2 text-xs font-bold text-muted-foreground">₹</span>
+                        <input
+                          type="number"
+                          value={priceRange[0]}
+                          onChange={(e) => {
+                            const val = Math.min(Math.max(0, parseInt(e.target.value) || 0), priceRange[1]);
+                            setPriceRange([val, priceRange[1]]);
+                          }}
+                          className="w-full pl-7 pr-3 py-2 text-sm font-bold bg-muted/50 border border-border/50 rounded-xl outline-none focus:border-primary/50 transition-colors"
+                        />
+                      </div>
                     </div>
-                    <div className="w-8 h-px bg-border/50 mx-2 mt-4" />
-                    <div className="flex flex-col items-end">
+                    <div className="w-4 h-px bg-border/50 mt-4 shrink-0" />
+                    <div className="flex flex-col flex-1">
                       <span className="text-[10px] uppercase font-bold text-muted-foreground mb-1">{t('marketplace.max')}</span>
-                      <span className="text-sm font-bold text-foreground">₹{priceRange[1]}</span>
+                      <div className="relative">
+                        <span className="absolute left-3 top-1/2 -translate-y-1/2 text-xs font-bold text-muted-foreground">₹</span>
+                        <input
+                          type="number"
+                          value={priceRange[1]}
+                          onChange={(e) => {
+                            const val = Math.max(priceRange[0], Math.min(50000, parseInt(e.target.value) || 0));
+                            setPriceRange([priceRange[0], val]);
+                          }}
+                          className="w-full pl-7 pr-3 py-2 text-sm font-bold bg-muted/50 border border-border/50 rounded-xl outline-none focus:border-primary/50 transition-colors"
+                        />
+                      </div>
                     </div>
                   </div>
                 </div>
@@ -428,11 +510,11 @@ export default function MarketplaceClient() {
                 <div className="flex flex-col sm:flex-row sm:items-center gap-4 w-full md:w-auto">
                   <p className="text-sm">
                     {t('marketplace.showing')} 
-                    <span className="font-semibold">{showAllProducts ? totalProducts : filteredProducts.length}</span> 
+                    <span className="font-semibold">{paginatedProducts.length}</span> 
                     {t('marketplace.products')}
-                    {!showAllProducts && totalPages > 1 && (
+                    {!showAllProducts && totalPagesCount > 1 && (
                       <span className="text-sm text-muted-foreground ml-2">
-                        {t('marketplace.page_info', { current: currentPage, total: totalPages })}
+                        {t('marketplace.page_info', { current: currentPage, total: totalPagesCount })}
                       </span>
                     )}
                   </p>
@@ -458,7 +540,7 @@ export default function MarketplaceClient() {
             </div>
 
             <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
-              {filteredProducts.map((product) => (
+              {paginatedProducts.map((product) => (
                 <Card key={product.id} className="group overflow-hidden border-border/50 hover:shadow-xl transition-all duration-300">
                   <Link href={`/marketplace/product/${product.id}`}>
                     <div className="relative aspect-[5/4] overflow-hidden bg-muted">
@@ -506,7 +588,7 @@ export default function MarketplaceClient() {
             </div>
             
             {/* Pagination Controls */}
-            {!showAllProducts && totalPages > 1 && (
+            {!showAllProducts && totalPagesCount > 1 && (
               <div className="flex justify-center items-center gap-2 mt-8 pb-4">
                 <Button
                   variant="outline"
@@ -519,7 +601,7 @@ export default function MarketplaceClient() {
                 </Button>
                 
                 <div className="flex items-center gap-2">
-                  {Array.from({ length: totalPages }, (_, i) => i + 1).map((page) => (
+                  {Array.from({ length: totalPagesCount }, (_, i) => i + 1).map((page) => (
                     <Button
                       key={page}
                       variant={currentPage === page ? "default" : "outline"}
@@ -536,7 +618,7 @@ export default function MarketplaceClient() {
                   variant="outline"
                   size="sm"
                   onClick={() => handlePageChange(currentPage + 1)}
-                  disabled={currentPage === totalPages}
+                  disabled={currentPage === totalPagesCount}
                   className="px-4 py-2"
                 >
                   {t('marketplace.next')}

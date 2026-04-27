@@ -80,6 +80,7 @@ export const getAllTemples = async (req: Request, res: Response) => {
   try {
     const { 
       page, limit, search, isVerified, templeId, date, 
+      startDate, endDate,
       deity, category, 
       state, district, location, 
       transactionRange, 
@@ -175,7 +176,11 @@ export const getAllTemples = async (req: Request, res: Response) => {
       }
     }
 
-    if (date) {
+    if (startDate || endDate) {
+      where.createdAt = {};
+      if (startDate) where.createdAt.gte = new Date(String(startDate));
+      if (endDate) where.createdAt.lte = new Date(String(endDate));
+    } else if (date) {
       const startOfDay = new Date(String(date));
       startOfDay.setHours(0, 0, 0, 0);
       const endOfDay = new Date(String(date));

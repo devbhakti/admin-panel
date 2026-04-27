@@ -37,18 +37,6 @@ export const initiateDonation = async (req: Request, res: Response) => {
         const temple = await prisma.temple.findUnique({ where: { id: templeId } });
         if (!temple) return res.status(404).json({ success: false, message: "Temple not found" });
 
-        // Create Razorpay Order
-        const options = {
-            amount: Math.round(amount * 100), // amount in the smallest currency unit
-            currency: "INR",
-            receipt: `don_${Date.now()}`,
-        };
-
-        const razorpayOrder = await razorpay.orders.create(options);
-
-        // Generate Custom Display ID
-        const displayId = generateDonationDisplayId();
-
         // Calculate Commission
         const commissionData = await getCommissionForAmount(
             amount,
@@ -58,7 +46,20 @@ export const initiateDonation = async (req: Request, res: Response) => {
         );
 
         const commissionAmount = commissionData.totalCommission || 0;
-        const netEarning = amount - commissionAmount;
+        const totalPayable = amount + commissionAmount;
+        const netEarning = amount;
+
+        // Create Razorpay Order
+        const options = {
+            amount: Math.round(totalPayable * 100), // amount in the smallest currency unit
+            currency: "INR",
+            receipt: `don_${Date.now()}`,
+        };
+
+        const razorpayOrder = await razorpay.orders.create(options);
+
+        // Generate Custom Display ID
+        const displayId = generateDonationDisplayId();
 
         // Save Pending Donation Record
         const donation = await prisma.donation.create({
@@ -164,9 +165,14 @@ export const generateDonationReceiptBuffer = async (donationId: string): Promise
             doc.moveDown(4);
 
             // --- Donation Amount Box ---
-            doc.fillColor(lightGray).rect(50, doc.y, 500, 60).fill();
-            doc.fillColor(primaryColor).fontSize(10).font('Helvetica-Bold').text('CONTRIBUTION AMOUNT', 60, doc.y + 15);
+            doc.fillColor(lightGray).rect(50, doc.y, 500, 80).fill();
+            doc.fillColor(primaryColor).fontSize(10).font('Helvetica-Bold').text('CONTRIBUTION TO TEMPLE', 60, doc.y + 15);
             doc.fontSize(20).text(`INR ${donation.amount.toLocaleString('en-IN')}`, 60, doc.y + 5);
+            
+            if (donation.commissionAmount && donation.commissionAmount > 0) {
+                doc.fillColor(textColor).fontSize(9).font('Helvetica').text(`Platform Support Fee: INR ${donation.commissionAmount.toLocaleString('en-IN')}`, 60, doc.y + 10);
+                doc.fillColor(textColor).fontSize(9).font('Helvetica-Bold').text(`Total Amount Paid: INR ${(donation.amount + donation.commissionAmount).toLocaleString('en-IN')}`, 60, doc.y + 5);
+            }
 
             doc.moveDown(4);
             doc.strokeColor(borderColor).lineWidth(1).moveTo(50, doc.y).lineTo(550, doc.y).stroke();
@@ -246,5 +252,29 @@ export const getMyDonations = async (req: Request, res: Response) => {
     } catch (error) {
         console.error('Error fetching my donations:', error);
         res.status(500).json({ success: false, message: 'Internal server error' });
+    }
+};
+
+export const calculateDonationCommission = async (req: Request, res: Response) => {
+    try {
+        const amount = parseFloat(req.query.amount as string);
+        if (isNaN(amount) || amount <= 0) {
+            return res.json({ success: true, platformFee: 0, totalPayable: 0 });
+        }
+        
+        const commissionData = await getCommissionForAmount(
+            amount,
+            SlabType.GLOBAL,
+            undefined,
+            CommissionCategory.DONATION
+        );
+        
+        res.json({ 
+            success: true, 
+            platformFee: commissionData.totalCommission || 0, 
+            totalPayable: amount + (commissionData.totalCommission || 0)
+        });
+    } catch (err: any) {
+        res.status(500).json({ success: false, message: err.message });
     }
 };

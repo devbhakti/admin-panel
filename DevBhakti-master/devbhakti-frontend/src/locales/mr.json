@@ -202,6 +202,7 @@
     "active": "सक्रिय:",
     "showing": "दाखवत आहे",
     "temples_count_label": "मंदिरे",
+    "no_temple_found": "तुमच्या शोधाशी जुळणारे कोणतेही मंदिर सापडले नाही.",
     "live_now": "आता थेट"
   },
   "footer": {

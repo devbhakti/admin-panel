@@ -16,8 +16,8 @@ export function Toaster() {
               {variant !== "success" && variant !== "destructive" && <Info className="h-5 w-5 text-blue-500 shrink-0 mt-0.5" />}
               
               <div className="grid gap-1">
-                {title && <ToastTitle>{title}</ToastTitle>}
-                {description && <ToastDescription>{description}</ToastDescription>}
+                {title && <ToastTitle className={variant === "success" ? "text-white" : ""}>{title}</ToastTitle>}
+                {description && <ToastDescription className={variant === "success" ? "text-white" : ""}>{description}</ToastDescription>}
               </div>
             </div>
             {action}

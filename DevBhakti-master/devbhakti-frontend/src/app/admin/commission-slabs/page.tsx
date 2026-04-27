@@ -249,8 +249,8 @@ export default function CommissionSlabsPage() {
                                 <span className="text-blue-600 font-bold text-xl">!</span>
                             </div>
                             <p className="text-sm text-blue-800 leading-relaxed font-medium">
-                                This percentage is only for internal accounting between Admin and Temple Admin. 
-                                <strong> Devotees (Users) will not see this deduction</strong> — they will always see the full amount they donated.
+                                This percentage is added on top of the devotee's donation amount.
+                                <strong> Devotees (Users) will pay this fee</strong> — the temple receives the full base donation amount.
                             </p>
                         </div>
                     </div>

@@ -31,6 +31,13 @@ import {
     PopoverContent,
     PopoverTrigger,
 } from "@/components/ui/popover";
+import {
+    Select,
+    SelectContent,
+    SelectItem,
+    SelectTrigger,
+    SelectValue,
+} from "@/components/ui/select";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Button } from "@/components/ui/button";
 
@@ -80,6 +87,7 @@ export default function TempleEventsPage() {
     const [events, setEvents] = useState<any[]>([]);
     const [isLoading, setIsLoading] = useState(true);
     const [searchTerm, setSearchTerm] = useState("");
+    const [selectedDate, setSelectedDate] = useState("ALL");
     const [isDialogOpen, setIsDialogOpen] = useState(false);
     const [editingEvent, setEditingEvent] = useState<any>(null);
     const [isSubmitting, setIsSubmitting] = useState(false);
@@ -284,9 +292,15 @@ export default function TempleEventsPage() {
         }
     };
 
+    const uniqueDates = Array.from(new Set(events.map(e => e.date)))
+        .filter(Boolean)
+        .sort((a, b) => new Date(a).getTime() - new Date(b).getTime());
+
     const filteredEvents = events.filter((event) => {
         const name = getL(event.name, 'en').toLowerCase();
-        return name.includes(searchTerm.toLowerCase());
+        const matchesSearch = name.includes(searchTerm.toLowerCase());
+        const matchesDate = selectedDate === "ALL" || event.date === selectedDate;
+        return matchesSearch && matchesDate;
     });
 
     // --- BULK MANAGEMENT ---
@@ -464,7 +478,7 @@ export default function TempleEventsPage() {
                 </div>
             </div>
 
-            {/* Search */}
+            {/* Search and Filters */}
             <div className="flex flex-col md:flex-row gap-4">
                 <div className="relative flex-1">
                     <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
@@ -475,6 +489,25 @@ export default function TempleEventsPage() {
                         onChange={(e) => setSearchTerm(e.target.value)}
                     />
                 </div>
+                <Select value={selectedDate} onValueChange={setSelectedDate}>
+                    <SelectTrigger className="flex h-10 w-full md:w-[250px] items-center justify-between rounded-md border border-slate-200 bg-white px-3 py-2 text-sm placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-[#7b4623]/20">
+                        <SelectValue placeholder="All Dates" />
+                    </SelectTrigger>
+                    <SelectContent>
+                        <SelectItem value="ALL" className="focus:bg-[#7b4623]/10 focus:text-[#7b4623]">
+                            All Dates
+                        </SelectItem>
+                        {uniqueDates.map((date) => (
+                            <SelectItem 
+                                key={date} 
+                                value={date}
+                                className="focus:bg-[#7b4623]/10 focus:text-[#7b4623]"
+                            >
+                                {date}
+                            </SelectItem>
+                        ))}
+                    </SelectContent>
+                </Select>
             </div>
 
             {/* Events Table */}
@@ -483,7 +516,7 @@ export default function TempleEventsPage() {
                     <TableHeader className="bg-slate-50">
                         <TableRow>
                             <TableHead>Event Name</TableHead>
-                            <TableHead>Date & Time</TableHead>
+                            <TableHead>Date</TableHead>
                             <TableHead>Description</TableHead>
                             <TableHead>Recommended Sevas</TableHead>
                             <TableHead>Status</TableHead>
@@ -522,12 +555,6 @@ export default function TempleEventsPage() {
                                             <Badge variant="outline" className="w-fit bg-indigo-50 text-indigo-700 border-indigo-100">
                                                 {event.date}
                                             </Badge>
-                                            {event.time && (
-                                                <div className="flex items-center text-xs font-bold text-slate-500 ml-1">
-                                                    <Clock className="w-3 h-3 mr-1" />
-                                                    {event.time}
-                                                </div>
-                                            )}
                                         </div>
                                     </TableCell>
                                     <TableCell>

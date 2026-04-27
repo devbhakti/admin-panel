@@ -199,7 +199,8 @@ export default function WithdrawalRequestsPage() {
                             label: "Total Gross Earning",
                             count: platformSummary?.totalPlatformGross || 0,
                             highlight: true,
-                            info: "Gross Merchandise Value of the entire platform."
+                            info: "Gross Merchandise Value of the entire platform.",
+                            customBg: "bg-[#8B5E3C]"
                         },
                         {
                             label: "Locked Commission",
@@ -222,7 +223,9 @@ export default function WithdrawalRequestsPage() {
                     ].map((stat, i) => (
                         <Card key={i} className={cn(
                             "border-none shadow-xl rounded-[1.5rem] overflow-hidden relative group",
-                            stat.highlight ? "bg-slate-900 text-white" : "bg-white text-slate-900 border border-slate-100"
+                            stat.customBg || (stat.highlight ? "bg-slate-900" : "bg-white"),
+                            stat.customBg ? "text-white" : (stat.highlight ? "text-white" : "text-slate-900"),
+                            !stat.customBg && !stat.highlight && "border border-slate-100"
                         )}>
                             <CardContent className="p-6">
                                 <div className="flex items-center gap-1.5 mb-2">

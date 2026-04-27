@@ -72,6 +72,7 @@ import {
   toggleProductStatusAdmin,
   fetchProductOwnersAdmin,
   createProductAdmin,
+  fetchActiveCategoriesAdmin,
 } from "@/api/adminController";
 
 function ProductsContent() {
@@ -93,6 +94,8 @@ function ProductsContent() {
   const [date, setDate] = useState<Date | undefined>(undefined);
   const [selectedOwner, setSelectedOwner] = useState<string>("all");
   const [owners, setOwners] = useState<any[]>([]);
+  const [selectedCategory, setSelectedCategory] = useState<string>("all");
+  const [categories, setCategories] = useState<any[]>([]);
   const [isImporting, setIsImporting] = useState(false);
   const [importProgress, setImportProgress] = useState({ total: 0, current: 0, success: 0, failed: 0 });
   const { toast } = useToast();
@@ -113,9 +116,9 @@ function ProductsContent() {
   useEffect(() => {
     loadProducts();
     // Update URL without reloading
-    const newPath = `/admin/products?page=${currentPage}${selectedOwner !== 'all' ? `&owner=${selectedOwner}` : ''}${selectedStatus !== 'all' ? `&status=${selectedStatus}` : ''}${searchTerm ? `&q=${searchTerm}` : ''}`;
+    const newPath = `/admin/products?page=${currentPage}${selectedOwner !== 'all' ? `&owner=${selectedOwner}` : ''}${selectedStatus !== 'all' ? `&status=${selectedStatus}` : ''}${selectedCategory !== 'all' ? `&category=${selectedCategory}` : ''}${searchTerm ? `&q=${searchTerm}` : ''}`;
     window.history.replaceState({ ...window.history.state, as: newPath, url: newPath }, '', newPath);
-  }, [currentPage, selectedOwner, selectedStatus, date]);
+  }, [currentPage, selectedOwner, selectedStatus, selectedCategory, date]);
 
   useEffect(() => {
     if (qParam) setSearchTerm(qParam);
@@ -148,6 +151,7 @@ function ProductsContent() {
 
   useEffect(() => {
     loadOwners();
+    loadCategories();
   }, []);
 
   const loadOwners = async () => {
@@ -161,6 +165,17 @@ function ProductsContent() {
     }
   };
 
+  const loadCategories = async () => {
+    try {
+      const res = await fetchActiveCategoriesAdmin();
+      if (Array.isArray(res)) {
+        setCategories(res);
+      }
+    } catch (error) {
+      console.error("Failed to load categories", error);
+    }
+  };
+
   const loadProducts = async () => {
     setIsLoading(true);
     try {
@@ -171,7 +186,8 @@ function ProductsContent() {
         status: selectedStatus === "all" ? undefined : selectedStatus,
         productId: idParam || undefined,
         templeId: selectedOwner === "all" ? undefined : selectedOwner,
-        date: date ? date.toISOString() : undefined
+        date: date ? date.toISOString() : undefined,
+        categoryId: selectedCategory === "all" ? undefined : selectedCategory,
       });
 
       if (res.success) {
@@ -576,6 +592,23 @@ function ProductsContent() {
             </Select>
           </div>
 
+          {/* Category Filter Dropdown */}
+          <div className="w-full md:w-[180px]">
+            <Select value={selectedCategory} onValueChange={(val) => { setSelectedCategory(val); setCurrentPage(1); }}>
+              <SelectTrigger className="h-10">
+                <SelectValue placeholder="All Categories" />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="all">All Categories</SelectItem>
+                {categories.map((cat: any) => (
+                  <SelectItem key={cat.id} value={cat.id}>
+                    {parseLocalizedValue(cat.name, language) || cat.nameSlug || cat.id}
+                  </SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
+          </div>
+
           <div className="flex gap-2">
             <Popover>
               <PopoverTrigger asChild>
@@ -599,7 +632,7 @@ function ProductsContent() {
                 />
               </PopoverContent>
             </Popover>
-            {(date || selectedOwner !== "all" || searchTerm) && (
+            {(date || selectedOwner !== "all" || searchTerm || selectedCategory !== "all") && (
               <Button
                 variant="ghost"
                 size="icon"
@@ -608,6 +641,7 @@ function ProductsContent() {
                   setSelectedOwner("all");
                   setSearchTerm("");
                   setSelectedStatus("all");
+                  setSelectedCategory("all");
                 }}
                 className="h-10 w-10 text-muted-foreground"
                 title={t("admin.products.list.clear_filters")}
@@ -627,6 +661,7 @@ function ProductsContent() {
               <TableHead>{t("admin.products.list.table_category")}</TableHead>
               <TableHead>{t("admin.products.list.table_owner")}</TableHead>
               <TableHead>{t("admin.products.list.table_variants_pricing")}</TableHead>
+              <TableHead>Stock</TableHead>
               <TableHead>{t("admin.products.list.table_status")}</TableHead>
               <TableHead className="text-right">{t("admin.products.list.table_actions")}</TableHead>
             </TableRow>
@@ -634,7 +669,7 @@ function ProductsContent() {
           <TableBody>
             {isLoading ? (
               <TableRow>
-                <TableCell colSpan={6} className="text-center py-12 text-muted-foreground">
+                <TableCell colSpan={7} className="text-center py-12 text-muted-foreground">
                   <div className="flex flex-col items-center gap-2">
                     <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary"></div>
                     <span>{t("admin.products.list.loading_data")}</span>
@@ -643,7 +678,7 @@ function ProductsContent() {
               </TableRow>
             ) : filteredProducts.length === 0 ? (
               <TableRow>
-                <TableCell colSpan={6} className="text-center py-12 text-muted-foreground">
+                <TableCell colSpan={7} className="text-center py-12 text-muted-foreground">
                   {t("admin.products.list.no_products")}
                 </TableCell>
               </TableRow>
@@ -724,6 +759,24 @@ function ProductsContent() {
                         </div>
                       )}
                     </div>
+                  </TableCell>
+                  {/* Stock Column */}
+                  <TableCell>
+                    {(() => {
+                      const totalStock = product.variants?.reduce((sum: number, v: any) => sum + (v.stock || 0), 0) ?? 0;
+                      const isOutOfStock = totalStock === 0;
+                      return isOutOfStock ? (
+                        <div className="inline-flex items-center gap-1.5 px-2 py-1 rounded-md bg-red-50 border border-red-200 text-red-700 text-xs font-semibold whitespace-nowrap">
+                          <span className="h-2 w-2 rounded-full bg-red-500 shrink-0"></span>
+                          Out of Stock
+                        </div>
+                      ) : (
+                        <div className="inline-flex items-center gap-1.5 px-2 py-1 rounded-md bg-emerald-50 border border-emerald-200 text-emerald-700 text-xs font-semibold whitespace-nowrap">
+                          <span className="h-2 w-2 rounded-full bg-emerald-500 shrink-0"></span>
+                          {totalStock} In Stock
+                        </div>
+                      );
+                    })()}
                   </TableCell>
                   <TableCell>
                     {getStatusBadge(product.status)}

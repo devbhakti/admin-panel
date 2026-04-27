@@ -6,6 +6,8 @@ import Navbar from "@/components/landing/Navbar";
 import Footer from "@/components/landing/Footer";
 import { RefreshCw, MapPin, Mail, UserCheck, AlertTriangle, Info, Package, Heart } from "lucide-react";
 import { useLanguage } from "@/context/LanguageContext";
+import Image from "next/image";
+import refundImage from "@/assets/temple-jagannath.jpg";
 
 export default function ReturnsRefundPolicyPage() {
     const { t, tRaw } = useLanguage();
@@ -91,50 +93,42 @@ export default function ReturnsRefundPolicyPage() {
             <Navbar />
 
             {/* Hero Header */}
-          <section className="relative pt-32 sm:pt-40 pb-12 sm:pb-16">
-    {/* 1. 'overflow-hidden' hata diya hai */}
-    <div className="absolute inset-0 z-0 bg-gradient-to-b from-primary/5 via-transparent to-background" />
-    <div className="container mx-auto px-4 sm:px-6 relative z-10 text-center">
-        <motion.div
-            initial={{ opacity: 0, y: -20 }}
-            animate={{ opacity: 1, y: 0 }}
-            className="flex justify-center mb-4 sm:mb-6"
-        >
-            <div className="p-3 sm:p-4 bg-primary/10 backdrop-blur-md rounded-xl sm:rounded-2xl">
-                <RefreshCw className="w-8 h-8 sm:w-12 sm:h-12 text-primary" />
-            </div>
-        </motion.div>
+            <section className="relative min-h-[480px] flex items-center justify-center overflow-hidden">
+                {/* Background image */}
+                <div className="absolute inset-0">
+                    <Image
+                        src={refundImage}
+                        alt="Returns & Refund Policy"
+                        fill
+                        priority
+                        className="object-cover"
+                    />
+                    <div className="absolute inset-0 bg-gradient-to-b from-background/80 via-background/60 to-background/90" />
+                </div>
 
-        {/* 2. H1 Title Fix: Formula Applied */}
-        <motion.h1
-            // 'scale' hata ke 'y' (slide) lagaya
-            initial={{ opacity: 0, y: 20 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ duration: 0.8 }}
-            // 'py-4', 'leading-[1.3]', 'break-words' add kiya
-            className="text-3xl sm:text-4xl md:text-5xl lg:text-7xl font-serif font-bold mb-4 sm:mb-6 text-gradient-sacred pb-2 py-4 leading-[1.3] break-words"
-        >
-            {t('returns_policy.title')}
-        </motion.h1>
-
-        <motion.p
-            initial={{ opacity: 0 }}
-            animate={{ opacity: 1 }}
-            transition={{ delay: 0.2 }}
-            className="text-xs sm:text-sm font-bold text-primary mb-4 sm:mb-6 uppercase tracking-widest break-words"
-        >
-            {t('returns_policy.effective_date')}
-        </motion.p>
-        <motion.p
-            initial={{ opacity: 0 }}
-            animate={{ opacity: 1 }}
-            transition={{ delay: 0.3 }}
-            className="text-base sm:text-lg md:text-xl text-muted-foreground max-w-3xl mx-auto leading-relaxed break-words"
-        >
-            {t('returns_policy.intro')}
-        </motion.p>
-    </div>
-</section>
+                <div className="container mx-auto px-4 sm:px-6 pt-28 pb-12 relative z-10 text-center">
+                    <motion.div
+                        initial={{ opacity: 0, y: -20 }}
+                        animate={{ opacity: 1, y: 0 }}
+                        className="max-w-4xl mx-auto"
+                    >
+                        <div className="inline-flex p-3 sm:p-4 bg-primary/10 backdrop-blur-md rounded-xl sm:rounded-2xl text-primary mb-6 border border-primary/20">
+                            <RefreshCw className="w-8 h-8 sm:w-10 sm:h-10" />
+                        </div>
+                        <h1 className="text-4xl md:text-5xl lg:text-7xl font-serif font-bold mb-4 text-foreground leading-tight">
+                            {t('returns_policy.title')}
+                        </h1>
+                        <p className="text-sm font-bold text-primary mb-8 uppercase tracking-widest">
+                            {t('returns_policy.effective_date')}
+                        </p>
+                        <div className="text-lg md:text-xl text-foreground/80 max-w-3xl mx-auto leading-relaxed">
+                            <p>
+                                {t('returns_policy.intro')}
+                            </p>
+                        </div>
+                    </motion.div>
+                </div>
+            </section>
 
             {/* Clauses Section */}
             <section className="py-16 sm:py-20 container mx-auto px-4 sm:px-6">

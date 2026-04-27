@@ -171,7 +171,15 @@ export const buildLangArray = (
  */
 export const getEnglish = (field: any): string => {
   if (!field) return '';
+  
+  if (isLangObject(field)) {
+    let langObj = field;
+    if (typeof field === 'string') {
+      try { langObj = JSON.parse(field); } catch (e) {}
+    }
+    return langObj.en || langObj.En || '';
+  }
+
   if (typeof field === 'string') return field;
-  if (isLangObject(field)) return (field as any).en ?? '';
   return '';
 };

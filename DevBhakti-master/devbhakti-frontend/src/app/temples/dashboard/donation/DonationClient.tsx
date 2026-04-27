@@ -22,12 +22,22 @@ import {
     Users,
     ChevronRight,
     Building2,
-    Trash2
+    Trash2,
+    Calendar as CalendarIcon
 } from "lucide-react";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Badge } from "@/components/ui/badge";
+import { 
+    Popover, 
+    PopoverContent, 
+    PopoverTrigger 
+} from "@/components/ui/popover";
+import { Calendar } from "@/components/ui/calendar";
+import { DateRange } from "react-day-picker";
+import { format } from "date-fns";
+import { cn } from "@/lib/utils";
 import { useToast } from "@/hooks/use-toast";
 import { useDebounce } from "@/hooks/use-debounce";
 
@@ -58,6 +68,7 @@ export default function DonationClient() {
     const [searchQuery, setSearchQuery] = useState("");
     const debouncedSearch = useDebounce(searchQuery, 500);
     const [statusFilter, setStatusFilter] = useState("all");
+    const [dateRange, setDateRange] = useState<DateRange | undefined>();
     const [donations, setDonations] = useState<any[]>([]);
     const [selectedDonation, setSelectedDonation] = useState<any | null>(null);
     const [loading, setLoading] = useState(true);
@@ -97,7 +108,9 @@ export default function DonationClient() {
                 search: debouncedSearch,
                 status: statusFilter,
                 page: page.toString(),
-                limit: "10"
+                limit: "10",
+                ...(dateRange?.from && { startDate: dateRange.from.toISOString() }),
+                ...(dateRange?.to && { endDate: dateRange.to.toISOString() })
             });
 
             const response = await axios.get(`${API_URL}/temple-admin/donations/${templeId}?${query}`, { validateStatus: () => true });
@@ -146,7 +159,7 @@ export default function DonationClient() {
         if (templeId) {
             fetchDonations(currentPage);
         }
-    }, [templeId, debouncedSearch, statusFilter, currentPage]);
+    }, [templeId, debouncedSearch, statusFilter, dateRange, currentPage]);
 
     const handlePrintReceipt = (donation: any) => {
         const html = generateReceiptHTML({
@@ -293,6 +306,52 @@ export default function DonationClient() {
                                     <CardDescription>History of all spiritual contributions</CardDescription>
                                 </div>
                                 <div className="flex items-center gap-2">
+                                    <Popover>
+                                        <PopoverTrigger asChild>
+                                            <Button
+                                                id="date"
+                                                variant={"outline"}
+                                                className={cn(
+                                                    "w-[240px] justify-start text-left font-normal h-9 text-xs border-primary/10 rounded-xl",
+                                                    !dateRange && "text-muted-foreground"
+                                                )}
+                                            >
+                                                <CalendarIcon className="mr-2 h-4 w-4" />
+                                                {dateRange?.from ? (
+                                                    dateRange.to ? (
+                                                        <>
+                                                            {format(dateRange.from, "LLL dd, y")} -{" "}
+                                                            {format(dateRange.to, "LLL dd, y")}
+                                                        </>
+                                                    ) : (
+                                                        format(dateRange.from, "LLL dd, y")
+                                                    )
+                                                ) : (
+                                                    <span>Pick a date range</span>
+                                                )}
+                                            </Button>
+                                        </PopoverTrigger>
+                                        <PopoverContent className="w-auto p-0" align="end">
+                                            <Calendar
+                                                initialFocus
+                                                mode="range"
+                                                defaultMonth={dateRange?.from}
+                                                selected={dateRange}
+                                                onSelect={setDateRange}
+                                                numberOfMonths={2}
+                                            />
+                                        </PopoverContent>
+                                    </Popover>
+                                    {dateRange && (
+                                        <Button 
+                                            variant="ghost" 
+                                            size="icon" 
+                                            className="h-8 w-8 rounded-full hover:bg-primary/10"
+                                            onClick={() => setDateRange(undefined)}
+                                        >
+                                            <X className="w-4 h-4" />
+                                        </Button>
+                                    )}
                                     <div className="relative">
                                         <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
                                         <Input
@@ -305,9 +364,6 @@ export default function DonationClient() {
                                             className="pl-9 h-9 w-[200px] text-sm bg-background/50 border-primary/10 rounded-xl"
                                         />
                                     </div>
-                                    <Button variant="ghost" size="icon" className="rounded-xl border border-primary/10">
-                                        <Filter className="w-4 h-4" />
-                                    </Button>
                                 </div>
                             </div>
                             <div className="flex gap-2 mt-4 overflow-x-auto pb-2 scrollbar-none">

@@ -827,10 +827,10 @@ const ProfilePage = () => {
                             initial={{ opacity: 0, scale: 0.9, y: 20 }}
                             animate={{ opacity: 1, scale: 1, y: 0 }}
                             exit={{ opacity: 0, scale: 0.9, y: 20 }}
-                            className="bg-white w-full max-w-xl rounded-[2.5rem] shadow-2xl overflow-hidden relative"
+                            className="bg-white w-full max-w-xl rounded-[1.5rem] md:rounded-[2.5rem] shadow-2xl overflow-hidden relative max-h-[90vh] flex flex-col"
                         >
                             {/* Modal Header */}
-                            <div className="bg-gradient-to-r from-primary to-primary/80 p-8 text-white">
+                            <div className="bg-gradient-to-r from-primary to-primary/80 p-6 md:p-8 text-white shrink-0">
                                 <button
                                     onClick={() => setSelectedBooking(null)}
                                     className="absolute top-6 right-6 p-2 rounded-full bg-white/10 hover:bg-white/20 transition-colors"
@@ -848,7 +848,7 @@ const ProfilePage = () => {
                                 </div>
                             </div>
 
-                            <div className="p-8 space-y-8">
+                            <div className="p-6 md:p-8 space-y-8 overflow-y-auto flex-1 custom-scrollbar">
                                 {/* Booking Status Banner */}
                                 <div className={`flex items-center justify-between p-4 rounded-2xl ${selectedBooking.status === 'BOOKED' ? 'bg-emerald-50 border border-emerald-100' : 'bg-orange-50 border border-orange-100'
                                     }`}>
@@ -905,14 +905,14 @@ const ProfilePage = () => {
                                             <p className="text-[10px] text-slate-400 font-bold uppercase tracking-widest mb-1">{t('profile.modal.phone_label')}</p>
                                             <p className="text-slate-700 font-medium">{selectedBooking.devoteePhone}</p>
                                         </div>
-                                        <div>
+                                        {/* <div>
                                             <p className="text-[10px] text-slate-400 font-bold uppercase tracking-widest mb-1">{t('profile.modal.ref_label')}</p>
-                                            <p className="text-sm font-mono text-primary font-bold">#{selectedBooking.id.toUpperCase()}</p>
-                                        </div>
+                                            <p className="text-sm font-mono text-primary font-bold break-all">#{selectedBooking.id.toUpperCase()}</p>
+                                        </div> */}
                                     </div>
                                     {/* New details */}
                                     {(selectedBooking.gothra || selectedBooking.kuldevi || selectedBooking.kuldevta || selectedBooking.dob || selectedBooking.anniversary) && (
-                                        <div className="md:col-span-2 grid grid-cols-2 md:grid-cols-3 gap-4 border-t pt-4">
+                                        <div className="md:col-span-2 grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-4 border-t pt-4">
                                             {selectedBooking.gothra && (
                                                 <div>
                                                     <p className="text-[10px] text-slate-400 font-bold uppercase tracking-widest mb-1">{t('profile.fields.gothra')}</p>
@@ -958,39 +958,37 @@ const ProfilePage = () => {
                                         <p className="text-3xl font-serif font-bold text-primary">₹{selectedBooking.packagePrice}</p>
                                     </div>
                                 </div>
+                            </div>
 
-                                <div className="pt-4 flex gap-3">
-                                    <Button
-                                        onClick={async () => {
-                                            if (!selectedBooking) return;
-                                            try {
-                                                const res = await downloadBookingReceipt(selectedBooking.id);
-                                                if (res.success) {
-                                                    const url = window.URL.createObjectURL(new Blob([res.data]));
-                                                    const link = document.createElement('a');
-                                                    link.href = url;
-                                                    link.setAttribute('download', `${t('profile.modal.receipt_prefix')}${selectedBooking.id.slice(-6)}.pdf`);
-                                                    document.body.appendChild(link);
-                                                    link.click();
-                                                    link.remove();
-                                                } else {
-                                                    toast({
-                                                        title: t('common.messages.download_failed'),
-                                                        description: t('common.messages.download_error'),
-                                                        variant: "destructive"
-                                                    });
-                                                }
-                                            } catch (e) {
-                                                console.error(e);
+                            {/* Modal Footer */}
+                            <div className="p-6 md:px-8 border-t border-slate-50 bg-slate-50/30 shrink-0">
+                                <Button
+                                    onClick={async () => {
+                                        if (!selectedBooking) return;
+                                        try {
+                                            const res = await downloadBookingReceipt(selectedBooking.id);
+                                            if (res.success) {
+                                                const url = window.URL.createObjectURL(new Blob([res.data]));
+                                                const link = document.createElement('a');
+                                                link.href = url;
+                                                link.setAttribute('download', `${t('profile.modal.receipt_prefix')}${selectedBooking.id.slice(-6)}.pdf`);
+                                                document.body.appendChild(link);
+                                                link.click();
+                                                link.remove();
+                                            } else {
+                                                toast({
+                                                    title: t('profile.messages.download_failed'),
+                                                    description: t('profile.messages.download_error'),
+                                                    variant: "destructive"
+                                                });
                                             }
-                                        }}
-                                        className="flex-1 rounded-2xl h-12 font-bold shadow-lg shadow-primary/20">
-                                        {t('profile.modal.download_button')}
-                                    </Button>
-                                    {/* <Button variant="outline" className="flex-1 rounded-2xl h-12 font-bold border-slate-200">
-                                        Need Help?
-                                    </Button> */}
-                                </div>
+                                        } catch (e) {
+                                            console.error(e);
+                                        }
+                                    }}
+                                    className="w-full rounded-2xl h-14 font-bold shadow-lg shadow-primary/20 text-lg">
+                                    {t('profile.modal.download_button')}
+                                </Button>
                             </div>
                         </motion.div>
                     </div>

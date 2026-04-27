@@ -433,7 +433,7 @@ export default function MyBookingsPage() {
                                                             </div>
                                                         )}
 
-                                                        <div className="flex items-center justify-between p-6 bg-slate-900 rounded-[2rem] text-white">
+                                                        <div className="flex items-center justify-between p-6 bg-[#794A05] rounded-[2rem] text-white shadow-lg shadow-orange-900/10">
                                                             <div className="flex items-center gap-4">
                                                                 <div className="w-12 h-12 rounded-2xl bg-white/10 flex items-center justify-center">
                                                                     <Church className="w-6 h-6 text-orange-400" />

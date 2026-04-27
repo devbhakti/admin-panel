@@ -215,6 +215,8 @@ import Navbar from "@/components/landing/Navbar";
 import Footer from "@/components/landing/Footer";
 import { UserCheck, Shield, FileText, Mail, Gavel, Scale, MapPin, Clock, AlertCircle } from "lucide-react";
 import { useLanguage } from "@/context/LanguageContext";
+import Image from "next/image";
+import grievanceImage from "@/assets/temple-meenakshi.jpg";
 
 export default function GrievanceOfficerPage() {
     const { t, tRaw } = useLanguage();
@@ -243,47 +245,40 @@ export default function GrievanceOfficerPage() {
             <Navbar />
 
             {/* Hero Header */}
-            {/* FIX 2: Removed 'overflow-hidden' to prevent clipping during animations.
-                Increased 'pt' and 'pb' to give more vertical space for tall letters. */}
-            <section className="relative pt-32 sm:pt-40 pb-20 sm:pb-24">
-                <div className="absolute inset-0 z-0 bg-gradient-to-b from-primary/5 via-transparent to-background" />
-                <div className="container mx-auto px-4 sm:px-6 relative z-10 text-center">
+            <section className="relative min-h-[480px] flex items-center justify-center overflow-hidden">
+                {/* Background image */}
+                <div className="absolute inset-0">
+                    <Image
+                        src={grievanceImage}
+                        alt="Grievance Officer"
+                        fill
+                        priority
+                        className="object-cover"
+                    />
+                    <div className="absolute inset-0 bg-gradient-to-b from-background/80 via-background/60 to-background/90" />
+                </div>
+
+                <div className="container mx-auto px-4 sm:px-6 pt-28 pb-12 relative z-10 text-center">
                     <motion.div
                         initial={{ opacity: 0, y: -20 }}
                         animate={{ opacity: 1, y: 0 }}
-                        className="flex justify-center mb-4 sm:mb-6"
+                        className="max-w-4xl mx-auto"
                     >
-                        <div className="p-3 sm:p-4 bg-primary/10 backdrop-blur-md rounded-xl sm:rounded-2xl">
-                            <Scale className="w-8 h-8 sm:w-12 sm:h-12 text-primary" />
+                        <div className="inline-flex p-3 sm:p-4 bg-primary/10 backdrop-blur-md rounded-xl sm:rounded-2xl text-primary mb-6 border border-primary/20">
+                            <Scale className="w-8 h-8 sm:w-10 sm:h-10" />
+                        </div>
+                        <h1 className="text-4xl md:text-5xl lg:text-7xl font-serif font-bold mb-4 text-foreground leading-tight">
+                            {t('grievance.title')}
+                        </h1>
+                        <p className="text-sm font-bold text-primary mb-8 uppercase tracking-widest">
+                            {t('grievance.effective_date')}
+                        </p>
+                        <div className="text-lg md:text-xl text-foreground/80 max-w-3xl mx-auto leading-relaxed">
+                            <p>
+                                {t('grievance.intro')}
+                            </p>
                         </div>
                     </motion.div>
-                    <motion.h1
-                        initial={{ opacity: 0, scale: 0.95 }}
-                        animate={{ opacity: 1, scale: 1 }}
-                        transition={{ duration: 0.8 }}
-                        // FIX 3: Added 'leading-[1.15]' and 'py-2'.
-                        // 'leading-[1.15]' tightens vertical space slightly for better look but keeps it safe.
-                        // 'py-2' adds padding specifically to the text element so the Matra (top line) doesn't touch the container edge.
-                        className="text-3xl sm:text-4xl md:text-5xl lg:text-7xl font-serif font-bold mb-4 sm:mb-6 text-gradient-sacred pb-2 break-normal leading-[1.15] py-2"
-                    >
-                        {t('grievance.title')}
-                    </motion.h1>
-                    <motion.p
-                        initial={{ opacity: 0 }}
-                        animate={{ opacity: 1 }}
-                        transition={{ delay: 0.2 }}
-                        className="text-xs sm:text-sm font-bold text-primary mb-4 sm:mb-6 uppercase tracking-widest break-words leading-relaxed"
-                    >
-                        {t('grievance.effective_date')}
-                    </motion.p>
-                    <motion.p
-                        initial={{ opacity: 0 }}
-                        animate={{ opacity: 1 }}
-                        transition={{ delay: 0.3 }}
-                        className="text-base sm:text-lg md:text-xl text-muted-foreground max-w-3xl mx-auto leading-relaxed break-words"
-                    >
-                        {t('grievance.intro')}
-                    </motion.p>
                 </div>
             </section>
 

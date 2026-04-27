@@ -49,6 +49,8 @@ const PoojaListClient: React.FC = () => {
     const [filters, setFilters] = useState<{ locations: string[], temples: any[], poojaCategories: any[] }>({ locations: [], temples: [], poojaCategories: [] });
     const [selectedLocation, setSelectedLocation] = useState("All");
     const [selectedTemple, setSelectedTemple] = useState("All");
+    const [isSearchFocused, setIsSearchFocused] = useState(false);
+    const [suggestions, setSuggestions] = useState<any[]>([]);
 
     const categories = React.useMemo(() => {
         return [{ id: "All", name: t('poojas_list.all') || "All" }, ...filters.poojaCategories];
@@ -224,6 +226,37 @@ const PoojaListClient: React.FC = () => {
         return matchesSearch;
     });
 
+    const getFuzzySuggestions = (query: string) => {
+        if (query.length < 2) return [];
+        const matches: any[] = [];
+        poojas.forEach(pooja => {
+            const name = getLocalized(pooja, 'name', language) || "";
+            const queryLower = query.toLowerCase();
+            const nameLower = name.toLowerCase();
+            const distance = getLevenshteinDistance(queryLower, nameLower);
+            
+            if (nameLower === queryLower) return;
+
+            if (distance < 3 || nameLower.includes(queryLower)) {
+                matches.push({
+                    title: name,
+                    category: getLocalized(pooja, 'category', language)
+                });
+            }
+        });
+        return Array.from(new Set(matches.map(m => m.title)))
+            .map(title => matches.find(m => m.title === title))
+            .slice(0, 5);
+    };
+
+    useEffect(() => {
+        if (searchQuery.trim() && isSearchFocused) {
+            setSuggestions(getFuzzySuggestions(searchQuery));
+        } else {
+            setSuggestions([]);
+        }
+    }, [searchQuery, isSearchFocused, poojas]);
+
     const suggestion = React.useMemo(() => {
         if (searchQuery.length < 2 || filteredPoojas.length > 0) return null;
 
@@ -258,7 +291,7 @@ const PoojaListClient: React.FC = () => {
             <Navbar />
 
             {/* Hero Section */}
-            <section className="relative min-h-[520px] flex items-center justify-center overflow-hidden">
+            <section className="relative min-h-[480px] flex items-center justify-center overflow-hidden">
                 {/* Background image */}
                 <div className="absolute inset-0">
                     <Image
@@ -305,26 +338,14 @@ const PoojaListClient: React.FC = () => {
                                     placeholder={t('poojas.search_placeholder_long')}
                                     value={searchQuery}
                                     onChange={(e) => setSearchQuery(e.target.value)}
-                                    className="w-full pl-14 pr-32 py-5 text-lg outline-none bg-transparent"
+                                    onFocus={() => setIsSearchFocused(true)}
+                                    className="w-full pl-14 pr-32 py-5 text-lg outline-none bg-transparent text-zinc-800"
                                 />
-                                <Button className="absolute right-2 h-12 px-8 rounded-xl bg-primary hover:bg-primary/90 hidden sm:flex">
+                                <Button className="absolute right-2 h-12 px-8 rounded-xl bg-primary hover:bg-primary/90 hidden sm:flex font-bold">
                                     {t('marketplace.explore')}
                                 </Button>
                             </div>
 
-                            {/* Related Search Suggestions */}
-                            {/* <div className="mt-4 flex flex-wrap items-center justify-center gap-2 animate-in fade-in slide-in-from-top-2 duration-700">
-                                <span className="text-xs font-bold text-zinc-500 uppercase tracking-widest mr-1">Related Search:</span>
-                                {["Maha Mrityunjaya", "Rudra Abhishek", "Shanti Puja", "Ganesh Seva", "Aarti"].map((term) => (
-                                    <button
-                                        key={term}
-                                        onClick={() => setSearchQuery(term)}
-                                        className="text-xs font-semibold px-3 py-1.5 rounded-full bg-white/40 backdrop-blur-md border border-primary/20 text-primary hover:bg-primary hover:text-white transition-all duration-300"
-                                    >
-                                        {term}
-                                    </button>
-                                ))}
-                            </div> */}
                         </div>
                     </motion.div>
                 </div>
@@ -500,15 +521,39 @@ const PoojaListClient: React.FC = () => {
                                                         <span className="text-xs text-zinc-400 uppercase font-bold tracking-widest">Start From</span>
                                                         <span className="text-2xl font-bold text-zinc-900 font-display">₹{pooja.price}</span>
                                                     </div> */}
-                                                    <div className="flex flex-col gap-2 w-full">
-                                                    <div className="flex flex-col gap-2 w-full">
+                                                    <div className="flex flex-col gap-3 w-full">
                                                         <Button
-                                                            className="w-full rounded-xl bg-primary hover:bg-primary/90 group/book transition-all duration-300 capitalize"
+                                                            className="w-full rounded-2xl bg-[#794A05] hover:bg-[#5d3804] text-white group/book transition-all duration-300 font-bold h-12 shadow-md shadow-orange-900/10"
+                                                            onClick={(e) => {
+                                                                e.preventDefault();
+                                                                e.stopPropagation();
+                                                                const bookingUrl = `/booking?temple=${pooja.temple?.id || ''}&pooja=${pooja.id}`;
+                                                                const token = localStorage.getItem("token");
+                                                                const savedUser = localStorage.getItem("user");
+                                                                const parsedUser = savedUser ? JSON.parse(savedUser) : null;
+                                                                if (!token || !parsedUser || parsedUser.role !== "DEVOTEE") {
+                                                                    router.push(`/auth?redirect=${encodeURIComponent(bookingUrl)}`);
+                                                                    return;
+                                                                }
+                                                                router.push(bookingUrl);
+                                                            }}
                                                         >
-                                                            {t('common.know_more')}
-                                                            <ChevronRight className="w-4 h-4 ml-2 group-hover/btn:translate-x-1 transition-transform" />
+                                                            {t('common.book_now')}
+                                                            <Zap className="w-4 h-4 ml-2 fill-white" />
                                                         </Button>
-                                                    </div>
+
+                                                        <Button
+                                                            variant="ghost"
+                                                            className="w-full rounded-2xl bg-[#FFF9F0] hover:bg-[#F5EAD6] text-[#794A05] border border-[#794A05]/10 transition-all duration-300 font-bold h-12"
+                                                            onClick={(e) => {
+                                                                e.preventDefault();
+                                                                e.stopPropagation();
+                                                                router.push(`/poojas/${pooja.slug || pooja.id}`);
+                                                            }}
+                                                        >
+                                                            {t('poojas_list.more_details')}
+                                                            <ChevronRight className="w-4 h-4 ml-2" />
+                                                        </Button>
                                                     </div>
                                                 </div>
                                             </div>
@@ -533,41 +578,51 @@ const PoojaListClient: React.FC = () => {
                     </div>
 
                     {filteredPoojas.length === 0 && (
-                        <div className="text-center py-32 bg-orange-50/30 rounded-[3rem] border-2 border-dashed border-orange-100">
-                            <div className="w-20 h-20 bg-orange-100 rounded-full flex items-center justify-center mx-auto mb-6">
-                                <Search className="w-10 h-10 text-primary" />
-                            </div>
-                            <h3 className="text-2xl font-bold text-zinc-900 mb-2">
-                                {t('poojas_list.no_rituals_found')}
-                            </h3>
-                            <p className="text-zinc-500 max-w-md mx-auto line-clamp-2">
-                                {suggestion ? (
-                                    <>
-                                        {`"${searchQuery}" ${t('poojas_list.no_results_for')}`}
-                                        {t('poojas_list.did_you_mean')}
-                                        <button
-                                            onClick={() => setSearchQuery(suggestion)}
-                                            className="text-primary font-bold hover:underline"
-                                        >
-                                            {suggestion}
-                                        </button>?
-                                    </>
-                                ) : (
-                                    t('poojas_list.adjust_filters')
+                        <div className="text-center py-20">
+                            <div className="max-w-md mx-auto">
+                                <div className="w-20 h-20 bg-muted/30 rounded-full flex items-center justify-center mx-auto mb-6">
+                                    <Search className="w-10 h-10 text-muted-foreground/30" />
+                                </div>
+                                <h3 className="text-xl font-serif text-foreground mb-2">
+                                    {t('poojas.no_ritual_found') || "No Rituals Found"}
+                                </h3>
+                                <p className="text-muted-foreground mb-8">
+                                    {t('landing.landing_search.no_results_for')} "{searchQuery}". {t('landing.landing_search.try_another')}
+                                </p>
+                                
+                                {/* Fuzzy Suggestion for results area */}
+                                {searchQuery.length >= 2 && getFuzzySuggestions(searchQuery).length > 0 && (
+                                    <div className="bg-primary/5 p-8 rounded-[2.5rem] border border-primary/10 animate-in fade-in slide-in-from-bottom-4">
+                                        <p className="text-foreground font-bold mb-4">{t('landing.landing_search.did_you_mean')}?</p>
+                                        <div className="flex flex-wrap justify-center gap-2">
+                                            {getFuzzySuggestions(searchQuery).map((s: any, idx: number) => (
+                                                <button
+                                                    key={idx}
+                                                    onClick={() => {
+                                                        setSearchQuery(s.title);
+                                                    }}
+                                                    className="px-5 py-2 rounded-full bg-white border border-primary/20 hover:bg-primary hover:text-white transition-all font-serif italic text-sm text-primary"
+                                                >
+                                                    {s.title}
+                                                </button>
+                                            ))}
+                                        </div>
+                                    </div>
                                 )}
-                            </p>
-                            <Button
-                                variant="outline"
-                                className="mt-8 rounded-full"
-                                onClick={() => { 
-                                    setSearchQuery(""); 
-                                    setSelectedCategory("All"); 
-                                    setSelectedLocation("All"); 
-                                    setSelectedTemple("All"); 
-                                }}
-                            >
-                                {t('poojas_list.reset_search')}
-                            </Button>
+
+                                <Button
+                                    variant="outline"
+                                    className="mt-8 rounded-full"
+                                    onClick={() => { 
+                                        setSearchQuery(""); 
+                                        setSelectedCategory("All"); 
+                                        setSelectedLocation("All"); 
+                                        setSelectedTemple("All"); 
+                                    }}
+                                >
+                                    {t('poojas_list.reset_search')}
+                                </Button>
+                            </div>
                         </div>
                     )}
 

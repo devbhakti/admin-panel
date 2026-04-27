@@ -23,38 +23,37 @@ export default function AboutClient() {
     return (
         <main className="min-h-screen bg-background pattern-sacred">
             <Navbar />
-{/* Hero Section - About Page */}
-{/* 1. 'pt-40' badhaya hai space ke liye */}
-<section className="relative pt-40 pb-20">
-    <div className="absolute inset-0 z-0 bg-gradient-to-b from-primary/5 via-transparent to-background" />
-    <div className="container mx-auto px-4 relative z-10">
-        <motion.div
-            initial={{ opacity: 0, scale: 0.95 }}
-            animate={{ opacity: 1, scale: 1 }}
-            transition={{ duration: 0.8 }}
-            className="text-center max-w-4xl mx-auto"
-        >
-            {/* 
-               IMPORTANT FIX: 
-               - 'scale' motion ko H1 par lagaya hai par yahan H1 par hata ke 'y' (slide) lagaya hai.
-               - 'py-4': Ye main fix hai. Isse H1 ka inner box bada hoga aur gradient text cut nahi hoga.
-               - 'leading-[1.3]': Line height loose rakhi hai.
-            */}
-            <motion.h1
-                initial={{ opacity: 0, y: 20 }}  // Scale hata diya
-                animate={{ opacity: 1, y: 0 }}   // Slide up effect
-                transition={{ duration: 0.8 }}
-                className="text-4xl md:text-7xl font-serif font-bold mb-6 text-gradient-sacred pb-2 leading-[1.3] break-words py-4"
-            >
-                {t('about.title')}
-            </motion.h1>
-            
-            <p className="text-lg md:text-xl text-muted-foreground leading-relaxed break-words">
-                {t('about.subtitle')}
-            </p>
-        </motion.div>
-    </div>
-</section>
+            {/* Hero Section - About Page */}
+            <section className="relative min-h-[480px] flex items-center justify-center overflow-hidden">
+                {/* Background image */}
+                <div className="absolute inset-0">
+                    <Image
+                        src={aboutImage}
+                        alt="About DevBhakti"
+                        fill
+                        priority
+                        className="object-cover"
+                    />
+                    <div className="absolute inset-0 bg-gradient-to-b from-background/80 via-background/60 to-background/90" />
+                </div>
+
+                <div className="container mx-auto px-4 pt-28 pb-12 relative z-10">
+                    <motion.div
+                        initial={{ opacity: 0, y: 20 }}
+                        animate={{ opacity: 1, y: 0 }}
+                        transition={{ duration: 0.8 }}
+                        className="text-center max-w-4xl mx-auto"
+                    >
+                        <h1 className="text-4xl md:text-5xl lg:text-7xl font-serif font-bold text-foreground mb-6 leading-tight">
+                            {t('about.title')}
+                        </h1>
+                        
+                        <p className="text-lg text-foreground mb-8 leading-relaxed max-w-2xl mx-auto">
+                            {t('about.subtitle')}
+                        </p>
+                    </motion.div>
+                </div>
+            </section>
             {/* Content Section 1: Who We Are */}
             <section className="py-20 bg-card/30 backdrop-blur-sm border-y border-border/50">
                 <div className="container mx-auto px-4">

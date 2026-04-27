@@ -9,7 +9,7 @@ import {
     MoreVertical,
     Mail,
     Phone,
-    Calendar,
+    Calendar as CalendarIcon,
     Eye,
     Loader2,
     CheckSquare,
@@ -26,10 +26,23 @@ import {
     ShieldCheck
 } from "lucide-react";
 import { Checkbox } from "@/components/ui/checkbox";
+import { Switch } from "@/components/ui/switch";
 import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Badge } from "@/components/ui/badge";
+import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
+import { Calendar } from "@/components/ui/calendar";
+import { DateRange } from "react-day-picker";
+import {
+    Select,
+    SelectContent,
+    SelectItem,
+    SelectTrigger,
+    SelectValue,
+} from "@/components/ui/select";
+import { format } from "date-fns";
+import { cn } from "@/lib/utils";
 import {
     DropdownMenu,
     DropdownMenuContent,
@@ -75,6 +88,8 @@ export default function AdminUsersPage() {
     const [anniversaryFilter, setAnniversaryFilter] = useState("");
     const [anniversaryStart, setAnniversaryStart] = useState("");
     const [anniversaryEnd, setAnniversaryEnd] = useState("");
+    const [dobDateRange, setDobDateRange] = useState<DateRange | undefined>(undefined);
+    const [anniversaryDateRange, setAnniversaryDateRange] = useState<DateRange | undefined>(undefined);
     const [page, setPage] = useState(1);
     const [totalPages, setTotalPages] = useState(1);
     const [stats, setStats] = useState({
@@ -87,7 +102,7 @@ export default function AdminUsersPage() {
         filteredBookings: 0,
         filteredOrders: 0
     });
-    const [dateRange, setDateRange] = useState<"all" | "week" | "month" | "year">("all");
+    const [dateRange, setDateRange] = useState<"all" | "week" | "month" | "year" | "pooja_last_year">("all");
     const [selectedUserIds, setSelectedUserIds] = useState<string[]>([]);
     const [filterType, setFilterType] = useState<string>("");
     const { hasPermission } = useAdminAuth();
@@ -105,20 +120,21 @@ export default function AdminUsersPage() {
         setLoading(true);
         try {
             let startDate, endDate;
-            if (dateRange !== "all") {
+            let currentFilterType = filterType;
+
+            if (dateRange === "pooja_last_year") {
+                currentFilterType = "pooja_last_year";
+            } else if (dateRange !== "all") {
                 const now = new Date();
                 endDate = now.toISOString();
                 const start = new Date();
                 if (dateRange === "week") {
-                    // Start of the week (Sunday)
                     start.setDate(now.getDate() - now.getDay());
                     start.setHours(0, 0, 0, 0);
                 } else if (dateRange === "month") {
-                    // Start of the month
                     start.setDate(1);
                     start.setHours(0, 0, 0, 0);
                 } else if (dateRange === "year") {
-                    // Start of the year
                     start.setMonth(0, 1);
                     start.setHours(0, 0, 0, 0);
                 }
@@ -138,7 +154,7 @@ export default function AdminUsersPage() {
                 anniversary: anniversaryFilter,
                 anniversaryStart,
                 anniversaryEnd,
-                filterType: filterType
+                filterType: currentFilterType
             });
             if (response.success) {
                 setUsers(response.data.users);
@@ -152,6 +168,23 @@ export default function AdminUsersPage() {
             setLoading(false);
         }
     }, [page, debouncedSearch, typeFilter, dateRange, dobFilter, dobStart, dobEnd, anniversaryFilter, anniversaryStart, anniversaryEnd, filterType]);
+
+    // Sync Date Ranges
+    useEffect(() => {
+        if (dobDateRange?.from) setDobStart(format(dobDateRange.from, "yyyy-MM-dd"));
+        else setDobStart("");
+        if (dobDateRange?.to) setDobEnd(format(dobDateRange.to, "yyyy-MM-dd"));
+        else setDobEnd("");
+        setPage(1);
+    }, [dobDateRange]);
+
+    useEffect(() => {
+        if (anniversaryDateRange?.from) setAnniversaryStart(format(anniversaryDateRange.from, "yyyy-MM-dd"));
+        else setAnniversaryStart("");
+        if (anniversaryDateRange?.to) setAnniversaryEnd(format(anniversaryDateRange.to, "yyyy-MM-dd"));
+        else setAnniversaryEnd("");
+        setPage(1);
+    }, [anniversaryDateRange]);
 
     const handleExportExcel = async () => {
         // ... (existing handleExportExcel logic remains)
@@ -354,11 +387,11 @@ export default function AdminUsersPage() {
                             <DropdownMenuLabel>Choose Template</DropdownMenuLabel>
                             <DropdownMenuSeparator />
                             <DropdownMenuItem className="cursor-pointer" onClick={() => handleSendWhatsAppCampaign('birthday_reminder')}>
-                                <Calendar className="mr-2 h-4 w-4 text-emerald-500" />
+                                <CalendarIcon className="mr-2 h-4 w-4 text-emerald-500" />
                                 <span>Birthday Reminder</span>
                             </DropdownMenuItem>
                             <DropdownMenuItem className="cursor-pointer" onClick={() => handleSendWhatsAppCampaign('anniversary_reminder_lugrs')}>
-                                <Calendar className="mr-2 h-4 w-4 text-rose-500" />
+                                <CalendarIcon className="mr-2 h-4 w-4 text-rose-500" />
                                 <span>Anniversary Reminder</span>
                             </DropdownMenuItem>
                         </DropdownMenuContent>
@@ -443,190 +476,194 @@ export default function AdminUsersPage() {
                 </Card>
             </div>
 
-            {/* Filter Command Center */}
             <div className="flex flex-col gap-4 bg-white/70 backdrop-blur-md p-5 sm:p-6 rounded-2xl border border-primary/10 shadow-sacred relative overflow-hidden group">
-                {/* Subtle background glow */}
-                <div className="absolute -top-24 -right-24 w-48 h-48 bg-primary/5 rounded-full blur-3xl pointer-events-none" />
+                <div className="absolute -top-24 -right-24 w-64 h-64 bg-primary/10 rounded-full blur-[80px] pointer-events-none" />
+                <div className="absolute -bottom-24 -left-24 w-64 h-64 bg-emerald-500/5 rounded-full blur-[80px] pointer-events-none" />
                 
-                <div className="flex flex-col lg:flex-row lg:items-center gap-4 relative z-10">
-                    {/* Search bar */}
-                    <div className="relative w-full lg:w-96 group/search">
-                        <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-primary/40 group-focus-within/search:text-primary transition-colors" />
+                <div className="flex flex-col xl:flex-row gap-3 justify-between items-start xl:items-center relative z-20">
+                    <div className="relative w-full xl:w-64">
+                        <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
                         <Input
-                            placeholder="Search by name, email, or UID..."
-                            className="pl-10 h-11 bg-white border-primary/5 rounded-xl text-sm shadow-sm focus-visible:ring-primary/20 focus-visible:border-primary/30 transition-all font-medium"
+                            placeholder="Search by name, email..."
                             value={searchQuery}
                             onChange={(e) => setSearchQuery(e.target.value)}
+                            className="pl-10 h-10 rounded-xl bg-slate-50 border-transparent focus-visible:ring-2 focus-visible:ring-primary/20 transition-all text-xs"
                         />
                     </div>
 
-                    {/* User Type Toggles */}
-                    <div className="flex flex-wrap items-center gap-1.5 p-1 bg-primary/5 rounded-xl border border-primary/10">
-                        <Button
-                            variant="ghost"
-                            size="sm"
-                            onClick={() => { setTypeFilter("all"); setPage(1); }}
-                            className={`h-9 px-4 rounded-lg text-xs font-black uppercase tracking-wider transition-all ${typeFilter === 'all' ? 'bg-primary text-white shadow-md scale-[1.02]' : 'text-primary/60 hover:bg-white/50'}`}
-                        >
-                            All Users
-                        </Button>
-                        <Button
-                            variant="ghost"
-                            size="sm"
-                            onClick={() => { setTypeFilter("devotee"); setPage(1); }}
-                            className={`h-9 px-4 rounded-lg text-xs font-black uppercase tracking-wider transition-all ${typeFilter === 'devotee' ? 'bg-primary text-white shadow-md scale-[1.02]' : 'text-primary/60 hover:bg-white/50'}`}
-                        >
-                            Devotees
-                        </Button>
-                        <Button
-                            variant="ghost"
-                            size="sm"
-                            onClick={() => { setTypeFilter("temple_admin"); setPage(1); }}
-                            className={`h-9 px-4 rounded-lg text-xs font-black uppercase tracking-wider transition-all ${typeFilter === 'temple_admin' ? 'bg-primary text-white shadow-md scale-[1.02]' : 'text-primary/60 hover:bg-white/50'}`}
-                        >
-                            Temples
-                        </Button>
-                        <Button
-                            variant="ghost"
-                            size="sm"
-                            onClick={() => { setTypeFilter("seller"); setPage(1); }}
-                            className={`h-9 px-4 rounded-lg text-xs font-black uppercase tracking-wider transition-all ${typeFilter === 'seller' ? 'bg-primary text-white shadow-md scale-[1.02]' : 'text-primary/60 hover:bg-white/50'}`}
-                        >
-                            Sellers
-                        </Button>
-                        <Button
-                            variant="ghost"
-                            size="sm"
-                            onClick={() => { setFilterType(filterType === 'pooja_last_year' ? "" : "pooja_last_year"); setPage(1); }}
-                            className={`h-9 px-4 rounded-lg text-xs font-black uppercase tracking-wider transition-all ${filterType === 'pooja_last_year' ? 'bg-primary text-white shadow-md scale-[1.02]' : 'text-primary/60 hover:bg-white/50'}`}
-                        >
-                            Last Year Pooja
-                        </Button>
-                    </div>
-                </div>
+                    <div className="flex flex-wrap items-center gap-2.5 w-full xl:w-auto">
+                        {/* Registration Period Dropdown */}
+                        <Select value={dateRange} onValueChange={(val: any) => setDateRange(val)}>
+                            <SelectTrigger className="w-[140px] h-10 rounded-xl bg-slate-50 border-transparent focus:ring-2 focus:ring-primary/20 text-xs font-bold uppercase tracking-wider">
+                                <SelectValue placeholder="Period" />
+                            </SelectTrigger>
+                            <SelectContent className="rounded-xl border-primary/5 shadow-xl">
+                                <SelectItem value="all" className="text-xs font-bold uppercase tracking-wider">All Time</SelectItem>
+                                <SelectItem value="week" className="text-xs font-bold uppercase tracking-wider">This Week</SelectItem>
+                                <SelectItem value="month" className="text-xs font-bold uppercase tracking-wider">This Month</SelectItem>
+                                <SelectItem value="year" className="text-xs font-bold uppercase tracking-wider">This Year</SelectItem>
+                                <SelectItem value="pooja_last_year" className="text-xs font-bold uppercase tracking-wider text-primary">Last Year Pooja</SelectItem>
+                            </SelectContent>
+                        </Select>
 
-                <div className="grid grid-cols-1 lg:grid-cols-3 gap-6 border-t border-primary/5 pt-5 mt-1 relative z-10">
-                    {/* Time Range */}
-                    <div className="flex flex-col gap-2.5">
-                        <div className="flex items-center gap-2 mb-0.5">
-                            <div className="p-1 rounded-md bg-primary/10"><Calendar className="w-3 h-3 text-primary" /></div>
-                            <p className="text-[10px] font-black uppercase tracking-widest text-primary/70">Registration Period</p>
-                        </div>
-                        <div className="flex flex-wrap items-center gap-1.5">
-                            {["all", "week", "month", "year"].map((range) => (
+                        {/* User Type Dropdown */}
+                        <Select value={typeFilter} onValueChange={(val: any) => setTypeFilter(val)}>
+                            <SelectTrigger className="w-[140px] h-10 rounded-xl bg-slate-50 border-transparent focus:ring-2 focus:ring-primary/20 text-xs font-bold uppercase tracking-wider">
+                                <SelectValue placeholder="User Type" />
+                            </SelectTrigger>
+                            <SelectContent className="rounded-xl border-primary/5 shadow-xl">
+                                <SelectItem value="all" className="text-xs font-bold uppercase tracking-wider text-slate-500">All Users</SelectItem>
+                                <SelectItem value="devotee" className="text-xs font-bold uppercase tracking-wider text-emerald-600">Devotees</SelectItem>
+                                <SelectItem value="temple_admin" className="text-xs font-bold uppercase tracking-wider text-amber-600">Temples</SelectItem>
+                                <SelectItem value="seller" className="text-xs font-bold uppercase tracking-wider text-blue-600">Sellers</SelectItem>
+                            </SelectContent>
+                        </Select>
+
+                        {/* Birthday Picker */}
+                        <Popover>
+                            <PopoverTrigger asChild>
                                 <Button
-                                    key={range}
-                                    variant="ghost"
-                                    size="sm"
-                                    onClick={() => { setDateRange(range as any); setPage(1); }}
-                                    className={`h-8 px-3 rounded-lg text-[11px] font-bold border transition-all ${dateRange === range ? 'bg-primary text-white border-primary shadow-sm' : 'bg-white border-primary/10 text-primary/60 hover:bg-primary/5'}`}
+                                    variant="outline"
+                                    className={cn(
+                                        "h-10 px-3 min-w-[170px] justify-start text-left font-bold rounded-xl bg-slate-50 border-transparent hover:bg-slate-100 transition-all text-[10px] uppercase tracking-wider",
+                                        !dobDateRange && "text-emerald-600/60"
+                                    )}
                                 >
-                                    {range === "all" ? "All Time" : range === "week" ? "This Week" : range === "month" ? "This Month" : "This Year"}
+                                    <Heart className="mr-2 h-3.5 w-3.5 text-emerald-500" />
+                                    {dobDateRange?.from ? (
+                                        dobDateRange.to ? (
+                                            <>
+                                                {format(dobDateRange.from, "MMM dd")} - {format(dobDateRange.to, "MMM dd")}
+                                            </>
+                                        ) : (
+                                            format(dobDateRange.from, "MMM dd")
+                                        )
+                                    ) : (
+                                        "Filter by Birthday"
+                                    )}
                                 </Button>
-                            ))}
-                        </div>
-                    </div>
+                            </PopoverTrigger>
+                            <PopoverContent className="w-auto p-0 rounded-2xl shadow-xl border-primary/5" align="start">
+                                <div className="p-3 border-b flex items-center justify-between bg-emerald-50/50">
+                                    <span className="text-[10px] font-black text-emerald-700 uppercase tracking-widest">Birthday Filter</span>
+                                    <Button
+                                        variant="ghost"
+                                        size="sm"
+                                        className={`h-7 px-3 text-[9px] font-black uppercase tracking-widest rounded-full border transition-all ${dobFilter === 'upcoming' ? 'bg-emerald-600 text-white border-emerald-600 shadow-md scale-105' : 'text-emerald-600 border-emerald-100 hover:bg-emerald-50 bg-white'}`}
+                                        onClick={() => {
+                                            if (dobFilter === 'upcoming') setDobFilter('');
+                                            else { setDobFilter('upcoming'); setDobDateRange(undefined); }
+                                            setPage(1);
+                                        }}
+                                    >
+                                        {dobFilter === 'upcoming' ? 'Upcoming Active' : 'Upcoming'}
+                                    </Button>
+                                </div>
+                                <Calendar
+                                    initialFocus
+                                    mode="range"
+                                    defaultMonth={dobDateRange?.from}
+                                    selected={dobDateRange}
+                                    onSelect={(range) => {
+                                        setDobDateRange(range);
+                                        if (range) setDobFilter('');
+                                    }}
+                                    numberOfMonths={2}
+                                />
+                                {dobDateRange && (
+                                    <div className="p-2 border-t flex justify-end bg-emerald-50/20">
+                                        <Button variant="ghost" size="sm" className="h-7 text-[9px] font-bold text-rose-500 hover:bg-rose-50 rounded-lg" onClick={() => setDobDateRange(undefined)}>Clear</Button>
+                                    </div>
+                                )}
+                            </PopoverContent>
+                        </Popover>
 
-                    {/* Birthday Range */}
-                    <div className="flex flex-col gap-2.5">
-                        <div className="flex items-center justify-between mb-0.5">
-                            <div className="flex items-center gap-2">
-                                <div className="p-1 rounded-md bg-emerald-100"><Heart className="w-3 h-3 text-emerald-600" /></div>
-                                <p className="text-[10px] font-black uppercase tracking-widest text-emerald-700/70">Birthday Range</p>
-                            </div>
+                        {/* Anniversary Picker */}
+                        <Popover>
+                            <PopoverTrigger asChild>
+                                <Button
+                                    variant="outline"
+                                    className={cn(
+                                        "h-10 px-3 min-w-[170px] justify-start text-left font-bold rounded-xl bg-slate-50 border-transparent hover:bg-slate-100 transition-all text-[10px] uppercase tracking-wider",
+                                        !anniversaryDateRange && "text-rose-600/60"
+                                    )}
+                                >
+                                    <Sparkles className="mr-2 h-3.5 w-3.5 text-rose-500" />
+                                    {anniversaryDateRange?.from ? (
+                                        anniversaryDateRange.to ? (
+                                            <>
+                                                {format(anniversaryDateRange.from, "MMM dd")} - {format(anniversaryDateRange.to, "MMM dd")}
+                                            </>
+                                        ) : (
+                                            format(anniversaryDateRange.from, "MMM dd")
+                                        )
+                                    ) : (
+                                        "Filter by Anniversary"
+                                    )}
+                                </Button>
+                            </PopoverTrigger>
+                            <PopoverContent className="w-auto p-0 rounded-2xl shadow-xl border-primary/5" align="start">
+                                <div className="p-3 border-b flex items-center justify-between bg-rose-50/50">
+                                    <span className="text-[10px] font-black text-rose-700 uppercase tracking-widest">Anniversary Filter</span>
+                                    <Button
+                                        variant="ghost"
+                                        size="sm"
+                                        className={`h-7 px-3 text-[9px] font-black uppercase tracking-widest rounded-full border transition-all ${anniversaryFilter === 'upcoming' ? 'bg-rose-600 text-white border-rose-600 shadow-md scale-105' : 'text-rose-600 border-rose-100 hover:bg-rose-50 bg-white'}`}
+                                        onClick={() => {
+                                            if (anniversaryFilter === 'upcoming') setAnniversaryFilter('');
+                                            else { setAnniversaryFilter('upcoming'); setAnniversaryDateRange(undefined); }
+                                            setPage(1);
+                                        }}
+                                    >
+                                        {anniversaryFilter === 'upcoming' ? 'Upcoming Active' : 'Upcoming'}
+                                    </Button>
+                                </div>
+                                <Calendar
+                                    initialFocus
+                                    mode="range"
+                                    defaultMonth={anniversaryDateRange?.from}
+                                    selected={anniversaryDateRange}
+                                    onSelect={(range) => {
+                                        setAnniversaryDateRange(range);
+                                        if (range) setAnniversaryFilter('');
+                                    }}
+                                    numberOfMonths={2}
+                                />
+                                {anniversaryDateRange && (
+                                    <div className="p-2 border-t flex justify-end bg-rose-50/20">
+                                        <Button variant="ghost" size="sm" className="h-7 text-[9px] font-bold text-rose-500 hover:bg-rose-50 rounded-lg" onClick={() => setAnniversaryDateRange(undefined)}>Clear</Button>
+                                    </div>
+                                )}
+                            </PopoverContent>
+                        </Popover>
+
+                        <div className="flex items-center gap-2.5 ml-auto">
                             <Button
                                 variant="ghost"
                                 size="sm"
-                                className={`h-6 px-2 text-[9px] font-black uppercase tracking-tighter rounded-md transition-all ${dobFilter === 'upcoming' ? 'bg-emerald-600 text-white shadow-sm' : 'text-emerald-600 hover:bg-emerald-50 bg-emerald-50/50 border border-emerald-100'}`}
+                                className="h-10 px-4 rounded-xl text-[10px] font-black uppercase tracking-widest border border-primary/10 hover:bg-rose-50 hover:text-rose-600 transition-all gap-2"
                                 onClick={() => {
-                                    if (dobFilter === 'upcoming') setDobFilter('');
-                                    else { setDobFilter('upcoming'); setDobStart(''); setDobEnd(''); }
+                                    setSearchQuery("");
+                                    setDebouncedSearch("");
+                                    setTypeFilter("all");
+                                    setDobFilter("");
+                                    setAnniversaryFilter("");
+                                    setDobStart("");
+                                    setDobEnd("");
+                                    setAnniversaryStart("");
+                                    setAnniversaryEnd("");
+                                    setDobDateRange(undefined);
+                                    setAnniversaryDateRange(undefined);
+                                    setDateRange("all");
+                                    setFilterType("");
                                     setPage(1);
                                 }}
                             >
-                                {dobFilter === 'upcoming' ? 'Upcoming Active' : 'Show Upcoming'}
+                                <RotateCcw className="w-3.5 h-3.5" />
+                                Reset
                             </Button>
                         </div>
-                        <div className={`flex items-center gap-2 p-1.5 rounded-xl border transition-all ${dobFilter === 'upcoming' ? 'bg-emerald-50/50 border-emerald-100 opacity-50' : 'bg-white border-primary/10 hover:border-primary/30 shadow-sm'}`}>
-                            <Input
-                                type="date"
-                                value={dobStart}
-                                onChange={(e) => { setDobStart(e.target.value); setPage(1); }}
-                                className="h-8 bg-transparent border-none text-[11px] focus-visible:ring-0 p-1 w-full font-bold text-primary"
-                                disabled={dobFilter === 'upcoming'}
-                            />
-                            <div className="w-2 h-0.5 bg-primary/20 rounded-full" />
-                            <Input
-                                type="date"
-                                value={dobEnd}
-                                onChange={(e) => { setDobEnd(e.target.value); setPage(1); }}
-                                className="h-8 bg-transparent border-none text-[11px] focus-visible:ring-0 p-1 w-full font-bold text-primary"
-                                disabled={dobFilter === 'upcoming'}
-                            />
-                        </div>
                     </div>
-
-                    {/* Anniversary Range */}
-                    <div className="flex flex-col gap-2.5">
-                        <div className="flex items-center justify-between mb-0.5">
-                            <div className="flex items-center gap-2">
-                                <div className="p-1 rounded-md bg-rose-100"><Sparkles className="w-3 h-3 text-rose-600" /></div>
-                                <p className="text-[10px] font-black uppercase tracking-widest text-rose-700/70">Anniversary Range</p>
-                            </div>
-                            <Button
-                                variant="ghost"
-                                size="sm"
-                                className={`h-6 px-2 text-[9px] font-black uppercase tracking-tighter rounded-md transition-all ${anniversaryFilter === 'upcoming' ? 'bg-rose-600 text-white shadow-sm' : 'text-rose-600 hover:bg-rose-50 bg-rose-50/50 border border-rose-100'}`}
-                                onClick={() => {
-                                    if (anniversaryFilter === 'upcoming') setAnniversaryFilter('');
-                                    else { setAnniversaryFilter('upcoming'); setAnniversaryStart(''); setAnniversaryEnd(''); }
-                                    setPage(1);
-                                }}
-                            >
-                                {anniversaryFilter === 'upcoming' ? 'Upcoming Active' : 'Show Upcoming'}
-                            </Button>
-                        </div>
-                        <div className={`flex items-center gap-2 p-1.5 rounded-xl border transition-all ${anniversaryFilter === 'upcoming' ? 'bg-rose-50/50 border-rose-100 opacity-50' : 'bg-white border-primary/10 hover:border-primary/30 shadow-sm'}`}>
-                            <Input
-                                type="date"
-                                value={anniversaryStart}
-                                onChange={(e) => { setAnniversaryStart(e.target.value); setPage(1); }}
-                                className="h-8 bg-transparent border-none text-[11px] focus-visible:ring-0 p-1 w-full font-bold text-primary"
-                                disabled={anniversaryFilter === 'upcoming'}
-                            />
-                            <div className="w-2 h-0.5 bg-primary/20 rounded-full" />
-                            <Input
-                                type="date"
-                                value={anniversaryEnd}
-                                onChange={(e) => { setAnniversaryEnd(e.target.value); setPage(1); }}
-                                className="h-8 bg-transparent border-none text-[11px] focus-visible:ring-0 p-1 w-full font-bold text-primary"
-                                disabled={anniversaryFilter === 'upcoming'}
-                            />
-                        </div>
-                    </div>
-                </div>
-
-                <div className="flex justify-end border-t border-primary/5 pt-4 mt-2 relative z-10">
-                    <Button
-                        size="sm"
-                        variant="ghost"
-                        className="h-9 px-5 text-xs font-black uppercase tracking-widest text-primary/40 hover:text-primary hover:bg-primary/5 transition-all flex items-center gap-2 rounded-xl"
-                        onClick={() => {
-                            setSearchQuery("");
-                            setTypeFilter("all");
-                            setDobFilter("");
-                            setDobStart("");
-                            setDobEnd("");
-                            setAnniversaryFilter("");
-                            setAnniversaryStart("");
-                            setAnniversaryEnd("");
-                            setDateRange("all");
-                            setPage(1);
-                        }}
-                    >
-                        <RotateCcw className="w-3.5 h-3.5" />
-                        Reset Sacred Filters
-                    </Button>
                 </div>
             </div>
 
@@ -713,8 +750,8 @@ export default function AdminUsersPage() {
                                                 <div>
                                                     <p className="text-[9px] font-black uppercase tracking-widest text-muted-foreground mb-1.5">IMP Dates</p>
                                                     <div className="space-y-1">
-                                                        {user.dob && <div className="flex items-center gap-1.5 text-emerald-600 font-bold text-[10px]"><Calendar className="w-3 h-3" /> Bdy: {formatImpDate(user.dob)}</div>}
-                                                        {user.anniversary && <div className="flex items-center gap-1.5 text-rose-600 font-bold text-[10px]"><Calendar className="w-3 h-3" /> Ann: {formatImpDate(user.anniversary)}</div>}
+                                                        {user.dob && <div className="flex items-center gap-1.5 text-emerald-600 font-bold text-[10px]"><CalendarIcon className="w-3 h-3" /> Bdy: {formatImpDate(user.dob)}</div>}
+                                                        {user.anniversary && <div className="flex items-center gap-1.5 text-rose-600 font-bold text-[10px]"><CalendarIcon className="w-3 h-3" /> Ann: {formatImpDate(user.anniversary)}</div>}
                                                         {!user.dob && !user.anniversary && <span className="text-muted-foreground text-[10px] italic">No dates set</span>}
                                                     </div>
                                                 </div>
@@ -729,7 +766,7 @@ export default function AdminUsersPage() {
                                                 </div>
                                                 <div>
                                                     <p className="text-[9px] font-black uppercase tracking-widest text-muted-foreground mb-1.5">Joined</p>
-                                                    <div className="flex items-center gap-1.5 text-[11px] font-bold text-foreground italic"><Calendar className="w-3 h-3 text-primary/60" /> {new Date(user.joinedDate).toLocaleDateString()}</div>
+                                                    <div className="flex items-center gap-1.5 text-[11px] font-bold text-foreground italic"><CalendarIcon className="w-3 h-3 text-primary/60" /> {new Date(user.joinedDate).toLocaleDateString()}</div>
                                                 </div>
                                             </div>
                                         </div>
@@ -836,13 +873,13 @@ export default function AdminUsersPage() {
                                                 <div className="space-y-1">
                                                     {user.dob && (
                                                         <div className="flex items-center gap-1.5 text-emerald-600 font-bold text-[10px]">
-                                                            <Calendar className="w-3 h-3" />
+                                                            <CalendarIcon className="w-3 h-3" />
                                                             <span>Bdy: {formatImpDate(user.dob)}</span>
                                                         </div>
                                                     )}
                                                     {user.anniversary && (
                                                         <div className="flex items-center gap-1.5 text-rose-600 font-bold text-[10px]">
-                                                            <Calendar className="w-3 h-3" />
+                                                            <CalendarIcon className="w-3 h-3" />
                                                             <span>Ann: {formatImpDate(user.anniversary)}</span>
                                                         </div>
                                                     )}
@@ -854,7 +891,7 @@ export default function AdminUsersPage() {
                                             <td className="p-4">
                                                 <div className="flex flex-col">
                                                     <p className="text-[11px] font-bold text-foreground italic flex items-center gap-1.5">
-                                                        <Calendar className="w-3 h-3 text-primary/60" />
+                                                        <CalendarIcon className="w-3 h-3 text-primary/60" />
                                                         {new Date(user.joinedDate).toLocaleDateString()}
                                                     </p>
                                                 </div>

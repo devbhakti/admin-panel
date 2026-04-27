@@ -271,7 +271,7 @@ export default function TestimonialsPage() {
                                 <TableHead>Details</TableHead>
                                 <TableHead>Category</TableHead>
                                 <TableHead>Status</TableHead>
-                                <TableHead>Order</TableHead>
+                                {/* <TableHead>Order</TableHead> */}
                                 <TableHead className="text-right">Actions</TableHead>
                             </TableRow>
                         </TableHeader>
@@ -305,7 +305,7 @@ export default function TestimonialsPage() {
                                             {testimonial.active ? "Active" : "Inactive"}
                                         </Badge>
                                     </TableCell>
-                                    <TableCell>{testimonial.order}</TableCell>
+                                    {/* <TableCell>{testimonial.order}</TableCell> */}
                                     <TableCell className="text-right">
                                         <div className="flex justify-end gap-2">
                                             <Button
@@ -419,7 +419,7 @@ export default function TestimonialsPage() {
                                     <option value="false">Inactive</option>
                                 </select>
                             </div>
-                            <div className="space-y-2">
+                            {/* <div className="space-y-2">
                                 <Label htmlFor="order">Order</Label>
                                 <Input
                                     id="order"
@@ -427,19 +427,23 @@ export default function TestimonialsPage() {
                                     value={formData.order}
                                     onChange={(e) => setFormData({ ...formData, order: parseInt(e.target.value) })}
                                 />
-                            </div>
+                            </div> */}
                         </div>
 
                         <div className="grid grid-cols-2 gap-4">
                             <div className="space-y-2">
-                                <Label>Thumbnail Image</Label>
-                                <div className="border-2 border-dashed rounded-lg p-4 flex flex-col items-center justify-center gap-2 hover:bg-muted/50 transition-colors cursor-pointer relative h-40">
+                                <div className="flex justify-between items-center">
+                                    <Label>Thumbnail Image</Label>
+                                    <span className="text-[9px] text-zinc-400 font-bold uppercase tracking-widest">1080x1350px (4:5)</span>
+                                </div>
+                                <div className="border-2 border-dashed rounded-lg p-4 flex flex-col items-center justify-center gap-2 hover:bg-muted/50 transition-colors cursor-pointer relative h-40 overflow-hidden">
                                     {thumbnailPreview ? (
                                         <img src={thumbnailPreview} className="w-full h-full object-cover rounded" />
                                     ) : (
                                         <>
                                             <ImageIcon className="w-8 h-8 text-muted-foreground" />
-                                            <div className="text-xs text-center">Upload Thumbnail (400x600 Recommended)</div>
+                                            <div className="text-xs text-center font-medium">Click to upload Thumbnail</div>
+                                            <div className="text-[10px] text-muted-foreground/60 text-center">Vertical Portrait Recommended</div>
                                         </>
                                     )}
                                     <input
@@ -452,7 +456,10 @@ export default function TestimonialsPage() {
                                 </div>
                             </div>
                             <div className="space-y-2">
-                                <Label>Video File</Label>
+                                <div className="flex justify-between items-center">
+                                    <Label>Video File</Label>
+                                    <span className="text-[9px] text-zinc-400 font-bold uppercase tracking-widest">Portrait (9:16 / 4:5)</span>
+                                </div>
                                 <div className="border-2 border-dashed rounded-lg p-4 flex flex-col items-center justify-center gap-2 hover:bg-muted/50 transition-colors cursor-pointer relative h-40">
                                     {videoPreview ? (
                                         <div className="flex flex-col items-center justify-center bg-zinc-100 w-full h-full rounded">
@@ -464,7 +471,8 @@ export default function TestimonialsPage() {
                                     ) : (
                                         <>
                                             <Video className="w-8 h-8 text-muted-foreground" />
-                                            <div className="text-xs text-center">Click to upload MP4 video</div>
+                                            <div className="text-xs text-center font-medium">Click to upload MP4 video</div>
+                                            <div className="text-[10px] text-muted-foreground/60 text-center">Max size 10MB Recommended</div>
                                         </>
                                     )}
                                     <input

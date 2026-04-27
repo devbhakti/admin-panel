@@ -10,17 +10,26 @@ import {
     MoreVertical,
     Mail,
     Phone,
-    Calendar,
+    Calendar as CalendarIcon,
     Eye,
     ShoppingCart,
     Loader2,
-    Download
+    Download,
+    X
 } from "lucide-react";
 import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Badge } from "@/components/ui/badge";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { 
+    Popover, 
+    PopoverContent, 
+    PopoverTrigger 
+} from "@/components/ui/popover";
+import { Calendar } from "@/components/ui/calendar";
+import { format } from "date-fns";
+import { cn } from "@/lib/utils";
 import { fetchMyTempleDevotees } from "@/api/templeAdminController";
 import { useToast } from "@/hooks/use-toast";
 import { API_URL } from "@/config/apiConfig";
@@ -201,7 +210,7 @@ export default function TempleUsersPage() {
                                     </td>
                                     <td className="p-4">
                                         <div className="flex items-center gap-1 text-muted-foreground text-sm">
-                                            <Calendar className="w-3 h-3" />
+                                            <CalendarIcon className="w-3 h-3" />
                                             {new Date(user.lastInteraction).toLocaleDateString('en-IN', {
                                                 day: 'numeric',
                                                 month: 'short',
@@ -294,29 +303,83 @@ export default function TempleUsersPage() {
                         />
                     </div>
                 </div>
-                <div className="flex flex-col gap-1 w-full md:w-36">
+                <div className="flex flex-col gap-1 w-full md:w-[240px]">
                     <p className="text-[10px] font-bold uppercase text-muted-foreground ml-1">Birthday</p>
-                    <Input
-                        type="date"
-                        value={dobFilter}
-                        onChange={(e) => {
-                            setDobFilter(e.target.value);
-                            setCurrentPage(1);
-                        }}
-                        className="h-11"
-                    />
+                    <div className="relative">
+                        <Popover>
+                            <PopoverTrigger asChild>
+                                <Button
+                                    variant={"outline"}
+                                    className={cn(
+                                        "w-full justify-start text-left font-normal h-11 px-3",
+                                        !dobFilter && "text-muted-foreground"
+                                    )}
+                                >
+                                    <CalendarIcon className="mr-2 h-4 w-4" />
+                                    {dobFilter ? format(new Date(dobFilter), "PPP") : <span>Pick a date</span>}
+                                </Button>
+                            </PopoverTrigger>
+                            <PopoverContent className="w-auto p-0" align="start">
+                                <Calendar
+                                    mode="single"
+                                    selected={dobFilter ? new Date(dobFilter) : undefined}
+                                    onSelect={(date) => {
+                                        setDobFilter(date ? format(date, "yyyy-MM-dd") : "");
+                                        setCurrentPage(1);
+                                    }}
+                                    numberOfMonths={2}
+                                    initialFocus
+                                />
+                            </PopoverContent>
+                        </Popover>
+                        {dobFilter && (
+                            <button 
+                                onClick={() => { setDobFilter(""); setCurrentPage(1); }}
+                                className="absolute right-2 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-foreground"
+                            >
+                                <X className="w-4 h-4" />
+                            </button>
+                        )}
+                    </div>
                 </div>
-                <div className="flex flex-col gap-1 w-full md:w-36">
+                <div className="flex flex-col gap-1 w-full md:w-[240px]">
                     <p className="text-[10px] font-bold uppercase text-muted-foreground ml-1">Anniversary</p>
-                    <Input
-                        type="date"
-                        value={anniversaryFilter}
-                        onChange={(e) => {
-                            setAnniversaryFilter(e.target.value);
-                            setCurrentPage(1);
-                        }}
-                        className="h-11"
-                    />
+                    <div className="relative">
+                        <Popover>
+                            <PopoverTrigger asChild>
+                                <Button
+                                    variant={"outline"}
+                                    className={cn(
+                                        "w-full justify-start text-left font-normal h-11 px-3",
+                                        !anniversaryFilter && "text-muted-foreground"
+                                    )}
+                                >
+                                    <CalendarIcon className="mr-2 h-4 w-4" />
+                                    {anniversaryFilter ? format(new Date(anniversaryFilter), "PPP") : <span>Pick a date</span>}
+                                </Button>
+                            </PopoverTrigger>
+                            <PopoverContent className="w-auto p-0" align="start">
+                                <Calendar
+                                    mode="single"
+                                    selected={anniversaryFilter ? new Date(anniversaryFilter) : undefined}
+                                    onSelect={(date) => {
+                                        setAnniversaryFilter(date ? format(date, "yyyy-MM-dd") : "");
+                                        setCurrentPage(1);
+                                    }}
+                                    numberOfMonths={2}
+                                    initialFocus
+                                />
+                            </PopoverContent>
+                        </Popover>
+                        {anniversaryFilter && (
+                            <button 
+                                onClick={() => { setAnniversaryFilter(""); setCurrentPage(1); }}
+                                className="absolute right-2 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-foreground"
+                            >
+                                <X className="w-4 h-4" />
+                            </button>
+                        )}
+                    </div>
                 </div>
                 <Button
                     onClick={handleExportDevotees}
@@ -333,7 +396,7 @@ export default function TempleUsersPage() {
                         <div className="px-4 pt-4 border-b">
                             <TabsList className="bg-muted/50">
                                 <TabsTrigger value="pooja" className="gap-2">
-                                    <Calendar className="w-4 h-4" />
+                                    <CalendarIcon className="w-4 h-4" />
                                     Pooja Bookers
                                 </TabsTrigger>
                                 <TabsTrigger value="product" className="gap-2">

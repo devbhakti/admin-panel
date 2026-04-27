@@ -355,7 +355,7 @@ export default function EditCategoryPage() {
               </TabsContent>
             </Tabs>
 
-             <div className="space-y-2">
+             {/* <div className="space-y-2">
               <Label>{t("admin.categories.image")}</Label>
               <div className="flex items-center gap-4">
                 {(categoryImagePreview || existingImage) ? (
@@ -397,7 +397,7 @@ export default function EditCategoryPage() {
                   )}
                 </div>
               </div>
-            </div>
+            </div> */}
 
             <div className="flex items-center space-x-2">
               <Switch

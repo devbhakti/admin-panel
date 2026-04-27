@@ -30,7 +30,14 @@ import {
     TableRow,
 } from "@/components/ui/table";
 import { Badge } from "@/components/ui/badge";
-import { fetchMyPoojas, deleteMyPooja, togglePoojaStatus } from "@/api/templeAdminController";
+import {
+    Select,
+    SelectContent,
+    SelectItem,
+    SelectTrigger,
+    SelectValue,
+} from "@/components/ui/select";
+import { fetchMyPoojas, deleteMyPooja, togglePoojaStatus, fetchPoojaCategories } from "@/api/templeAdminController";
 import { useToast } from "@/hooks/use-toast";
 import { useAdminAuth } from "@/hooks/use-admin-auth";
 import { API_URL } from "@/config/apiConfig";
@@ -39,6 +46,8 @@ import { parseLocalizedValue } from '@/utils/textUtils';
 export default function TemplePoojasListPage() {
     const router = useRouter();
     const [poojas, setPoojas] = useState<any[]>([]);
+    const [categories, setCategories] = useState<any[]>([]);
+    const [selectedCategory, setSelectedCategory] = useState("ALL");
     const [isLoading, setIsLoading] = useState(true);
     const [searchTerm, setSearchTerm] = useState("");
     const { toast } = useToast();
@@ -46,7 +55,19 @@ export default function TemplePoojasListPage() {
 
     useEffect(() => {
         loadPoojas();
+        loadCategories();
     }, []);
+
+    const loadCategories = async () => {
+        try {
+            const res = await fetchPoojaCategories();
+            if (res && res.data) {
+                setCategories(res.data);
+            }
+        } catch (error) {
+            console.error("Failed to load categories", error);
+        }
+    };
 
     const loadPoojas = async () => {
         setIsLoading(true);
@@ -98,10 +119,12 @@ export default function TemplePoojasListPage() {
         }
     };
 
-    const filteredPoojas = poojas.filter(pooja =>
-        parseLocalizedValue(pooja.name).toLowerCase().includes(searchTerm.toLowerCase()) ||
-        parseLocalizedValue(pooja.category).toLowerCase().includes(searchTerm.toLowerCase())
-    );
+    const filteredPoojas = poojas.filter(pooja => {
+        const matchesSearch = parseLocalizedValue(pooja.name).toLowerCase().includes(searchTerm.toLowerCase()) ||
+                              parseLocalizedValue(pooja.category).toLowerCase().includes(searchTerm.toLowerCase());
+        const matchesCategory = selectedCategory === "ALL" || parseLocalizedValue(pooja.category) === selectedCategory;
+        return matchesSearch && matchesCategory;
+    });
 
     const getImageUrl = (path: string) => {
         if (!path) return "https://via.placeholder.com/150";
@@ -291,8 +314,8 @@ export default function TemplePoojasListPage() {
             </div>
 
             {/* Search */}
-            <div className="flex flex-col md:flex-row gap-4">
-                <div className="relative w-full">
+            <div className="flex flex-col md:flex-row gap-4 mb-4">
+                <div className="relative flex-1">
                     <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
                     <Input
                         placeholder="Search your poojas..."
@@ -301,6 +324,25 @@ export default function TemplePoojasListPage() {
                         onChange={(e) => setSearchTerm(e.target.value)}
                     />
                 </div>
+                <Select value={selectedCategory} onValueChange={setSelectedCategory}>
+                    <SelectTrigger className="flex h-10 w-full md:w-[250px] items-center justify-between rounded-md border border-slate-200 bg-white px-3 py-2 text-sm placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-[#7b4623]/20">
+                        <SelectValue placeholder="All Categories" />
+                    </SelectTrigger>
+                    <SelectContent>
+                        <SelectItem value="ALL" className="focus:bg-[#7b4623]/10 focus:text-[#7b4623]">
+                            All Categories
+                        </SelectItem>
+                        {categories.map((cat) => (
+                            <SelectItem 
+                                key={cat.id} 
+                                value={parseLocalizedValue(cat.name)}
+                                className="focus:bg-[#7b4623]/10 focus:text-[#7b4623]"
+                            >
+                                {parseLocalizedValue(cat.name)}
+                            </SelectItem>
+                        ))}
+                    </SelectContent>
+                </Select>
             </div>
 
             {/* Poojas Table Container */}

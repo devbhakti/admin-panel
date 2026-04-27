@@ -121,7 +121,7 @@ const sidebarItems = [
     permission: "cms.menu",
     subItems: [
       { label: "Manage Banners", href: "/admin/cms/banners", permission: "cms.banners" },
-      { label: "Manage Features", href: "/admin/cms/features", permission: "cms.features" },
+      // { label: "Manage Features", href: "/admin/cms/features", permission: "cms.features" },
       { label: "Manage Rating", href: "/admin/cms/manage-rating", permission: "cms.ratings" },
       { label: "Manage Testimonials", href: "/admin/cms/testimonials", permission: "cms.testimonials" },
       { label: "Manage CTA Cards", href: "/admin/cms/cta-cards", permission: "cms.cta_cards" },

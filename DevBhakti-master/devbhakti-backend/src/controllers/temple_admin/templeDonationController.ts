@@ -5,7 +5,7 @@ import { getLang, localize, getEnglish } from "../../utils/localization";
 export const getTempleDonations = async (req: Request, res: Response) => {
     try {
         const { templeId } = req.params; // Or from auth middleware if applicable
-        const { search, status, page = 1, limit = 10 } = req.query;
+        const { search, status, page = 1, limit = 10, startDate, endDate } = req.query;
         const skip = (parseInt(String(page), 10) - 1) * parseInt(String(limit), 10);
 
         const where: any = { templeId };
@@ -15,6 +15,19 @@ export const getTempleDonations = async (req: Request, res: Response) => {
         } else if (!status || status === "all") {
             // Default to showing only successful donations
             where.status = "SUCCESS";
+        }
+
+        if (startDate || endDate) {
+            where.createdAt = {};
+            if (startDate) {
+                where.createdAt.gte = new Date(String(startDate));
+            }
+            if (endDate) {
+                // Ensure endDate includes the full day
+                const end = new Date(String(endDate));
+                end.setHours(23, 59, 59, 999);
+                where.createdAt.lte = end;
+            }
         }
 
         if (search) {

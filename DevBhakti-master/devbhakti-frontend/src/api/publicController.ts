@@ -156,3 +156,13 @@ export const submitContactForm = async (data: {
         };
     }
 };
+
+export const calculateDonationFee = async (amount: number) => {
+    try {
+        const response = await axios.get(`${API_URL}/donations/calculate-fee`, { params: { amount } });
+        return response.data;
+    } catch (error) {
+        console.error("Error calculating donation fee:", error);
+        return { success: false, platformFee: 0, totalPayable: amount };
+    }
+};

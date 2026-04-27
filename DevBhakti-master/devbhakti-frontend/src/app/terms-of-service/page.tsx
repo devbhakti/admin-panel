@@ -6,6 +6,8 @@ import Navbar from "@/components/landing/Navbar";
 import Footer from "@/components/landing/Footer";
 import { Scale, CheckCircle2, AlertTriangle, Gavel, Globe, CreditCard, Info } from "lucide-react";
 import { useLanguage } from "@/context/LanguageContext";
+import Image from "next/image";
+import termsImage from "@/assets/temple-meenakshi.jpg";
 
 export default function TermsOfServicePage() {
     const { t, tRaw } = useLanguage();
@@ -94,29 +96,41 @@ export default function TermsOfServicePage() {
             <Navbar />
 
             {/* Hero Header */}
-            <section className="relative pt-24 sm:pt-32 pb-16 sm:pb-20 overflow-hidden">
-                <div className="absolute inset-0 z-0 bg-gradient-to-b from-primary/10 via-transparent to-background" />
-                <div className="container mx-auto px-4 sm:px-6 relative z-10">
+            <section className="relative min-h-[480px] flex items-center justify-center overflow-hidden">
+                {/* Background image */}
+                <div className="absolute inset-0">
+                    <Image
+                        src={termsImage}
+                        alt="Terms of Service"
+                        fill
+                        priority
+                        className="object-cover"
+                    />
+                    <div className="absolute inset-0 bg-gradient-to-b from-background/80 via-background/60 to-background/90" />
+                </div>
+
+                <div className="container mx-auto px-4 sm:px-6 pt-28 pb-12 relative z-10 text-center">
                     <motion.div
                         initial={{ opacity: 0, y: -20 }}
                         animate={{ opacity: 1, y: 0 }}
-                        className="text-center max-w-4xl mx-auto"
+                        className="max-w-4xl mx-auto"
                     >
-                        <div className="inline-flex p-2 sm:p-3 rounded-xl sm:rounded-2xl bg-primary text-white mb-4 sm:mb-6 shadow-glow">
-                            <Scale className="w-6 h-6 sm:w-8 sm:h-8" />
+                        <div className="inline-flex p-3 rounded-2xl bg-primary/10 backdrop-blur-md text-primary mb-6 border border-primary/20">
+                            <Scale className="w-10 h-10" />
                         </div>
-                        <h1 className="text-3xl sm:text-4xl md:text-5xl lg:text-7xl font-serif font-bold mb-3 sm:mb-4 text-primary break-normal">
+                        <h1 className="text-4xl md:text-5xl lg:text-7xl font-serif font-bold mb-4 text-foreground leading-tight">
                             {t('terms.title')}
                         </h1>
-                        <p className="text-xs sm:text-sm font-bold text-primary mb-4 sm:mb-6 uppercase tracking-widest break-words">{t('terms.effective_date')}</p>
-                        <div className="text-base sm:text-lg md:text-xl text-muted-foreground leading-relaxed max-w-3xl mx-auto space-y-3 sm:space-y-4">
-                            <p className="break-words">
+                        <p className="text-sm font-bold text-primary mb-8 uppercase tracking-widest">{t('terms.effective_date')}</p>
+                        
+                        <div className="text-lg md:text-xl text-foreground/80 max-w-3xl mx-auto leading-relaxed space-y-4">
+                            <p>
                                 {t('terms.intro_p1')}
                             </p>
-                            <p className="break-words">
+                            <p>
                                 {t('terms.intro_p2')}
                             </p>
-                            <p className="break-words">
+                            <p>
                                 {t('terms.intro_p3')}
                             </p>
                         </div>

@@ -221,6 +221,8 @@ export const fetchAllTemplesAdmin = async (params?: {
     isVerified?: boolean; 
     templeId?: string; 
     date?: string; 
+    startDate?: string;
+    endDate?: string;
     deity?: string; 
     category?: string;
     state?: string; 
@@ -240,6 +242,8 @@ export const fetchAllTemplesAdmin = async (params?: {
         if (params.isVerified !== undefined) query.append('isVerified', params.isVerified.toString());
         if (params.templeId) query.append('templeId', params.templeId);
         if (params.date) query.append('date', params.date);
+        if (params.startDate) query.append('startDate', params.startDate);
+        if (params.endDate) query.append('endDate', params.endDate);
         if (params.deity) query.append('deity', params.deity);
         if (params.category) query.append('category', params.category);
         if (params.state) query.append('state', params.state);
@@ -584,7 +588,7 @@ export const deletePoojaFAQAdmin = async (id: string) => {
 
 
 // Admin Product Management
-export const fetchAllProductsAdmin = async (params?: { page?: number; limit?: number; search?: string; status?: string; templeId?: string; date?: string; productId?: string }) => {
+export const fetchAllProductsAdmin = async (params?: { page?: number; limit?: number; search?: string; status?: string; templeId?: string; date?: string; productId?: string; categoryId?: string }) => {
     const token = getAdminToken();
     let url = `${API_URL}/admin/products`;
     if (params) {
@@ -596,6 +600,7 @@ export const fetchAllProductsAdmin = async (params?: { page?: number; limit?: nu
         if (params.status) query.append('status', params.status);
         if (params.templeId) query.append('templeId', params.templeId);
         if (params.date) query.append('date', params.date);
+        if (params.categoryId) query.append('categoryId', params.categoryId);
         url += `?${query.toString()}`;
     }
     const response = await axios.get(url, {
@@ -799,7 +804,7 @@ export const fetchProductsByTempleAdmin = async (templeId: string) => {
 // };
 
 // Admin Order Management
-export const fetchAllOrdersAdmin = async (params?: { page?: number; limit?: number; search?: string; status?: string; paymentStatus?: string; date?: string }) => {
+export const fetchAllOrdersAdmin = async (params?: { page?: number; limit?: number; search?: string; status?: string; paymentStatus?: string; date?: string; templeId?: string }) => {
     const token = getAdminToken();
     let url = `${API_URL}/admin/orders`;
     if (params) {
@@ -810,6 +815,7 @@ export const fetchAllOrdersAdmin = async (params?: { page?: number; limit?: numb
         if (params.status) query.append('status', params.status);
         if (params.paymentStatus) query.append('paymentStatus', params.paymentStatus);
         if (params.date) query.append('date', params.date);
+        if (params.templeId) query.append('templeId', params.templeId);
         url += `?${query.toString()}`;
     }
     const response = await axios.get(url, {
