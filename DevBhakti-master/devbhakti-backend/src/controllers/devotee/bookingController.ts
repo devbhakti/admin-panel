@@ -351,7 +351,10 @@ export const getMyBookings = async (req: Request, res: Response) => {
 
         const bookings = await prisma.poojaBooking.findMany({
 
-            where: { userId },
+            where: { 
+                userId,
+                status: { not: 'PENDING' }
+            },
 
             include: {
 

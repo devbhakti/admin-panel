@@ -161,13 +161,24 @@ export default function MyBookingsPage() {
                                 >
                                     <div className="p-6 md:p-8">
                                         <div className="flex flex-wrap items-center justify-between gap-4 mb-6">
-                                            <div className="flex items-center gap-3">
+                                            <div className="flex items-center gap-4">
                                                 <div className="p-3 bg-orange-50 rounded-2xl">
                                                     <Calendar className="w-6 h-6 text-[#794A05]" />
                                                 </div>
                                                 <div>
-                                                    <p className="text-xs font-bold text-slate-400 uppercase tracking-widest">{t("bookings.label_booking_id")}</p>
-                                                    <p className="font-mono text-sm font-bold text-slate-900">#{booking.id.slice(-8).toUpperCase()}</p>
+                                                    <div className="flex items-center gap-2 mb-1">
+                                                        <span className="text-[10px] font-bold text-slate-500 uppercase tracking-tight">
+                                                            {format(new Date(booking.createdAt), "dd MMM yyyy")}
+                                                        </span>
+                                                        <div className="w-1 h-1 rounded-full bg-slate-300" />
+                                                        <Badge variant="secondary" className="bg-orange-100 text-[#794A05] hover:bg-orange-200 border-none px-2 py-0 h-4 text-[9px] font-bold uppercase tracking-tighter">
+                                                            {booking.packageName}
+                                                        </Badge>
+                                                    </div>
+                                                    <div className="flex flex-col">
+                                                        <p className="text-[10px] font-bold text-slate-400 uppercase tracking-widest leading-none mb-1">{t("bookings.label_booking_id")}</p>
+                                                        <p className="font-mono text-sm font-bold text-slate-900 leading-none">#{booking.id.slice(-8).toUpperCase()}</p>
+                                                    </div>
                                                 </div>
                                             </div>
                                             <div className="flex flex-col items-end">
@@ -207,13 +218,11 @@ export default function MyBookingsPage() {
                                         </div>
 
                                         <div className="mt-6 flex items-center justify-between">
-                                            <div className="flex items-center gap-4 text-xs font-medium text-slate-500">
+                                            <div className="flex items-center gap-4 text-xs font-medium text-slate-400">
                                                 <div className="flex items-center gap-1.5">
                                                     <Clock className="w-3.5 h-3.5" />
-                                                    {format(new Date(booking.createdAt), "dd MMM yyyy")}
+                                                    {format(new Date(booking.createdAt), "hh:mm a")}
                                                 </div>
-                                                <div className="w-1 h-1 rounded-full bg-slate-300" />
-                                                <span className="font-bold text-primary">{booking.packageName}</span>
                                             </div>
                                             <div className="flex items-center gap-2">
                                                 <Button

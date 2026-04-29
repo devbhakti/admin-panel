@@ -64,7 +64,8 @@ export default function TempleOrderDetailsPage() {
                     router.push("/temples/dashboard/orders");
                 }
             }
-        } catch (error) {
+        }
+    } catch (error) {
             console.error("Load order error:", error);
         } finally {
             setLoading(false);
