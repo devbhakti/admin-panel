@@ -514,7 +514,7 @@ function BookingsContent() {
                                         </td>
                                         <td className="py-6">
                                             <span className="text-[11px] font-bold text-slate-600">
-                                                {formatDateDDMMYYYY(booking.createdAt, true)}
+                                                {formatDateDDMMYYYY(booking.createdAt, false)}
                                             </span>
                                         </td>
                                         <td className="py-6">

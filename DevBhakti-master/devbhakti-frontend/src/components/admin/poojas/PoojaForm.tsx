@@ -1,7 +1,7 @@
 "use client";
 
 import React, { useState, useEffect } from "react";
-import { Plus, X, Upload, Layout, Languages, FileText, HelpCircle, Package, ArrowRight, Save, Clock } from "lucide-react";
+import { Plus, X, Upload, Layout, Languages, FileText, HelpCircle, Package, ArrowRight, Save, Clock, Info } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -608,15 +608,23 @@ export const PoojaForm: React.FC<PoojaFormProps> = ({
                         {STATIC_PACKAGE_TYPES.map((ptype) => {
                             const isSelected = packages.some((p: any) => p.name === ptype.name);
                             return (
-                                <Button
-                                    key={ptype.name}
-                                    type="button"
-                                    variant={isSelected ? "default" : "outline"}
-                                    onClick={() => togglePackage(ptype)}
-                                    className={`rounded-full px-6 h-[34px] text-xs font-bold transition-all ${isSelected ? 'bg-orange-100 text-orange-700 border-orange-200 hover:bg-orange-100' : 'bg-orange-50/50 text-slate-600 border-orange-100 hover:bg-orange-50 hover:text-orange-700'}`}
-                                >
-                                    <Plus className={`w-3.5 h-3.5 mr-1.5 ${isSelected ? 'rotate-45' : ''} transition-transform`} /> {ptype.name}
-                                </Button>
+                                <TooltipProvider key={ptype.name} delayDuration={200}>
+                                    <Tooltip>
+                                        <TooltipTrigger asChild>
+                                            <Button
+                                                type="button"
+                                                variant={isSelected ? "default" : "outline"}
+                                                onClick={() => togglePackage(ptype)}
+                                                className={`rounded-full px-6 h-[34px] text-xs font-bold transition-all ${isSelected ? 'bg-orange-100 text-orange-700 border-orange-200 hover:bg-orange-100' : 'bg-orange-50/50 text-slate-600 border-orange-100 hover:bg-orange-50 hover:text-orange-700'}`}
+                                            >
+                                                <Plus className={`w-3.5 h-3.5 mr-1.5 ${isSelected ? 'rotate-45' : ''} transition-transform`} /> {ptype.name}
+                                            </Button>
+                                        </TooltipTrigger>
+                                        <TooltipContent side="top" className="bg-slate-800 text-white text-xs px-3 py-1.5 rounded-lg">
+                                            {ptype.description}
+                                        </TooltipContent>
+                                    </Tooltip>
+                                </TooltipProvider>
                             );
                         })}
                     </div>
@@ -642,13 +650,27 @@ export const PoojaForm: React.FC<PoojaFormProps> = ({
                                         <X className="w-4 h-4 text-red-500" />
                                     </Button>
                                     <div className="flex-1 grid grid-cols-1 md:grid-cols-12 gap-6">
-                                        <div className="md:col-span-3 space-y-2">
+                                        <div className="md:col-span-4 space-y-2">
                                             <Label className="text-[10px] font-bold text-slate-400 uppercase tracking-widest">{t('admin_pooja_form.labels.tier_type')}</Label>
-                                            <div className="h-12 flex items-center px-4 bg-slate-50/50 rounded-xl border border-slate-100 text-sm font-bold text-slate-700">
-                                                {pkg.name}
-                                            </div>
+                                            <TooltipProvider delayDuration={100}>
+                                                <Tooltip>
+                                                    <TooltipTrigger asChild>
+                                                        <div className="h-12 flex items-center gap-2 px-4 bg-slate-50/50 rounded-xl border border-slate-100 text-sm font-bold text-slate-700 cursor-default">
+                                                            {pkg.name}
+                                                            {pkg.description && (
+                                                                <Info className="w-3.5 h-3.5 text-slate-400 flex-shrink-0" />
+                                                            )}
+                                                        </div>
+                                                    </TooltipTrigger>
+                                                    {pkg.description && (
+                                                        <TooltipContent side="top" className="bg-slate-800 text-white text-xs px-3 py-1.5 rounded-lg">
+                                                            {pkg.description}
+                                                        </TooltipContent>
+                                                    )}
+                                                </Tooltip>
+                                            </TooltipProvider>
                                         </div>
-                                        <div className="md:col-span-3 space-y-2">
+                                        <div className="md:col-span-4 space-y-2">
                                             <Label className="text-[10px] font-bold text-slate-400 uppercase tracking-widest">{t('admin_pooja_form.labels.tier_price')}</Label>
                                             <div className="relative">
                                                 <span className="absolute left-4 top-1/2 -translate-y-1/2 text-slate-400 font-bold text-sm">₹</span>
@@ -660,14 +682,11 @@ export const PoojaForm: React.FC<PoojaFormProps> = ({
                                                 />
                                             </div>
                                         </div>
-                                        <div className="md:col-span-6 space-y-2">
-                                            <Label className="text-[10px] font-bold text-slate-400 uppercase tracking-widest">{t('admin_pooja_form.labels.tier_note')}</Label>
-                                            <Input
-                                                value={pkg.description}
-                                                onChange={e => updatePackage(idx, 'description', e.target.value)}
-                                                placeholder={t('admin_pooja_form.placeholders.tier_note')}
-                                                className="h-12 bg-white rounded-xl border-slate-200 text-sm shadow-sm"
-                                            />
+                                        <div className="md:col-span-4 space-y-2">
+                                            <Label className="text-[10px] font-bold text-slate-400 uppercase tracking-widest">Note</Label>
+                                            <div className="h-12 flex items-center px-4 bg-slate-50/30 rounded-xl border border-dashed border-slate-200 text-xs text-slate-400 font-medium select-none">
+                                                {pkg.description || '—'}
+                                            </div>
                                         </div>
                                     </div>
                                 </div>

@@ -313,10 +313,10 @@ function LedgerContent() {
                             <CardContent className="p-6">
                                 <div className="flex items-center justify-between mb-2">
                                     <div className="flex items-center gap-1.5">
-                                        <p className="font-bold uppercase tracking-widest text-[10px] text-slate-400">{stat.label}</p>
+                                        <p className={cn("font-bold uppercase tracking-widest text-[10px]", (stat.customBg || stat.highlight) ? "text-white/60" : "text-slate-400")}>{stat.label}</p>
                                         <Tooltip>
                                             <TooltipTrigger asChild>
-                                                <Info className="w-3.5 h-3.5 text-slate-400 cursor-help flex-shrink-0" />
+                                                <Info className={cn("w-3.5 h-3.5 cursor-help flex-shrink-0", (stat.customBg || stat.highlight) ? "text-white/60" : "text-slate-400")} />
                                             </TooltipTrigger>
                                             <TooltipContent side="top" className="bg-slate-800 text-white text-xs max-w-[220px]">
                                                 {stat.info}
@@ -326,7 +326,7 @@ function LedgerContent() {
                                     {stat.icon && <div className={cn("p-2 rounded-full", stat.bg)}>{stat.icon}</div>}
                                 </div>
                                 <h2 className="text-2xl font-extrabold flex items-center gap-1">
-                                    <IndianRupee className={cn("w-5 h-5 opacity-70", stat.highlight ? "text-slate-400" : "text-slate-500")} strokeWidth={3} />
+                                    <IndianRupee className={cn("w-5 h-5 opacity-70", (stat.customBg || stat.highlight) ? "text-white/60" : "text-slate-500")} strokeWidth={3} />
                                     {stat.count.toLocaleString()}
                                 </h2>
                             </CardContent>
@@ -476,7 +476,7 @@ function LedgerContent() {
                                     <tr key={tx.id} className="hover:bg-slate-50/50 transition-colors group">
                                         <td className="py-6 pl-8">
                                             <div className="flex flex-col">
-                                                <span className="text-[10px] font-extrabold text-slate-400 uppercase tracking-tighter">{format(new Date(tx.createdAt), "dd MMM yyyy, hh:mm a")}</span>
+                                                <span className="text-[10px] font-extrabold text-slate-400 uppercase tracking-tighter">{format(new Date(tx.createdAt), "dd MMM yyyy")}</span>
                                                 <span className="text-sm font-extrabold text-slate-900">{tx.description}</span>
                                             </div>
                                         </td>
@@ -606,7 +606,7 @@ function LedgerContent() {
                                     {merchantTxs.map((tx) => (
                                         <tr key={tx.id} className="hover:bg-slate-50 transition-colors">
                                             <td className="py-3 text-slate-500 text-[11px] font-bold whitespace-nowrap pr-4">
-                                                {format(new Date(tx.createdAt), "dd MMM yy, hh:mm a")}
+                                                {format(new Date(tx.createdAt), "dd MMM yy")}
                                             </td>
                                             <td className="py-3 font-semibold text-slate-800 max-w-[180px] truncate">{tx.description}</td>
                                             <td className="py-3 text-center">

@@ -368,7 +368,7 @@ export default function CategoriesManagementPage() {
                       <tr key={category.id} className="hover:bg-slate-50/60 transition-colors">
                         <td className="px-6 py-4 font-medium">
                           <div className="flex items-center gap-3">
-                            <div className="w-10 h-10 rounded-lg bg-slate-100 flex items-center justify-center overflow-hidden shrink-0">
+                            {/* <div className="w-10 h-10 rounded-lg bg-slate-100 flex items-center justify-center overflow-hidden shrink-0">
                               {category.image ? (
                                 <img
                                   src={`${BASE_URL}${category.image}`}
@@ -378,7 +378,7 @@ export default function CategoriesManagementPage() {
                               ) : (
                                 <Package className="w-5 h-5 text-slate-400" />
                               )}
-                            </div>
+                            </div> */}
                             <span className="truncate max-w-[150px]">{getL(category.name, "en") || "—"}</span>
                           </div>
                         </td>
@@ -465,7 +465,8 @@ export default function CategoriesManagementPage() {
           {selectedCategory && (
             <div className="space-y-4">
               <div className="flex items-center gap-4">
-                <div className="w-16 h-16 rounded-lg bg-slate-100 flex items-center justify-center overflow-hidden border">
+
+                {/* <div className="w-16 h-16 rounded-lg bg-slate-100 flex items-center justify-center overflow-hidden border">
                   {selectedCategory.image ? (
                     <img
                       src={`${BASE_URL}${selectedCategory.image}`}
@@ -475,7 +476,8 @@ export default function CategoriesManagementPage() {
                   ) : (
                     <Package className="w-8 h-8 text-slate-400" />
                   )}
-                </div>
+                </div> */}
+
                 <div>
                   <h3 className="font-bold text-slate-900">{getL(selectedCategory.name, language)}</h3>
                   <div className="mt-1">{getStatusBadge(selectedCategory.isActive)}</div>

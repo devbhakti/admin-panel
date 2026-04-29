@@ -361,7 +361,7 @@ export default function ViewTemplePage() {
                                     <div key={p.id} className="p-4 rounded-xl border bg-slate-50 flex items-center justify-between group hover:border-primary transition-all">
                                         <div className="flex flex-col">
                                             <span className="font-bold text-slate-800">{parseL(p.name, activeTab)}</span>
-                                            <span className="text-sm text-slate-500">{parseL(p.category, activeTab)}{p.duration ? ` • ${p.duration}` : ''}</span>
+                                            {p.duration && <span className="text-sm text-slate-500">{p.duration}</span>}
                                         </div>
                                         <Badge variant="outline" className="group-hover:bg-primary group-hover:text-white transition-colors">₹{p.price}</Badge>
                                     </div>
@@ -383,7 +383,6 @@ export default function ViewTemplePage() {
                                     <div key={p.id} className="p-4 rounded-xl border bg-slate-50 flex items-center justify-between group hover:border-primary transition-all">
                                         <div className="flex flex-col">
                                             <span className="font-bold text-slate-800">{parseL(p.name, activeTab)}</span>
-                                            <span className="text-sm text-slate-500">{parseL(p.category, activeTab)}</span>
                                         </div>
                                         <Badge variant="outline" className="group-hover:bg-primary group-hover:text-white transition-colors">
                                             ₹{p.variants?.[0]?.price || 0}

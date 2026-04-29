@@ -20,6 +20,8 @@ import {
     Share2,
     ChevronLeft,
     ChevronRight,
+    ChevronUp,
+    ChevronDown,
     IndianRupee,
     Maximize2,
     X,
@@ -62,6 +64,7 @@ export default function TempleDetail() {
     const [showRatings, setShowRatings] = useState(false);
     const [selectedEvent, setSelectedEvent] = useState<any>(null);
     const [videoPlayUrl, setVideoPlayUrl] = useState<string | null>(null);
+    const [showAllEvents, setShowAllEvents] = useState(false);
 
     const purposes = React.useMemo(() => {
         if (!temple?.poojas) return [];
@@ -735,21 +738,40 @@ export default function TempleDetail() {
                                             <h3 className="text-[11px] font-black uppercase tracking-[0.2em] text-muted-foreground">{t('temple_detail.upcoming_events')}</h3>
                                         </div>
                                         <div className="space-y-3">
-                                            {temple.events.slice(0, 3).map((event: any, index: number) => (
+                                            {temple.events.slice(0, showAllEvents ? undefined : 3).map((event: any, index: number) => (
                                                 <div
                                                     key={index}
                                                     onClick={() => setSelectedEvent(event)}
                                                     className="relative pl-4 border-l-2 border-primary/10 hover:border-primary/40 transition-all py-1 group cursor-pointer hover:bg-primary/5 rounded-r-lg"
                                                 >
                                                     <div className="absolute -left-[5px] top-2 h-2 w-2 rounded-full bg-primary/20 group-hover:bg-primary transition-colors" />
-                                                    <h4 className="font-bold text-sm text-foreground leading-tight group-hover:text-primary transition-colors">{getLocalized(event, 'name', language)}</h4>
-                                                    <p className="text-[11px] font-medium text-muted-foreground mt-1 flex items-center gap-1.5">
+                                                    <div className="flex items-center gap-2 mb-0.5">
+                                                        <h4 className="font-bold text-sm text-foreground leading-tight group-hover:text-primary transition-colors">{getLocalized(event, 'name', language)}</h4>
+                                                        {!event.templeId && (
+                                                            <Badge className="bg-orange-100 text-orange-700 hover:bg-orange-200 border-none text-[8px] px-1.5 h-4 font-black uppercase tracking-tighter">
+                                                                Global
+                                                            </Badge>
+                                                        )}
+                                                    </div>
+                                                    <p className="text-[11px] font-medium text-muted-foreground flex items-center gap-1.5">
                                                         <Clock className="w-3 h-3" />
                                                         {event.date}
                                                     </p>
                                                 </div>
                                             ))}
                                         </div>
+                                        {temple.events.length > 3 && (
+                                            <button 
+                                                onClick={() => setShowAllEvents(!showAllEvents)}
+                                                className="w-full mt-2 text-[10px] font-bold text-primary hover:text-primary/80 uppercase tracking-widest flex items-center justify-center gap-1 transition-colors"
+                                            >
+                                                {showAllEvents ? (
+                                                    <>Show Less <ChevronUp className="w-3 h-3" /></>
+                                                ) : (
+                                                    <>+ {temple.events.length - 3} More Events <ChevronDown className="w-3 h-3" /></>
+                                                )}
+                                            </button>
+                                        )}
                                     </div>
                                 )}
 
@@ -927,8 +949,15 @@ export default function TempleDetail() {
                         <div className="relative">
                             {/* Header Gradient */}
                             <div className="h-32 bg-gradient-to-br from-primary via-[#a05a2c] to-[#7c4624] p-6 flex flex-col justify-end">
-                                <h2 className="text-2xl font-black text-white leading-tight">{getLocalized(selectedEvent, 'name', language)}</h2>
-                                <div className="flex items-center gap-2 text-white/80 text-sm mt-1">
+                                <div className="flex items-center gap-2 mb-1">
+                                    <h2 className="text-2xl font-black text-white leading-tight">{getLocalized(selectedEvent, 'name', language)}</h2>
+                                    {!selectedEvent.templeId && (
+                                        <Badge className="bg-white/20 text-white backdrop-blur-md border-white/30 text-[10px] font-black uppercase tracking-wider">
+                                            Global Event
+                                        </Badge>
+                                    )}
+                                </div>
+                                <div className="flex items-center gap-2 text-white/80 text-sm">
                                     <Calendar className="h-4 w-4" />
                                     <span className="font-medium">{selectedEvent.date}</span>
                                 </div>

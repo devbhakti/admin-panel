@@ -1142,6 +1142,7 @@ export const fetchAllBookingsAdmin = async (params?: {
     sortBy?: string;
     sortOrder?: string;
     bookingId?: string;
+    templeId?: string;
 }) => {
     const token = getAdminToken();
     let url = `${API_URL}/admin/bookings`;
@@ -1157,6 +1158,7 @@ export const fetchAllBookingsAdmin = async (params?: {
         if (params.dateType) query.append('dateType', params.dateType);
         if (params.sortBy) query.append('sortBy', params.sortBy);
         if (params.sortOrder) query.append('sortOrder', params.sortOrder);
+        if (params.templeId && params.templeId !== 'all') query.append('templeId', params.templeId);
         const qs = query.toString();
         if (qs) url += `?${qs}`;
     }

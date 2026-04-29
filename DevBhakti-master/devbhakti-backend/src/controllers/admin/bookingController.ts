@@ -11,12 +11,16 @@ export const getAllBookings = async (req: Request, res: Response) => {
         const limit = parseInt(req.query.limit as string) || 10;
         const skip = (page - 1) * limit;
 
-        const { status, search, startDate, endDate, dateType, sortBy, sortOrder, bookingId } = req.query;
+        const { status, search, startDate, endDate, dateType, sortBy, sortOrder, bookingId, templeId } = req.query;
 
         let where: any = {};
 
         if (bookingId) {
             where.id = bookingId as string;
+        }
+
+        if (templeId && templeId !== 'all') {
+            where.templeId = templeId as string;
         }
 
         if (status && status !== 'all') {
@@ -243,12 +247,16 @@ export const downloadBookingsExcel = async (req: Request, res: Response) => {
     try {
         console.log("Generating Filtered Bookings Excel...");
 
-        const { status, search, startDate, endDate, dateType, sortBy, sortOrder, bookingId } = req.query;
+        const { status, search, startDate, endDate, dateType, sortBy, sortOrder, bookingId, templeId } = req.query;
 
         let where: any = {};
 
         if (bookingId) {
             where.id = bookingId as string;
+        }
+
+        if (templeId && templeId !== 'all') {
+            where.templeId = templeId as string;
         }
 
         if (status && status !== 'all') {

@@ -132,13 +132,13 @@ export default function ViewPoojaPage() {
                                 </div>
                             </div> */}
 
-                            <div className="flex items-center gap-3">
+                            {/* <div className="flex items-center gap-3">
                                 <Calendar className="w-4 h-4 text-primary" />
                                 <div>
                                     <p className="text-xs text-muted-foreground">Time</p>
                                     <p className="font-semibold">{pooja.time}</p>
                                 </div>
-                            </div>
+                            </div> */}
 
                             <div className="flex items-center gap-3">
                                 <MapPin className="w-4 h-4 text-primary" />

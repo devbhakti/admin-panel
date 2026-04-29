@@ -487,7 +487,7 @@ export default function TempleProfilePage() {
                                     <div className="space-y-3">
                                         <Label className="text-[10px] font-black uppercase tracking-widest text-slate-400 ml-1">Main Profile Photo</Label>
                                         <div 
-                                            className="relative aspect-square rounded-[2rem] overflow-hidden border-2 border-dashed border-slate-200 bg-slate-50/50 cursor-pointer hover:border-[#7b4623]/30 transition-all group"
+                                            className="relative aspect-video max-w-sm mx-auto rounded-[2rem] overflow-hidden border-2 border-dashed border-slate-200 bg-slate-50/50 cursor-pointer hover:border-[#7b4623]/30 transition-all group"
                                             onClick={() => mainImageRef.current?.click()}
                                         >
                                             {mainImagePreview ? (
@@ -495,7 +495,7 @@ export default function TempleProfilePage() {
                                             ) : (
                                                 <div className="absolute inset-0 flex flex-col items-center justify-center text-slate-400 gap-2">
                                                     <Plus className="w-8 h-8" />
-                                                    <span className="text-[10px] font-bold">1:1 Ratio</span>
+                                                    <span className="text-[10px] font-bold">16:9 Ratio</span>
                                                 </div>
                                             )}
                                             <input type="file" ref={mainImageRef} className="hidden" accept="image/*" onChange={handleMainImageChange} />
@@ -866,9 +866,8 @@ export default function TempleProfilePage() {
                         <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
                             {/* Left Side: Images & Quick Stats */}
                             <div className="lg:col-span-1 space-y-8">
-                                {/* Profile Card */}
-                                <Card className="overflow-hidden border-white/20 bg-white/60 backdrop-blur-sm shadow-xl rounded-[2.5rem]">
-                                    <div className="relative aspect-square">
+                                <Card className="overflow-hidden border-white/20 bg-white/60 backdrop-blur-sm shadow-xl rounded-[2.5rem] max-w-sm mx-auto">
+                                    <div className="relative aspect-video">
                                         <img src={mainImagePreview || "https://placehold.co/600x600?text=No+Image"} className="w-full h-full object-cover" />
                                         <div className="absolute inset-x-0 bottom-0 p-6 bg-gradient-to-t from-black/80 to-transparent">
                                             <h2 className="text-2xl font-bold text-white font-serif">{formData.name_en}</h2>

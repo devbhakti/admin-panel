@@ -356,9 +356,9 @@ function BookingForm() {
     }
   };
 
-  // Extract packages from pooja data if available, or use defaults
-  const poojaPackages = selectedPoojaData?.packages ?
-    (typeof selectedPoojaData.packages === 'string' ? JSON.parse(selectedPoojaData.packages) : selectedPoojaData.packages)
+  const resolvedPackages = selectedPoojaData?.packages || platformPoojaOption?.packages;
+  const poojaPackages = resolvedPackages ?
+    (typeof resolvedPackages === 'string' ? JSON.parse(resolvedPackages) : resolvedPackages)
     : [
       { id: "p1", name: t("booking_client.package_basic_name"), price: selectedPoojaData?.price || 501, description: t("booking_client.package_basic_desc") },
       { id: "p2", name: t("booking_client.package_standard_name"), price: (selectedPoojaData?.price || 501) + 600, description: t("booking_client.package_standard_desc") },

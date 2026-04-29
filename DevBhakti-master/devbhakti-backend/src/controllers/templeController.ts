@@ -284,8 +284,14 @@ export const getTempleById = async (req: Request, res: Response) => {
       }),
       prisma.event.findMany({
         where: {
-          templeId: temple.id,
+          OR: [
+            { templeId: temple.id },
+            { templeId: null }
+          ],
           status: true
+        },
+        orderBy: {
+          date: 'asc'
         }
       })
     ]);

@@ -259,7 +259,7 @@ export default function AdminDashboardPage() {
 
 
                         <span className="text-[15px] font-bold text-slate-800 uppercase tracking-tighter">
-                          {format(new Date(activity.time), "hh:mm a  dd-MM-yyyy")}
+                          {format(new Date(activity.time), "dd MMM yyyy")}
                         </span>
                         <div className="w-1.5 h-1.5 rounded-full bg-primary/30" />
                       </div>

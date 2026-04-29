@@ -170,14 +170,14 @@ function AdminOrdersContent() {
                 }));
 
             setVendors([
-                { id: "ALL", name: "All Vendors & Temples", role: "FILTER", icon: <Store className="w-4 h-4 text-slate-500" /> },
+                { id: "ALL", name: "All Vendor & Temples", role: "FILTER", icon: <Store className="w-5 h-5 text-slate-500" /> },
                 { id: "general", name: "DevBhakti Exclusive", role: "ADMIN", icon: <ShieldCheck className="w-4 h-4 text-amber-600" />, searchText: "devbhakti exclusive admin general" },
                 ...formattedTemples,
                 ...formattedSellers
             ]);
         } catch (error) {
             console.error("Load Vendors Error:", error);
-            setVendors([{ id: "ALL", name: "All Vendors & Temples", role: "FILTER", icon: <Store className="w-4 h-4 text-slate-500" /> }]);
+            setVendors([{ id: "ALL", name: "All Vendor & Temple", role: "FILTER", icon: <Store className="w-4 h-4 text-slate-500" /> }]);
         } finally {
             setIsLoadingVendors(false);
         }
@@ -433,7 +433,7 @@ function AdminOrdersContent() {
                                 className="w-[200px] h-10 justify-between font-bold rounded-xl border-slate-300 bg-white"
                             >
                                 {vendorFilter === "ALL" ? (
-                                    <span>All Vendors & Temples</span>
+                                    <span>All Vendor & Temple</span>
                                 ) : (
                                     <div className="flex items-center gap-2 truncate">
                                         {vendors.find(v => v.id === vendorFilter)?.icon}
@@ -475,15 +475,17 @@ function AdminOrdersContent() {
 
                      <Select value={statusFilter} onValueChange={(val) => { setStatusFilter(val); setCurrentPage(1); }}>
 
-                        <SelectTrigger className="w-[150px] h-10 rounded-xl border-slate-300 bg-white font-bold">
+                        <SelectTrigger className="w-[180px] h-10 rounded-xl border-slate-300 bg-white font-bold">
                             <SelectValue placeholder={t("admin.orders.filter_status")} />
                         </SelectTrigger>
                         <SelectContent className="rounded-xl">
                             <SelectItem value="ALL">{t("admin.orders.all_status")}</SelectItem>
                             <SelectItem value="PENDING">{t("admin.orders.status_pending")}</SelectItem>
+                            <SelectItem value="BOOKED">Booked</SelectItem>
                             <SelectItem value="ACCEPTED">{t("admin.orders.status_accepted")}</SelectItem>
                             <SelectItem value="PROCESSING">{t("admin.orders.status_processing")}</SelectItem>
                             <SelectItem value="SHIPPED">{t("admin.orders.status_shipped")}</SelectItem>
+                            <SelectItem value="PARTIALLY_SHIPPED">Partially Shipped</SelectItem>
                             <SelectItem value="DELIVERED">{t("admin.orders.status_delivered")}</SelectItem>
                             <SelectItem value="COMPLETED">{t("admin.orders.status_completed")}</SelectItem>
                             <SelectItem value="CANCELLED">{t("admin.orders.status_cancelled")}</SelectItem>
@@ -543,7 +545,7 @@ function AdminOrdersContent() {
                             </TableHead>
                             <TableHead className="py-4 font-bold text-slate-800">{t("admin.orders.table_order_id")}</TableHead>
                             <TableHead className="py-4 font-bold text-slate-800">{t("admin.orders.table_devotee")}</TableHead>
-                            <TableHead className="py-4 font-bold text-slate-800">{t("admin.orders.table_date_time")}</TableHead>
+                            <TableHead className="py-4 font-bold text-slate-800">{t("admin.orders.table_date_time") || "Date"}</TableHead>
                             <TableHead className="py-4 font-bold text-slate-800">{t("admin.orders.table_amount")}</TableHead>
                             <TableHead className="py-4 font-bold text-slate-800">{t("admin.orders.table_status")}</TableHead>
                             <TableHead className="py-4 font-bold text-slate-800">{t("admin.orders.table_payment")}</TableHead>
@@ -583,8 +585,8 @@ function AdminOrdersContent() {
                                         <span className="text-xs font-bold text-slate-600">{order.user?.phone}</span>
                                     </div>
                                 </TableCell>
-                                <TableCell className="font-bold text-slate-800">
-                                    {format(new Date(order.createdAt), "dd MMM, hh:mm a")}
+                                <TableCell className="text-slate-500 font-bold text-[13px]">
+                                    {format(new Date(order.createdAt), "dd MMM yyyy")}
                                 </TableCell>
                                 <TableCell className="font-extrabold text-[#794A05]">
                                     ₹{order.totalAmount.toLocaleString()}
@@ -637,9 +639,7 @@ function AdminOrdersContent() {
                                         <DialogTitle className="text-2xl font-bold text-slate-900 font-serif">
                                             {t("admin.orders.details_title")}
                                         </DialogTitle>
-                                        <p className="text-slate-700 font-bold mt-1 uppercase tracking-widest text-xs">
                                             ID: {selectedOrder.displayId || `#${selectedOrder.id.slice(-8).toUpperCase()}`} • {format(new Date(selectedOrder.createdAt), "dd MMM yyyy")}
-                                        </p>
                                     </div>
                                     <Badge className={cn("rounded-full px-4 py-1.5 font-bold uppercase tracking-widest text-xs", getStatusColor(selectedOrder.status))}>
                                         {getStatusText(selectedOrder.status)}

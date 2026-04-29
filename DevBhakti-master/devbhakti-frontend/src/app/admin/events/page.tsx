@@ -647,7 +647,7 @@ export default function AdminEventsPage() {
                         <TableRow className="bg-muted/50 hover:bg-muted/50 text-xs">
                             <TableHead className="font-bold py-3 text-slate-700">{t('admin.events.table_event') || "Event"}</TableHead>
                             <TableHead className="font-bold py-3 text-slate-700">{t('admin.events.table_temple') || "Temple"}</TableHead>
-                            <TableHead className="font-bold py-3 text-slate-700">{t('admin.events.table_datetime') || "Date & Time"}</TableHead>
+                            <TableHead className="font-bold py-3 text-slate-700">{t('admin.events.table_datetime') || "Date"}</TableHead>
                             <TableHead className="font-bold py-3 text-slate-700">{t('admin.events.table_description') || "Description"}</TableHead>
                             <TableHead className="font-bold py-3 text-slate-700">{t('admin.events.table_rituals') || "Associated Rituals"}</TableHead>
                             <TableHead className="font-bold py-3 text-slate-700">{t('admin.events.table_status') || "Status"}</TableHead>
@@ -699,15 +699,9 @@ export default function AdminEventsPage() {
                                     <TableCell>
                                         <div className="flex flex-col gap-1">
                                             <Badge variant="outline" className="w-fit">{event.date}</Badge>
-                                            {event.time && (
-                                                <div className="flex items-center text-[10px] font-bold text-muted-foreground ml-1">
-                                                    <Clock className="w-3 h-3 mr-1" />
-                                                    {event.time}
-                                                </div>
-                                            )}
                                         </div>
                                     </TableCell>
-                                     <TableCell>
+                                    <TableCell>
                                          <div className="text-sm text-muted-foreground line-clamp-1 max-w-[300px]">
                                              {getLocalized(event, 'description', language as Language) || t('common.no_description') || "No description"}
                                          </div>
@@ -882,18 +876,12 @@ export default function AdminEventsPage() {
 
                                     {/* Date and Time */}
                                     <div className="space-y-2">
-                                        <h3 className="text-[10px] font-bold text-slate-400 uppercase tracking-widest">{t('admin.events.table_datetime') || "Date & Time"}</h3>
+                                        <h3 className="text-[10px] font-bold text-slate-400 uppercase tracking-widest">{t('admin.events.table_datetime') || "Date"}</h3>
                                         <div className="grid grid-cols-1 gap-2">
                                             <div className="flex items-center gap-2 p-3 bg-white border border-orange-100 rounded-xl shadow-sm">
                                                 <CalendarIcon className="w-4 h-4 text-orange-500" />
                                                 <span className="text-sm font-medium">{viewingEvent.date}</span>
                                             </div>
-                                            {viewingEvent.time && (
-                                                <div className="flex items-center gap-2 p-3 bg-white border border-orange-100 rounded-xl shadow-sm">
-                                                    <Clock className="w-4 h-4 text-orange-500" />
-                                                    <span className="text-sm font-medium">{viewingEvent.time}</span>
-                                                </div>
-                                            )}
                                         </div>
                                     </div>
 
@@ -946,24 +934,26 @@ export default function AdminEventsPage() {
 
                                         {["en", "hi", "mr"].map((l) => (
                                             <TabsContent key={l} value={l} className="space-y-6 mt-0 animate-in fade-in-50 duration-300">
-                                                {/* Localized Name */}
-                                                <div className="bg-white border border-orange-100 rounded-2xl p-6 shadow-sm border-l-4 border-l-orange-500">
-                                                    <h3 className="text-[10px] font-bold text-slate-400 uppercase tracking-widest mb-1">{t('admin.events.table_event')} ({l.toUpperCase()})</h3>
-                                                    <h2 className="text-2xl font-black text-slate-800 leading-tight">
-                                                        {getLocalized(viewingEvent, 'name', l as Language)}
-                                                    </h2>
-                                                </div>
+                                                <div className="bg-white border border-orange-100 rounded-2xl shadow-sm overflow-hidden">
+                                                    {/* Localized Name Section */}
+                                                    <div className="p-6 border-l-4 border-l-orange-500 border-b border-orange-100">
+                                                        <h3 className="text-[10px] font-bold text-slate-400 uppercase tracking-widest mb-1">{t('admin.events.table_event')} ({l.toUpperCase()})</h3>
+                                                        <h2 className="text-2xl font-black text-slate-800 leading-tight">
+                                                            {getLocalized(viewingEvent, 'name', l as Language)}
+                                                        </h2>
+                                                    </div>
 
-                                                {/* Localized Description */}
-                                                <div className="bg-white border border-orange-100 rounded-2xl p-8 shadow-sm">
-                                                    <h3 className="text-[10px] font-bold text-slate-400 uppercase tracking-widest mb-4 border-b border-orange-50 pb-4">
-                                                        {t('admin.events.about_event')} ({l.toUpperCase()})
-                                                    </h3>
-                                                    <p className="text-slate-600 leading-relaxed font-semibold text-lg whitespace-pre-wrap">
-                                                        {getLocalized(viewingEvent, 'description', l as Language) || (
-                                                            <span className="italic text-slate-400">No description provided in this language.</span>
-                                                        )}
-                                                    </p>
+                                                    {/* Localized Description Section */}
+                                                    <div className="p-8">
+                                                        <h3 className="text-[10px] font-bold text-slate-400 uppercase tracking-widest mb-4 border-b border-orange-50 pb-4">
+                                                            {t('admin.events.about_event')} ({l.toUpperCase()})
+                                                        </h3>
+                                                        <p className="text-slate-600 leading-relaxed font-semibold text-lg whitespace-pre-wrap break-words">
+                                                            {getLocalized(viewingEvent, 'description', l as Language) || (
+                                                                <span className="italic text-slate-400">No description provided in this language.</span>
+                                                            )}
+                                                        </p>
+                                                    </div>
                                                 </div>
                                             </TabsContent>
                                         ))}

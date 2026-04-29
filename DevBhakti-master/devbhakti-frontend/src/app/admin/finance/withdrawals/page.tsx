@@ -325,7 +325,7 @@ export default function WithdrawalRequestsPage() {
                                                         <span className="font-bold text-slate-700">
                                                             {req.bankDetails?.bankName ? `${req.bankDetails.bankName} - ${req.bankDetails.accountNumber}` : req.bankDetails?.type || 'Standard Payout'}
                                                         </span>
-                                                        <span className="text-[10px] text-slate-400 font-bold tracking-tighter uppercase">{format(new Date(req.createdAt), "dd MMM yyyy, hh:mm a")}</span>
+                                                        <span className="text-[10px] text-slate-400 font-bold tracking-tighter uppercase">{format(new Date(req.createdAt), "dd MMM yyyy")}</span>
                                                     </div>
                                                 </td>
                                                 <td className="py-6 text-center">

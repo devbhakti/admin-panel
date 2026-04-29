@@ -218,7 +218,7 @@ export default function PendingRequestsPage() {
                                                 <div className="space-y-2 mb-6">
                                                     <div className="flex justify-between items-center text-sm">
                                                         <span className="text-slate-400">Date</span>
-                                                        <span className="font-bold text-slate-700">{format(new Date(req.date), "dd MMM yyyy, hh:mm a")}</span>
+                                                        <span className="font-bold text-slate-700">{format(new Date(req.date), "dd MMM yyyy")}</span>
                                                     </div>
                                                     <div className="flex justify-between items-center text-sm">
                                                         <span className="text-slate-400">{req.itemType === 'temple' ? 'Applicant' : (req.itemType === 'payout' ? 'Account Type' : (req.itemType === 'pooja' ? 'Temple' : (req.itemType === 'finance' ? 'Entity' : 'Vendor')))}</span>
@@ -259,7 +259,7 @@ export default function PendingRequestsPage() {
                                         <div className="space-y-2 mb-6">
                                             <div className="flex justify-between items-center text-sm">
                                                 <span className="text-slate-400">Date</span>
-                                                <span className="font-bold text-slate-700">{format(new Date(req.date), "dd MMM yyyy, hh:mm a")}</span>
+                                                <span className="font-bold text-slate-700">{format(new Date(req.date), "dd MMM yyyy")}</span>
                                             </div>
                                             <div className="flex justify-between items-center text-sm">
                                                 <span className="text-slate-400">Applicant</span>
@@ -299,7 +299,7 @@ export default function PendingRequestsPage() {
                                         <div className="space-y-2 mb-6">
                                             <div className="flex justify-between items-center text-sm">
                                                 <span className="text-slate-400">Date</span>
-                                                <span className="font-bold text-slate-700">{format(new Date(req.date), "dd MMM yyyy, hh:mm a")}</span>
+                                                <span className="font-bold text-slate-700">{format(new Date(req.date), "dd MMM yyyy")}</span>
                                             </div>
                                             <div className="flex justify-between items-center text-sm">
                                                 <span className="text-slate-400">Temple</span>
@@ -339,7 +339,7 @@ export default function PendingRequestsPage() {
                                         <div className="space-y-2 mb-6">
                                             <div className="flex justify-between items-center text-sm">
                                                 <span className="text-slate-400">Date</span>
-                                                <span className="font-bold text-slate-700">{format(new Date(req.date), "dd MMM yyyy, hh:mm a")}</span>
+                                                <span className="font-bold text-slate-700">{format(new Date(req.date), "dd MMM yyyy")}</span>
                                             </div>
                                             <div className="flex justify-between items-center text-sm">
                                                 <span className="text-slate-400">Vendor</span>
@@ -379,7 +379,7 @@ export default function PendingRequestsPage() {
                                         <div className="space-y-2 mb-6">
                                             <div className="flex justify-between items-center text-sm">
                                                 <span className="text-slate-400">Date</span>
-                                                <span className="font-bold text-slate-700">{format(new Date(req.date), "dd MMM yyyy, hh:mm a")}</span>
+                                                <span className="font-bold text-slate-700">{format(new Date(req.date), "dd MMM yyyy")}</span>
                                             </div>
                                             <div className="flex justify-between items-center text-sm">
                                                 <span className="text-slate-400">Account Type</span>
@@ -419,7 +419,7 @@ export default function PendingRequestsPage() {
                                         <div className="space-y-2 mb-6">
                                             <div className="flex justify-between items-center text-sm">
                                                 <span className="text-slate-400">Date</span>
-                                                <span className="font-bold text-slate-700">{format(new Date(req.date), "dd MMM yyyy, hh:mm a")}</span>
+                                                <span className="font-bold text-slate-700">{format(new Date(req.date), "dd MMM yyyy")}</span>
                                             </div>
                                             <div className="flex justify-between items-center text-sm">
                                                 <span className="text-slate-400">Request Type</span>

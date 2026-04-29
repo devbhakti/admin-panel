@@ -357,7 +357,7 @@ export default function PayoutsManagementPage() {
                                                         <td className="py-6">
                                                             <div className="flex flex-col text-[11px] text-slate-500 font-medium">
                                                                 <span>{req.bankDetails?.type || 'Manual Request'}</span>
-                                                                <span className="text-[9px] text-slate-400">{format(new Date(req.createdAt), "dd MMM, hh:mm a")}</span>
+                                                                <span className="text-[9px] text-slate-400">{format(new Date(req.createdAt), "dd MMM yyyy")}</span>
                                                             </div>
                                                         </td>
                                                         <td className="py-6 text-center">
