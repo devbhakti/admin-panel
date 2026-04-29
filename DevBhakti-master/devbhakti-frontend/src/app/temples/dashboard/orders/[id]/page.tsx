@@ -32,7 +32,7 @@ import {
     SelectTrigger, 
     SelectValue 
 } from "@/components/ui/select";
-import { fetchTempleOrders, updateTempleSubOrderStatus } from "@/api/templeController";
+import { fetchTempleOrders, updateSubOrderStatus, fetchMyTempleProfile } from "@/api/templeAdminController";
 import { BASE_URL } from "@/config/apiConfig";
 import { format } from "date-fns";
 import { cn } from "@/lib/utils";
@@ -51,7 +51,10 @@ export default function TempleOrderDetailsPage() {
     const loadOrder = async () => {
         setLoading(true);
         try {
-            const response = await fetchTempleOrders();
+            const profileRes = await fetchMyTempleProfile();
+            if (profileRes.success && profileRes.data.id) {
+                const tId = profileRes.data.id;
+                const response = await fetchTempleOrders(tId);
             if (response.success) {
                 const found = response.data.find((o: any) => o.id === params.id);
                 if (found) {
@@ -76,7 +79,9 @@ export default function TempleOrderDetailsPage() {
 
     const handleStatusUpdate = async (status: string) => {
         try {
-            const response = await updateTempleSubOrderStatus(params.id as string, { status });
+            const profileRes = await fetchMyTempleProfile();
+            const tId = profileRes.data.id;
+            const response = await updateSubOrderStatus(params.id as string, { status, templeId: tId });
             if (response.success) {
                 toast({ title: "Status Updated", description: `Order marked as ${status}` });
                 loadOrder();
@@ -120,7 +125,7 @@ export default function TempleOrderDetailsPage() {
                     <ArrowLeft className="w-5 h-5" />
                 </Button>
                 <div>
-                    <h1 className="text-2xl font-bold font-serif">Temple Order Details</h1>
+                    <h1 className="text-2xl font-bold font-serif text-slate-900">Temple Order Details</h1>
                     <p className="text-muted-foreground text-sm">
                         Manage and track status for Order {order.displayId || `#${order.id.slice(-8).toUpperCase()}`}
                     </p>
