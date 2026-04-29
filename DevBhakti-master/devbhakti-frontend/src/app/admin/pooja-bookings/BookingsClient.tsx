@@ -332,7 +332,6 @@ function BookingsContent() {
                         ))}
                     </div>
                 </div>
-
                 {/* Divider */}
                 <div className="h-px w-full bg-slate-100"></div>
 
@@ -457,6 +456,7 @@ function BookingsContent() {
                     <table className="w-full text-left min-w-[1000px]">
                         <thead className="bg-[#FAF9F6] border-b border-slate-100">
                             <tr>
+
                                 <th className="py-5 pl-8 text-left text-[11px] font-extrabold text-slate-900 uppercase tracking-widest whitespace-nowrap">ID</th>
                                 <th className="py-5 text-left text-[11px] font-extrabold text-slate-900 uppercase tracking-widest whitespace-nowrap">Service</th>
                                 <th className="py-5 text-left text-[11px] font-extrabold text-slate-900 uppercase tracking-widest whitespace-nowrap">Temple</th>

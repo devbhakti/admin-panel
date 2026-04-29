@@ -83,17 +83,20 @@ export default function TempleDetail() {
     }, [purposes]);
 
     const recommendedPoojas = React.useMemo(() => {
-        if (!selectedEvent || !temple?.poojas) return [];
-        // Recommendation logic:    
-        // Try to match pooja benefits or category with event name
-        const eventNameLower = getLocalized(selectedEvent, 'name', language)?.toLowerCase() || "";
-        const filtered = temple.poojas.filter((p: any) =>
-            getLocalized(p, 'category', language)?.toLowerCase().includes(eventNameLower) ||
-            getLocalized(p, 'name', language)?.toLowerCase().includes(eventNameLower) ||
-            getLocalizedArray(p, 'benefits', language)?.some((b: string) => eventNameLower.includes(b.toLowerCase()))
-        );
-        return filtered.length > 0 ? filtered.slice(0, 3) : temple.poojas.slice(0, 3);
-    }, [selectedEvent, temple, language]);
+        if (!selectedEvent) return [];
+        
+        // Only show poojas that were EXPLICITLY recommended in the admin dashboard
+        if (selectedEvent.Pooja && selectedEvent.Pooja.length > 0) {
+            // Check if these poojas exist in the temple's poojas list to get full details (like prices)
+            const explicitPoojaIds = selectedEvent.Pooja.map((p: any) => p.id);
+            const explicitPoojas = temple?.poojas?.filter((p: any) => explicitPoojaIds.includes(p.id)) || [];
+            
+            // If we found the full details, use them. Otherwise, just use the basic pooja objects from the event.
+            return explicitPoojas.length > 0 ? explicitPoojas : selectedEvent.Pooja;
+        }
+
+        return [];
+    }, [selectedEvent, temple]);
 
     useEffect(() => {
         const savedUser = localStorage.getItem("user");
@@ -977,48 +980,50 @@ export default function TempleDetail() {
                                 )}
 
                                 {/* Recommended Poojas Section */}
-                                <div className="space-y-4">
-                                    <div className="flex items-center gap-2">
-                                        <div className="h-1 w-6 bg-primary rounded-full" />
-                                        <h3 className="text-sm font-black uppercase tracking-widest text-foreground">Recommended Poojas</h3>
-                                    </div>
+                                {recommendedPoojas.length > 0 && (
+                                    <div className="space-y-4">
+                                        <div className="flex items-center gap-2">
+                                            <div className="h-1 w-6 bg-primary rounded-full" />
+                                            <h3 className="text-sm font-black uppercase tracking-widest text-foreground">Recommended Poojas</h3>
+                                        </div>
 
-                                    <div className="grid gap-3">
-                                        {recommendedPoojas.map((pooja: any, idx: number) => (
-                                            <div
-                                                key={idx}
-                                                className="group p-4 rounded-xl bg-primary/[0.03] border border-primary/5 hover:border-primary/20 hover:bg-primary/[0.06] transition-all duration-300 flex items-center justify-between gap-4"
-                                            >
-                                                <div className="flex-1 min-w-0">
-                                                    <h4 className="font-bold text-sm text-foreground group-hover:text-primary transition-colors truncate">
-                                                        {parseLocalizedValue(pooja.name)}
-                                                    </h4>
-                                                    <div className="flex items-center text-primary font-black text-xs mt-1">
-                                                        <IndianRupee className="h-3 w-3" />
-                                                        {pooja.price}
-                                                    </div>
-                                                </div>
-                                                <Button
-                                                    size="sm"
-                                                    className="rounded-full bg-primary hover:bg-[#a05a2c] text-[10px] font-black uppercase tracking-wider px-4 h-8 shadow-sm"
-                                                    onClick={() => {
-                                                        const bookingUrl = `/booking?temple=${temple.id}&pooja=${encodeURIComponent(pooja.name)}`;
-                                                        const token = localStorage.getItem("token");
-                                                        const savedUser = localStorage.getItem("user");
-                                                        const parsedUser = savedUser ? JSON.parse(savedUser) : null;
-                                                        if (!token || !parsedUser || parsedUser.role !== "DEVOTEE") {
-                                                            router.push(`/auth?redirect=${encodeURIComponent(bookingUrl)}`);
-                                                            return;
-                                                        }
-                                                        router.push(bookingUrl);
-                                                    }}
+                                        <div className="grid gap-3">
+                                            {recommendedPoojas.map((pooja: any, idx: number) => (
+                                                <div
+                                                    key={idx}
+                                                    className="group p-4 rounded-xl bg-primary/[0.03] border border-primary/5 hover:border-primary/20 hover:bg-primary/[0.06] transition-all duration-300 flex items-center justify-between gap-4"
                                                 >
-                                                    Book Now
-                                                </Button>
-                                            </div>
-                                        ))}
+                                                    <div className="flex-1 min-w-0">
+                                                        <h4 className="font-bold text-sm text-foreground group-hover:text-primary transition-colors truncate">
+                                                            {parseLocalizedValue(pooja.name)}
+                                                        </h4>
+                                                        <div className="flex items-center text-primary font-black text-xs mt-1">
+                                                            <IndianRupee className="h-3 w-3" />
+                                                            {pooja.price}
+                                                        </div>
+                                                    </div>
+                                                    <Button
+                                                        size="sm"
+                                                        className="rounded-full bg-primary hover:bg-[#a05a2c] text-[10px] font-black uppercase tracking-wider px-4 h-8 shadow-sm"
+                                                        onClick={() => {
+                                                            const bookingUrl = `/booking?temple=${temple.id}&pooja=${encodeURIComponent(pooja.slug || pooja.id)}`;
+                                                            const token = localStorage.getItem("token");
+                                                            const savedUser = localStorage.getItem("user");
+                                                            const parsedUser = savedUser ? JSON.parse(savedUser) : null;
+                                                            if (!token || !parsedUser || parsedUser.role !== "DEVOTEE") {
+                                                                router.push(`/auth?redirect=${encodeURIComponent(bookingUrl)}`);
+                                                                return;
+                                                            }
+                                                            router.push(bookingUrl);
+                                                        }}
+                                                    >
+                                                        Book Now
+                                                    </Button>
+                                                </div>
+                                            ))}
+                                        </div>
                                     </div>
-                                </div>
+                                )}
 
                                 <div className="pt-2">
                                     {/* <Button

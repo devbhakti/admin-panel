@@ -41,6 +41,7 @@ import {
   ArrowLeft,
   CalendarDays,
   X,
+  Loader2,
 } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 import { useLanguage } from "@/context/LanguageContext";
@@ -57,10 +58,11 @@ function BookingForm() {
   const router = useRouter();
   const { t, language } = useLanguage();
 
-  // Skip Step 1 if temple and pooja are already in the URL
-  const initialStep = (searchParams.get("temple") && searchParams.get("pooja")) ? 2 : 1;
+  // Always start at Step 1 to allow data to load and normalize correctly
+  const initialStep = 1;
   const [step, setStep] = useState(initialStep);
   const [loading, setLoading] = useState(true);
+  const [isPaymentLoading, setIsPaymentLoading] = useState(false);
   const RAZORPAY_KEY = process.env.NEXT_PUBLIC_RAZORPAY_KEY_ID || "rzp_test_placeholder";
 
   const [allTemples, setAllTemples] = useState<any[]>([]);
@@ -360,9 +362,12 @@ function BookingForm() {
   const poojaPackages = resolvedPackages ?
     (typeof resolvedPackages === 'string' ? JSON.parse(resolvedPackages) : resolvedPackages)
     : [
-      { id: "p1", name: t("booking_client.package_basic_name"), price: selectedPoojaData?.price || 501, description: t("booking_client.package_basic_desc") },
-      { id: "p2", name: t("booking_client.package_standard_name"), price: (selectedPoojaData?.price || 501) + 600, description: t("booking_client.package_standard_desc") },
-      { id: "p3", name: t("booking_client.package_premium_name"), price: (selectedPoojaData?.price || 501) + 1600, description: t("booking_client.package_premium_desc") },
+      { 
+        id: "default", 
+        name: selectedPoojaData?.name ? `${selectedPoojaData.name} (Standard)` : t("booking_client.package_standard_name") || "Standard Package", 
+        price: selectedPoojaData?.price || 0, 
+        description: selectedPoojaData?.about || "Standard Pooja Service" 
+      }
     ];
 
   const selectedPackageData = poojaPackages.find((p: any) => (p.id === selectedPackage || p.name === selectedPackage));
@@ -540,6 +545,7 @@ function BookingForm() {
           description: t("booking_client.razorpay_description"),
           order_id: res.razorpayOrder.id,
           handler: async function (responseData: any) {
+            setIsPaymentLoading(true);
             try {
               const verifyRes = await fetch(`${API_URL}/payments/verify`, {
                 method: 'POST',
@@ -563,11 +569,19 @@ function BookingForm() {
 
               if (verifyData.success) {
                 setBookingId(res.data.id);
+                setIsPaymentLoading(false);
                 setStep(5); // Show confirmation
                 toast({ 
                   title: t("booking_client.toast_booking_confirmed"), 
                   description: t("booking_client.toast_booking_confirmed_desc"),
                   variant: "success"
+                });
+              } else {
+                setIsPaymentLoading(false);
+                toast({
+                  title: t("booking_client.toast_verification_failed"),
+                  description: verifyData.message || t("booking_client.toast_verification_failed_desc"),
+                  variant: "destructive",
                 });
               }
 
@@ -578,6 +592,7 @@ function BookingForm() {
                 description: t("booking_client.toast_verification_failed_desc"),
                 variant: "destructive",
               });
+              setIsPaymentLoading(false);
             }
           },
           prefill: {
@@ -591,6 +606,7 @@ function BookingForm() {
         const rzp = new (window as any).Razorpay(options);
 
         rzp.on('payment.failed', function (response: any) {
+          setIsPaymentLoading(false);
           console.error("Payment failed event:", response.error);
           notifyFailedPayment({
             orderType: "POOJA",
@@ -602,6 +618,7 @@ function BookingForm() {
         });
 
         rzp.on('modal.dismiss', function () {
+          setIsPaymentLoading(false);
           console.log("Payment modal dismissed");
           notifyFailedPayment({
             orderType: "POOJA",
@@ -633,6 +650,17 @@ function BookingForm() {
 
   return (
     <div className="min-h-screen bg-background">
+      {isPaymentLoading && (
+        <div className="fixed inset-0 z-[100] flex items-center justify-center bg-black/40 backdrop-blur-sm">
+          <div className="flex flex-col items-center gap-4 rounded-2xl bg-background px-8 py-7 text-center shadow-2xl border border-border">
+            <Loader2 className="h-10 w-10 animate-spin text-primary" />
+            <div>
+              <p className="text-lg font-bold text-foreground">Loading Payment</p>
+              <p className="mt-1 text-sm text-muted-foreground">Please wait while we confirm your payment.</p>
+            </div>
+          </div>
+        </div>
+      )}
       <Navbar />
 
       {/* Header */}

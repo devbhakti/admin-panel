@@ -9,7 +9,7 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Card, CardContent, CardHeader, CardTitle, CardFooter } from "@/components/ui/card";
 import { Separator } from "@/components/ui/separator";
-import { IndianRupee, MapPin, ShieldCheck, ArrowLeft } from "lucide-react";
+import { IndianRupee, MapPin, ShieldCheck, ArrowLeft, Loader2 } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 import axios from "axios";
 import { API_URL, BASE_URL } from "@/config/apiConfig";
@@ -54,6 +54,7 @@ function CheckoutContent() {
         : globalTotalAmount;
     const { toast } = useToast();
     const [isSubmitting, setIsSubmitting] = useState(false);
+    const [isPaymentLoading, setIsPaymentLoading] = useState(false);
     const [paymentMethod, setPaymentMethod] = useState<"COD" | "RAZORPAY">("RAZORPAY");
     const RAZORPAY_KEY = process.env.NEXT_PUBLIC_RAZORPAY_KEY_ID || "rzp_test_placeholder";
 
@@ -235,6 +236,7 @@ function CheckoutContent() {
                         description: "Sacred Marketplace Order",
                         order_id: response.data.razorpayOrder.id,
                         handler: async function (responseData: any) {
+                            setIsPaymentLoading(true);
                             try {
                                 const verifyRes = await axios.post(`${API_URL}/payments/verify`, {
                                     razorpay_order_id: responseData.razorpay_order_id,
@@ -259,6 +261,13 @@ function CheckoutContent() {
                                         clearCart();
                                     }
                                     router.push("/marketplace/order-success");
+                                } else {
+                                    setIsPaymentLoading(false);
+                                    toast({
+                                        title: "Payment Verification Failed",
+                                        description: verifyRes.data?.message || "Please contact support if the amount was deducted.",
+                                        variant: "destructive",
+                                    });
                                 }
                              } catch (error: any) {
                                 console.error("Verification error:", error);
@@ -284,6 +293,7 @@ function CheckoutContent() {
                                     description: errorDescription,
                                     variant: "destructive",
                                 });
+                                setIsPaymentLoading(false);
                             }
                         },
                         prefill: {
@@ -297,6 +307,7 @@ function CheckoutContent() {
                     const rzp = new (window as any).Razorpay(options);
 
                     rzp.on('payment.failed', function (response: any) {
+                        setIsPaymentLoading(false);
                         console.error("Payment failed event:", response.error);
                         notifyFailedPayment({
                             orderType: "MARKETPLACE",
@@ -309,6 +320,7 @@ function CheckoutContent() {
                     });
 
                     rzp.on('modal.dismiss', function () {
+                        setIsPaymentLoading(false);
                         notifyFailedPayment({
                             orderType: "MARKETPLACE",
                             orderData: orderData,
@@ -369,6 +381,17 @@ function CheckoutContent() {
 
     return (
         <div className="min-h-screen bg-[#fdf6e9]">
+            {isPaymentLoading && (
+                <div className="fixed inset-0 z-[100] flex items-center justify-center bg-black/40 backdrop-blur-sm">
+                    <div className="flex flex-col items-center gap-4 rounded-2xl bg-white px-8 py-7 text-center shadow-2xl border border-[#794A05]/10">
+                        <Loader2 className="h-10 w-10 animate-spin text-[#794A05]" />
+                        <div>
+                            <p className="text-lg font-bold text-[#2a1b01]">Loading Payment</p>
+                            <p className="mt-1 text-sm text-slate-500">Please wait while we confirm your payment.</p>
+                        </div>
+                    </div>
+                </div>
+            )}
             <Navbar />
             <main className="pt-32 pb-20 container mx-auto px-4">
                 <div className="flex items-center gap-2 mb-8">

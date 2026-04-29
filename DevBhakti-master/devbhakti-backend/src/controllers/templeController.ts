@@ -290,6 +290,9 @@ export const getTempleById = async (req: Request, res: Response) => {
           ],
           status: true
         },
+        include: {
+          Pooja: true
+        },
         orderBy: {
           date: 'asc'
         }

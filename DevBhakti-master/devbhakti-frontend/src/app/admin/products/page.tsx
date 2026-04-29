@@ -654,16 +654,16 @@ function ProductsContent() {
       </div>
 
       <div className="border rounded-xl bg-card overflow-hidden shadow-sm">
-        <Table>
+        <Table className="table-fixed">
           <TableHeader className="bg-slate-50/50">
             <TableRow>
-              <TableHead>{t("admin.products.list.table_product")}</TableHead>
-              <TableHead>{t("admin.products.list.table_category")}</TableHead>
-              <TableHead>{t("admin.products.list.table_owner")}</TableHead>
-              <TableHead>{t("admin.products.list.table_variants_pricing")}</TableHead>
-              <TableHead>Stock</TableHead>
-              <TableHead>{t("admin.products.list.table_status")}</TableHead>
-              <TableHead className="text-right">{t("admin.products.list.table_actions")}</TableHead>
+              <TableHead className="w-[27%]">{t("admin.products.list.table_product")}</TableHead>
+              <TableHead className="w-[12%]">{t("admin.products.list.table_category")}</TableHead>
+              <TableHead className="w-[15%]">{t("admin.products.list.table_owner")}</TableHead>
+              <TableHead className="w-[12%]">{t("admin.products.list.table_variants_pricing")}</TableHead>
+              <TableHead className="w-[10%]">Stock</TableHead>
+              <TableHead className="w-[10%]">{t("admin.products.list.table_status")}</TableHead>
+              <TableHead className="w-[14%] text-right">{t("admin.products.list.table_actions")}</TableHead>
             </TableRow>
           </TableHeader>
           <TableBody>
@@ -685,9 +685,9 @@ function ProductsContent() {
             ) : (
               filteredProducts.map((product) => (
                 <TableRow key={product.id} className="hover:bg-slate-50/50 transition-colors">
-                  <TableCell>
+                  <TableCell className="overflow-hidden">
                     <div className="flex items-center gap-3">
-                      <div className="w-16 aspect-[5/4] rounded-lg bg-slate-100 flex items-center justify-center overflow-hidden flex-shrink-0">
+                      <div className="w-14 aspect-[5/4] rounded-lg bg-slate-100 flex items-center justify-center overflow-hidden flex-shrink-0">
                         {product.image ? (
                           <img
                             src={`${BASE_URL}${product.image}`}
@@ -700,7 +700,7 @@ function ProductsContent() {
                       </div>
                       <div className="flex flex-col min-w-0">
                         <span className="font-semibold text-slate-900 truncate">{getLocalizedName(product)}</span>
-                        <p className="text-sm text-muted-foreground mt-0.5 break-all max-w-[300px]">
+                        <p className="text-sm text-muted-foreground mt-0.5 line-clamp-2">
                           {truncateText(parseLocalizedValue(product.description, language), 60)}
                           {(parseLocalizedValue(product.description, language))?.length > 60 && (
                             <button
@@ -714,75 +714,75 @@ function ProductsContent() {
                       </div>
                     </div>
                   </TableCell>
-                  <TableCell>
-                    <Badge variant="outline" className="font-medium">
+                  <TableCell className="overflow-hidden">
+                    <Badge variant="outline" className="max-w-full truncate font-medium">
                       {parseLocalizedValue(product.categoryObj?.name, language) || parseLocalizedValue(product.category, language) || "General"}
                     </Badge>
                   </TableCell>
-                  <TableCell>
-                    <div className="flex items-center gap-1.5">
+                  <TableCell className="overflow-hidden">
+                    <div className="flex min-w-0 items-center gap-1.5">
                       {product.temple ? (
-                        <div className="flex items-center gap-1.5 text-primary bg-primary/5 px-2 py-1 rounded-md border border-primary/10">
+                        <div className="flex min-w-0 items-center gap-1.5 text-primary bg-primary/5 px-2 py-1 rounded-md border border-primary/10">
                           <Building2 className="w-3.5 h-3.5" />
-                          <div className="flex flex-col">
+                          <div className="flex min-w-0 flex-col">
                             <span className="text-[10px] font-bold uppercase leading-none mb-0.5">Temple</span>
-                            <span className="text-sm font-medium leading-none text-slate-700">{parseLocalizedValue(product.temple.name, language)}</span>
+                            <span className="truncate text-sm font-medium leading-none text-slate-700">{parseLocalizedValue(product.temple.name, language)}</span>
                           </div>
                         </div>
                       ) : product.seller ? (
-                        <div className="flex items-center gap-1.5 text-blue-600 bg-blue-50 px-2 py-1 rounded-md border border-blue-100">
+                        <div className="flex min-w-0 items-center gap-1.5 text-blue-600 bg-blue-50 px-2 py-1 rounded-md border border-blue-100">
                           <Store className="w-3.5 h-3.5" />
-                          <div className="flex flex-col">
+                          <div className="flex min-w-0 flex-col">
                             <span className="text-[10px] font-bold uppercase leading-none mb-0.5">Seller</span>
-                            <span className="text-sm font-medium leading-none text-slate-700">{parseLocalizedValue(product.seller.name_en || product.seller.name || product.seller.storeName, language)}</span>
+                            <span className="truncate text-sm font-medium leading-none text-slate-700">{parseLocalizedValue(product.seller.name_en || product.seller.name || product.seller.storeName, language)}</span>
                           </div>
                         </div>
                       ) : (
-                        <div className="flex items-center gap-1.5 text-amber-600 bg-amber-50 px-2 py-1 rounded-md border border-amber-100">
+                        <div className="flex min-w-0 items-center gap-1.5 text-amber-600 bg-amber-50 px-2 py-1 rounded-md border border-amber-100">
                           <ShieldCheck className="w-3.5 h-3.5" />
-                          <span className="text-xs font-bold uppercase tracking-wider">Devbhakti Exclusive</span>
+                          <span className="truncate text-xs font-bold uppercase tracking-wider">Devbhakti Exclusive</span>
                         </div>
                       )}
                     </div>
                   </TableCell>
-                  <TableCell>
+                  <TableCell className="overflow-hidden">
                     <div className="space-y-1">
                       {product.variants.slice(0, 2).map((variant: any) => (
-                        <div key={variant.id} className="flex items-center justify-between text-sm">
-                          <span className="text-slate-800">{getLocalizedName(variant)}</span>
+                        <div key={variant.id} className="flex min-w-0 items-center justify-between gap-1 text-sm">
+                          <span className="truncate text-slate-800">{getLocalizedName(variant)}</span>
                           <span className="font-medium text-slate-900">₹{variant.price}</span>
                         </div>
                       ))}
                       {product.variants.length > 2 && (
-                        <div className="text-sm text-muted-foreground">
+                        <div className="truncate text-sm text-muted-foreground">
                           +{product.variants.length - 2} more variants
                         </div>
                       )}
                     </div>
                   </TableCell>
                   {/* Stock Column */}
-                  <TableCell>
+                  <TableCell className="overflow-hidden">
                     {(() => {
                       const totalStock = product.variants?.reduce((sum: number, v: any) => sum + (v.stock || 0), 0) ?? 0;
                       const isOutOfStock = totalStock === 0;
                       return isOutOfStock ? (
-                        <div className="inline-flex items-center gap-1.5 px-2 py-1 rounded-md bg-red-50 border border-red-200 text-red-700 text-xs font-semibold whitespace-nowrap">
+                        <div className="inline-flex max-w-full items-center gap-1.5 px-2 py-1 rounded-md bg-red-50 border border-red-200 text-red-700 text-xs font-semibold">
                           <span className="h-2 w-2 rounded-full bg-red-500 shrink-0"></span>
-                          Out of Stock
+                          <span className="truncate">Out of Stock</span>
                         </div>
                       ) : (
-                        <div className="inline-flex items-center gap-1.5 px-2 py-1 rounded-md bg-emerald-50 border border-emerald-200 text-emerald-700 text-xs font-semibold whitespace-nowrap">
+                        <div className="inline-flex max-w-full items-center gap-1.5 px-2 py-1 rounded-md bg-emerald-50 border border-emerald-200 text-emerald-700 text-xs font-semibold">
                           <span className="h-2 w-2 rounded-full bg-emerald-500 shrink-0"></span>
-                          {totalStock} In Stock
+                          <span className="truncate">{totalStock} In Stock</span>
                         </div>
                       );
                     })()}
                   </TableCell>
-                  <TableCell>
+                  <TableCell className="overflow-hidden">
                     {getStatusBadge(product.status)}
                   </TableCell>
                   <TableCell className="text-right">
-                    <div className="flex justify-end gap-1">
+                    <div className="flex justify-end gap-0.5">
                       {hasPermission("products.approval") && (
                         <Button
                           variant="ghost"
