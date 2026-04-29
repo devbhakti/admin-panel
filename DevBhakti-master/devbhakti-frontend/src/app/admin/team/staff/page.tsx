@@ -19,7 +19,7 @@ function getToken() {
 type Permission = { key: string; label: string };
 type Role = { id: string; name: string; permissions: Permission[] };
 type StaffMember = {
-    id: string; name: string; email: string; isActive: boolean;
+    id: string; displayId: string; name: string; email: string; isActive: boolean;
     createdAt: string; staffRoles: { role: Role }[];
 };
 
@@ -260,7 +260,14 @@ export default function StaffMembersPage() {
                                                 {s.name[0].toUpperCase()}
                                             </div>
                                             <div>
-                                                <p className="font-medium text-foreground text-xs sm:text-sm">{s.name}</p>
+                                                <p className="font-medium text-foreground text-xs sm:text-sm flex items-center gap-2">
+                                                    {s.name}
+                                                    {s.displayId && (
+                                                        <span className="text-[10px] font-mono bg-muted px-1.5 py-0.5 rounded text-muted-foreground border border-border">
+                                                            {s.displayId}
+                                                        </span>
+                                                    )}
+                                                </p>
                                                 <p className="text-xs text-muted-foreground flex items-center gap-1">
                                                     <Mail className="w-3 h-3" />{s.email}
                                                 </p>

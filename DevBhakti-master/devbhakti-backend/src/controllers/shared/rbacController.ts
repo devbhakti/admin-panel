@@ -3,6 +3,7 @@ import bcrypt from 'bcrypt';
 import { prisma } from '../../lib/prisma';
 import { OwnerType } from '@prisma/client';
 import { sendEmail } from '../../utils/sendEmail';
+import { generateCustomId } from '../../utils/idGenerator';
 
 // ────────────────────────────────────────────────────────────
 // STAFF MEMBER APIs
@@ -73,9 +74,12 @@ export const createStaffMember = async (req: Request, res: Response) => {
     }
 
     const hashedPassword = await bcrypt.hash(password, 10);
+    const prefix = ownerType === 'ADMIN' ? 'DBSID' : (ownerType === 'TEMPLE' ? 'TSID' : 'UID');
+    const displayId = await generateCustomId(prefix);
 
     const staff = await prisma.staffMember.create({
       data: {
+        displayId,
         name,
         email,
         password: hashedPassword,

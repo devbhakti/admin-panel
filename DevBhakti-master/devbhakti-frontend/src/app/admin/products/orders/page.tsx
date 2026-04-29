@@ -190,7 +190,7 @@ function AdminOrdersContent() {
 
     useEffect(() => {
         if (idParam && orders.length > 0) {
-            const order = orders.find(o => o.id === idParam);
+            const order = orders.find(o => o.id === idParam || o.displayId === idParam);
             if (order) {
                 setSelectedOrder(order);
             }
@@ -575,7 +575,7 @@ function AdminOrdersContent() {
                                     />
                                 </TableCell>
                                 <TableCell className="font-mono text-sm font-bold text-slate-900">
-                                    #{order.id.slice(-8).toUpperCase()}
+                                    {order.displayId || `#${order.id.slice(-8).toUpperCase()}`}
                                 </TableCell>
                                 <TableCell>
                                     <div className="flex flex-col">
@@ -638,7 +638,7 @@ function AdminOrdersContent() {
                                             {t("admin.orders.details_title")}
                                         </DialogTitle>
                                         <p className="text-slate-700 font-bold mt-1 uppercase tracking-widest text-xs">
-                                            ID: #{selectedOrder.id} • {format(new Date(selectedOrder.createdAt), "dd MMM yyyy")}
+                                            ID: {selectedOrder.displayId || `#${selectedOrder.id.slice(-8).toUpperCase()}`} • {format(new Date(selectedOrder.createdAt), "dd MMM yyyy")}
                                         </p>
                                     </div>
                                     <Badge className={cn("rounded-full px-4 py-1.5 font-bold uppercase tracking-widest text-xs", getStatusColor(selectedOrder.status))}>

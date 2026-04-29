@@ -92,10 +92,10 @@ export default function TemplePoojasListPage() {
                 await deleteMyPooja(id);
                 toast({ title: "Success", description: "Pooja deleted successfully" });
                 loadPoojas();
-            } catch (error) {
+            } catch (error: any) {
                 toast({
                     title: "Error",
-                    description: "Failed to delete pooja",
+                    description: error.response?.data?.message || "Failed to delete pooja",
                     variant: "destructive"
                 });
             }
@@ -307,7 +307,7 @@ export default function TemplePoojasListPage() {
                             className="bg-[#7b4623] hover:bg-[#5d351a] text-white flex-1 md:flex-initial"
                         >
                             <Plus className="w-4 h-4 mr-2" />
-                            Offer New Pooja
+                            Create New Pooja
                         </Button>
                     )}
                 </div>

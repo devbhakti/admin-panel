@@ -1255,7 +1255,8 @@
       "edit_image": "Edit Temple Image",
       "adjust_profile": "Adjust Temple Profile Image",
       "adjust_banner": "Adjust Temple Banner Image",
-      "add": "Add"
+      "add": "Add",
+      "add_slot": "Add Slot"
     }
   },
   "temple_login_modal": {

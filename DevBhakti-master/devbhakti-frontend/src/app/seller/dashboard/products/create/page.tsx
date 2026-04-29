@@ -40,6 +40,8 @@ import { Separator } from "@/components/ui/separator";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { useLanguage, Language } from "@/context/LanguageContext";
 import { fetchCategories, createSellerProduct } from "@/api/sellerController";
+import { ImageCropper } from "@/components/ImageCropper";
+
 
 interface Variant {
     id: string;
@@ -116,6 +118,11 @@ export default function CreateSellerProductPage() {
         { id: "1", name_en: "", name_hi: "", name_mr: "", price: 0, stock: 0, imageFile: null, imagePreview: "" }
     ]);
 
+    // Cropper State
+    const [croppingImage, setCroppingImage] = useState<string | null>(null);
+    const [cropType, setCropType] = useState<{ type: 'product' | 'variant', id?: string } | null>(null);
+
+
     const [errors, setErrors] = useState<Record<string, string>>({});
 
     const handleProductImageChange = (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -125,16 +132,15 @@ export default function CreateSellerProductPage() {
                 toast({ title: "Invalid File", description: "Please select an image file", variant: "destructive" });
                 return;
             }
-            if (file.size > 5 * 1024 * 1024) {
-                toast({ title: "File Too Large", description: "Image size should be less than 5MB", variant: "destructive" });
-                return;
-            }
-            setProductImage(file);
             const reader = new FileReader();
-            reader.onloadend = () => setProductImagePreview(reader.result as string);
+            reader.onloadend = () => {
+                setCroppingImage(reader.result as string);
+                setCropType({ type: 'product' });
+            };
             reader.readAsDataURL(file);
         }
     };
+
 
     const removeProductImage = () => {
         setProductImage(null);
@@ -263,18 +269,32 @@ export default function CreateSellerProductPage() {
                 toast({ title: "Invalid File", description: "Please select an image file", variant: "destructive" });
                 return;
             }
-            if (file.size > 5 * 1024 * 1024) {
-                toast({ title: "File Too Large", description: "Image size should be less than 5MB", variant: "destructive" });
-                return;
-            }
             const reader = new FileReader();
             reader.onloadend = () => {
-                setVariants(variants.map(variant =>
-                    variant.id === id ? { ...variant, imageFile: file, imagePreview: reader.result as string } : variant
-                ));
+                setCroppingImage(reader.result as string);
+                setCropType({ type: 'variant', id });
             };
             reader.readAsDataURL(file);
         }
+    };
+
+    const handleCropComplete = (croppedFile: File) => {
+        if (!cropType) return;
+
+        const reader = new FileReader();
+        reader.onloadend = () => {
+            if (cropType.type === 'product') {
+                setProductImage(croppedFile);
+                setProductImagePreview(reader.result as string);
+            } else if (cropType.type === 'variant' && cropType.id) {
+                setVariants(variants.map(v =>
+                    v.id === cropType.id ? { ...v, imageFile: croppedFile, imagePreview: reader.result as string } : v
+                ));
+            }
+            setCroppingImage(null);
+            setCropType(null);
+        };
+        reader.readAsDataURL(croppedFile);
     };
 
     const removeVariantImage = (id: string) => {
@@ -282,6 +302,7 @@ export default function CreateSellerProductPage() {
             variant.id === id ? { ...variant, imageFile: null, imagePreview: "" } : variant
         ));
     };
+
 
     return (
         <div className="space-y-6 max-w-7xl mx-auto">
@@ -519,7 +540,18 @@ export default function CreateSellerProductPage() {
                     </div>
                 </Tabs>
             </form>
+            {croppingImage && (
+                <ImageCropper
+                    image={croppingImage}
+                    onCrop={handleCropComplete}
+                    onClose={() => {
+                        setCroppingImage(null);
+                        setCropType(null);
+                    }}
+                />
+            )}
         </div>
     );
 }
+
 

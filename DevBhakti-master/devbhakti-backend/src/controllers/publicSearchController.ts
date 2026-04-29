@@ -17,10 +17,9 @@ export const searchGlobal = async (req: Request, res: Response) => {
                 FROM "Temple" t
                 INNER JOIN "User" u ON t."userId" = u.id
                 WHERE (
-                    (t.name->>'en' ILIKE ${ilikeQuery}) OR 
-                    (t.name->>'hi' ILIKE ${ilikeQuery}) OR 
-                    (t.location->>'en' ILIKE ${ilikeQuery}) OR 
-                    (t.category->>'en' ILIKE ${ilikeQuery})
+                    (t.name::text ILIKE ${ilikeQuery}) OR 
+                    (t.location::text ILIKE ${ilikeQuery}) OR 
+                    (t.category::text ILIKE ${ilikeQuery})
                 ) AND t."isActive" = true AND u."isVerified" = true
                 LIMIT 20
             ` : prisma.temple.findMany({
@@ -38,10 +37,9 @@ export const searchGlobal = async (req: Request, res: Response) => {
                 LEFT JOIN "Temple" t ON p."templeId" = t.id
                 LEFT JOIN "User" u ON t."userId" = u.id
                 WHERE (
-                    (p.name->>'en' ILIKE ${ilikeQuery}) OR 
-                    (p.name->>'hi' ILIKE ${ilikeQuery}) OR 
-                    (p.category->>'en' ILIKE ${ilikeQuery}) OR 
-                    (p.about->>'en' ILIKE ${ilikeQuery})
+                    (p.name::text ILIKE ${ilikeQuery}) OR 
+                    (p.category::text ILIKE ${ilikeQuery}) OR 
+                    (p.about::text ILIKE ${ilikeQuery})
                 ) AND p.status = true 
                 AND (p."isMaster" = true OR (t."isActive" = true AND u."isVerified" = true))
                 LIMIT 20
@@ -56,10 +54,9 @@ export const searchGlobal = async (req: Request, res: Response) => {
                 LEFT JOIN "User" ut ON t."userId" = ut.id
                 LEFT JOIN "User" us ON s."userId" = us.id
                 WHERE (
-                    (p.name->>'en' ILIKE ${ilikeQuery}) OR 
-                    (p.name->>'hi' ILIKE ${ilikeQuery}) OR 
-                    (p.category->>'en' ILIKE ${ilikeQuery}) OR 
-                    (p.description->>'en' ILIKE ${ilikeQuery})
+                    (p.name::text ILIKE ${ilikeQuery}) OR 
+                    (p.category::text ILIKE ${ilikeQuery}) OR 
+                    (p.description::text ILIKE ${ilikeQuery})
                 ) AND p.status = 'approved'
                 AND (
                     (p."templeId" IS NOT NULL AND t."isActive" = true AND ut."isVerified" = true) OR

@@ -6,6 +6,7 @@ import path from 'path';
 import jwt from 'jsonwebtoken';
 import { sendSMS } from '../../services/mobicommService';
 import { sendWhatsAppMessage } from '../../services/whatsappService';
+import { generateCustomId } from '../../utils/idGenerator';
 
 const JWT_SECRET = process.env.JWT_SECRET || 'devbhakti_secret_key_2026';
 
@@ -314,8 +315,12 @@ export const sendOTP = async (req: Request, res: Response) => {
             }
 
             // Create user
+            const prefix = checkRole === 'INSTITUTION' ? 'TAID' : 'UID';
+            const displayId = await generateCustomId(prefix);
+
             user = await prisma.user.create({
                 data: {
+                    displayId,
                     phone: normalizedPhone,
                     name: name || 'Devotee',
                     email: email ? email.toLowerCase().trim() : null,

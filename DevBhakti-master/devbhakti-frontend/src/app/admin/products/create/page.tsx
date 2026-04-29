@@ -81,7 +81,10 @@ export default function CreateProductPage() {
   const [productImage, setProductImage] = useState<File | null>(null);
   const [productImagePreview, setProductImagePreview] = useState<string>("");
   const [showCropper, setShowCropper] = useState(false);
+  const [showVariantCropper, setShowVariantCropper] = useState(false);
   const [tempImage, setTempImage] = useState<string | null>(null);
+  const [tempVariantImage, setTempVariantImage] = useState<string | null>(null);
+  const [currentVariantId, setCurrentVariantId] = useState<string | null>(null);
   const [open, setOpen] = useState(false);
 
   // All form data in flat structure (same as TempleForm pattern)
@@ -275,10 +278,35 @@ export default function CreateProductPage() {
   const handleVariantImageChange = (id: string, e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
     if (file) {
+      if (!file.type.startsWith('image/')) { toast({ title: "Invalid File", description: "Please select an image file", variant: "destructive" }); return; }
+      if (file.size > 5 * 1024 * 1024) { toast({ title: "File Too Large", description: "Max 5MB", variant: "destructive" }); return; }
+      
+      setCurrentVariantId(id);
       const reader = new FileReader();
-      reader.onloadend = () => setVariants(variants.map(v => v.id === id ? { ...v, imageFile: file, imagePreview: reader.result as string } : v));
+      reader.onloadend = () => {
+        setTempVariantImage(reader.result as string);
+        setShowVariantCropper(true);
+      };
       reader.readAsDataURL(file);
+      e.target.value = '';
     }
+  };
+
+  const handleVariantCropComplete = (croppedFile: File) => {
+    if (!currentVariantId) return;
+
+    const reader = new FileReader();
+    reader.onloadend = () => {
+      setVariants(variants.map(v => 
+        v.id === currentVariantId 
+          ? { ...v, imageFile: croppedFile, imagePreview: reader.result as string } 
+          : v
+      ));
+      setShowVariantCropper(false);
+      setTempVariantImage(null);
+      setCurrentVariantId(null);
+    };
+    reader.readAsDataURL(croppedFile);
   };
 
   const removeVariantImage = (id: string) => setVariants(variants.map(v => v.id === id ? { ...v, imageFile: null, imagePreview: "" } : v));
@@ -293,9 +321,20 @@ export default function CreateProductPage() {
           image={tempImage}
           onCropComplete={handleCropComplete}
           onCancel={() => { setShowCropper(false); setTempImage(null); }}
-          initialAspect={3 / 2}
+          initialAspect={1}
           lockAspect={true}
           title="Adjust Product Image"
+        />
+      )}
+
+      {showVariantCropper && tempVariantImage && (
+        <ImageCropper
+          image={tempVariantImage}
+          onCropComplete={handleVariantCropComplete}
+          onCancel={() => { setShowVariantCropper(false); setTempVariantImage(null); setCurrentVariantId(null); }}
+          initialAspect={1}
+          lockAspect={true}
+          title="Adjust Variant Image"
         />
       )}
 

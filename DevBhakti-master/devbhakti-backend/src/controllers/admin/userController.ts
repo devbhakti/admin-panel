@@ -200,6 +200,7 @@ export const getAllUsers = async (req: Request, res: Response) => {
             data: {
                 users: localize(users.map(user => ({
                     id: user.id,
+                    displayId: user.displayId,
                     name: user.name,
                     email: user.email,
                     phone: user.phone,
@@ -371,7 +372,8 @@ export const downloadUsersExcel = async (req: Request, res: Response) => {
         const workbook = new ExcelJS.Workbook();
         const worksheet = workbook.addWorksheet('Users Report');
         worksheet.columns = [
-            { header: 'User ID', key: 'id', width: 25 },
+            { header: 'Display ID', key: 'displayId', width: 20 },
+            { header: 'Internal ID', key: 'id', width: 25 },
             { header: 'Name', key: 'name', width: 25 },
             { header: 'Email', key: 'email', width: 25 },
             { header: 'Phone', key: 'phone', width: 20 },
@@ -390,7 +392,8 @@ export const downloadUsersExcel = async (req: Request, res: Response) => {
         headerRow.alignment = { vertical: 'middle', horizontal: 'center' };
 
         usersList.forEach((u) => {
-            worksheet.addRow({
+                worksheet.addRow({
+                displayId: u.displayId || 'N/A',
                 id: u.id,
                 name: u.name || "N/A",
                 email: u.email || "N/A",

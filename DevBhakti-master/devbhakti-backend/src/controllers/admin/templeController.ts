@@ -5,6 +5,7 @@ import bcrypt from 'bcrypt';
 import { createShiprocketPickupLocation } from '../../services/shiprocketService';
 import { parseLocation, extractPincode } from '../../lib/shiprocketUtils';
 import { buildLangJson, getEnglish, getLang, localize } from '../../utils/localization';
+import { generateCustomId } from "../../utils/idGenerator";
 
 
 // Helper to get file paths
@@ -341,8 +342,12 @@ export const createTemple = async (req: Request, res: Response) => {
 
     const result = await prisma.$transaction(async (tx) => {
       // 1. Create User & Temple
+      const userDisplayId = await generateCustomId('TAID');
+      const templeDisplayId = await generateCustomId('TID');
+
       const user = await tx.user.create({
         data: {
+          displayId: userDisplayId,
           name: JSON.stringify(buildLangJson(data.adminName_en || data.name, data.adminName_hi, data.adminName_mr)),
           email: data.email,
           phone: data.phone,
@@ -351,7 +356,8 @@ export const createTemple = async (req: Request, res: Response) => {
           isVerified: false,
           temple: {
             create: {
-              templeId: `TMP-${Math.random().toString(36).substring(2, 8).toUpperCase()}`,
+              displayId: templeDisplayId,
+              templeId: templeDisplayId, // Use the same for backward compatibility or keep original logic? User said TID04A1286
               name: JSON.stringify(buildLangJson(data.name_en || data.templeName || data.name, data.name_hi, data.name_mr)),
               location: JSON.stringify(buildLangJson(data.location_en || data.location, data.location_hi, data.location_mr)),
               fullAddress: JSON.stringify(buildLangJson(data.fullAddress_en || data.fullAddress, data.fullAddress_hi, data.fullAddress_mr)),

@@ -41,7 +41,7 @@ import {
     fetchSellerFinanceLedger,
     requestSellerWithdrawal
 } from "@/api/sellerController";
-import { isPayoutAllowed, nextPayoutDate } from "@/utils/payoutSchedule";
+import { isPayoutAllowed, nextPayoutDate, PAYOUT_DAYS } from "@/utils/payoutSchedule";
 import { useToast } from "@/hooks/use-toast";
 
 import { useRouter } from "next/navigation";
@@ -88,10 +88,19 @@ export default function SellerPaymentsPage() {
     };
 
 
-    const filteredLedger = ledger.filter(entry =>
-        (entry.description || "").toLowerCase().includes(searchQuery.toLowerCase()) ||
-        (entry.id || "").toLowerCase().includes(searchQuery.toLowerCase())
-    );
+    const [deliveryFilter, setDeliveryFilter] = useState("all");
+
+    const filteredLedger = ledger.filter(entry => {
+        const matchesSearch = (entry.description || "").toLowerCase().includes(searchQuery.toLowerCase()) ||
+            (entry.id || "").toLowerCase().includes(searchQuery.toLowerCase()) ||
+            (entry.orderDetail?.displayId || "").toLowerCase().includes(searchQuery.toLowerCase()) ||
+            (entry.orderDetail?.customerName || "").toLowerCase().includes(searchQuery.toLowerCase());
+        
+        const matchesDelivery = deliveryFilter === "all" || 
+            (entry.orderDetail?.deliveryStatus || "").toLowerCase() === deliveryFilter.toLowerCase();
+
+        return matchesSearch && matchesDelivery;
+    });
 
 
     return (
@@ -119,17 +128,17 @@ export default function SellerPaymentsPage() {
             {/* Premium Stats Cards */}
             <TooltipProvider>
                 <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-5 gap-4">
-                    <Card className="border-none shadow-xl bg-primary text-dark rounded-[1.5rem] overflow-hidden relative group">
+                    <Card className="border-none shadow-xl bg-[#794A05] text-white rounded-[1.5rem] overflow-hidden relative group">
                         <CardContent className="p-6">
                             <div className="flex items-center gap-1.5 mb-2">
-                                <p className="text-slate-400 font-bold uppercase tracking-widest text-[10px]">Total Sales</p>
+                                <p className="text-white font-bold uppercase tracking-widest text-[10px]">Total Sales</p>
                                 <Tooltip>
-                                    <TooltipTrigger><Info className="w-3 h-3 text-slate-500 cursor-help" /></TooltipTrigger>
+                                    <TooltipTrigger><Info className="w-3 h-3 text-white/40 cursor-help" /></TooltipTrigger>
                                     <TooltipContent className="bg-slate-800 text-white border-slate-700 text-[12px]">Total value of all orders.</TooltipContent>
                                 </Tooltip>
                             </div>
                             <h2 className="text-2xl font-extrabold flex items-center gap-1">
-                                <IndianRupee className="w-5 h-5 text-slate-400" strokeWidth={3} />
+                                <IndianRupee className="w-5 h-5 text-white" strokeWidth={3} />
                                 {summary.totalEarnings.toLocaleString()}
                             </h2>
                         </CardContent>
@@ -215,8 +224,8 @@ export default function SellerPaymentsPage() {
                         isPayoutAllowed() ? "text-emerald-700/80" : "text-amber-700/80"
                     )}>
                         {isPayoutAllowed()
-                            ? "Marketplace payouts are currently being processed (15th / 28th). Your settled funds are ready for withdrawal."
-                            : `Payouts are processed on the 15th and 28th of every month. The next window opens on ${format(nextPayoutDate(), "do MMMM yyyy")}.`
+                            ? `Marketplace payouts are currently being processed (${PAYOUT_DAYS.map(d => d + (d === 1 ? 'st' : 'th')).join(' / ')}). Your settled funds are ready for withdrawal.`
+                            : `Payouts are processed on the ${PAYOUT_DAYS.map(d => d + (d === 1 ? 'st' : 'th')).join(' and ')} of every month. The next window opens on ${format(nextPayoutDate(), "do MMMM yyyy")}.`
                         }
                     </p>
                 </div>
@@ -254,9 +263,23 @@ export default function SellerPaymentsPage() {
                                 className="pl-10 h-10 rounded-xl border-slate-200 focus:ring-[#794A05]/10"
                             />
                         </div>
-                        <Button variant="outline" size="icon" className="rounded-xl border-slate-200">
-                            <Filter className="w-4 h-4" />
-                        </Button>
+                        <div className="flex items-center gap-2">
+                            <select 
+                                value={deliveryFilter}
+                                onChange={(e) => setDeliveryFilter(e.target.value)}
+                                className="h-10 rounded-xl border-slate-200 text-xs font-bold px-4 bg-white outline-none focus:ring-2 focus:ring-[#794A05]/20"
+                            >
+                                <option value="all">All Delivery Status</option>
+                                <option value="PENDING">Pending</option>
+                                <option value="PROCESSING">Processing</option>
+                                <option value="SHIPPED">Shipped</option>
+                                <option value="DELIVERED">Delivered</option>
+                                <option value="CANCELLED">Cancelled</option>
+                            </select>
+                            <Button variant="outline" size="icon" className="rounded-xl border-slate-200">
+                                <Filter className="w-4 h-4" />
+                            </Button>
+                        </div>
                     </div>
                 </div>
 
@@ -265,13 +288,10 @@ export default function SellerPaymentsPage() {
                         <table className="w-full">
                             <thead className="bg-slate-50/80">
                                 <tr>
-                                    <th className="py-5 pl-8 text-left text-[11px] font-extrabold text-slate-900 uppercase tracking-widest">Date / Description</th>
-                                    <th className="py-5 text-left text-[11px] font-extrabold text-slate-900 uppercase tracking-widest">Type</th>
-                                    <th className="py-5 text-center text-[11px] font-extrabold text-slate-900 uppercase tracking-widest">Status</th>
-                                    {/* Hiding Gross/Commission columns for cleaner look
-                                    <th className="py-5 text-right text-[11px] font-extrabold text-slate-900 uppercase tracking-widest">Gross</th>
-                                    <th className="py-5 text-right text-[11px] font-extrabold text-slate-900 uppercase tracking-widest">Commission</th>
-                                    */}
+                                    <th className="py-5 pl-8 text-left text-[11px] font-extrabold text-slate-900 uppercase tracking-widest">Order Details</th>
+                                    {/* <th className="py-5 text-left text-[11px] font-extrabold text-slate-900 uppercase tracking-widest">Type</th> */}
+                                    <th className="py-5 text-center text-[11px] font-extrabold text-slate-900 uppercase tracking-widest">Payment Status</th>
+                                    <th className="py-5 text-center text-[11px] font-extrabold text-slate-900 uppercase tracking-widest">Delivery Status</th>
                                     <th className="py-5 pr-8 text-right text-[11px] font-extrabold text-slate-900 uppercase tracking-widest">Net Earning</th>
                                 </tr>
                             </thead>
@@ -293,23 +313,44 @@ export default function SellerPaymentsPage() {
                                                     <span className="text-[10px] font-bold text-slate-400">
                                                         {format(new Date(entry.createdAt), "dd MMM, yyyy")}
                                                     </span>
-                                                    <span className="text-sm font-extrabold text-slate-900">{entry.description}</span>
+                                                    <span className="text-sm font-extrabold text-slate-900 flex items-center gap-2">
+                                                        {entry.orderDetail?.displayId ? `#${entry.orderDetail.displayId}` : entry.description}
+                                                    </span>
+                                                    {entry.orderDetail?.customerName && (
+                                                        <span className="text-[10px] font-medium text-slate-500 uppercase tracking-tight">
+                                                            Customer: {entry.orderDetail.customerName}
+                                                        </span>
+                                                    )}
                                                 </div>
                                             </td>
-                                            <td className="py-6">
+                                            {/* <td className="py-6">
                                                 <Badge variant="outline" className="rounded-full px-3 py-1 text-[10px] font-bold border-slate-200 text-slate-600 bg-slate-50">
                                                     {entry.type.replace('_', ' ')}
                                                 </Badge>
-                                            </td>
+                                            </td> */}
                                             <td className="py-6 text-center">
                                                 <Badge className={cn(
                                                     "rounded-full px-3 py-1 text-[10px] font-bold border",
-                                                    entry.status === "COMPLETED" ? "bg-emerald-50 text-emerald-700 border-emerald-200" :
-                                                        entry.status === "PENDING" ? "bg-amber-50 text-amber-700 border-amber-200" :
+                                                    (entry.orderDetail?.paymentStatus || entry.status) === "PAID" || (entry.orderDetail?.paymentStatus || entry.status) === "COMPLETED" ? "bg-emerald-50 text-emerald-700 border-emerald-200" :
+                                                        (entry.orderDetail?.paymentStatus || entry.status) === "PENDING" ? "bg-amber-50 text-amber-700 border-amber-200" :
                                                             "bg-red-50 text-red-700 border-red-200"
                                                 )}>
-                                                    {entry.status}
+                                                    {entry.orderDetail?.paymentStatus || entry.status}
                                                 </Badge>
+                                            </td>
+                                            <td className="py-6 text-center">
+                                                {entry.orderDetail?.deliveryStatus ? (
+                                                    <Badge variant="outline" className={cn(
+                                                        "rounded-full px-3 py-1 text-[10px] font-bold",
+                                                        entry.orderDetail.deliveryStatus === "DELIVERED" ? "bg-emerald-50 text-emerald-700 border-emerald-100" :
+                                                        entry.orderDetail.deliveryStatus === "CANCELLED" ? "bg-rose-50 text-rose-700 border-rose-100" :
+                                                        "bg-blue-50 text-blue-700 border-blue-100"
+                                                    )}>
+                                                        {entry.orderDetail.deliveryStatus}
+                                                    </Badge>
+                                                ) : (
+                                                    <span className="text-slate-300 text-[10px] font-bold">N/A</span>
+                                                )}
                                             </td>
                                             {/* Hiding cells for Gross/Commission
                                             <td className="py-6 text-right">

@@ -168,7 +168,7 @@ export default function TempleEditEventPage() {
         try {
             const payload = {
                 ...formData,
-                time: `${timeData.hours}:${timeData.minutes} ${timeData.period}`,
+                // time: `${timeData.hours}:${timeData.minutes} ${timeData.period}`,
                 recommendedPoojaIds: selectedPoojaIds,
             };
 
@@ -295,7 +295,7 @@ export default function TempleEditEventPage() {
                         </Popover>
                     </div>
 
-                    <div className="space-y-2">
+                    {/* <div className="space-y-2">
                         <Label className="text-slate-700 font-medium font-bold text-[#7b4623]">Time *</Label>
                         <div className="flex gap-1">
                             <select
@@ -325,12 +325,12 @@ export default function TempleEditEventPage() {
                                 <option value="PM">PM</option>
                             </select>
                         </div>
-                    </div>
+                    </div> */}
                 </div>
 
                 <div className="flex items-center justify-between p-6 border rounded-2xl bg-slate-50 transition-all hover:bg-slate-100/50">
                     <div className="space-y-1">
-                        <Label className="text-base font-bold text-[#7b4623]">Event Visibility</Label>
+                        <Label className="text-base font-bold text-[#7b4623]">Event Status</Label>
                         <p className="text-sm text-muted-foreground">
                             Show or hide this event from devotees on the platform.
                         </p>

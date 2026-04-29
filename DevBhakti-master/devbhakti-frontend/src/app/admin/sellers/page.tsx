@@ -162,7 +162,8 @@ export default function SellersManagementPage() {
 
     const handleExportExcel = () => {
         const exportData = sellers.map(s => ({
-            "ID": s.id,
+            "Seller ID": s.displayId,
+            "Internal ID": s.id,
             "Store_Name": s.storeName,
             "Seller_Full_Name": s.name,
             "Email": s.email,
@@ -371,7 +372,12 @@ export default function SellersManagementPage() {
                                                 <Store className="w-5 h-5" />
                                             </div>
                                             <div className="flex flex-col">
-                                                <span className="font-semibold text-slate-900">{seller.storeName}</span>
+                                                <div className="flex items-center gap-2">
+                                                    <span className="font-semibold text-slate-900">{seller.storeName}</span>
+                                                    <Badge variant="outline" className="font-mono text-[10px] py-0 h-4">
+                                                        {seller.displayId}
+                                                    </Badge>
+                                                </div>
                                                 <span className="text-xs text-muted-foreground">
                                                     {seller.name}
                                                 </span>
@@ -474,7 +480,7 @@ export default function SellersManagementPage() {
                             <div className="grid grid-cols-2 gap-4">
                                 <div>
                                     <label className="text-sm font-medium text-slate-700">Seller ID</label>
-                                    <p className="text-slate-900">{selectedSeller.id}</p>
+                                    <p className="text-slate-900 font-mono">{selectedSeller.displayId || selectedSeller.id}</p>
                                 </div>
                                 <div>
                                     <label className="text-sm font-medium text-slate-700">Join Date</label>

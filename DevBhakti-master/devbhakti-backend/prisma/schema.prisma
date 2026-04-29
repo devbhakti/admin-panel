@@ -28,6 +28,7 @@ model User {
   address       String?
   isActive      Boolean        @default(true)
   nativePlace   String?
+  displayId     String?        @unique
   cart          Cart?
   donations     Donation[]
   favorites     Favorite[]
@@ -84,6 +85,7 @@ model Temple {
   updatedAt             DateTime              @updatedAt
   poojaCommissionRate   Float                 @default(5.0)
   productCommissionRate Float                 @default(10.0)
+  displayId             String?               @unique
   templeId              String?               @unique
   slug                  String?               @unique
   isActive              Boolean               @default(true)
@@ -148,6 +150,7 @@ model SellerProfile {
   isVerified            Boolean               @default(false)
   userId                String                @unique
   productCommissionRate Float                 @default(10.0)
+  displayId             String?               @unique
   createdAt             DateTime              @default(now())
   updatedAt             DateTime              @updatedAt
   accountHolderName     String?
@@ -373,6 +376,7 @@ model CTACard {
 
 model PoojaBooking {
   id                 String        @id @default(cuid())
+  displayId          String?       @unique
   userId             String
   poojaId            String
   templeId           String?
@@ -405,6 +409,7 @@ model PoojaBooking {
 
 model Order {
   id              String     @id @default(cuid())
+  displayId       String?    @unique
   userId          String
   totalAmount     Float
   status          String     @default("PENDING")
@@ -506,6 +511,7 @@ model CommissionSlab {
 
 model StaffMember {
   id         String      @id @default(cuid())
+  displayId  String?     @unique
   name       String
   email      String      @unique
   password   String
@@ -628,6 +634,15 @@ model GlobalSetting {
   value     Json
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
+}
+
+model IdSequence {
+  prefix    String
+  yearCode  String
+  lastValue Int      @default(0)
+  updatedAt DateTime @updatedAt
+
+  @@id([prefix, yearCode])
 }
 
 enum SlabType {

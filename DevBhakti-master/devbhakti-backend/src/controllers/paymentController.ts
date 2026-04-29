@@ -54,8 +54,8 @@ export const verifyPayment = async (req: Request, res: Response) => {
                         code: "OUT_OF_STOCK",
                         count: remaining,
                         message: remaining === 0
-                            ? "Yeh product abhi available nahi hai (stock khatam ho gaya). Aapka payment refund ho jaayega."
-                            : `Sirf ${remaining} item(s) available hain. Aap jitna maang rahe hain utna stock nahi hai. Aapka payment refund ho jaayega.`,
+                            ? "This product is currently unavailable (out of stock). Your payment will be refunded."
+                            : `Only ${remaining} item(s) are available. Your full order cannot be fulfilled at this time. Your payment will be refunded.`,
                     });
                 }
 
@@ -64,7 +64,7 @@ export const verifyPayment = async (req: Request, res: Response) => {
                     return res.status(409).json({
                         success: false,
                         code: "PRODUCT_UNAVAILABLE",
-                        message: "Ek ya zyada product abhi available nahi hain. Aapka payment refund ho jaayega.",
+                        message: "One or more products are currently unavailable. Your payment will be refunded.",
                     });
                 }
 

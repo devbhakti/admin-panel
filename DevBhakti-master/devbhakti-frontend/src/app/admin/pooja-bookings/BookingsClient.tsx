@@ -36,7 +36,7 @@ import { useDebounce } from "@/hooks/use-debounce";
 import { useAdminAuth } from "@/hooks/use-admin-auth";
 import { cn } from "@/lib/utils";
 import axios from "axios";
-import { API_URL } from "@/config/apiConfig";
+import { API_URL, BASE_URL } from "@/config/apiConfig";
 import { parseLocalizedValue } from "@/utils/textUtils";
 
 const statusConfig = {
@@ -224,14 +224,22 @@ function BookingsContent() {
         try {
             toast({ title: "Exporting...", description: "Please wait while we prepare the Excel file." });
 
-
             const token = localStorage.getItem('admin_token') || localStorage.getItem('staff_token');
 
+            const params = {
+                status: statusFilter,
+                search: searchQuery,
+                startDate: selectedDateRange?.from?.toISOString(),
+                endDate: selectedDateRange?.to?.toISOString(),
+                dateType: filterDateType,
+                sortBy: sortBy,
+                sortOrder: sortOrder
+            };
 
             const response = await axios.get(`${API_URL}/admin/bookings/export/excel`, {
+                params,
                 responseType: 'blob',
                 validateStatus: () => true,
-
                 headers: {
                     'Authorization': `Bearer ${token}`,
                     'Content-Type': 'application/json'
@@ -279,15 +287,15 @@ function BookingsContent() {
 
             <div className="grid grid-cols-2 md:grid-cols-4 gap-3 sm:gap-4">
                 {[
-                    { label: "Total", value: totalItems, color: "text-slate-900" },
-                    { label: "Booked", value: stats.booked, color: "text-blue-600" },
-                    { label: "Completed", value: stats.completed, color: "text-emerald-700" },
-                    { label: "Rejections", value: stats.cancelled + stats.rejected, color: "text-rose-600" },
+                    { label: "Total Bookings", value: totalItems, color: "text-white" },
+                    { label: "Active", value: stats.booked, color: "text-white" },
+                    { label: "Finished", value: stats.completed, color: "text-white" },
+                    { label: "Cancelled", value: stats.cancelled + stats.rejected, color: "text-white" },
                 ].map((stat) => (
-                    <Card key={stat.label} className="border-none shadow-sm bg-white/50 backdrop-blur-sm">
-                        <CardContent className="p-3 sm:p-4">
-                            <p className={`text-lg sm:text-2xl font-extrabold ${stat.color}`}>{String(stat.value)}</p>
-                            <p className="text-[9px] sm:text-[10px] font-bold text-slate-400 uppercase tracking-widest">{stat.label}</p>
+                    <Card key={stat.label} className="border-none shadow-xl bg-[#794A05] text-white rounded-[1.5rem] overflow-hidden relative group">
+                        <CardContent className="p-3 sm:p-6">
+                            <p className={`text-xl sm:text-2xl font-extrabold ${stat.color}`}>{String(stat.value)}</p>
+                            <p className="text-[9px] sm:text-[10px] font-bold text-white uppercase tracking-widest">{stat.label}</p>
                         </CardContent>
                     </Card>
                 ))}
@@ -371,21 +379,25 @@ function BookingsContent() {
                                     <div className="p-3 border-b flex items-center justify-between bg-slate-50/50">
                                         <span className="text-xs font-bold text-slate-500 uppercase tracking-wider">Quick Select</span>
                                         <div className="flex gap-1.5">
-                                            {["all", "week", "month", "year"].map((r) => (
+                                            {["all", "today", "week", "month", "year"].map((r) => (
                                                 <Button
                                                     key={r}
                                                     variant="ghost"
                                                     size="sm"
                                                     onClick={() => {
                                                         setDateRange(r as any);
-                                                        setSelectedDateRange(undefined);
+                                                        if (r === "today") {
+                                                            setSelectedDateRange({ from: new Date(), to: new Date() });
+                                                        } else {
+                                                            setSelectedDateRange(undefined);
+                                                        }
                                                     }}
                                                     className={cn(
                                                         "h-7 px-2.5 text-[10px] font-bold rounded-lg transition-all",
                                                         dateRange === r ? "bg-[#794A05] text-white" : "text-slate-500 hover:bg-slate-100"
                                                     )}
                                                 >
-                                                    {r === "all" ? "All" : r === "week" ? "Week" : r === "month" ? "Month" : "Year"}
+                                                    {r === "all" ? "All" : r === "today" ? "Today" : r === "week" ? "Week" : r === "month" ? "Month" : "Year"}
                                                 </Button>
                                             ))}
                                         </div>
@@ -442,18 +454,18 @@ function BookingsContent() {
 
             <Card className="border-none shadow-xl rounded-[16px] sm:rounded-[24px] overflow-hidden bg-white">
                 <div className="overflow-x-auto">
-                    <table className="w-full text-left min-w-[600px]">
+                    <table className="w-full text-left min-w-[1000px]">
                         <thead className="bg-[#FAF9F6] border-b border-slate-100">
                             <tr>
-                                <th className="p-2 sm:p-4 text-[9px] sm:text-[11px] font-bold text-slate-400 uppercase tracking-widest whitespace-nowrap">ID</th>
-                                <th className="p-2 sm:p-4 text-[9px] sm:text-[11px] font-bold text-slate-400 uppercase tracking-widest whitespace-nowrap">Service</th>
-                                <th className="p-2 sm:p-4 text-[9px] sm:text-[11px] font-bold text-slate-400 uppercase tracking-widest whitespace-nowrap">Temple</th>
-                                <th className="p-2 sm:p-4 text-[9px] sm:text-[11px] font-bold text-slate-400 uppercase tracking-widest whitespace-nowrap">Devotee</th>
-                                <th className="p-2 sm:p-4 text-[9px] sm:text-[11px] font-bold text-slate-400 uppercase tracking-widest whitespace-nowrap hidden lg:table-cell" title="DDMMYYYY format">Booking Date & Time</th>
-                                <th className="p-2 sm:p-4 text-[9px] sm:text-[11px] font-bold text-slate-400 uppercase tracking-widest whitespace-nowrap" title="DDMMYYYY format">Ritual Date</th>
-                                <th className="p-2 sm:p-4 text-[9px] sm:text-[11px] font-bold text-slate-400 uppercase tracking-widest whitespace-nowrap">Amount</th>
-                                <th className="p-2 sm:p-4 text-[9px] sm:text-[11px] font-bold text-slate-400 uppercase tracking-widest whitespace-nowrap">Status</th>
-                                <th className="p-2 sm:p-4 text-right text-[9px] sm:text-[11px] font-bold text-slate-400 uppercase tracking-widest whitespace-nowrap">Actions</th>
+                                <th className="py-5 pl-8 text-left text-[11px] font-extrabold text-slate-900 uppercase tracking-widest whitespace-nowrap">ID</th>
+                                <th className="py-5 text-left text-[11px] font-extrabold text-slate-900 uppercase tracking-widest whitespace-nowrap">Service</th>
+                                <th className="py-5 text-left text-[11px] font-extrabold text-slate-900 uppercase tracking-widest whitespace-nowrap">Temple</th>
+                                <th className="py-5 text-left text-[11px] font-extrabold text-slate-900 uppercase tracking-widest whitespace-nowrap">Devotee</th>
+                                <th className="py-5 text-left text-[11px] font-extrabold text-slate-900 uppercase tracking-widest whitespace-nowrap">Booking Date & Time</th>
+                                <th className="py-5 text-left text-[11px] font-extrabold text-slate-900 uppercase tracking-widest whitespace-nowrap">Ritual Date</th>
+                                <th className="py-5 text-left text-[11px] font-extrabold text-slate-900 uppercase tracking-widest whitespace-nowrap">Amount</th>
+                                <th className="py-5 text-center text-[11px] font-extrabold text-slate-900 uppercase tracking-widest whitespace-nowrap">Status</th>
+                                <th className="py-5 pr-8 text-right text-[11px] font-extrabold text-slate-900 uppercase tracking-widest whitespace-nowrap">Actions</th>
                             </tr>
                         </thead>
                         <tbody>
@@ -465,53 +477,67 @@ function BookingsContent() {
                                 const status = statusConfig[booking.status as keyof typeof statusConfig] || statusConfig.BOOKED;
                                 return (
                                     <tr key={booking.id} className="border-b border-slate-50 hover:bg-slate-50 transition-colors">
-                                        <td className="p-2 sm:p-4 font-mono text-[9px] sm:text-[11px] font-bold text-[#794A05]">#{String(booking.id).slice(-8).toUpperCase()}</td>
-                                        <td className="p-2 sm:p-4">
-                                            <p className="text-xs sm:text-sm font-bold text-slate-900">{parseLocalizedValue(booking.pooja?.name)}</p>
-                                            {booking.packageName && <p className="text-xs text-slate-500 mt-0.5">{parseLocalizedValue(booking.packageName)}</p>}
+                                        <td className="py-6 pl-8">
+                                            <span className="text-[10px] font-extrabold text-[#794A05] uppercase tracking-tighter">
+                                                {booking.displayId || `#${String(booking.id).slice(-8).toUpperCase()}`}
+                                            </span>
                                         </td>
-                                        <td className="p-2 sm:p-4">
-                                            {booking.temple ? (
-                                                <div className="flex items-center gap-2">
-                                                    <Building2 className="w-3 h-3 sm:w-4 sm:h-4 text-slate-400" />
-                                                    <p className="text-xs sm:text-sm font-bold text-slate-900">{parseLocalizedValue(booking.temple.name)}</p>
-                                                </div>
-                                            ) : (
-                                                <p className="text-xs sm:text-sm font-bold text-slate-400">N/A</p>
-                                            )}
-                                        </td>
-                                        <td className="p-2 sm:p-4">
-                                            <div className="flex items-center gap-2">
-                                                <User className="w-3 h-3 sm:w-4 sm:h-4 text-slate-400" />
-                                                <p className="text-xs sm:text-sm font-bold text-slate-900">{parseLocalizedValue(booking.devoteeName)}</p>
+                                        <td className="py-6">
+                                            <div className="flex flex-col">
+                                                <span className="text-sm font-bold text-slate-900 truncate max-w-[150px]">
+                                                    {parseLocalizedValue(booking.pooja?.name)}
+                                                </span>
+                                                <span className="text-[10px] font-semibold text-slate-400 uppercase">
+                                                    {parseLocalizedValue(booking.packageName) || "Single"}
+                                                </span>
                                             </div>
                                         </td>
-                                        <td className="p-2 sm:p-4 hidden lg:table-cell">
-                                            <p className="text-xs sm:text-sm font-medium text-slate-900" title="Date is in DDMMYYYY format">
+                                        <td className="py-6">
+                                            <div className="flex items-center gap-2">
+                                                <div className="p-1.5 bg-slate-100 rounded-lg">
+                                                    <Building2 className="w-3.5 h-3.5 text-slate-400" />
+                                                </div>
+                                                <span className="text-[11px] font-bold text-slate-700 truncate max-w-[150px]">
+                                                    {booking.temple ? parseLocalizedValue(booking.temple.name) : "N/A"}
+                                                </span>
+                                            </div>
+                                        </td>
+                                        <td className="py-6">
+                                            <div className="flex items-center gap-2">
+                                                <div className="p-1.5 bg-slate-100 rounded-lg">
+                                                    <User className="w-3.5 h-3.5 text-slate-400" />
+                                                </div>
+                                                <span className="text-[11px] font-bold text-slate-700 truncate max-w-[120px]">
+                                                    {parseLocalizedValue(booking.devoteeName)}
+                                                </span>
+                                            </div>
+                                        </td>
+                                        <td className="py-6">
+                                            <span className="text-[11px] font-bold text-slate-600">
                                                 {formatDateDDMMYYYY(booking.createdAt, true)}
-                                            </p>
+                                            </span>
                                         </td>
-                                        <td className="p-2 sm:p-4">
-                                            <p className="text-xs sm:text-sm font-medium text-slate-900" title="Date is in DDMMYYYY format">
+                                        <td className="py-6">
+                                            <span className="text-[11px] font-bold text-slate-700">
                                                 {formatDateDDMMYYYY(typeof booking.bookingDate === 'string' ? booking.bookingDate : (booking.bookingDate?.en || booking.bookingDate?.hi || booking.bookingDate?.mr || "N/A"), false)}
-                                            </p>
+                                            </span>
                                         </td>
-                                        <td className="p-2 sm:p-4">
-                                            <p className="text-xs sm:text-sm font-bold text-slate-900">₹{String((booking.packagePrice || 0) + (booking.platformFee || 0))}</p>
+                                        <td className="py-6">
+                                            <p className="text-sm font-black text-slate-900">₹{String((booking.packagePrice || 0) + (booking.platformFee || 0))}</p>
                                         </td>
-                                        <td className="p-2 sm:p-4">
-                                            <Badge variant="outline" className={`rounded-full px-2 sm:px-3 py-1 font-extrabold text-[9px] sm:text-[10px] ${status.color}`}>
+                                        <td className="py-6 text-center">
+                                            <Badge variant="outline" className={`rounded-full px-3 py-1 font-extrabold text-[9px] uppercase tracking-wider ${status.color}`}>
                                                 {status.label}
                                             </Badge>
                                         </td>
-                                        <td className="p-2 sm:p-4 text-right">
-                                            <div className="flex items-center justify-end gap-2">
-                                                <Button variant="ghost" size="icon" onClick={() => setSelectedBooking(booking)} className="h-7 w-7 sm:h-8 sm:w-8 rounded-lg">
-                                                    <Eye className="w-3 h-3 sm:w-4 sm:h-4" />
+                                        <td className="py-6 pr-8 text-right">
+                                            <div className="flex items-center justify-end gap-1">
+                                                <Button variant="ghost" size="icon" onClick={() => setSelectedBooking(booking)} className="h-8 w-8 rounded-full hover:bg-slate-100">
+                                                    <Eye className="w-4 h-4 text-slate-400" />
                                                 </Button>
                                                 {hasPermission('bookings.delete') && (
-                                                    <Button variant="ghost" size="icon" onClick={() => handleDelete(booking.id)} className="h-7 w-7 sm:h-8 sm:w-8 rounded-lg text-rose-500 hover:text-rose-600 hover:bg-rose-50">
-                                                        <Trash2 className="w-3 h-3 sm:w-4 sm:h-4" />
+                                                    <Button variant="ghost" size="icon" onClick={() => handleDelete(booking.id)} className="h-8 w-8 rounded-full text-slate-300 hover:text-rose-500 hover:bg-rose-50">
+                                                        <Trash2 className="w-4 h-4" />
                                                     </Button>
                                                 )}
                                             </div>
@@ -532,93 +558,251 @@ function BookingsContent() {
                 </div>
             )}
 
-            {selectedBooking && (
-                <div className="fixed inset-0 z-[100] flex items-center justify-center p-4 sm:p-6 bg-black/50">
-                    <div className="bg-white rounded-[24px] sm:rounded-[32px] w-full max-w-md sm:max-w-lg lg:max-w-xl shadow-2xl p-4 sm:p-6 lg:p-8 relative max-h-[90vh] overflow-y-auto">
-                        <h3 className="text-lg sm:text-xl font-bold font-serif mb-4 sm:mb-6 text-[#794A05]">Booking Details</h3>
-                        <div className="space-y-4">
-                            <div className="p-4 bg-slate-50 rounded-2xl">
-                                <p className="text-[10px] font-bold text-slate-400 uppercase mb-1">Devotee Information</p>
-                                <p className="font-bold text-slate-800 text-lg">{parseLocalizedValue(selectedBooking.devoteeName)}</p>
-                                <p className="text-sm text-slate-500">{String(selectedBooking.devoteePhone || "")}</p>
-                                <p className="text-sm text-slate-500">{String(selectedBooking.devoteeEmail || "")}</p>
-                            </div>
-                            <div className="p-4 bg-orange-50 rounded-2xl">
-                                <p className="text-[10px] font-bold text-orange-400 uppercase mb-1">Pooja Service</p>
-                                <p className="font-bold text-[#794A05] text-lg">{parseLocalizedValue(selectedBooking.pooja?.name)}</p>
-                                <p className="text-sm text-[#794A05]">{parseLocalizedValue(selectedBooking.packageName)}</p>
-                                <div className="mt-2 flex justify-between items-end">
+            <AnimatePresence>
+                {selectedBooking && (
+                    <div className="fixed inset-0 z-[100] flex items-center justify-center p-4">
+                        <motion.div
+                            initial={{ opacity: 0 }}
+                            animate={{ opacity: 1 }}
+                            exit={{ opacity: 0 }}
+                            onClick={() => setSelectedBooking(null)}
+                            className="absolute inset-0 bg-black/40 backdrop-blur-sm"
+                        />
+                        <motion.div
+                            initial={{ opacity: 0, scale: 0.9, y: 20 }}
+                            animate={{ opacity: 1, scale: 1, y: 0 }}
+                            exit={{ opacity: 0, scale: 0.9, y: 20 }}
+                            className="bg-white w-full max-w-3xl rounded-[2rem] shadow-2xl overflow-hidden relative border border-slate-100 max-h-[90vh] overflow-y-auto premium-scrollbar"
+                        >
+                            {/* Modal Header */}
+                            <div className="bg-gradient-to-r from-[#794A05] to-[#5d3904] p-6 md:p-8 text-white sticky top-0 z-10">
+                                <button
+                                    onClick={() => setSelectedBooking(null)}
+                                    className="absolute top-6 right-6 p-2 rounded-full bg-white/10 hover:bg-white/20 transition-colors"
+                                >
+                                    <X className="w-5 h-5" />
+                                </button>
+                                <div className="flex items-center gap-4 mb-2">
+                                    <div className="w-10 h-10 md:w-12 md:h-12 bg-white/20 rounded-2xl flex items-center justify-center backdrop-blur-md">
+                                        <Calendar className="w-6 h-6 md:w-7 md:h-7" />
+                                    </div>
                                     <div>
-                                        <p className="text-[9px] text-orange-400 font-bold uppercase">Base: ₹{selectedBooking.packagePrice}</p>
-                                        <p className="text-[9px] text-orange-400 font-bold uppercase">Fee: + ₹{(selectedBooking.platformFee || 0)}</p>
+                                        <h3 className="text-xl md:text-2xl font-serif font-bold">Booking Details</h3>
+                                        <p className="text-white/80 text-xs md:text-sm">Comprehensive reservation summary</p>
                                     </div>
-                                    <p className="text-2xl font-black text-[#794A05]">₹{String((selectedBooking.packagePrice || 0) + (selectedBooking.platformFee || 0))}</p>
                                 </div>
                             </div>
-                            {selectedBooking.bookingDate && (
-                                <div className="p-4 bg-slate-50 rounded-2xl">
-                                    <p className="text-[10px] font-bold text-slate-400 uppercase mb-1">Scheduled Date</p>
-                                    <p className="font-bold text-slate-800">{formatDateDDMMYYYY(typeof selectedBooking.bookingDate === 'string' ? selectedBooking.bookingDate : (selectedBooking.bookingDate?.en || selectedBooking.bookingDate?.hi || selectedBooking.bookingDate?.mr || "N/A"), false)}</p>
-                                </div>
-                            )}
 
-                            {/* Status Management for Admin */}
-                            {hasPermission('bookings.manage') && selectedBooking.status === 'BOOKED' && (
-                                <div className="space-y-4 pt-4 border-t border-slate-100">
-                                    <p className="text-[10px] font-bold text-slate-400 uppercase">Update Status</p>
-
-                                    <div className="grid grid-cols-2 gap-3">
-                                        {/* <Button
-                                            variant="outline"
-                                            className="rounded-2xl h-12 border-rose-200 text-rose-600 hover:bg-rose-50"
-                                            onClick={() => handleUpdateStatus(selectedBooking.id, 'REJECTED')}
-                                            disabled={isProcessing}
-                                        >
-                                            Reject Booking
-                                        </Button> */}
-                                        <Button
-                                            className="bg-emerald-600 hover:bg-emerald-700 text-white rounded-2xl h-12 font-bold"
-                                            onClick={() => setConfirmCompleteId(selectedBooking.id)}
-                                            disabled={isProcessing}
-                                        >
-                                            {isProcessing ? "Processing..." : "Mark Completed"}
-                                        </Button>
+                            <div className="p-6 md:p-8 space-y-8">
+                                {/* Status Overview */}
+                                <div className="flex flex-col md:flex-row md:items-center justify-between p-4 bg-slate-50 rounded-2xl border border-slate-100 gap-4">
+                                    <div className="flex items-center gap-3">
+                                        <div className={`p-2 rounded-xl ${statusConfig[selectedBooking.status as keyof typeof statusConfig]?.color}`}>
+                                            {React.createElement(statusConfig[selectedBooking.status as keyof typeof statusConfig]?.icon || CheckCircle, { className: "w-5 h-5" })}
+                                        </div>
+                                        <div>
+                                            <p className="text-[10px] text-slate-400 font-bold uppercase tracking-widest">Current Status</p>
+                                            <p className="font-bold text-slate-700">{selectedBooking.status}</p>
+                                        </div>
+                                    </div>
+                                    <div className="flex flex-col md:items-end">
+                                        <p className="text-[10px] text-slate-400 font-bold uppercase tracking-widest">Ritual Date</p>
+                                        <Badge variant="outline" className="px-3 py-1 bg-white font-bold text-[#794A05] w-fit">
+                                            {formatDateDDMMYYYY(typeof selectedBooking.bookingDate === 'string' ? selectedBooking.bookingDate : (selectedBooking.bookingDate?.en || selectedBooking.bookingDate?.hi || selectedBooking.bookingDate?.mr || "N/A"), false)}
+                                        </Badge>
                                     </div>
                                 </div>
-                            )}
 
-                            {/* View Existing Proof Photos */}
-                            {selectedBooking.status === 'COMPLETED' && selectedBooking.proofPhotos && selectedBooking.proofPhotos.length > 0 && (
-                                <div className="space-y-3 pt-4 border-t border-slate-100">
-                                    <p className="text-[10px] font-bold text-slate-400 uppercase">Pooja Proof Photos</p>
-                            <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
-                                        {selectedBooking.proofPhotos.map((photo: string, i: number) => (
-                                            <a key={i} href={photo} target="_blank" rel="noopener noreferrer" className="relative aspect-video rounded-xl overflow-hidden border border-slate-100 group">
-                                                <img 
-                                                    src={photo.startsWith('http') ? photo : `${API_URL}${photo}`} 
-                                                    alt="Proof" 
-                                                    className="w-full h-full object-cover transition-transform group-hover:scale-110" 
-                                                    onError={(e) => {
-                                                        const target = e.target as HTMLImageElement;
-                                                        target.src = '/placeholder-image.jpg';
-                                                    }}
-                                                />
-                                                <div className="absolute inset-0 bg-black/20 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center">
-                                                    <Eye className="w-4 h-4 sm:w-5 sm:h-5 text-white" />
+                                {/* Information Grid */}
+                                <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
+                                    <div className="space-y-4">
+                                        <div>
+                                            <p className="text-[10px] text-slate-400 font-bold uppercase tracking-widest mb-1">Service & Temple</p>
+                                            <div className="space-y-1">
+                                                <div className="flex items-center gap-2 text-slate-800 font-bold text-lg">
+                                                    {parseLocalizedValue(selectedBooking.pooja?.name)}
                                                 </div>
-                                            </a>
-                                        ))}
+                                                <p className="text-sm font-semibold text-[#794A05] flex items-center gap-1.5">
+                                                    <Building2 className="w-3.5 h-3.5" />
+                                                    {selectedBooking.temple ? parseLocalizedValue(selectedBooking.temple.name) : "N/A"}
+                                                </p>
+                                                <p className="text-xs text-slate-500 font-medium">{parseLocalizedValue(selectedBooking.packageName)}</p>
+                                            </div>
+                                        </div>
+                                    </div>
+
+                                    <div className="space-y-4">
+                                        <div>
+                                            <p className="text-[10px] text-slate-400 font-bold uppercase tracking-widest mb-1">Primary Devotee</p>
+                                            <p className="text-slate-800 font-bold flex items-center gap-1.5 text-lg">
+                                                <User className="w-4 h-4 text-slate-400" />
+                                                {selectedBooking.devoteeName}
+                                            </p>
+                                        </div>
+                                        <div>
+                                            <p className="text-[10px] text-slate-400 font-bold uppercase tracking-widest mb-1">Contact Information</p>
+                                            <div className="space-y-1">
+                                                <p className="text-sm text-slate-700 font-medium flex items-center gap-1.5">
+                                                    <Phone className="w-3.5 h-3.5 text-slate-400" />
+                                                    {selectedBooking.devoteePhone}
+                                                </p>
+                                                <p className="text-sm text-slate-700 font-medium flex items-center gap-1.5">
+                                                    <Mail className="w-3.5 h-3.5 text-slate-400" />
+                                                    {selectedBooking.devoteeEmail || "N/A"}
+                                                </p>
+                                            </div>
+                                        </div>
                                     </div>
                                 </div>
-                            )}
-                        </div>
-                        <Button className="w-full mt-6 sm:mt-8 bg-[#794A05] hover:bg-[#5d3904] text-white h-12 sm:h-14 rounded-2xl font-bold text-sm sm:text-base" onClick={() => {
-                            setSelectedBooking(null);
-                            setProofPhotos([]);
-                        }}>Close Details</Button>
+
+                                {/* Spiritual & Personal Info */}
+                                {(selectedBooking.gotra || selectedBooking.rashi || selectedBooking.nakshatra || selectedBooking.dob || selectedBooking.anniversary || selectedBooking.kuldevi || selectedBooking.kuldevta) && (
+                                    <div className="grid grid-cols-2 md:grid-cols-3 gap-6 pt-6 border-t border-slate-100">
+                                        {selectedBooking.gotra && (
+                                            <div>
+                                                <p className="text-[10px] text-slate-400 font-bold uppercase tracking-widest mb-1">Gotra</p>
+                                                <p className="text-slate-700 font-bold">{selectedBooking.gotra}</p>
+                                            </div>
+                                        )}
+                                        {selectedBooking.rashi && (
+                                            <div>
+                                                <p className="text-[10px] text-slate-400 font-bold uppercase tracking-widest mb-1">Rashi</p>
+                                                <p className="text-slate-700 font-bold">{selectedBooking.rashi}</p>
+                                            </div>
+                                        )}
+                                        {selectedBooking.nakshatra && (
+                                            <div>
+                                                <p className="text-[10px] text-slate-400 font-bold uppercase tracking-widest mb-1">Nakshatra</p>
+                                                <p className="text-slate-700 font-bold">{selectedBooking.nakshatra}</p>
+                                            </div>
+                                        )}
+                                        {selectedBooking.dob && (
+                                            <div>
+                                                <p className="text-[10px] text-slate-400 font-bold uppercase tracking-widest mb-1">Birthday</p>
+                                                <p className="text-slate-700 font-bold">{format(new Date(selectedBooking.dob), "dd MMM yyyy")}</p>
+                                            </div>
+                                        )}
+                                        {selectedBooking.anniversary && (
+                                            <div>
+                                                <p className="text-[10px] text-slate-400 font-bold uppercase tracking-widest mb-1">Anniversary</p>
+                                                <p className="text-slate-700 font-bold">{format(new Date(selectedBooking.anniversary), "dd MMM yyyy")}</p>
+                                            </div>
+                                        )}
+                                        {selectedBooking.kuldevi && (
+                                            <div>
+                                                <p className="text-[10px] text-slate-400 font-bold uppercase tracking-widest mb-1">Kuldevi</p>
+                                                <p className="text-slate-700 font-bold">{selectedBooking.kuldevi}</p>
+                                            </div>
+                                        )}
+                                        {selectedBooking.kuldevta && (
+                                            <div>
+                                                <p className="text-[10px] text-slate-400 font-bold uppercase tracking-widest mb-1">Kuldevta</p>
+                                                <p className="text-slate-700 font-bold">{selectedBooking.kuldevta}</p>
+                                            </div>
+                                        )}
+                                    </div>
+                                )}
+
+                                {/* Additional Devotees */}
+                                {selectedBooking.additionalDevotees && selectedBooking.additionalDevotees.length > 0 && (
+                                    <div className="pt-6 border-t border-slate-100">
+                                        <p className="text-[10px] text-slate-400 font-bold uppercase tracking-widest mb-3">Additional Devotees</p>
+                                        <div className="space-y-3">
+                                            {selectedBooking.additionalDevotees.map((dev: any, i: number) => (
+                                                <div key={i} className="bg-slate-50 p-4 rounded-xl border border-slate-100 grid grid-cols-1 sm:grid-cols-2 md:grid-cols-4 gap-4">
+                                                    <div>
+                                                        <p className="text-[10px] text-slate-400 font-bold uppercase tracking-tight">Name</p>
+                                                        <p className="text-sm font-bold text-slate-700">{dev.name}</p>
+                                                    </div>
+                                                    {dev.gothra && (
+                                                        <div>
+                                                            <p className="text-[10px] text-slate-400 font-bold uppercase tracking-tight">Gotra</p>
+                                                            <p className="text-sm font-bold text-slate-700">{dev.gothra}</p>
+                                                        </div>
+                                                    )}
+                                                    {dev.kuldevi && (
+                                                        <div>
+                                                            <p className="text-[10px] text-slate-400 font-bold uppercase tracking-tight">Kuldevi</p>
+                                                            <p className="text-sm font-bold text-slate-700">{dev.kuldevi}</p>
+                                                        </div>
+                                                    )}
+                                                    {dev.kuldevta && (
+                                                        <div>
+                                                            <p className="text-[10px] text-slate-400 font-bold uppercase tracking-tight">Kuldevta</p>
+                                                            <p className="text-sm font-bold text-slate-700">{dev.kuldevta}</p>
+                                                        </div>
+                                                    )}
+                                                </div>
+                                            ))}
+                                        </div>
+                                    </div>
+                                )}
+
+                                {/* Extended Details */}
+                                <div className="grid grid-cols-1 md:grid-cols-2 gap-6 pt-6 border-t border-slate-100">
+                                    <div>
+                                        <p className="text-[10px] text-slate-400 font-bold uppercase tracking-widest mb-1">Delivery Address</p>
+                                        <p className="text-sm text-slate-700 font-medium bg-slate-50 p-3 rounded-xl border border-dashed border-slate-200 min-h-[80px]">
+                                            {selectedBooking.address || "No physical address provided."}
+                                        </p>
+                                    </div>
+                                    <div>
+                                        <p className="text-[10px] text-slate-400 font-bold uppercase tracking-widest mb-1">Special Requests</p>
+                                        <p className="text-sm text-slate-700 font-medium bg-slate-50 p-3 rounded-xl border border-dashed border-slate-200 min-h-[80px] italic">
+                                            "{selectedBooking.specialRequests || "No specific instructions."}"
+                                        </p>
+                                    </div>
+                                </div>
+
+                                {/* Proof Photos */}
+                                {selectedBooking.status === 'COMPLETED' && selectedBooking.proofPhotos && selectedBooking.proofPhotos.length > 0 && (
+                                    <div className="pt-6 border-t border-slate-100">
+                                        <p className="text-[10px] text-slate-400 font-bold uppercase tracking-widest mb-3">Pooja Proof Photos</p>
+                                        <div className="grid grid-cols-2 gap-4">
+                                            {selectedBooking.proofPhotos.map((photo: string, i: number) => (
+                                                <a key={i} href={photo.startsWith('http') ? photo : `${BASE_URL}${photo}`} target="_blank" rel="noopener noreferrer" className="relative aspect-video rounded-xl overflow-hidden border border-slate-100 group">
+                                                    <img src={photo.startsWith('http') ? photo : `${BASE_URL}${photo}`} alt="Proof" className="w-full h-full object-cover transition-transform group-hover:scale-110" />
+                                                    <div className="absolute inset-0 bg-black/20 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center">
+                                                        <Eye className="w-5 h-5 text-white" />
+                                                    </div>
+                                                </a>
+                                            ))}
+                                        </div>
+                                    </div>
+                                )}
+
+                                {/* Admin Actions */}
+                                <div className="pt-6 border-t border-slate-100 sticky bottom-0 bg-white pb-2">
+                                    <div className="flex items-center justify-between gap-4">
+                                        <div>
+                                            <p className="text-[10px] text-slate-400 font-bold uppercase tracking-widest mb-1">Total Payment</p>
+                                            <p className="text-2xl font-black text-[#794A05]">₹{String((selectedBooking.packagePrice || 0) + (selectedBooking.platformFee || 0))}</p>
+                                        </div>
+                                        <div className="flex gap-2">
+                                            {hasPermission('bookings.manage') && selectedBooking.status === 'BOOKED' && (
+                                                <Button
+                                                    onClick={() => setConfirmCompleteId(selectedBooking.id)}
+                                                    className="bg-emerald-600 hover:bg-emerald-700 text-white rounded-xl px-6 h-12 font-bold"
+                                                    disabled={isProcessing}
+                                                >
+                                                    Mark Completed
+                                                </Button>
+                                            )}
+                                            <Button 
+                                                variant="outline" 
+                                                className="rounded-xl h-12 px-6 font-bold border-slate-200 text-slate-600"
+                                                onClick={() => setSelectedBooking(null)}
+                                            >
+                                                Close Details
+                                            </Button>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </motion.div>
                     </div>
-                </div>
-            )}
+                )}
+            </AnimatePresence>
 
             {/* Mark Complete Confirmation Dialog */}
             <AnimatePresence>

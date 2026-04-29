@@ -69,8 +69,8 @@ export default function TempleRegistrationForm({ onClose }: { onClose?: () => vo
         website: "",
         mapUrl: "",
         operatingHours: [
-            { label: "Morning", start: "07:00 AM", end: "01:00 PM", active: true },
-            { label: "Evening", start: "05:00 PM", end: "10:00 PM", active: true }
+            { label: "Slot 1", start: "07:00 AM", end: "01:00 PM", active: true },
+            { label: "Slot 2", start: "05:00 PM", end: "10:00 PM", active: true }
         ],
         // Fixed stats for reg
         rating: "0",
@@ -255,13 +255,16 @@ export default function TempleRegistrationForm({ onClose }: { onClose?: () => vo
     };
 
     const addOperatingHour = () => {
-        setFormData(prev => ({
-            ...prev,
-            operatingHours: [
-                ...prev.operatingHours,
-                { label: "New Slot", start: "09:00 AM", end: "05:00 PM", active: true }
-            ]
-        }));
+        setFormData(prev => {
+            const slotNumber = prev.operatingHours.length + 1;
+            return {
+                ...prev,
+                operatingHours: [
+                    ...prev.operatingHours,
+                    { label: `Slot ${slotNumber}`, start: "09:00 AM", end: "05:00 PM", active: true }
+                ]
+            };
+        });
     };
 
     const removeOperatingHour = (index: number) => {

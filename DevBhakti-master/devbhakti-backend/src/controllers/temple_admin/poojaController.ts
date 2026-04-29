@@ -133,6 +133,14 @@ export const deleteMyPooja = async (req: Request, res: Response) => {
         await prisma.pooja.delete({ where: { id: String(id) } });
         res.json({ success: true, message: 'Pooja deleted successfully' });
     } catch (error: any) {
+        // Prisma error code P2003 is for foreign key constraint violation
+        if (error.code === 'P2003') {
+            return res.status(400).json({ 
+                success: false, 
+                message: 'Cannot delete this Pooja because it has existing bookings. Please disable it instead by turning off its status toggle to keep your records safe.' 
+            });
+        }
+        console.error('Delete Pooja Error:', error);
         res.status(500).json({ success: false, message: error.message });
     }
 };

@@ -19,6 +19,7 @@ export const getAllOrdersAdmin = async (req: Request, res: Response) => {
     if (search) {
       where.OR = [
         { id: { contains: search, mode: "insensitive" } },
+        { displayId: { contains: search, mode: "insensitive" } },
         { user: { name: { contains: search, mode: "insensitive" } } },
       ];
     }
@@ -105,7 +106,8 @@ export const downloadOrdersExcelAdmin = async (req: Request, res: Response) => {
     const worksheet = workbook.addWorksheet('Admin Orders Report');
 
     worksheet.columns = [
-      { header: 'Order ID', key: 'id', width: 30 },
+      { header: 'Order ID', key: 'displayId', width: 20 },
+      { header: 'Internal ID', key: 'id', width: 30 },
       { header: 'Devotee Name', key: 'devoteeName', width: 25 },
       { header: 'Phone', key: 'phone', width: 15 },
       { header: 'Total Amount', key: 'totalAmount', width: 15 },
@@ -128,6 +130,7 @@ export const downloadOrdersExcelAdmin = async (req: Request, res: Response) => {
       }).join(' | ');
 
       worksheet.addRow({
+        displayId: o.displayId || "N/A",
         id: o.id,
         devoteeName: o.user?.name || "N/A",
         phone: o.user?.phone || "N/A",

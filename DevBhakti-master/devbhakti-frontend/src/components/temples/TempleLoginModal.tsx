@@ -10,6 +10,7 @@ import { sendOTP, verifyOTP } from "@/api/authController";
 import { useRouter } from "next/navigation";
 import { useToast } from "@/hooks/use-toast";
 import { useLanguage } from "@/context/LanguageContext";
+import TempleRegistrationForm from "./TempleRegistrationForm";
 
 interface TempleLoginModalProps {
     onClose: () => void;
@@ -22,6 +23,7 @@ export default function TempleLoginModal({ onClose }: TempleLoginModalProps) {
     const t = (key: string) => baseT(`temple_login_modal.${key}`);
 
     const [showOtpInput, setShowOtpInput] = useState(false);
+    const [showRegistrationModal, setShowRegistrationModal] = useState(false);
     const [devOtp, setDevOtp] = useState<string | null>(null);
     const [loading, setLoading] = useState(false);
     const [otp, setOtp] = useState("");
@@ -212,12 +214,38 @@ export default function TempleLoginModal({ onClose }: TempleLoginModalProps) {
                     </button>
                     <p className="text-sm text-slate-400">
                         {t('footer.new_admin')}{" "}
-                        <a href="/temples/register" className="text-[#7b4623] font-bold underline">
+                        <button 
+                            onClick={() => setShowRegistrationModal(true)}
+                            className="text-[#7b4623] font-bold underline hover:text-[#5d351a] transition-colors"
+                        >
                             {t('footer.register')}
-                        </a>
+                        </button>
                     </p>
                 </div>
             </div>
+            
+            {/* Registration Modal */}
+            <AnimatePresence>
+                {showRegistrationModal && (
+                    <motion.div
+                        initial={{ opacity: 0 }}
+                        animate={{ opacity: 1 }}
+                        exit={{ opacity: 0 }}
+                        className="fixed inset-0 bg-black/50 backdrop-blur-sm z-50 flex items-center justify-center p-4"
+                        onClick={() => setShowRegistrationModal(false)}
+                    >
+                        <motion.div
+                            initial={{ opacity: 0, scale: 0.95 }}
+                            animate={{ opacity: 1, scale: 1 }}
+                            exit={{ opacity: 0, scale: 0.95 }}
+                            className="bg-white rounded-[2.5rem] shadow-2xl max-w-4xl w-full max-h-[90vh] overflow-y-auto"
+                            onClick={(e) => e.stopPropagation()}
+                        >
+                            <TempleRegistrationForm onClose={() => setShowRegistrationModal(false)} />
+                        </motion.div>
+                    </motion.div>
+                )}
+            </AnimatePresence>
         </div>
     );
 }

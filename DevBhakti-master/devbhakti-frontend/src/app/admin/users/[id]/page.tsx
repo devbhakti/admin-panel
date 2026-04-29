@@ -193,7 +193,7 @@ export default function DevoteeDetailPage() {
                             <div className="absolute -inset-1 bg-gradient-to-r from-primary to-orange-400 rounded-full blur opacity-25 group-hover:opacity-50 transition duration-1000 group-hover:duration-200"></div>
                             <div className="w-20 h-20 sm:w-28 sm:h-28 rounded-full bg-white p-1 relative">
                                 {user.profileImage ? (
-                                    <img src={user.profileImage} alt={user.name} className="w-full h-full rounded-full object-cover shadow-inner" />
+                                    <img src={user.profileImage.startsWith('http') ? user.profileImage : `${BASE_URL}${user.profileImage}`} alt={user.name} className="w-full h-full rounded-full object-cover shadow-inner" />
                                 ) : (
                                     <div className="w-full h-full rounded-full bg-slate-50 flex items-center justify-center border-2 border-slate-100">
                                         <User className="w-8 h-8 sm:w-12 sm:h-12 text-slate-300" />

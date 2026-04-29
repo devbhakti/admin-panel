@@ -12,6 +12,7 @@ import razorpay from '../../lib/razorpay';
 import { getCommissionForAmount } from '../admin/commissionSlabController';
 
 import { CommissionCategory, SlabType } from '@prisma/client';
+import { generateCustomId } from '../../utils/idGenerator';
 
 
 
@@ -239,15 +240,15 @@ export const createBooking = async (req: Request, res: Response) => {
 
 
         // Create booking and ledger entry in a transaction
+        const displayId = await generateCustomId('BKID');
 
         const booking = await prisma.$transaction(async (tx) => {
 
             const newBooking = await tx.poojaBooking.create({
 
                 data: {
-
+                    displayId,
                     userId,
-
                     poojaId: pooja.id,
                     templeId: effectiveTempleId,
 
@@ -297,7 +298,7 @@ export const createBooking = async (req: Request, res: Response) => {
                     commission: commissionAmount,
                     type: "POOJA_EARNING",
                     sourceId: newBooking.id,
-                    description: `Pooja Booking: ${getEnglish((pooja as any).name)} (${packageName})`,
+                    description: `Pooja Booking: ${getEnglish((pooja as any).name)} (${packageName}) [${displayId}]`,
                     status: "PENDING"
                 }
             });
@@ -322,11 +323,8 @@ export const createBooking = async (req: Request, res: Response) => {
             razorpayOrder: await razorpay.orders.create({
 
                 amount: Math.round((finalPrice + commissionAmount) * 100),
-
                 currency: "INR",
-
-                receipt: `pooja_rcpt_${booking.id.slice(-10)}`,
-
+                receipt: `pooja_rcpt_${(booking.displayId || booking.id).slice(-10)}`,
             })
 
         });
@@ -651,8 +649,7 @@ export const getBookingReceipt = async (req: Request, res: Response) => {
 
 
         const doc = new PDFDocument({ margin: 50, size: 'A4' });
-
-        const filename = `receipt-${booking.id.slice(-6)}.pdf`;
+        const filename = `receipt-${booking.displayId || booking.id.slice(-6)}.pdf`;
 
 
 
@@ -703,8 +700,7 @@ export const getBookingReceipt = async (req: Request, res: Response) => {
         // Receipt Info (Top Right)
 
         doc.fillColor(textColor).fontSize(10).font('Helvetica-Bold').text('BOOKING RECEIPT', 400, 55, { align: 'right' });
-
-        doc.font('Helvetica').fontSize(9).text(`No: #${booking.id.slice(0, 8).toUpperCase()}`, 400, 70, { align: 'right' });
+        doc.font('Helvetica').fontSize(9).text(`No: #${booking.displayId || booking.id.slice(0, 8).toUpperCase()}`, 400, 70, { align: 'right' });
 
         doc.text(`Date: ${new Date().toLocaleDateString('en-IN', { day: 'numeric', month: 'long', year: 'numeric' })}`, 400, 82, { align: 'right' });
 

@@ -59,7 +59,7 @@ export const initiateDonation = async (req: Request, res: Response) => {
         const razorpayOrder = await razorpay.orders.create(options);
 
         // Generate Custom Display ID
-        const displayId = generateDonationDisplayId();
+        const displayId = await generateDonationDisplayId();
 
         // Save Pending Donation Record
         const donation = await prisma.donation.create({

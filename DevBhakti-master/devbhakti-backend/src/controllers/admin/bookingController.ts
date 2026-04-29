@@ -26,6 +26,25 @@ export const getAllBookings = async (req: Request, res: Response) => {
             where.status = { not: 'PENDING' };
         }
 
+        if (search) {
+            where.OR = [
+                { devoteeName: { contains: search as string, mode: 'insensitive' } },
+                { devoteePhone: { contains: search as string, mode: 'insensitive' } },
+                { id: { contains: search as string, mode: 'insensitive' } },
+                { displayId: { contains: search as string, mode: 'insensitive' } },
+                { 
+                    temple: {
+                        OR: [
+                            { name: { path: ['en'], string_contains: search as string } },
+                            { name: { path: ['hi'], string_contains: search as string } },
+                            { name: { path: ['mr'], string_contains: search as string } },
+                            { location: { path: ['en'], string_contains: search as string } }
+                        ]
+                    }
+                }
+            ];
+        }
+
      
         if (startDate || endDate) {
             if (dateType === 'ritualDate') {
@@ -79,9 +98,18 @@ export const getAllBookings = async (req: Request, res: Response) => {
         ]);
 
         const lang = getLang(req);
+        const localizedBookings = localize(bookings, lang);
+
+        // Add explicit paymentStatus and deliveryStatus for "proper" API response
+        const enhancedBookings = localizedBookings.map((b: any) => ({
+            ...b,
+            paymentStatus: 'Success',
+            deliveryStatus: b.status
+        }));
+
         res.json({
             success: true,
-            data: localize(bookings, lang),
+            data: enhancedBookings,
             pagination: {
                 total,
                 page,
@@ -213,13 +241,75 @@ export const updateBookingStatus = async (req: Request, res: Response) => {
 
 export const downloadBookingsExcel = async (req: Request, res: Response) => {
     try {
-        console.log("Generating Bookings Excel...");
+        console.log("Generating Filtered Bookings Excel...");
+
+        const { status, search, startDate, endDate, dateType, sortBy, sortOrder, bookingId } = req.query;
+
+        let where: any = {};
+
+        if (bookingId) {
+            where.id = bookingId as string;
+        }
+
+        if (status && status !== 'all') {
+            where.status = status;
+        } else {
+            where.status = { not: 'PENDING' };
+        }
+
+        if (search) {
+            where.OR = [
+                { devoteeName: { contains: search as string, mode: 'insensitive' } },
+                { devoteePhone: { contains: search as string, mode: 'insensitive' } },
+                { id: { contains: search as string, mode: 'insensitive' } },
+                { displayId: { contains: search as string, mode: 'insensitive' } },
+                { 
+                    temple: {
+                        OR: [
+                            { name: { path: ['en'], string_contains: search as string } },
+                            { name: { path: ['hi'], string_contains: search as string } },
+                            { name: { path: ['mr'], string_contains: search as string } },
+                            { location: { path: ['en'], string_contains: search as string } }
+                        ]
+                    }
+                }
+            ];
+        }
+
+        if (startDate || endDate) {
+            if (dateType === 'ritualDate') {
+                where.bookingDate = {};
+                if (startDate) {
+                    const s = new Date(String(startDate)).toISOString().split('T')[0];
+                    where.bookingDate.gte = s;
+                }
+                if (endDate) {
+                    const e = new Date(String(endDate)).toISOString().split('T')[0];
+                    where.bookingDate.lte = e;
+                }
+            } else {
+                where.createdAt = {};
+                if (startDate) where.createdAt.gte = new Date(String(startDate));
+                if (endDate) where.createdAt.lte = new Date(String(endDate));
+            }
+        }
+
+        let orderByProp: any = { createdAt: 'desc' };
+        if (sortBy === 'ritualDate') {
+            orderByProp = { bookingDate: sortOrder === 'asc' ? 'asc' : 'desc' };
+        } else if (sortBy === 'bookingDate') {
+            orderByProp = { createdAt: sortOrder === 'asc' ? 'asc' : 'desc' };
+        }
 
         const bookings = await prisma.poojaBooking.findMany({
-            orderBy: { createdAt: 'desc' },
+            where,
+            orderBy: orderByProp,
             include: {
                 pooja: {
                     select: { name: true }
+                },
+                temple: {
+                    select: { name: true, location: true }
                 }
             }
         });
@@ -228,10 +318,12 @@ export const downloadBookingsExcel = async (req: Request, res: Response) => {
         const workbook = new ExcelJS.Workbook();
         const worksheet = workbook.addWorksheet('Pooja Bookings Report');
 
-        // 3. Columns define karein
+        // 3. Columns defined (Internal ID removed as requested)
         worksheet.columns = [
-            { header: 'Booking ID', key: 'id', width: 30 },
+            { header: 'Booking ID', key: 'displayId', width: 20 },
             { header: 'Pooja Service', key: 'poojaName', width: 30 },
+            { header: 'Temple Name', key: 'templeName', width: 30 },
+            { header: 'Temple Location', key: 'templeLocation', width: 30 },
             { header: 'Package Name', key: 'packageName', width: 30 },
             { header: 'Devotee Name', key: 'devoteeName', width: 30 },
             { header: 'Phone', key: 'devoteePhone', width: 20 },
@@ -239,12 +331,14 @@ export const downloadBookingsExcel = async (req: Request, res: Response) => {
             { header: 'Package Price', key: 'packagePrice', width: 15 },
             { header: 'Platform Fee', key: 'platformFee', width: 15 },
             { header: 'Total Amount', key: 'totalAmount', width: 15 },
-            { header: 'Status', key: 'status', width: 15 },
-            { header: 'Booking Date', key: 'bookingDate', width: 20 },
+            { header: 'Payment Status', key: 'paymentStatus', width: 15 },
+            { header: 'Delivery Status', key: 'deliveryStatus', width: 15 },
+            { header: 'Ritual Date', key: 'bookingDate', width: 20 },
             { header: 'Gothra', key: 'gothra', width: 20 },
             { header: 'Kuldevi', key: 'kuldevi', width: 20 },
             { header: 'Kuldevta', key: 'kuldevta', width: 20 },
             { header: 'DOB', key: 'dob', width: 15 },
+            { header: 'Anniversary', key: 'anniversary', width: 15 },
             { header: 'Native Place', key: 'nativePlace', width: 25 },
             { header: 'Address', key: 'address', width: 40 },
             { header: 'Special Requests', key: 'specialRequests', width: 40 },
@@ -258,15 +352,17 @@ export const downloadBookingsExcel = async (req: Request, res: Response) => {
         headerRow.fill = {
             type: 'pattern',
             pattern: 'solid',
-            fgColor: { argb: 'FF794A05' }, // Theme Color
+            fgColor: { argb: 'FF794A05' },
         };
         headerRow.alignment = { vertical: 'middle', horizontal: 'center' };
 
         // 5. Data Add karein
         bookings.forEach((b: any) => {
             worksheet.addRow({
-                id: b.id,
+                displayId: b.displayId || 'N/A',
                 poojaName: getEnglish(b.pooja?.name) || "N/A",
+                templeName: getEnglish(b.temple?.name) || "N/A",
+                templeLocation: getEnglish(b.temple?.location) || "N/A",
                 packageName: b.packageName || "",
                 devoteeName: b.devoteeName || "",
                 devoteePhone: b.devoteePhone || "",
@@ -274,12 +370,14 @@ export const downloadBookingsExcel = async (req: Request, res: Response) => {
                 packagePrice: b.packagePrice || 0,
                 platformFee: b.platformFee || 0,
                 totalAmount: (b.packagePrice || 0) + (b.platformFee || 0),
-                status: b.status,
+                paymentStatus: 'Success',
+                deliveryStatus: b.status,
                 bookingDate: b.bookingDate || "",
                 gothra: b.gothra || "",
                 kuldevi: b.kuldevi || "",
                 kuldevta: b.kuldevta || "",
                 dob: b.dob || "",
+                anniversary: b.anniversary || "",
                 nativePlace: b.nativePlace || "",
                 address: b.address || "",
                 specialRequests: b.specialRequests || "",

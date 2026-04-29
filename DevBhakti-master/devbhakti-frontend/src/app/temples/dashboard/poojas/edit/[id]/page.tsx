@@ -15,6 +15,13 @@ import { useToast } from "@/hooks/use-toast";
 import { API_URL } from "@/config/apiConfig";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from "@/components/ui/dialog";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { cn } from "@/lib/utils";
+import {
+    Tooltip,
+    TooltipContent,
+    TooltipProvider,
+    TooltipTrigger,
+} from "@/components/ui/tooltip";
 import { parseLocalizedValue } from "@/utils/textUtils";
 
 export default function TempleEditPoojaPage() {
@@ -68,11 +75,21 @@ export default function TempleEditPoojaPage() {
     };
 
     const toggleCategory = (catName: string) => {
-        setSelectedCats(prev =>
-            prev.includes(catName)
-                ? prev.filter(c => c !== catName)
-                : [...prev, catName]
-        );
+        setSelectedCats(prev => {
+            if (prev.includes(catName)) {
+                return prev.filter(c => c !== catName);
+            } else {
+                if (prev.length >= 5) {
+                    toast({
+                        title: "Limit Exceeded",
+                        description: "You can only select up to 5 categories.",
+                        variant: "destructive"
+                    });
+                    return prev;
+                }
+                return [...prev, catName];
+            }
+        });
     };
 
     const handleSuggestCategory = async () => {
@@ -386,9 +403,69 @@ export default function TempleEditPoojaPage() {
                 </Tabs>
 
                 <div className="space-y-6">
+                    <div className="space-y-4">
+                        <Label className="text-base font-semibold text-[#7b4623]">Pooja Image</Label>
+                        <div className="flex items-start gap-6">
+                            <div className="shrink-0">
+                                <div className="w-32 h-24 bg-slate-100 rounded-xl border-2 border-dashed border-slate-300 overflow-hidden">
+                                    {imagePreview ? (
+                                        <img 
+                                            src={imagePreview} 
+                                            alt="Pooja preview" 
+                                            className="w-full h-full object-cover"
+                                        />
+                                    ) : (
+                                        <div className="w-full h-full flex items-center justify-center text-slate-400">
+                                            <Upload className="w-8 h-8" />
+                                        </div>
+                                    )}
+                                </div>
+                            </div>
+                            <div className="flex-1 space-y-3">
+                                <div>
+                                    <input
+                                        type="file"
+                                        id="pooja-image"
+                                        accept="image/*"
+                                        onChange={handleImageChange}
+                                        className="hidden"
+                                    />
+                                    <Button
+                                        type="button"
+                                        onClick={() => document.getElementById('pooja-image')?.click()}
+                                        variant="outline"
+                                        className="rounded-xl border-dashed border-[#7b4623] text-[#7b4623] hover:bg-orange-50"
+                                    >
+                                        <Upload className="w-4 h-4 mr-2" />
+                                        Choose New Image
+                                    </Button>
+                                </div>
+                                {imagePreview && (
+                                    <Button
+                                        type="button"
+                                        onClick={() => {
+                                            setImageFile(null);
+                                            setImagePreview("");
+                                        }}
+                                        variant="ghost"
+                                        className="text-red-600 hover:text-red-700 hover:bg-red-50 rounded-xl"
+                                    >
+                                        <X className="w-4 h-4 mr-2" />
+                                        Remove Image
+                                    </Button>
+                                )}
+                                <p className="text-xs text-slate-500">
+                                    Upload a new image to replace the current one. Image will be cropped to 16:9 ratio.
+                                </p>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <div className="space-y-6">
                     <div className="space-y-4 md:col-span-2">
                         <div className="flex items-center justify-between">
-                            <Label className="text-base font-semibold text-[#7b4623]">Category/Purpose *</Label>
+                            <Label className="text-base font-semibold text-[#7b4623]">Category/Purpose </Label>
                             <Button
                                 type="button"
                                 variant="outline"
@@ -402,17 +479,32 @@ export default function TempleEditPoojaPage() {
 
                         <DropdownMenu>
                             <DropdownMenuTrigger asChild>
-                                <Button variant="outline" className="w-full justify-between h-11 rounded-xl border-slate-200 text-slate-600 hover:bg-transparent">
-                                    <span>Select purposes...</span>
-                                    <ChevronDown className="w-4 h-4 opacity-50" />
+                                <Button 
+                                    variant="outline" 
+                                    className="w-full justify-between h-14 rounded-2xl px-4 border-slate-200 bg-slate-50/50 hover:bg-white transition-all text-left font-normal"
+                                >
+                                    <div className="flex flex-wrap gap-1.5 items-center overflow-hidden py-1">
+                                        {selectedCats.length > 0 ? (
+                                            selectedCats.map((catName) => (
+                                                <span key={catName} className="bg-[#7b4623]/10 text-[#7b4623] text-[12px] font-medium px-3 py-1 rounded-lg border border-[#7b4623]/20 whitespace-nowrap">
+                                                    {parseLocalizedValue(catName)}
+                                                </span>
+                                            ))
+                                        ) : (
+                                            <span className="text-slate-400">Select categories for this pooja...</span>
+                                        )}
+                                    </div>
+                                    <ChevronDown className="w-4 h-4 opacity-50 shrink-0 ml-2 text-[#7b4623]" />
                                 </Button>
                             </DropdownMenuTrigger>
-                            <DropdownMenuContent className="w-[var(--radix-dropdown-menu-trigger-width)] max-h-64 overflow-y-auto">
+                            <DropdownMenuContent className="w-[var(--radix-dropdown-menu-trigger-width)] max-h-[400px] overflow-y-auto rounded-2xl shadow-2xl border-slate-100 p-2 animate-in slide-in-from-top-2 duration-200">
                                 {poojaCategories.map((cat) => (
                                     <DropdownMenuCheckboxItem
                                         key={cat.id}
                                         checked={selectedCats.includes(cat.name)}
+                                        onSelect={(e) => e.preventDefault()}
                                         onCheckedChange={() => toggleCategory(cat.name)}
+                                        className="rounded-xl mb-1 last:mb-0 h-10 cursor-pointer focus:bg-orange-50 focus:text-[#7b4623]"
                                     >
                                         {parseLocalizedValue(cat.name)}
                                     </DropdownMenuCheckboxItem>
@@ -420,20 +512,13 @@ export default function TempleEditPoojaPage() {
                             </DropdownMenuContent>
                         </DropdownMenu>
 
-                        <div className="flex flex-wrap gap-2 mt-3">
-                            {selectedCats.map(catName => (
-                                <div key={catName} className="flex items-center gap-1.5 bg-[#7b4623] text-white px-3 py-1.5 rounded-full text-sm">
-                                    <span>{parseLocalizedValue(catName)}</span>
-                                    <X
-                                        className="w-3.5 h-3.5 cursor-pointer hover:text-red-300"
-                                        onClick={() => toggleCategory(catName)}
-                                    />
-                                </div>
-                            ))}
-                        </div>
-
                         {selectedCats.length === 0 && (
-                            <p className="text-[10px] text-slate-400 italic">Select one or more purposes for this pooja</p>
+                            <p className="text-[11px] text-slate-400 italic pl-1">Select one or more purposes for this pooja (Max 5)</p>
+                        )}
+                        {selectedCats.length > 0 && (
+                            <p className="text-[11px] text-[#7b4623] font-medium pl-1">
+                                Selected {selectedCats.length} of 5 categories
+                            </p>
                         )}
                     </div>
                 </div>
@@ -445,24 +530,32 @@ export default function TempleEditPoojaPage() {
 
                     <div className="space-y-3">
                         <Label className="text-sm font-medium">Select Packages to Offer</Label>
-                        <div className="flex flex-wrap gap-3">
-                            {STATIC_PACKAGE_TYPES.map((ptype) => {
-                                const isSelected = formData.packages.some(p => p.name === ptype.name);
-                                return (
-                                    <Button
-                                        key={ptype.name}
-                                        type="button"
-                                        variant={isSelected ? "default" : "outline"}
-                                        onClick={() => togglePackage(ptype)}
-                                        className={`rounded-full px-6 transition-all ${isSelected ? 'bg-[#7b4623] hover:bg-[#5d351a] shadow-md border-transparent' : 'hover:border-[#7b4623] hover:text-[#7b4623]'}`}
-                                    >
-                                        {isSelected && <Plus className="w-4 h-4 mr-2 rotate-45" />}
-                                        {!isSelected && <Plus className="w-4 h-4 mr-2" />}
-                                        {ptype.name}
-                                    </Button>
-                                );
-                            })}
-                        </div>
+                        <TooltipProvider>
+                            <div className="flex flex-wrap gap-3">
+                                {STATIC_PACKAGE_TYPES.map((ptype) => {
+                                    const isSelected = formData.packages.some(p => p.name === ptype.name);
+                                    return (
+                                        <Tooltip key={ptype.name}>
+                                            <TooltipTrigger asChild>
+                                            <Button
+                                                type="button"
+                                                variant={isSelected ? "default" : "outline"}
+                                                onClick={() => togglePackage(ptype)}
+                                                className={`rounded-full px-6 transition-all ${isSelected ? 'bg-[#7b4623] hover:bg-[#5d351a] shadow-md border-transparent' : 'hover:border-[#7b4623] hover:text-[#7b4623]'}`}
+                                            >
+                                                {isSelected && <Plus className="w-4 h-4 mr-2 rotate-45" />}
+                                                {!isSelected && <Plus className="w-4 h-4 mr-2" />}
+                                                {ptype.name}
+                                            </Button>
+                                            </TooltipTrigger>
+                                            <TooltipContent>
+                                                <p>{ptype.description}</p>
+                                            </TooltipContent>
+                                        </Tooltip>
+                                    );
+                                })}
+                            </div>
+                        </TooltipProvider>
                     </div>
 
                     <div className="space-y-4">
@@ -492,8 +585,8 @@ export default function TempleEditPoojaPage() {
                                             <Input
                                                 placeholder="Details"
                                                 value={pkg.description}
-                                                onChange={(e) => updatePackage(index, 'description', e.target.value)}
-                                                className="h-10 border-slate-200"
+                                                readOnly
+                                                className="h-10 border-slate-200 bg-slate-50 cursor-not-allowed"
                                             />
                                         </div>
                                         <div className="sm:col-span-1 flex items-center justify-center">

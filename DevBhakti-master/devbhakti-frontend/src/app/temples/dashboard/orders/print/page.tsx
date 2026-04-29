@@ -305,7 +305,7 @@ function PrintLabelsContent() {
                                     <div className="column-content">
                                         <div className="detail-row">
                                             <span className="detail-label">INVOICE NO</span>
-                                            <span className="detail-value">: INV-{order.id.slice(-6).toUpperCase()}</span>
+                                            <span className="detail-value">: INV-{(order.displayId || order.id).slice(-6).toUpperCase()}</span>
                                         </div>
                                         <div className="detail-row">
                                             <span className="detail-label">INVOICE DATE</span>
@@ -313,7 +313,7 @@ function PrintLabelsContent() {
                                         </div>
                                         <div className="detail-row">
                                             <span className="detail-label">ORDER NO</span>
-                                            <span className="detail-value">: {parentOrder.id?.slice(-8).toUpperCase() || order.id.slice(-8).toUpperCase()}</span>
+                                            <span className="detail-value">: {parentOrder.displayId || parentOrder.id?.slice(-8).toUpperCase() || order.displayId || order.id.slice(-8).toUpperCase()}</span>
                                         </div>
                                         <div className="detail-row">
                                             <span className="detail-label">ORDER DATE</span>

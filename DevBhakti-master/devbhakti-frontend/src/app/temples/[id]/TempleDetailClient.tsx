@@ -992,7 +992,7 @@ export default function TempleDetail() {
                                 </div>
 
                                 <div className="pt-2">
-                                    <Button
+                                    {/* <Button
                                         variant="outline"
                                         className="w-full text-xs font-bold py-6 border-dashed border-primary/20 hover:border-primary/40 hover:bg-primary/5 rounded-xl text-primary"
                                         onClick={() => {
@@ -1003,7 +1003,7 @@ export default function TempleDetail() {
                                         }}
                                     >
                                         View All Poojas
-                                    </Button>
+                                    </Button> */}
                                 </div>
                             </div>
                         </div>

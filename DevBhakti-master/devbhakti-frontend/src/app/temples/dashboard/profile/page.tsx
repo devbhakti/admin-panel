@@ -540,7 +540,7 @@ export default function TempleProfilePage() {
                                 </CardHeader>
                                 <CardContent className="p-6 space-y-6">
                                     <div className="flex items-center justify-between p-4 bg-white/50 rounded-2xl border border-white/40">
-                                        <Label className="text-sm font-bold text-slate-700">Online Visibility</Label>
+                                        <Label className="text-sm font-bold text-slate-700">Live Darshan</Label>
                                         <Switch checked={formData.isLive} onCheckedChange={v => setFormData({...formData, isLive: v})} />
                                     </div>
                                     {formData.isLive && (

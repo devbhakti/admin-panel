@@ -134,7 +134,10 @@ function TemplesContent() {
         urlType: "slug",
         slabs: [],
         poojaSlabs: [],
-        marketplaceSlabs: []
+        marketplaceSlabs: [],
+        donationSlabs: [],
+        poojaRateType: "DEFAULT",
+        marketplaceRateType: "DEFAULT"
     });
 
     // Excel feature states
@@ -707,6 +710,14 @@ function TemplesContent() {
                     category: 'MARKETPLACE'
                 }));
 
+                const donationSlabs = uniqueSlabs.filter((s: any) => s.category === 'DONATION').map((s: any) => ({
+                    minAmount: s.minAmount,
+                    maxAmount: s.maxAmount,
+                    platformFee: s.platformFee.toString(),
+                    percentage: s.percentage.toString(),
+                    category: 'DONATION'
+                }));
+
                 setApprovalData({
                     id,
                     slug: generatedSlug,
@@ -714,6 +725,9 @@ function TemplesContent() {
                     urlType: "slug",
                     poojaSlabs,
                     marketplaceSlabs,
+                    donationSlabs,
+                    poojaRateType: "DEFAULT",
+                    marketplaceRateType: "DEFAULT",
                     slabs: [] // Keeping this for backward compatibility if needed, but we rely on split slabs
                 });
                 setApprovalModalOpen(true);
@@ -744,19 +758,26 @@ function TemplesContent() {
                     subdomain: approvalData.subdomain,
                     urlType: approvalData.urlType,
                     commissionSlabs: [
-                        ...approvalData.poojaSlabs.map((s: any) => ({
+                        ...(approvalData.poojaRateType === 'CUSTOM' ? approvalData.poojaSlabs.map((s: any) => ({
                             minAmount: parseFloat(s.minAmount),
                             maxAmount: s.maxAmount ? parseFloat(s.maxAmount) : null,
                             platformFee: parseFloat(s.platformFee),
                             percentage: parseFloat(s.percentage),
                             category: 'POOJA'
-                        })),
-                        ...approvalData.marketplaceSlabs.map((s: any) => ({
+                        })) : []),
+                        ...(approvalData.marketplaceRateType === 'CUSTOM' ? approvalData.marketplaceSlabs.map((s: any) => ({
                             minAmount: parseFloat(s.minAmount),
                             maxAmount: s.maxAmount ? parseFloat(s.maxAmount) : null,
                             platformFee: parseFloat(s.platformFee),
                             percentage: parseFloat(s.percentage),
                             category: 'MARKETPLACE'
+                        })) : []),
+                        ...approvalData.donationSlabs.map((s: any) => ({
+                            minAmount: parseFloat(s.minAmount),
+                            maxAmount: s.maxAmount ? parseFloat(s.maxAmount) : null,
+                            platformFee: parseFloat(s.platformFee),
+                            percentage: parseFloat(s.percentage),
+                            category: 'DONATION'
                         }))
                     ]
                 }
@@ -1097,7 +1118,7 @@ function TemplesContent() {
                                             </TableCell>
                                             <TableCell>
                                                 <Badge variant="outline" className="font-mono text-xs">
-                                                    {inst.templeId || "N/A"}
+                                                    {inst.temple?.displayId || inst.templeId || "N/A"}
                                                 </Badge>
                                             </TableCell>
                                             <TableCell>
@@ -1165,7 +1186,7 @@ function TemplesContent() {
                                                     {/* Active/Inactive Status */}
                                                     <div className="flex items-center gap-2">
                                                         <div className={`flex items-center gap-1.5 px-2.5 py-1 rounded-md text-xs font-medium ${inst.temple?.isActive
-                                                            ? 'bg-emerald-50 text-emerald-700 border border-emerald-200'
+                                                            ? (inst.isVerified ? 'bg-emerald-50 text-emerald-700 border border-emerald-200' : 'bg-red-50 text-red-700 border border-red-200')
                                                             : 'bg-slate-50 text-slate-500 border border-slate-200'
                                                             }`}>
                                                             {inst.temple?.isActive ? (
@@ -1256,7 +1277,7 @@ function TemplesContent() {
                                                 </div>
                                             </div>
                                             <Badge variant="outline" className="font-mono text-xs">
-                                                {inst.templeId || "N/A"}
+                                                {inst.temple?.displayId || inst.templeId || "N/A"}
                                             </Badge>
                                         </div>
 
@@ -1431,7 +1452,7 @@ function TemplesContent() {
                                             </TableCell>
                                             <TableCell>
                                                 <Badge variant="outline" className="font-mono text-xs">
-                                                    {inst.templeId || "N/A"}
+                                                    {inst.temple?.displayId || inst.templeId || "N/A"}
                                                 </Badge>
                                             </TableCell>
                                             <TableCell>
@@ -1494,7 +1515,7 @@ function TemplesContent() {
                                                     {/* Active/Inactive Status */}
                                                     <div className="flex items-center gap-2">
                                                         <div className={`flex items-center gap-1.5 px-2.5 py-1 rounded-md text-xs font-medium ${inst.temple?.isActive
-                                                            ? 'bg-emerald-50 text-emerald-700 border border-emerald-200'
+                                                            ? (inst.isVerified ? 'bg-emerald-50 text-emerald-700 border border-emerald-200' : 'bg-red-50 text-red-700 border border-red-200')
                                                             : 'bg-slate-50 text-slate-500 border border-slate-200'
                                                             }`}>
                                                             {inst.temple?.isActive ? (
@@ -1585,7 +1606,7 @@ function TemplesContent() {
                                                 </div>
                                             </div>
                                             <Badge variant="outline" className="font-mono text-xs">
-                                                {inst.templeId || "N/A"}
+                                                {inst.temple?.displayId || inst.templeId || "N/A"}
                                             </Badge>
                                         </div>
 
@@ -1860,7 +1881,18 @@ function TemplesContent() {
 
                         {/* Slab management - Pooja */}
                         <div className="space-y-4">
-                            <label className="text-sm font-bold text-slate-800 uppercase tracking-widest text-[11px]">🕉️ Pooja Platform Fee Slabs</label>
+                            <div className="flex items-center justify-between">
+                                <label className="text-sm font-bold text-slate-800 uppercase tracking-widest text-[11px]">🕉️ Pooja Platform Fee Slabs</label>
+                                <div className="flex items-center gap-3 bg-slate-100/50 p-1 rounded-lg border border-slate-200">
+                                    <span className={`text-[9px] font-bold ${approvalData.poojaRateType === "DEFAULT" ? "text-primary" : "text-muted-foreground"}`}>DEFAULT</span>
+                                    <Switch
+                                        checked={approvalData.poojaRateType === "CUSTOM"}
+                                        onCheckedChange={(checked) => setApprovalData({ ...approvalData, poojaRateType: checked ? "CUSTOM" : "DEFAULT" })}
+                                        className="scale-75"
+                                    />
+                                    <span className={`text-[9px] font-bold ${approvalData.poojaRateType === "CUSTOM" ? "text-orange-600" : "text-muted-foreground"}`}>CUSTOM</span>
+                                </div>
+                            </div>
                             <div className="space-y-3 bg-slate-50 p-4 rounded-xl border border-slate-200">
                                 {approvalData.poojaSlabs?.length > 0 ? (
                                     approvalData.poojaSlabs.map((slab: any, index: number) => (
@@ -1881,6 +1913,7 @@ function TemplesContent() {
                                                         }}
                                                         className="pl-5 h-8 text-xs font-mono"
                                                         placeholder="Fee"
+                                                        disabled={approvalData.poojaRateType === "DEFAULT"}
                                                     />
                                                 </div>
                                                 <div className="relative flex-1">
@@ -1895,6 +1928,7 @@ function TemplesContent() {
                                                         }}
                                                         className="pr-5 h-8 text-xs text-right font-mono"
                                                         placeholder="%"
+                                                        disabled={approvalData.poojaRateType === "DEFAULT"}
                                                     />
                                                     <span className="absolute right-2 top-1/2 -translate-y-1/2 text-[10px] text-slate-400 font-mono">%</span>
                                                 </div>
@@ -1909,7 +1943,18 @@ function TemplesContent() {
 
                         {/* Slab management - Marketplace */}
                         <div className="space-y-4">
-                            <label className="text-sm font-bold text-slate-800 uppercase tracking-widest text-[11px]">🛍️ Marketplace Platform Fee Slabs</label>
+                            <div className="flex items-center justify-between">
+                                <label className="text-sm font-bold text-slate-800 uppercase tracking-widest text-[11px]">🛍️ Marketplace Platform Fee Slabs</label>
+                                <div className="flex items-center gap-3 bg-slate-100/50 p-1 rounded-lg border border-slate-200">
+                                    <span className={`text-[9px] font-bold ${approvalData.marketplaceRateType === "DEFAULT" ? "text-primary" : "text-muted-foreground"}`}>DEFAULT</span>
+                                    <Switch
+                                        checked={approvalData.marketplaceRateType === "CUSTOM"}
+                                        onCheckedChange={(checked) => setApprovalData({ ...approvalData, marketplaceRateType: checked ? "CUSTOM" : "DEFAULT" })}
+                                        className="scale-75"
+                                    />
+                                    <span className={`text-[9px] font-bold ${approvalData.marketplaceRateType === "CUSTOM" ? "text-orange-600" : "text-muted-foreground"}`}>CUSTOM</span>
+                                </div>
+                            </div>
                             <div className="space-y-3 bg-slate-50 p-4 rounded-xl border border-slate-200">
                                 {approvalData.marketplaceSlabs?.length > 0 ? (
                                     approvalData.marketplaceSlabs.map((slab: any, index: number) => (
@@ -1930,6 +1975,7 @@ function TemplesContent() {
                                                         }}
                                                         className="pl-5 h-8 text-xs font-mono"
                                                         placeholder="Fee"
+                                                        disabled={approvalData.marketplaceRateType === "DEFAULT"}
                                                     />
                                                 </div>
                                                 <div className="relative flex-1">
@@ -1944,6 +1990,7 @@ function TemplesContent() {
                                                         }}
                                                         className="pr-5 h-8 text-xs text-right font-mono"
                                                         placeholder="%"
+                                                        disabled={approvalData.marketplaceRateType === "DEFAULT"}
                                                     />
                                                     <span className="absolute right-2 top-1/2 -translate-y-1/2 text-[10px] text-slate-400 font-mono">%</span>
                                                 </div>
@@ -1952,6 +1999,24 @@ function TemplesContent() {
                                     ))
                                 ) : (
                                     <p className="text-[10px] text-center text-slate-400 py-2 italic font-mono">No Marketplace slabs defined.</p>
+                                )}
+                            </div>
+                        </div>
+
+                        {/* Slab management - Donation */}
+                        <div className="space-y-4">
+                            <label className="text-sm font-bold text-slate-800 uppercase tracking-widest text-[11px]">💳 Donation Platform Fee</label>
+                            <div className="space-y-3 bg-slate-50 p-4 rounded-xl border border-slate-200">
+                                {approvalData.donationSlabs?.length > 0 ? (
+                                    <div className="flex flex-wrap gap-2">
+                                        {approvalData.donationSlabs.map((slab: any, index: number) => (
+                                            <Badge key={index} variant="outline" className="bg-white text-emerald-700 border-emerald-200 font-mono px-4 py-2 text-[11px] shadow-sm">
+                                                {slab.percentage}% Platform Commission
+                                            </Badge>
+                                        ))}
+                                    </div>
+                                ) : (
+                                    <p className="text-[10px] text-center text-slate-400 py-2 italic font-mono">No Donation slabs defined.</p>
                                 )}
                             </div>
                         </div>

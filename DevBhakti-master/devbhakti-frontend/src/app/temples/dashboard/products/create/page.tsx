@@ -351,7 +351,7 @@ export default function CreateTempleProductPage() {
                                             </div>
 
                                             <div className="space-y-2">
-                                                <Label htmlFor={`description_${lang}`}>Short Description * ({lang.toUpperCase()})</Label>
+                                                <Label htmlFor={`description_${lang}`}>Description * ({lang.toUpperCase()})</Label>
                                                 <Textarea
                                                     id={`description_${lang}`}
                                                     value={(formData as any)[`description_${lang}`]}
@@ -364,7 +364,7 @@ export default function CreateTempleProductPage() {
                                             </div>
 
                                             <div className="space-y-2">
-                                                <Label htmlFor={`highlights_${lang}`}>Highlights ({lang.toUpperCase()})</Label>
+                                                <Label htmlFor={`highlights_${lang}`}>Highlights (comma seprate) ({lang.toUpperCase()})</Label>
                                                 <Textarea
                                                     id={`highlights_${lang}`}
                                                     value={(formData as any)[`highlights_${lang}`]}
@@ -406,10 +406,11 @@ export default function CreateTempleProductPage() {
                                     </div>
 
                                     <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                                        <div className="space-y-2">
+                                        {/* <div className="space-y-2">
                                             <Label htmlFor="origin">Origin</Label>
                                             <Input id="origin" value={formData.origin} onChange={(e) => setFormData({ ...formData, origin: e.target.value })} />
-                                        </div>
+                                            <p className="text-xs text-muted-foreground">From add new product form</p>
+                                        </div> */}
                                         <div className="space-y-2">
                                             <Label htmlFor="rating">Base Rating (1-5)</Label>
                                             <Input

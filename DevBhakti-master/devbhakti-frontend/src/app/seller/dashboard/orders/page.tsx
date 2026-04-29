@@ -20,7 +20,8 @@ import {
     ArrowLeft,
     Loader2,
     Package,
-    Download
+    Download,
+    Printer
 } from "lucide-react";
 import * as XLSX from 'xlsx';
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
@@ -55,12 +56,14 @@ import { fetchSellerOrders, updateSellerSubOrderStatus, fetchSellerProfile } fro
 import { BASE_URL } from "@/config/apiConfig";
 import { useAdminAuth } from "@/hooks/use-admin-auth";
 
-import { useSearchParams } from "next/navigation";
+import { useSearchParams, useRouter } from "next/navigation";
 export default function SellerOrdersPage() {
     const [orders, setOrders] = useState<any[]>([]);
     const [isLoading, setIsLoading] = useState(true);
     const [searchQuery, setSearchQuery] = useState("");
     const [selectedOrder, setSelectedOrder] = useState<any>(null);
+    const [statusConfirm, setStatusConfirm] = useState<{ id: string; status: string } | null>(null);
+    const router = useRouter();
     const { toast } = useToast();
     const searchParams = useSearchParams();
     const statusFilter = searchParams.get("status")?.toUpperCase();
@@ -84,6 +87,10 @@ export default function SellerOrdersPage() {
         } finally {
             setIsLoading(false);
         }
+    };
+
+    const handleSinglePrint = (order: any) => {
+        router.push(`/seller/dashboard/orders/print?ids=${order.id}`);
     };
 
     const handleStatusUpdate = async (subOrderId: string, status: string) => {
@@ -140,7 +147,9 @@ export default function SellerOrdersPage() {
 
     const filteredOrders = orders.filter((o) => {
         const matchesSearch = (o.id || "").toLowerCase().includes(searchQuery.toLowerCase()) ||
-            (o.order?.user?.name || "").toLowerCase().includes(searchQuery.toLowerCase());
+            (o.displayId || "").toLowerCase().includes(searchQuery.toLowerCase()) ||
+            (o.order?.user?.name || "").toLowerCase().includes(searchQuery.toLowerCase()) ||
+            (o.order?.displayId || "").toLowerCase().includes(searchQuery.toLowerCase());
 
         const matchesStatus = statusFilter ? o.status === statusFilter : true;
 
@@ -268,7 +277,7 @@ export default function SellerOrdersPage() {
                                     >
                                         <td className="py-6 pl-8">
                                             <span className="font-mono text-xs font-bold text-[#794A05] bg-orange-50 px-2 py-1 rounded">
-                                                #{order.id.slice(-8).toUpperCase()}
+                                                {order.displayId || `#${order.id.slice(-8).toUpperCase()}`}
                                             </span>
                                         </td>
                                         <td className="py-6">
@@ -296,12 +305,21 @@ export default function SellerOrdersPage() {
                                             </Badge>
                                         </td>
                                         <td className="py-6 pr-8 text-right">
-                                            <button
-                                                className="h-9 w-9 flex items-center justify-center rounded-xl bg-slate-50 text-slate-600 hover:bg-[#794A05]/10 hover:text-[#794A05] transition-all"
-                                                onClick={() => setSelectedOrder(order)}
-                                            >
-                                                <Eye className="w-4 h-4" />
-                                            </button>
+                                            <div className="flex items-center justify-end gap-2">
+                                                <button
+                                                    className="h-9 w-9 flex items-center justify-center rounded-xl bg-slate-50 text-slate-600 hover:bg-[#794A05]/10 hover:text-[#794A05] transition-all"
+                                                    onClick={() => handleSinglePrint(order)}
+                                                    title="Print Label"
+                                                >
+                                                    <Printer className="w-4 h-4" />
+                                                </button>
+                                                <button
+                                                    className="h-9 w-9 flex items-center justify-center rounded-xl bg-slate-50 text-slate-600 hover:bg-[#794A05]/10 hover:text-[#794A05] transition-all"
+                                                    onClick={() => setSelectedOrder(order)}
+                                                >
+                                                    <Eye className="w-4 h-4" />
+                                                </button>
+                                            </div>
                                         </td>
                                     </TableRow>
                                 ))
@@ -321,17 +339,24 @@ export default function SellerOrdersPage() {
                                     <div>
                                         <p className="text-[10px] font-bold text-slate-400 uppercase tracking-[0.2em] mb-1">Order Details</p>
                                         <DialogTitle className="text-2xl font-bold text-slate-900 font-serif">
-                                            ID: #{selectedOrder.id.toUpperCase()}
+                                            ID: {selectedOrder.displayId || `#${selectedOrder.id.slice(-8).toUpperCase()}`}
                                         </DialogTitle>
                                         <p className="text-slate-500 font-bold mt-1 text-xs uppercase tracking-widest">
                                             Placed on {format(new Date(selectedOrder.createdAt), "dd MMMM yyyy")}
                                         </p>
                                     </div>
                                     <div className="flex items-center gap-4">
+                                        <Button
+                                            onClick={() => handleSinglePrint(selectedOrder)}
+                                            className="bg-[#794A05] hover:bg-[#5d3904] text-white rounded-xl px-6 flex items-center gap-2"
+                                        >
+                                            <Printer className="w-4 h-4" />
+                                            Print Label
+                                        </Button>
                                         {canManageOrders ? (
                                             <Select
                                                 defaultValue={selectedOrder.status}
-                                                onValueChange={(val) => handleStatusUpdate(selectedOrder.id, val)}
+                                                onValueChange={(val) => setStatusConfirm({ id: selectedOrder.id, status: val })}
                                             >
                                                 <SelectTrigger className="w-full sm:w-[180px] h-11 font-extrabold border-slate-200 rounded-2xl bg-white shadow-sm ring-offset-orange-50 focus:ring-[#794A05]">
                                                     <SelectValue />
@@ -481,6 +506,43 @@ export default function SellerOrdersPage() {
                             </div>
                         </div>
                     )}
+                </DialogContent>
+            </Dialog>
+
+            {/* Status Change Confirmation Dialog */}
+            <Dialog open={!!statusConfirm} onOpenChange={(open) => !open && setStatusConfirm(null)}>
+                <DialogContent className="max-w-md rounded-3xl p-8 border-none shadow-2xl bg-white">
+                    <DialogHeader>
+                        <div className="w-16 h-16 bg-amber-50 rounded-full flex items-center justify-center mb-4 mx-auto border border-amber-100">
+                            <Truck className="w-8 h-8 text-[#794A05]" />
+                        </div>
+                        <DialogTitle className="text-xl font-bold text-slate-900 text-center">
+                            Confirm Status Change
+                        </DialogTitle>
+                        <div className="text-slate-500 text-center mt-2 font-medium">
+                            Are you sure you want to change the status of this sacred order to <span className="text-[#794A05] font-black underline decoration-orange-200">{statusConfirm?.status}</span>?
+                        </div>
+                    </DialogHeader>
+                    <div className="flex gap-4 mt-8">
+                        <Button 
+                            variant="outline" 
+                            className="flex-1 h-12 rounded-2xl font-bold border-slate-200 hover:bg-slate-50"
+                            onClick={() => setStatusConfirm(null)}
+                        >
+                            Cancel
+                        </Button>
+                        <Button 
+                            className="flex-1 h-12 rounded-2xl font-black bg-[#794A05] hover:bg-[#5d3904] text-white shadow-lg shadow-orange-100"
+                            onClick={() => {
+                                if (statusConfirm) {
+                                    handleStatusUpdate(statusConfirm.id, statusConfirm.status);
+                                    setStatusConfirm(null);
+                                }
+                            }}
+                        >
+                            Yes, Update
+                        </Button>
+                    </div>
                 </DialogContent>
             </Dialog>
         </div>

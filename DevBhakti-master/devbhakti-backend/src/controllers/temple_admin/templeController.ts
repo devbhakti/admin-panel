@@ -107,14 +107,14 @@ export const registerTemple = async (req: Request, res: Response) => {
       const temple = await tx.temple.create({
         data: {
           templeId: templeId,
-          name: JSON.stringify(buildLangJson(data.name_en || data.templeName || 'New Temple', data.name_hi, data.name_mr)),
-          category: JSON.stringify(buildLangJson(data.category_en || data.category || 'Sacred', data.category_hi, data.category_mr)),
+          name: buildLangJson(data.name_en || data.templeName || 'New Temple', data.name_hi, data.name_mr),
+          category: buildLangJson(data.category_en || data.category || 'Sacred', data.category_hi, data.category_mr),
           openTime: data.openTime || '',
           operatingHours: operatingHours,
-          description: JSON.stringify(buildLangJson(data.description_en || data.description || '', data.description_hi, data.description_mr)),
-          history: JSON.stringify(buildLangJson(data.history_en || data.history || '', data.history_hi, data.history_mr)),
-          location: JSON.stringify(buildLangJson(data.location_en || data.location || '', data.location_hi, data.location_mr)),
-          fullAddress: JSON.stringify(buildLangJson(data.fullAddress_en || data.fullAddress || '', data.fullAddress_hi, data.fullAddress_mr)),
+          description: buildLangJson(data.description_en || data.description || '', data.description_hi, data.description_mr),
+          history: buildLangJson(data.history_en || data.history || '', data.history_hi, data.history_mr),
+          location: buildLangJson(data.location_en || data.location || '', data.location_hi, data.location_mr),
+          fullAddress: buildLangJson(data.fullAddress_en || data.fullAddress || '', data.fullAddress_hi, data.fullAddress_mr),
           phone: data.phone || '',
           website: data.website,
           mapUrl: data.mapUrl,
@@ -135,7 +135,7 @@ export const registerTemple = async (req: Request, res: Response) => {
               date: ev.date,
             }))
           },
-          pickupLocation: JSON.stringify(buildLangJson(`TEMPLE_${Math.random().toString(36).substring(2, 7).toUpperCase()}`, null, null))
+          pickupLocation: buildLangJson(`TEMPLE_${Math.random().toString(36).substring(2, 7).toUpperCase()}`, null, null)
         }
       });
 
@@ -571,104 +571,176 @@ export const getTempleDevotees = async (req: Request, res: Response) => {
       orderBy: { createdAt: 'desc' }
     });
 
-    // Process Pooja Bookers
+    // Process Lists
     const poojaDevoteesMap = new Map();
+    const productDevoteesMap = new Map();
+    const allDevoteesMap = new Map();
+    
+    // Process Pooja Bookers
     poojaBookings.forEach(booking => {
-      if (!booking.user) return;
-      if (!poojaDevoteesMap.has(booking.userId)) {
-        poojaDevoteesMap.set(booking.userId, {
-          ...booking.user,
-          lastInteraction: booking.createdAt,
-          totalInteractions: 0,
-          totalSpent: 0,
-          type: 'POOJA'
-        });
-      }
-      const devotee = poojaDevoteesMap.get(booking.userId);
-      devotee.totalInteractions += 1;
-      devotee.totalSpent += booking.packagePrice;
-      if (new Date(booking.createdAt) > new Date(devotee.lastInteraction)) {
-        devotee.lastInteraction = booking.createdAt;
-      }
+        if (!booking.user) return;
+        const userId = booking.userId;
+        
+        // Individual list
+        if (!poojaDevoteesMap.has(userId)) {
+            poojaDevoteesMap.set(userId, {
+                ...booking.user,
+                lastInteraction: booking.createdAt,
+                totalInteractions: 0,
+                totalSpent: 0,
+                type: 'POOJA'
+            });
+        }
+        const pDevotee = poojaDevoteesMap.get(userId);
+        pDevotee.totalInteractions += 1;
+        pDevotee.totalSpent += booking.packagePrice;
+        if (new Date(booking.createdAt) > new Date(pDevotee.lastInteraction)) {
+            pDevotee.lastInteraction = booking.createdAt;
+        }
+
+        // All list
+        if (!allDevoteesMap.has(userId)) {
+            allDevoteesMap.set(userId, {
+                ...booking.user,
+                lastInteraction: booking.createdAt,
+                totalInteractions: 0,
+                totalSpent: 0,
+                type: 'POOJA'
+            });
+        }
+        const aDevotee = allDevoteesMap.get(userId);
+        aDevotee.totalInteractions += 1;
+        aDevotee.totalSpent += booking.packagePrice;
+        if (new Date(booking.createdAt) > new Date(aDevotee.lastInteraction)) {
+            aDevotee.lastInteraction = booking.createdAt;
+        }
     });
 
     // Process Product Customers
-    const productDevoteesMap = new Map();
     productSubOrders.forEach(subOrder => {
-      if (!subOrder.order.user) return;
-      if (!productDevoteesMap.has(subOrder.order.userId)) {
-        productDevoteesMap.set(subOrder.order.userId, {
-          ...subOrder.order.user,
-          lastInteraction: subOrder.createdAt,
-          totalInteractions: 0,
-          totalSpent: 0,
-          type: 'PRODUCT'
-        });
-      }
-      const devotee = productDevoteesMap.get(subOrder.order.userId);
-      devotee.totalInteractions += 1;
-      devotee.totalSpent += subOrder.totalAmount;
-      if (new Date(subOrder.createdAt) > new Date(devotee.lastInteraction)) {
-        devotee.lastInteraction = subOrder.createdAt;
-      }
+        if (!subOrder.order.user) return;
+        const userId = subOrder.order.userId;
+
+        // Individual list
+        if (!productDevoteesMap.has(userId)) {
+            productDevoteesMap.set(userId, {
+                ...subOrder.order.user,
+                lastInteraction: subOrder.createdAt,
+                totalInteractions: 0,
+                totalSpent: 0,
+                type: 'PRODUCT'
+            });
+        }
+        const prDevotee = productDevoteesMap.get(userId);
+        prDevotee.totalInteractions += 1;
+        prDevotee.totalSpent += subOrder.totalAmount;
+        if (new Date(subOrder.createdAt) > new Date(prDevotee.lastInteraction)) {
+            prDevotee.lastInteraction = subOrder.createdAt;
+        }
+
+        // All list
+        if (!allDevoteesMap.has(userId)) {
+            allDevoteesMap.set(userId, {
+                ...subOrder.order.user,
+                lastInteraction: subOrder.createdAt,
+                totalInteractions: 0,
+                totalSpent: 0,
+                type: 'PRODUCT'
+            });
+        } else {
+            const aDevotee = allDevoteesMap.get(userId);
+            aDevotee.type = 'BOTH';
+        }
+        const aDevotee = allDevoteesMap.get(userId);
+        aDevotee.totalInteractions += 1;
+        aDevotee.totalSpent += subOrder.totalAmount;
+        if (new Date(subOrder.createdAt) > new Date(aDevotee.lastInteraction)) {
+            aDevotee.lastInteraction = subOrder.createdAt;
+        }
     });
 
     const querySearch = (req.query.search as string || "").toLowerCase();
-    const dob = req.query.dob as string;
-    const anniversary = req.query.anniversary as string;
+    const dobStart = req.query.dobStart as string;
+    const dobEnd = req.query.dobEnd as string;
+    const anniversaryStart = req.query.anniversaryStart as string;
+    const anniversaryEnd = req.query.anniversaryEnd as string;
     const page = parseInt(req.query.page as string) || 1;
     const limit = parseInt(req.query.limit as string) || 10;
 
     let poojaBookers = Array.from(poojaDevoteesMap.values());
     let productCustomers = Array.from(productDevoteesMap.values());
+    let allDevotees = Array.from(allDevoteesMap.values());
 
-    if (querySearch) {
-      poojaBookers = poojaBookers.filter(user =>
-        (user.name?.toLowerCase() || "").includes(querySearch) ||
-        (user.email?.toLowerCase() || "").includes(querySearch) ||
-        (user.phone || "").includes(querySearch)
-      );
-      productCustomers = productCustomers.filter(user =>
-        (user.name?.toLowerCase() || "").includes(querySearch) ||
-        (user.email?.toLowerCase() || "").includes(querySearch) ||
-        (user.phone || "").includes(querySearch)
-      );
-    }
+    // Date Range Helper (handles YYYY-MM-DD or MM-DD for recurring dates)
+    const isDateInRange = (dateStr: string | null, start: string, end: string) => {
+        if (!dateStr || !start || !end) return true;
+        // If it's a birthday/anniversary, we often care about MM-DD
+        // But if a range is provided like 2024-01-01 to 2024-01-31, we can match exactly
+        const date = new Date(dateStr);
+        const s = new Date(start);
+        const e = new Date(end);
+        return date >= s && date <= e;
+    };
 
-    if (dob) {
-      poojaBookers = poojaBookers.filter(u => u.dob === dob);
-      productCustomers = productCustomers.filter(u => u.dob === dob);
-    }
-    if (anniversary) {
-      poojaBookers = poojaBookers.filter(u => u.anniversary === anniversary);
-      productCustomers = productCustomers.filter(u => u.anniversary === anniversary);
-    }
+    // Search and Filter helper
+    const filterList = (list: any[]) => {
+        let filtered = list;
+        if (querySearch) {
+            filtered = filtered.filter(user =>
+                (user.name?.toLowerCase() || "").includes(querySearch) ||
+                (user.email?.toLowerCase() || "").includes(querySearch) ||
+                (user.phone || "").includes(querySearch)
+            );
+        }
+        
+        if (dobStart && dobEnd) {
+            filtered = filtered.filter(u => isDateInRange(u.dob, dobStart, dobEnd));
+        }
+        if (anniversaryStart && anniversaryEnd) {
+            filtered = filtered.filter(u => isDateInRange(u.anniversary, anniversaryStart, anniversaryEnd));
+        }
+        
+        return filtered;
+    };
 
-    const totalDevoteesCount = new Set([...poojaDevoteesMap.keys(), ...productDevoteesMap.keys()]).size;
+    poojaBookers = filterList(poojaBookers);
+    productCustomers = filterList(productCustomers);
+    allDevotees = filterList(allDevotees);
 
-    // Total lengths after search
+    // Sort by recent activity helper
+    const sortByRecent = (a: any, b: any) => new Date(b.lastInteraction).getTime() - new Date(a.lastInteraction).getTime();
+    poojaBookers.sort(sortByRecent);
+    productCustomers.sort(sortByRecent);
+    allDevotees.sort(sortByRecent);
+
+    // Total counts after filtering
     const poojaTotal = poojaBookers.length;
     const productTotal = productCustomers.length;
+    const allTotal = allDevotees.length;
 
     // Apply Pagination
     poojaBookers = poojaBookers.slice((page - 1) * limit, page * limit);
     productCustomers = productCustomers.slice((page - 1) * limit, page * limit);
+    allDevotees = allDevotees.slice((page - 1) * limit, page * limit);
 
     res.json({
       success: true,
       data: {
         poojaBookers,
         productCustomers,
+        allDevotees,
         stats: {
-          totalDevotees: totalDevoteesCount,
+          totalDevotees: allDevoteesMap.size,
           poojaBookersCount: poojaTotal,
           productCustomersCount: productTotal,
+          allDevoteesCount: allTotal
         },
         pagination: {
           page,
           limit,
           poojaTotalPages: Math.ceil(poojaTotal / limit),
           productTotalPages: Math.ceil(productTotal / limit),
+          allTotalPages: Math.ceil(allTotal / limit)
         }
       }
     });
@@ -684,9 +756,20 @@ export const downloadDevoteesExcel = async (req: Request, res: Response) => {
   try {
     const templeId = (req as any).owner.ownerId;
     const type = req.query.type as string; // 'pooja', 'product', or 'all'
-    const dob = req.query.dob as string;
-    const anniversary = req.query.anniversary as string;
+    const dobStart = req.query.dobStart as string;
+    const dobEnd = req.query.dobEnd as string;
+    const anniversaryStart = req.query.anniversaryStart as string;
+    const anniversaryEnd = req.query.anniversaryEnd as string;
     const search = (req.query.search as string || "").toLowerCase();
+
+    // Date Range Helper
+    const isDateInRange = (dateStr: string | null, start: string, end: string) => {
+        if (!dateStr || !start || !end) return true;
+        const date = new Date(dateStr);
+        const s = new Date(start);
+        const e = new Date(end);
+        return date >= s && date <= e;
+    };
 
     const temple = await prisma.temple.findUnique({
       where: { id: templeId }
@@ -738,18 +821,43 @@ export const downloadDevoteesExcel = async (req: Request, res: Response) => {
       poojaList = poojaList.filter(u => (u.name?.toLowerCase() || "").includes(search) || (u.email?.toLowerCase() || "").includes(search) || (u.phone || "").includes(search));
       productList = productList.filter(u => (u.name?.toLowerCase() || "").includes(search) || (u.email?.toLowerCase() || "").includes(search) || (u.phone || "").includes(search));
     }
-    if (dob) {
-      poojaList = poojaList.filter(u => u.dob === dob);
-      productList = productList.filter(u => u.dob === dob);
+    
+    if (dobStart && dobEnd) {
+      poojaList = poojaList.filter(u => isDateInRange(u.dob, dobStart, dobEnd));
+      productList = productList.filter(u => isDateInRange(u.dob, dobStart, dobEnd));
     }
-    if (anniversary) {
-      poojaList = poojaList.filter(u => u.anniversary === anniversary);
-      productList = productList.filter(u => u.anniversary === anniversary);
+    if (anniversaryStart && anniversaryEnd) {
+      poojaList = poojaList.filter(u => isDateInRange(u.anniversary, anniversaryStart, anniversaryEnd));
+      productList = productList.filter(u => isDateInRange(u.anniversary, anniversaryStart, anniversaryEnd));
     }
 
-    const devoteesList = type === 'pooja' ? poojaList :
-      type === 'product' ? productList :
-        [...poojaList, ...productList];
+    let devoteesList: any[] = [];
+    if (type === 'pooja') {
+        devoteesList = poojaList;
+    } else if (type === 'product') {
+        devoteesList = productList;
+    } else {
+        // Merge both lists for 'all'
+        const mergedMap = new Map();
+        poojaList.forEach(u => mergedMap.set(u.id, { ...u }));
+        productList.forEach(u => {
+            if (mergedMap.has(u.id)) {
+                const existing = mergedMap.get(u.id);
+                existing.totalInteractions += u.totalInteractions;
+                existing.totalSpent += u.totalSpent;
+                existing.type = 'BOTH';
+                if (new Date(u.lastInteraction) > new Date(existing.lastInteraction)) {
+                    existing.lastInteraction = u.lastInteraction;
+                }
+            } else {
+                mergedMap.set(u.id, { ...u });
+            }
+        });
+        devoteesList = Array.from(mergedMap.values());
+    }
+    
+    // Sort merged list
+    devoteesList.sort((a: any, b: any) => new Date(b.lastInteraction).getTime() - new Date(a.lastInteraction).getTime());
 
     const workbook = new ExcelJS.Workbook();
     const worksheet = workbook.addWorksheet('Devotees Report');

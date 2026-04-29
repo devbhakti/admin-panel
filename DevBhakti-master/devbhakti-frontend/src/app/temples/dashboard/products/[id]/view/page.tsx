@@ -150,7 +150,7 @@ export default function ViewTempleProductPage() {
                         </CardContent>
                     </Card>
 
-                    <Card className="border-slate-100 shadow-sm rounded-3xl overflow-hidden">
+                    {/* <Card className="border-slate-100 shadow-sm rounded-3xl overflow-hidden">
                         <CardHeader className="bg-slate-50/50 border-b border-slate-100">
                             <CardTitle className="text-sm font-bold uppercase tracking-wider text-slate-500 flex items-center gap-2">
                                 <Info className="w-4 h-4" /> Logistics & Origin
@@ -177,7 +177,7 @@ export default function ViewTempleProductPage() {
                                 </div>
                             </div>
                         </CardContent>
-                    </Card>
+                    </Card> */}
                 </div>
 
                 {/* Right Side: Tabbed Details & Variants */}

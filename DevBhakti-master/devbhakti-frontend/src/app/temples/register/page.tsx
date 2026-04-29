@@ -347,7 +347,7 @@ export default function RegisterTemplePage() {
                 </section>
 
                 {/* Testimonials with Modern Design */}
-                <section className="py-24 bg-background relative overflow-hidden">
+                {/* <section className="py-24 bg-background relative overflow-hidden">
                     <div className="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 relative z-10">
                         <motion.div
                             initial={{ opacity: 0, y: 30 }}
@@ -391,7 +391,7 @@ export default function RegisterTemplePage() {
                             ))}
                         </div>
                     </div>
-                </section>
+                </section> */}
 
                 {/* Features Section with Icon Grid */}
                 <section className="py-24 bg-muted/50 relative overflow-hidden">

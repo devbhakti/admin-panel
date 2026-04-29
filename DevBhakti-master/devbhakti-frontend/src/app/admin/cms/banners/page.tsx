@@ -319,7 +319,7 @@ export default function BannersPage() {
                                 </div>
                                 <div className="text-center space-y-1">
                                     <div className="text-sm font-medium text-foreground">Click to upload image</div>
-                                    <div className="text-xs text-muted-foreground">Aspect Ratio: 2.4:1 (1920x800 px)</div>
+                                    <div className="text-xs text-muted-foreground">Aspect Ratio: 2.4 (1920x800 px)</div>
                                 </div>
                                 <Input
                                     type="file"

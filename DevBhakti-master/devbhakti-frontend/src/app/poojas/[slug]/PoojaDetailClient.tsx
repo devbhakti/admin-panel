@@ -45,6 +45,7 @@ const PoojaDetailClient = ({ id }: PoojaDetailClientProps) => {
     const [isLoggedIn, setIsLoggedIn] = useState(false);
     const [user, setUser] = useState<any>(null);
     const [showRatings, setShowRatings] = useState(false);
+    const [showAllFaqs, setShowAllFaqs] = useState(false);
     const router = useRouter();
     const { language, t } = useLanguage();
 
@@ -142,13 +143,32 @@ const PoojaDetailClient = ({ id }: PoojaDetailClientProps) => {
             <main className="pt-28 pb-20">
                 <div className="container mx-auto px-4 max-w-[1440px]">
                     {/* Hero Section */}
-                    <div className="grid grid-cols-1 lg:grid-cols-12 gap-12 items-start mb-16">
-                        {/* Left: Image Card */}
-                        <div className="lg:col-span-5 relative">
+                    <div className="grid grid-cols-1 lg:grid-cols-12 gap-4 items-start mb-16">
+                        {/* Left: Info Section */}
+                        <div className="lg:col-span-8 flex flex-col h-full justify-between py-2">
+                            <motion.div
+                                initial={{ opacity: 0, y: 20 }}
+                                animate={{ opacity: 1, y: 0 }}
+                                transition={{ delay: 0.1 }}
+                            >
+                                <h1 className="text-5xl md:text-6xl font-serif font-bold text-[#1a1a1a] mb-6 leading-tight">
+                                    {getLocalized(pooja, 'name', language)}
+                                </h1>
+                                <p className="text-lg text-[#555] leading-relaxed mb-8">
+                                    {pooja.about?.split('.')[0]}. {pooja.about?.split('.')[1] || ""}
+                                </p>
+
+                                {/* Booking Bar */}
+                               
+                            </motion.div>
+                        </div>
+
+                        {/* Right: Image Card */}
+                        <div className="lg:col-span-4 relative">
                             <motion.div
                                 initial={{ opacity: 0, scale: 0.95 }}
                                 animate={{ opacity: 1, scale: 1 }}
-                                className="relative aspect-square md:aspect-[4/5] lg:aspect-square rounded-[2.5rem] overflow-hidden shadow-2xl border-4 border-white shadow-primary/10"
+                                className="relative aspect-[4/3] rounded-[2.5rem] overflow-hidden shadow-2xl border-4 border-white shadow-primary/10"
                             >
                                 <img
                                     src={getFullImageUrl(pooja.image)}
@@ -161,29 +181,12 @@ const PoojaDetailClient = ({ id }: PoojaDetailClientProps) => {
                                     </Badge>
                                 </div>
                             </motion.div>
-                        </div>
-
-                        {/* Right: Info Section */}
-                        <div className="lg:col-span-7 flex flex-col h-full justify-between py-2">
-                            <motion.div
-                                initial={{ opacity: 0, y: 20 }}
-                                animate={{ opacity: 1, y: 0 }}
-                                transition={{ delay: 0.1 }}
-                            >
-                                <h1 className="text-5xl md:text-6xl font-serif font-bold text-[#1a1a1a] mb-6 leading-tight">
-                                    {getLocalized(pooja, 'name', language)}
-                                </h1>
-                                <p className="text-lg text-[#555] leading-relaxed mb-8 max-w-2xl">
-                                    {pooja.about?.split('.')[0]}. {pooja.about?.split('.')[1] || ""}
-                                </p>
-
-
-                                {/* Booking Bar */}
-                                <div className="bg-[#FFEAD1] p-5 rounded-[2rem] border border-primary/10 flex flex-col md:flex-row items-center justify-between gap-6 shadow-lg shadow-primary/5">
+                            {/* Price below image */}
+                             <div className="bg-[#FFEAD1] py-2 px-3 rounded-[2rem] border border-primary/10 flex flex-col md:flex-row items-center justify-between gap-4 shadow-lg shadow-primary/5">
                                     <div className="px-4">
-                                        <div className="text-primary/70 text-[10px] font-bold uppercase tracking-[0.2em] mb-1">{t('pooja_detail.starting_from')}</div>
-                                        <div className="flex items-center gap-1 text-3xl font-bold text-primary">
-                                            <IndianRupee className="w-6 h-6 stroke-[2.5]" />
+                                        <div className="text-primary/70 text-[9px] font-bold uppercase tracking-[0.2em] mb-1">{t('pooja_detail.starting_from')}</div>
+                                        <div className="flex items-center gap-1 text-2xl font-bold text-primary">
+                                            <IndianRupee className="w-5 h-5 stroke-[2.5]" />
                                             <span>{getLowestPrice(pooja)}</span>
                                         </div>
                                     </div>
@@ -208,268 +211,268 @@ const PoojaDetailClient = ({ id }: PoojaDetailClientProps) => {
                                             if (pooja.temple?.id || pooja.isMaster) {
                                                 router.push(bookingUrl);
                                             } else {
-                                                // Otherwise scroll to temple tab to select temple first (for temple-specific poojas without direct temple relation shown)
-                                                setActiveTab("temple");
-                                                document.getElementById('content-tabs')?.scrollIntoView({ behavior: 'smooth' });
+                                                // Otherwise scroll to temple section
+                                                document.getElementById('temple-section')?.scrollIntoView({ behavior: 'smooth' });
                                             }
                                         }}
-                                        className="bg-primary text-white hover:bg-primary/90 transition-all duration-500 rounded-full px-10 py-7 text-lg font-bold shadow-md hover:shadow-xl hover:-translate-y-1 group"
+                                        className="bg-primary text-white hover:bg-primary/90 hover:shadow-xl hover:-translate-y-1 transition-all duration-300 ease-out rounded-full px-8 py-4 text-base font-bold shadow-md group"
                                     >
                                         {t('common.book_now')} <ArrowRight className="ml-3 w-5 h-5 group-hover:translate-x-1 transition-transform" />
                                     </Button>
                                 </div>
-                            </motion.div>
                         </div>
                     </div>
 
-                    {/* Tabs Navigation */}
-                    <div id="content-tabs" className="mt-20">
-                        <Tabs
-                            value={activeTab}
-                            onValueChange={setActiveTab}
-                            className="w-full"
-                        >
-                            <div className="flex justify-center mb-12">
-                                <TabsList className="h-auto bg-white/70 backdrop-blur-md p-1.5 rounded-full border border-primary/10 shadow-lg flex flex-wrap justify-center sm:flex-nowrap">
-                                    {[
-                                        { id: "about", label: t('pooja_detail.tab_about'), icon: Info },
-                                        { id: "temple", label: t('pooja_detail.tab_temple'), icon: MapPin },
-                                        ...(showRatings ? [{ id: "reviews", label: t('pooja_detail.tab_reviews'), icon: Star }] : []),
-                                        { id: "faqs", label: t('pooja_detail.tab_faqs'), icon: HelpCircle },
-                                    ].map((tab) => (
-                                        <TabsTrigger
-                                            key={tab.id}
-                                            value={tab.id}
-                                            className="rounded-full px-7 py-3 text-sm font-semibold transition-all duration-500 data-[state=active]:bg-primary data-[state=active]:text-white shadow-none data-[state=active]:shadow-lg flex items-center gap-2 group"
-                                        >
-                                            <tab.icon className="w-4 h-4 group-hover:scale-110 transition-transform" />
-                                            {tab.label}
-                                        </TabsTrigger>
-                                    ))}
-                                </TabsList>
+                    {/* Temple Section (Direct Content, No Tabs) */}
+                    <div id="temple-section" className="mt-20">
+                        <div className="max-w-6xl mx-auto">
+                            <div className="text-center">
+                                <h2 className="text-4xl font-serif font-bold mb-2 text-primary">{t('pooja_detail.participating_temples')}</h2>
+                                <p className="text-[#888] mt-4 mb-16 italic font-serif">{t('pooja_detail.sacred_locations_performed')}</p>
                             </div>
 
-                            <AnimatePresence mode="wait">
-                                <motion.div
-                                    key={activeTab}
-                                    initial={{ opacity: 0, y: 10 }}
-                                    animate={{ opacity: 1, y: 0 }}
-                                    exit={{ opacity: 0, y: -10 }}
-                                    transition={{ duration: 0.3 }}
-                                    className="bg-white rounded-[3rem] shadow-xl border border-primary/5 p-10 md:p-16"
-                                >
-                                    {/* About Tab Content */}
-                                    <TabsContent value="about" className="mt-0 outline-none">
-                                        <div className="max-w-6xl mx-auto">
-                                            <h2 className="text-4xl font-serif font-bold mb-8 text-primary">{t('pooja_detail.about_ritual')}</h2>
-                                            <div className="space-y-6">
-                                                <p className="text-xl text-[#555] leading-relaxed font-light italic">
-                                                    {pooja.about || t('pooja_detail.info_soon')}
-                                                </p>
-                                                {pooja.description && Array.isArray(pooja.description) && (
-                                                    <div className="grid grid-cols-1 md:grid-cols-2 gap-6 pt-6">
-                                                        {pooja.description.map((desc: string, i: number) => (
-                                                            <div key={i} className="flex items-start gap-4">
-                                                                <div className="w-1.5 h-1.5 bg-primary mt-2.5 rounded-full shrink-0" />
-                                                                <p className="text-[#666] leading-relaxed">{desc}</p>
-                                                            </div>
-                                                        ))}
-                                                    </div>
-                                                )}
+                            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
+                                {/* Any Location (Global) Booking Card */}
+                                {!pooja.temple && (
+                                <div className="bg-[#FFF8F0] p-6 rounded-[2.5rem] border-2 border-primary/20 shadow-xl w-full group overflow-hidden relative text-center">
+                                        <div className="absolute top-0 right-0 w-32 h-32 bg-primary/10 rounded-full -mr-16 -mt-16 blur-2xl group-hover:bg-primary/20 transition-colors" />
+                                        <div className="relative w-full h-52 mx-auto mb-4 rounded-2xl overflow-hidden border-4 border-white shadow-xl bg-white flex items-center justify-center group-hover:scale-105 transition-transform">
+                                            <Sparkle className="w-20 h-20 text-primary stroke-[1.5]" />
+                                        </div>
+                                        <h3 className="text-2xl font-serif font-bold text-[#1a1a1a] mb-1">{t('pooja_detail.any_location') || "Any Location"}</h3>
+                                        <p className="flex items-center justify-center gap-2 text-[#777] text-sm mb-6 font-medium">
+                                            <MapPin className="w-4 h-4 text-primary" />
+                                            {t('pooja_detail.global_booking') || "Global Service"}
+                                        </p>
+                                        <div className="space-y-3">
+                                            <Button
+                                                className="w-full bg-primary hover:bg-primary/90 text-white rounded-full h-12 font-bold flex items-center justify-center gap-2 transition-all group/btn shadow-md"
+                                                onClick={() => {
+                                                    const bookingUrl = `/booking?pooja=${id}`;
+                                                    const token = localStorage.getItem("token");
+                                                    const savedUser = localStorage.getItem("user");
+                                                    const parsedUser = savedUser ? JSON.parse(savedUser) : null;
+                                                    if (!token || !parsedUser || parsedUser.role !== "DEVOTEE") {
+                                                        toast({ title: t('common.login_required'), variant: "destructive" });
+                                                        router.push(`/auth?redirect=${encodeURIComponent(bookingUrl)}`);
+                                                        return;
+                                                    }
+                                                    router.push(bookingUrl);
+                                                }}
+                                            >
+                                                {t('common.book_now')} <ArrowRight className="w-4 h-4 group-hover/btn:translate-x-1 transition-transform" />
+                                            </Button>
+                                        </div>
+                                    </div>
+                                )}
+
+                                {/* Master Temple (if any) */}
+                                {pooja.temple && (
+                                    <div className="bg-white p-6 rounded-[2.5rem] border border-primary/10 shadow-xl w-full group overflow-hidden relative text-center">
+                                        <div className="absolute top-0 right-0 w-32 h-32 bg-primary/5 rounded-full -mr-16 -mt-16 blur-2xl group-hover:bg-primary/10 transition-colors" />
+                                        <div className="relative w-full h-52 mx-auto mb-4 rounded-2xl overflow-hidden border-4 border-white shadow-xl group-hover:scale-105 transition-transform">
+                                            <img
+                                                src={getFullImageUrl(pooja.temple.image)}
+                                                alt={getLocalized(pooja.temple, 'name', language)}
+                                                className="w-full h-full object-cover"
+                                            />
+                                        </div>
+                                        <div className="text-center">
+                                            <h3 className="text-2xl font-serif font-bold text-[#1a1a1a] mb-1">{getLocalized(pooja.temple, 'name', language)}</h3>
+                                            <p className="flex items-center justify-center gap-2 text-[#777] text-sm mb-6 font-medium">
+                                                <MapPin className="w-4 h-4 text-primary" />
+                                                {getLocalized(pooja.temple, 'location', language)}
+                                            </p>
+                                            <div className="space-y-3">
+                                                <Button
+                                                    className="w-full bg-[#5d4037] hover:bg-black text-white rounded-full h-12 font-bold flex items-center justify-center gap-2 transition-all group/btn"
+                                                    onClick={() => {
+                                                        const bookingUrl = `/booking?pooja=${id}&temple=${pooja.temple.id}`;
+                                                        const token = localStorage.getItem("token");
+                                                        const savedUser = localStorage.getItem("user");
+                                                        const parsedUser = savedUser ? JSON.parse(savedUser) : null;
+                                                        if (!token || !parsedUser || parsedUser.role !== "DEVOTEE") {
+                                                            toast({ title: t('common.login_required'), variant: "destructive" });
+                                                            router.push(`/auth?redirect=${encodeURIComponent(bookingUrl)}`);
+                                                            return;
+                                                        }
+                                                        router.push(bookingUrl);
+                                                    }}
+                                                >
+                                                    {t('common.book_pooja')} <ArrowRight className="w-4 h-4 group-hover/btn:translate-x-1 transition-transform" />
+                                                </Button>
+                                                <Button variant="outline" className="w-full border-primary/5 text-[#5d4037] bg-[#FFF8F0]/30 hover:bg-[#FFF8F0]/50 rounded-full h-12 font-bold transition-all" asChild>
+                                                    <Link href={getTempleUrl(pooja.temple)}>{t('pooja_detail.explore_temple')}</Link>
+                                                </Button>
                                             </div>
                                         </div>
-                                    </TabsContent>
+                                    </div>
+                                )}
 
-                                    {/* Temple Tab Content */}
-                                    <TabsContent value="temple" className="mt-0 outline-none">
-                                        <div className="max-w-6xl mx-auto">
-                                            <div className="text-center">
-                                                <h2 className="text-4xl font-serif font-bold mb-2 text-primary">{t('pooja_detail.participating_temples')}</h2>
-                                                <p className="text-[#888] mt-4 mb-16 italic font-serif">{t('pooja_detail.sacred_locations_performed')}</p>
-                                            </div>
-
-                                            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
-                                                {/* Any Location (Global) Booking Card */}
-                                                {!pooja.temple && (
-                                                    <div className="bg-[#FFF8F0] p-10 rounded-[2.5rem] border-2 border-primary/20 shadow-xl w-full group overflow-hidden relative text-center">
-                                                        <div className="absolute top-0 right-0 w-32 h-32 bg-primary/10 rounded-full -mr-16 -mt-16 blur-2xl group-hover:bg-primary/20 transition-colors" />
-                                                        <div className="relative w-32 h-32 mx-auto mb-8 rounded-full overflow-hidden border-4 border-white shadow-xl bg-white flex items-center justify-center group-hover:scale-105 transition-transform">
-                                                            <Sparkle className="w-16 h-16 text-primary stroke-[1.5]" />
-                                                        </div>
-                                                        <h3 className="text-2xl font-serif font-bold text-[#1a1a1a] mb-2">{t('pooja_detail.any_location') || "Any Location"}</h3>
-                                                        <p className="flex items-center justify-center gap-2 text-[#777] text-sm mb-10">
-                                                            <MapPin className="w-4 h-4 text-primary" />
-                                                            {t('pooja_detail.global_booking') || "Global Service"}
-                                                        </p>
-                                                        <div className="space-y-4">
-                                                            <Button
-                                                                className="w-full bg-primary hover:bg-primary/90 text-white rounded-full py-6 font-bold flex items-center justify-center gap-2 transition-all group/btn shadow-md"
-                                                                onClick={() => {
-                                                                    const bookingUrl = `/booking?pooja=${id}`;
-                                                                    const token = localStorage.getItem("token");
-                                                                    const savedUser = localStorage.getItem("user");
-                                                                    const parsedUser = savedUser ? JSON.parse(savedUser) : null;
-                                                                    if (!token || !parsedUser || parsedUser.role !== "DEVOTEE") {
-                                                                        toast({ title: t('common.login_required'), variant: "destructive" });
-                                                                        router.push(`/auth?redirect=${encodeURIComponent(bookingUrl)}`);
-                                                                        return;
-                                                                    }
-                                                                    router.push(bookingUrl);
-                                                                }}
-                                                            >
-                                                                {t('common.book_now')} <ArrowRight className="w-4 h-4 group-hover/btn:translate-x-1 transition-transform" />
-                                                            </Button>
-                                                        </div>
-                                                    </div>
-                                                )}
-
-                                                {/* Master Temple (if any) */}
-                                                {pooja.temple && (
-                                                    <div className="bg-white p-10 rounded-[2.5rem] border border-primary/10 shadow-xl w-full group overflow-hidden relative text-center">
-                                                        <div className="absolute top-0 right-0 w-32 h-32 bg-primary/5 rounded-full -mr-16 -mt-16 blur-2xl group-hover:bg-primary/10 transition-colors" />
-                                                        <div className="relative w-32 h-32 mx-auto mb-8 rounded-full overflow-hidden border-4 border-white shadow-xl group-hover:scale-105 transition-transform">
-                                                            <img
-                                                                src={getFullImageUrl(pooja.temple.image)}
-                                                                alt={getLocalized(pooja.temple, 'name', language)}
-                                                                className="w-full h-full object-cover"
-                                                            />
-                                                        </div>
-                                                        <h3 className="text-2xl font-serif font-bold text-[#1a1a1a] mb-2">{getLocalized(pooja.temple, 'name', language)}</h3>
-                                                        <p className="flex items-center justify-center gap-2 text-[#777] text-sm mb-10">
-                                                            <MapPin className="w-4 h-4 text-primary" />
-                                                            {getLocalized(pooja.temple, 'location', language)}
-                                                        </p>
-                                                        <div className="space-y-4">
-                                                            <Button
-                                                                className="w-full bg-[#5d4037] hover:bg-black text-white rounded-full py-6 font-bold flex items-center justify-center gap-2 transition-all group/btn"
-                                                                onClick={() => {
-                                                                    const bookingUrl = `/booking?pooja=${id}&temple=${pooja.temple.id}`;
-                                                                    const token = localStorage.getItem("token");
-                                                                    const savedUser = localStorage.getItem("user");
-                                                                    const parsedUser = savedUser ? JSON.parse(savedUser) : null;
-                                                                    if (!token || !parsedUser || parsedUser.role !== "DEVOTEE") {
-                                                                        toast({ title: t('common.login_required'), variant: "destructive" });
-                                                                        router.push(`/auth?redirect=${encodeURIComponent(bookingUrl)}`);
-                                                                        return;
-                                                                    }
-                                                                    router.push(bookingUrl);
-                                                                }}
-                                                            >
-                                                                    {t('common.book_pooja')} <ArrowRight className="w-4 h-4 group-hover/btn:translate-x-1 transition-transform" />
-                                                            </Button>
-                                                            <Button variant="outline" className="w-full border-primary/5 text-[#5d4037] bg-[#FFF8F0]/30 hover:bg-[#FFF8F0]/50 rounded-full py-6 font-bold transition-all" asChild>
-                                                                <Link href={getTempleUrl(pooja.temple)}>{t('pooja_detail.explore_temple')}</Link>
-                                                            </Button>
-                                                        </div>
-                                                    </div>
-                                                )}
-
-                                                {/* Associated Temples (Copies) */}
-                                                {pooja.templeCopies && pooja.templeCopies.length > 0 ? (
-                                                    pooja.templeCopies.map((copy: any) => (
-                                                        <div key={copy.temple.id} className="bg-white p-10 rounded-[2.5rem] border border-primary/10 shadow-xl w-full group overflow-hidden relative text-center">
-                                                            <div className="absolute top-0 right-0 w-32 h-32 bg-primary/5 rounded-full -mr-16 -mt-16 blur-2xl group-hover:bg-primary/10 transition-colors" />
-                                                            <div className="relative w-32 h-32 mx-auto mb-8 rounded-full overflow-hidden border-4 border-white shadow-xl group-hover:scale-105 transition-transform">
-                                                                <img
-                                                                    src={getFullImageUrl(copy.temple.image)}
-                                                                    alt={getLocalized(copy.temple, 'name', language)}
-                                                                    className="w-full h-full object-cover"
-                                                                />
-                                                            </div>
-                                                            <h3 className="text-2xl font-serif font-bold text-[#1a1a1a] mb-2">{getLocalized(copy.temple, 'name', language)}</h3>
-                                                            <p className="flex items-center justify-center gap-2 text-[#777] text-sm mb-10">
-                                                                <MapPin className="w-4 h-4 text-primary" />
-                                                                {getLocalized(copy.temple, 'location', language)}
-                                                            </p>
-                                                            <div className="space-y-4">
-                                                                <Button
-                                                                    className="w-full bg-[#5d4037] hover:bg-black text-white rounded-full py-6 font-bold flex items-center justify-center gap-2 transition-all group/btn"
-                                                                    onClick={() => {
-                                                                        const bookingUrl = `/booking?pooja=${id}&temple=${copy.temple.id}`;
-                                                                        const token = localStorage.getItem("token");
-                                                                        const savedUser = localStorage.getItem("user");
-                                                                        const parsedUser = savedUser ? JSON.parse(savedUser) : null;
-                                                                        if (!token || !parsedUser || parsedUser.role !== "DEVOTEE") {
-                                                                            toast({ title: t('common.login_required'), variant: "destructive" });
-                                                                            router.push(`/auth?redirect=${encodeURIComponent(bookingUrl)}`);
-                                                                            return;
-                                                                        }
-                                                                        router.push(bookingUrl);
-                                                                    }}
-                                                                >
-                                                                    {t('common.book_pooja')} <ArrowRight className="w-4 h-4 group-hover/btn:translate-x-1 transition-transform" />
-                                                                </Button>
-                                                                <Button variant="outline" className="w-full border-primary/5 text-[#5d4037] bg-[#FFF8F0]/30 hover:bg-[#FFF8F0]/50 rounded-full py-6 font-bold transition-all" asChild>
-                                                                    <Link href={getTempleUrl(copy.temple)}>{t('pooja_detail.explore_temple')}</Link>
-                                                                </Button>
-                                                            </div>
-                                                        </div>
-                                                    ))
-                                                ) : (!pooja.temple && (!pooja.templeCopies || pooja.templeCopies.length === 0) && (
-                                                    <div className="col-span-full p-16 border-2 border-dashed border-primary/10 rounded-[3rem] w-full text-center italic text-[#999]">
-                                                        {t('pooja_detail.temple_data_soon')}
-                                                    </div>
-                                                ))}
+                                {/* Associated Temples (Copies) - First 6 */}
+                                {pooja.templeCopies && pooja.templeCopies.slice(0, 6).map((copy: any) => (
+                                    <div key={copy.temple.id} className="bg-white p-6 rounded-[2.5rem] border border-primary/10 shadow-xl w-full group overflow-hidden relative text-center">
+                                        <div className="absolute top-0 right-0 w-32 h-32 bg-primary/5 rounded-full -mr-16 -mt-16 blur-2xl group-hover:bg-primary/10 transition-colors" />
+                                        <div className="relative w-full h-52 mx-auto mb-4 rounded-2xl overflow-hidden border-4 border-white shadow-xl group-hover:scale-105 transition-transform">
+                                            <img
+                                                src={getFullImageUrl(copy.temple.image)}
+                                                alt={getLocalized(copy.temple, 'name', language)}
+                                                className="w-full h-full object-cover"
+                                            />
+                                        </div>
+                                        <div className="text-center">
+                                            <h3 className="text-2xl font-serif font-bold text-[#1a1a1a] mb-1">{getLocalized(copy.temple, 'name', language)}</h3>
+                                            <p className="flex items-center justify-center gap-2 text-[#777] text-sm mb-6 font-medium">
+                                                <MapPin className="w-4 h-4 text-primary" />
+                                                {getLocalized(copy.temple, 'location', language)}
+                                            </p>
+                                            <div className="space-y-3">
+                                                <Button
+                                                    className="w-full bg-[#5d4037] hover:bg-black text-white rounded-full h-12 font-bold flex items-center justify-center gap-2 transition-all group/btn"
+                                                    onClick={() => {
+                                                        const bookingUrl = `/booking?pooja=${id}&temple=${copy.temple.id}`;
+                                                        const token = localStorage.getItem("token");
+                                                        const savedUser = localStorage.getItem("user");
+                                                        const parsedUser = savedUser ? JSON.parse(savedUser) : null;
+                                                        if (!token || !parsedUser || parsedUser.role !== "DEVOTEE") {
+                                                            toast({ title: t('common.login_required'), variant: "destructive" });
+                                                            router.push(`/auth?redirect=${encodeURIComponent(bookingUrl)}`);
+                                                            return;
+                                                        }
+                                                        router.push(bookingUrl);
+                                                    }}
+                                                >
+                                                    {t('common.book_pooja')} <ArrowRight className="w-4 h-4 group-hover/btn:translate-x-1 transition-transform" />
+                                                </Button>
+                                                <Button variant="outline" className="w-full border-primary/5 text-[#5d4037] bg-[#FFF8F0]/30 hover:bg-[#FFF8F0]/50 rounded-full h-12 font-bold transition-all" asChild>
+                                                    <Link href={getTempleUrl(copy.temple)}>{t('pooja_detail.explore_temple')}</Link>
+                                                </Button>
                                             </div>
                                         </div>
-                                    </TabsContent>
+                                    </div>
+                                ))}
+                            </div>
 
+                            {/* Load More Button */}
+                            {pooja.templeCopies && pooja.templeCopies.length > 6 && (
+                                <div className="text-center mt-12">
+                                    <Button
+                                        variant="outline"
+                                        className="bg-white border-primary/20 text-primary hover:bg-primary hover:text-white rounded-full px-8 py-4 font-bold transition-all"
+                                        onClick={() => {
+                                            // Show all temples or load more logic
+                                            const allTemples = document.getElementById('all-temples');
+                                            if (allTemples) {
+                                                allTemples.style.display = 'grid';
+                                            }
+                                        }}
+                                    >
+                                        Load More Temples ({pooja.templeCopies.length - 6} more)
+                                    </Button>
+                                </div>
+                            )}
 
-
-                                    {/* Reviews tab */}
-                                    <TabsContent value="reviews" className="mt-0 outline-none">
-                                        <div className="max-w-6xl mx-auto">
-                                            <h2 className="text-4xl font-serif font-bold mb-12 text-center text-primary">{t('pooja_detail.devotee_experiences')}</h2>
-                                            <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
-                                                {(pooja.reviews || [
-                                                    { name: "Anand Sharma", location: "Delhi", message: "A very peaceful experience. The ritual was performed with great authenticity.", rating: 5 },
-                                                    { name: "Priya Nair", location: "Bangalore", message: "Felt a deep sense of calm. Highly recommend for anyone looking for spiritual peace.", rating: 5 }
-                                                ]).map((review: any, idx: number) => (
-                                                    <div key={idx} className="p-10 rounded-[2.5rem] bg-[#FAFAFA] border border-primary/5 relative group group-hover:bg-white transition-colors">
-                                                        <MessageSquare className="absolute top-8 right-8 w-12 h-12 text-primary/5" />
-                                                        <div className="flex items-center gap-1 text-[#f59e0b] mb-6">
-                                                            {[...Array(review.rating || 5)].map((_, i) => (
-                                                                <Star key={i} className="w-4 h-4 fill-[#f59e0b]" />
-                                                            ))}
-                                                        </div>
-                                                        <p className="italic text-[#444] text-lg leading-relaxed mb-10 font-serif">"{review.message}"</p>
-                                                        <div className="flex items-center gap-5">
-                                                            <div className="w-14 h-14 rounded-full bg-gradient-to-br from-primary to-primary/80 flex items-center justify-center font-bold text-white text-xl shadow-lg font-serif">
-                                                                {review.name[0]}
-                                                            </div>
-                                                            <div>
-                                                                <div className="font-bold text-[#1a1a1a] font-serif">{review.name}</div>
-                                                                <div className="text-sm text-[#888] font-medium">{review.location}</div>
-                                                            </div>
-                                                        </div>
+                            {/* Hidden Temples (More than 6) */}
+                            {pooja.templeCopies && pooja.templeCopies.length > 6 && (
+                                <div id="all-temples" className="hidden mt-8">
+                                    <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
+                                        {pooja.templeCopies.slice(6).map((copy: any) => (
+                                            <div key={copy.temple.id} className="bg-white p-6 rounded-[2.5rem] border border-primary/10 shadow-xl w-full group overflow-hidden relative text-center">
+                                                <div className="absolute top-0 right-0 w-32 h-32 bg-primary/5 rounded-full -mr-16 -mt-16 blur-2xl group-hover:bg-primary/10 transition-colors" />
+                                                <div className="relative w-full h-52 mx-auto mb-4 rounded-2xl overflow-hidden border-4 border-white shadow-xl group-hover:scale-105 transition-transform">
+                                                    <img
+                                                        src={getFullImageUrl(copy.temple.image)}
+                                                        alt={getLocalized(copy.temple, 'name', language)}
+                                                        className="w-full h-full object-cover"
+                                                    />
+                                                </div>
+                                                <div className="text-center">
+                                                    <h3 className="text-2xl font-serif font-bold text-[#1a1a1a] mb-1">{getLocalized(copy.temple, 'name', language)}</h3>
+                                                    <p className="flex items-center justify-center gap-2 text-[#777] text-sm mb-6 font-medium">
+                                                        <MapPin className="w-4 h-4 text-primary" />
+                                                        {getLocalized(copy.temple, 'location', language)}
+                                                    </p>
+                                                    <div className="space-y-3">
+                                                        <Button
+                                                            className="w-full bg-[#5d4037] hover:bg-black text-white rounded-full h-12 font-bold flex items-center justify-center gap-2 transition-all group/btn"
+                                                            onClick={() => {
+                                                                const bookingUrl = `/booking?pooja=${id}&temple=${copy.temple.id}`;
+                                                                const token = localStorage.getItem("token");
+                                                                const savedUser = localStorage.getItem("user");
+                                                                const parsedUser = savedUser ? JSON.parse(savedUser) : null;
+                                                                if (!token || !parsedUser || parsedUser.role !== "DEVOTEE") {
+                                                                    toast({ title: t('common.login_required'), variant: "destructive" });
+                                                                    router.push(`/auth?redirect=${encodeURIComponent(bookingUrl)}`);
+                                                                    return;
+                                                                }
+                                                                router.push(bookingUrl);
+                                                            }}
+                                                        >
+                                                            {t('common.book_pooja')} <ArrowRight className="w-4 h-4 group-hover/btn:translate-x-1 transition-transform" />
+                                                        </Button>
+                                                        <Button variant="outline" className="w-full border-primary/5 text-[#5d4037] bg-[#FFF8F0]/30 hover:bg-[#FFF8F0]/50 rounded-full h-12 font-bold transition-all" asChild>
+                                                            <Link href={getTempleUrl(copy.temple)}>{t('pooja_detail.explore_temple')}</Link>
+                                                        </Button>
                                                     </div>
-                                                ))}
+                                                </div>
                                             </div>
-                                        </div>
-                                    </TabsContent>
+                                        ))}
+                                    </div>
+                                </div>
+                            )}
 
-                                    {/* FAQs tab - Standard FAQs + pooja-specific FAQs */}
-                                    <TabsContent value="faqs" className="mt-0 outline-none">
-                                        <div className="max-w-6xl mx-auto">
-                                            <h2 className="text-4xl font-serif font-bold mb-12 text-center text-primary text-gradient-sacred pb-2">{t('pooja_detail.questions_answers_title')}</h2>
-                                            <div className="space-y-6">
-                                                {[...(pooja.standardFaqs || []), ...(pooja.faqs && Array.isArray(pooja.faqs) ? pooja.faqs : [])].map((faq: any, idx: number) => (
-                                                    <div key={idx} className="p-8 rounded-[2rem] border border-primary/5 bg-[#FFF8F0]/30 hover:bg-white transition-all duration-500 hover:shadow-lg">
-                                                        <h4 className="text-xl font-serif font-bold text-[#1a1a1a] mb-4 flex items-start gap-4">
-                                                            <HelpCircle className="w-6 h-6 text-primary mt-0.5 shrink-0 opacity-50" />
-                                                            {faq.question || faq.q}
-                                                        </h4>
-                                                        <p className="text-[#666] leading-relaxed pl-10 italic">
-                                                            {faq.answer || faq.a}
-                                                        </p>
-                                                    </div>
-                                                ))}
-                                            </div>
-                                        </div>
-                                    </TabsContent>
-                                </motion.div>
-                            </AnimatePresence>
-                        </Tabs>
+
+                        </div>
+                    </div>
+
+                    {/* FAQs Section (Direct Content) */}
+                    <div className="mt-20">
+                        <div className="max-w-6xl mx-auto">
+                            <h2 className="text-4xl font-serif font-bold mb-12 text-center text-primary text-gradient-sacred pb-2">{t('pooja_detail.questions_answers_title')}</h2>
+                            <div className="space-y-6">
+                                {(() => {
+                                    const allFaqs = [...(pooja.standardFaqs || []), ...(pooja.faqs && Array.isArray(pooja.faqs) ? pooja.faqs : [])];
+                                    const displayedFaqs = showAllFaqs ? allFaqs : allFaqs.slice(0, 3);
+                                    
+                                    return (
+                                        <>
+                                            {displayedFaqs.map((faq: any, idx: number) => (
+                                                <motion.div 
+                                                    initial={{ opacity: 0, y: 10 }}
+                                                    animate={{ opacity: 1, y: 0 }}
+                                                    key={idx} 
+                                                    className="p-8 rounded-[2rem] border border-primary/5 bg-[#FFF8F0]/30 hover:bg-white transition-all duration-500 hover:shadow-lg"
+                                                >
+                                                    <h4 className="text-xl font-serif font-bold text-[#1a1a1a] mb-4 flex items-start gap-4">
+                                                        <HelpCircle className="w-6 h-6 text-primary mt-0.5 shrink-0 opacity-50" />
+                                                        {faq.question || faq.q}
+                                                    </h4>
+                                                    <p className="text-[#666] leading-relaxed pl-10 italic">
+                                                        {faq.answer || faq.a}
+                                                    </p>
+                                                </motion.div>
+                                            ))}
+                                            
+                                            {allFaqs.length > 3 && (
+                                                <div className="text-center mt-8">
+                                                    <Button
+                                                        variant="ghost"
+                                                        onClick={() => setShowAllFaqs(!showAllFaqs)}
+                                                        className="text-primary hover:text-primary/80 font-bold flex items-center gap-2 mx-auto"
+                                                    >
+                                                        {showAllFaqs ? (
+                                                            <>Show Less <ArrowRight className="w-4 h-4 rotate-[-90deg]" /></>
+                                                        ) : (
+                                                            <>Read More <ArrowRight className="w-4 h-4 rotate-90" /></>
+                                                        )}
+                                                    </Button>
+                                                </div>
+                                            )}
+                                        </>
+                                    );
+                                })()}
+                            </div>
+                        </div>
                     </div>
                 </div>
             </main>

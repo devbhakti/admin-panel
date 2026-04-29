@@ -73,7 +73,7 @@ const sellerSidebarGroups = [
     {
         title: "Finance",
         items: [
-            { label: "Transaction Ledger", icon: IndianRupee, href: "/seller/dashboard/payments", permission: "finance.ledger.view" },
+            { label: "Earnings & Settlements", icon: IndianRupee, href: "/seller/dashboard/payments", permission: "finance.ledger.view" },
             { label: "Withdraw Request", icon: Wallet, href: "/seller/dashboard/payments/withdraw", permission: "finance.withdrawals.view" },
             { label: "Payout History", icon: CalendarCheck, href: "/seller/dashboard/payments/history", permission: "finance.withdrawals.view" },
             { label: "Bank Details", icon: Building2, href: "/seller/dashboard/payments/bank-details", permission: "seller.bank.manage" }

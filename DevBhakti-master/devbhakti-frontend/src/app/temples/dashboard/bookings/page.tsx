@@ -26,7 +26,7 @@ import {
     Download
 } from "lucide-react";
 import * as XLSX from 'xlsx';
-import { useSearchParams } from "next/navigation";
+import { useSearchParams, useRouter, usePathname } from "next/navigation";
 import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -64,6 +64,7 @@ import { format, isWithinInterval, startOfDay, endOfDay, subWeeks, subMonths, su
 import { cn } from "@/lib/utils";
 import { parseLocalizedValue } from "@/utils/textUtils";
 import { useAdminAuth } from "@/hooks/use-admin-auth";
+import { API_URL, BASE_URL } from "@/config/apiConfig";
 
 const statusConfig = {
     BOOKED: {
@@ -108,9 +109,12 @@ export default function TempleBookingsPage() {
     const [filterType, setFilterType] = useState<"ritual" | "booking">("ritual");
     const [startDate, setStartDate] = useState<Date | undefined>(undefined);
     const [endDate, setEndDate] = useState<Date | undefined>(undefined);
-    const [statsPeriod, setStatsPeriod] = useState<"week" | "month" | "year" | "lifetime">("week");
+    const [statsPeriod, setStatsPeriod] = useState<"today" | "week" | "month" | "year" | "lifetime">("today");
     const { toast } = useToast();
     const { hasPermission } = useAdminAuth();
+    const router = useRouter();
+    const pathname = usePathname();
+    const searchParams = useSearchParams();
 
     useEffect(() => {
         loadBookings();
@@ -119,7 +123,7 @@ export default function TempleBookingsPage() {
 
     const checkTodayAvailability = async () => {
         try {
-            const todayStr = new Date().toISOString().split('T')[0];
+            const todayStr = format(new Date(), 'yyyy-MM-dd');
             const res = await getTempleAvailability({
                 month: todayStr.split('-')[1],
                 year: todayStr.split('-')[0]
@@ -141,7 +145,7 @@ export default function TempleBookingsPage() {
     const handleToggleToday = async () => {
         setIsProcessing(true);
         try {
-            const todayStr = new Date().toISOString().split('T')[0];
+            const todayStr = format(new Date(), 'yyyy-MM-dd');
             const newStatus = !isTodayClosed;
 
             // Set global availability (poojaId: null)
@@ -241,34 +245,75 @@ export default function TempleBookingsPage() {
     };
 
     const handleExportExcel = () => {
-        if (bookings.length === 0) {
-            toast({ title: "No Data", description: "There are no bookings to export", variant: "destructive" });
+        if (filteredBookings.length === 0) {
+            toast({ title: "No Data", description: "There are no bookings in the current filter to export", variant: "destructive" });
             return;
         }
 
-        const exportData = filteredBookings.map(b => ({
-            "Booking ID": b.id,
-            "Devotee Name": b.devoteeName || "N/A",
-            "Devotee Phone": b.devoteePhone || "N/A",
-            "Pooja Name": parseLocalizedValue(b.pooja?.name),
-            "Package": parseLocalizedValue(b.packageName),
-            "Ritual Date": b.bookingDate ? format(new Date(b.bookingDate), "dd MMM yyyy") : "N/A",
-            "Booked On": format(new Date(b.createdAt), "dd MMM yyyy"),
-            "Amount": b.packagePrice,
-            "Status": b.status,
-            "Gotra": b.gotra || "N/A",
-            "Rashi": b.rashi || "N/A",
-            "Nakshatra": b.nakshatra || "N/A"
-        }));
+        const exportData = filteredBookings.map(b => {
+            // Format additional devotees
+            let additionalDevoteesStr = "N/A";
+            if (b.additionalDevotees && Array.isArray(b.additionalDevotees) && b.additionalDevotees.length > 0) {
+                additionalDevoteesStr = b.additionalDevotees.map((d: any) => 
+                    `${d.name}${d.gothra ? ` (${d.gothra})` : ''}`
+                ).join(', ');
+            }
+
+            return {
+                "Booking ID": b.displayId || b.id,
+                "Devotee Name": b.devoteeName || "N/A",
+                "Devotee Phone": b.devoteePhone || "N/A",
+                "Devotee Email": b.devoteeEmail || "N/A",
+                "Pooja Name": parseLocalizedValue(b.pooja?.name),
+                "Package": parseLocalizedValue(b.packageName),
+                "Ritual Date": b.bookingDate ? format(new Date(b.bookingDate), "dd MMM yyyy") : "N/A",
+                "Booked On": format(new Date(b.createdAt), "dd MMM yyyy HH:mm"),
+                "Amount": b.packagePrice,
+                "Platform Fee": b.platformFee || 0,
+                "Total Paid": (b.packagePrice || 0) + (b.platformFee || 0),
+                "Status": b.status,
+                "Gothra": b.gothra || "N/A",
+                "Native Place": b.nativePlace || "N/A",
+                "Address": b.address || "N/A",
+                "Birthday": b.dob ? format(new Date(b.dob), "dd MMM yyyy") : "N/A",
+                "Anniversary": b.anniversary ? format(new Date(b.anniversary), "dd MMM yyyy") : "N/A",
+                "Kuldevi": b.kuldevi || "N/A",
+                "Kuldevta": b.kuldevta || "N/A",
+                "Additional Devotees": additionalDevoteesStr,
+                "Special Requests": b.specialRequests || "None"
+            };
+        });
 
         const ws = XLSX.utils.json_to_sheet(exportData);
+        
+        // Auto-size columns for better readability
+        const colWidths = Object.keys(exportData[0]).map(() => ({ wch: 20 }));
+        ws['!cols'] = colWidths;
+
         const wb = XLSX.utils.book_new();
         XLSX.utils.book_append_sheet(wb, ws, "Bookings");
-        XLSX.writeFile(wb, `Temple_Bookings_Export_${new Date().toISOString().split('T')[0]}.xlsx`);
+        
+        const fileName = `Temple_Bookings_${statsPeriod}_${format(new Date(), 'yyyy-MM-dd_HHmm')}.xlsx`;
+        XLSX.writeFile(wb, fileName);
+        
+        toast({
+            title: "Export Successful",
+            description: `Exported ${filteredBookings.length} bookings for ${statsPeriod} period.`,
+            variant: "success"
+        });
     };
 
-    const searchParams = useSearchParams();
     const statusFilter = searchParams.get("status");
+
+    const updateStatusFilter = (status: string | null) => {
+        const params = new URLSearchParams(searchParams.toString());
+        if (status) {
+            params.set("status", status);
+        } else {
+            params.delete("status");
+        }
+        router.push(`${pathname}?${params.toString()}`);
+    };
 
     const filteredBookings = useMemo(() => {
         const filtered = bookings.filter((b) => {
@@ -298,6 +343,7 @@ export default function TempleBookingsPage() {
                 const now = new Date();
                 let periodStart: Date;
                 switch (statsPeriod) {
+                    case "today": periodStart = startOfDay(now); break;
                     case "week": periodStart = subWeeks(now, 1); break;
                     case "month": periodStart = subMonths(now, 1); break;
                     case "year": periodStart = subYears(now, 1); break;
@@ -333,6 +379,9 @@ export default function TempleBookingsPage() {
         let startDate: Date;
 
         switch (statsPeriod) {
+            case "today":
+                startDate = startOfDay(now);
+                break;
             case "week":
                 startDate = subWeeks(now, 1);
                 break;
@@ -346,7 +395,7 @@ export default function TempleBookingsPage() {
                 startDate = new Date(0);
                 break;
             default:
-                startDate = subWeeks(now, 1);
+                startDate = startOfDay(now);
         }
 
         const periodBookings = bookings.filter(b => isAfter(new Date(b.createdAt), startDate));
@@ -435,6 +484,15 @@ export default function TempleBookingsPage() {
                     </Badge>
                 </h2>
                 <div className="flex items-center bg-muted rounded-lg p-1">
+                    <button
+                        onClick={() => setStatsPeriod("today")}
+                        className={cn(
+                            "px-3 py-1 text-xs font-medium rounded-md transition-all",
+                            statsPeriod === "today" ? "bg-white text-primary shadow-sm" : "text-muted-foreground hover:text-foreground"
+                        )}
+                    >
+                        Today
+                    </button>
                     <button
                         onClick={() => setStatsPeriod("week")}
                         className={cn(
@@ -550,6 +608,33 @@ export default function TempleBookingsPage() {
                         className="pl-10"
                     />
                 </div>
+
+                {/* Status Filter */}
+                <DropdownMenu>
+                    <DropdownMenuTrigger asChild>
+                        <Button variant="outline" size="sm" className="gap-2 text-sm shrink-0">
+                            <CheckCircle className="w-4 h-4" />
+                            {statusFilter ? (statusConfig[statusFilter as keyof typeof statusConfig]?.label || statusFilter) : "All Statuses"}
+                        </Button>
+                    </DropdownMenuTrigger>
+                    <DropdownMenuContent align="end">
+                        <DropdownMenuLabel>Filter by Status</DropdownMenuLabel>
+                        <DropdownMenuSeparator />
+                        <DropdownMenuItem onClick={() => updateStatusFilter(null)} className={cn(!statusFilter && "bg-primary/10 text-primary font-semibold")}>
+                            All Statuses
+                        </DropdownMenuItem>
+                        {Object.entries(statusConfig).filter(([key]) => key !== 'CANCELLED').map(([key, config]) => (
+                            <DropdownMenuItem 
+                                key={key} 
+                                onClick={() => updateStatusFilter(key)}
+                                className={cn(statusFilter === key && "bg-primary/10 text-primary font-semibold")}
+                            >
+                                <config.icon className="w-4 h-4 mr-2" />
+                                {config.label}
+                            </DropdownMenuItem>
+                        ))}
+                    </DropdownMenuContent>
+                </DropdownMenu>
 
                 {/* Filter Type Selector */}
                 <DropdownMenu>
@@ -794,7 +879,7 @@ export default function TempleBookingsPage() {
                                                                         className="text-slate-600 focus:text-slate-600"
                                                                         disabled={isProcessing}
                                                                     >
-                                                                        <XCircle className="w-4 h-4 mr-2" /> Cancel Booking
+                                                                        {/* <XCircle className="w-4 h-4 mr-2" /> Cancel Booking */}
                                                                     </DropdownMenuItem>
                                                                 )}
 
@@ -841,10 +926,10 @@ export default function TempleBookingsPage() {
                             initial={{ opacity: 0, scale: 0.9, y: 20 }}
                             animate={{ opacity: 1, scale: 1, y: 0 }}
                             exit={{ opacity: 0, scale: 0.9, y: 20 }}
-                            className="bg-white w-full max-w-3xl rounded-[2.5rem] shadow-2xl overflow-hidden relative border border-slate-100"
+                            className="bg-white w-full max-w-3xl rounded-[2rem] md:rounded-[2.5rem] shadow-2xl overflow-hidden relative border border-slate-100 max-h-[90vh] overflow-y-auto premium-scrollbar"
                         >
                             {/* Modal Header */}
-                            <div className="bg-gradient-to-r from-primary to-secondary p-8 text-white">
+                            <div className="bg-gradient-to-r from-primary to-secondary p-6 md:p-8 text-white sticky top-0 z-10">
                                 <button
                                     onClick={() => setSelectedBooking(null)}
                                     className="absolute top-6 right-6 p-2 rounded-full bg-white/10 hover:bg-white/20 transition-colors"
@@ -852,19 +937,19 @@ export default function TempleBookingsPage() {
                                     <X className="w-5 h-5" />
                                 </button>
                                 <div className="flex items-center gap-4 mb-2">
-                                    <div className="w-12 h-12 bg-white/20 rounded-2xl flex items-center justify-center backdrop-blur-md">
-                                        <Church className="w-7 h-7" />
+                                    <div className="w-10 h-10 md:w-12 md:h-12 bg-white/20 rounded-2xl flex items-center justify-center backdrop-blur-md">
+                                        <Church className="w-6 h-6 md:w-7 md:h-7" />
                                     </div>
                                     <div>
-                                        <h3 className="text-2xl font-serif font-bold">Booking Summary</h3>
-                                        <p className="text-white/80 text-sm">Review devotee information</p>
+                                        <h3 className="text-xl md:text-2xl font-serif font-bold">Booking Summary</h3>
+                                        <p className="text-white/80 text-xs md:text-sm">Review devotee information</p>
                                     </div>
                                 </div>
                             </div>
 
-                            <div className="p-8 space-y-8">
+                            <div className="p-6 md:p-8 space-y-8">
                                 {/* Status Overview */}
-                                <div className="flex items-center justify-between p-4 bg-slate-50 rounded-2xl border border-slate-100">
+                                <div className="flex flex-col md:flex-row md:items-center justify-between p-4 bg-slate-50 rounded-2xl border border-slate-100 gap-4">
                                     <div className="flex items-center gap-3">
                                         <div className={`p-2 rounded-xl ${statusConfig[selectedBooking.status as keyof typeof statusConfig]?.color}`}>
                                             {React.createElement(statusConfig[selectedBooking.status as keyof typeof statusConfig]?.icon || CheckCircle, { className: "w-5 h-5" })}
@@ -874,16 +959,16 @@ export default function TempleBookingsPage() {
                                             <p className="font-bold text-slate-700">{selectedBooking.status}</p>
                                         </div>
                                     </div>
-                                    <div className="flex flex-col items-end">
+                                    <div className="flex flex-col md:items-end">
                                         <p className="text-[10px] text-slate-400 font-bold uppercase tracking-widest">Ritual Date</p>
-                                        <Badge variant="outline" className="px-3 py-1 bg-white font-bold text-primary">
+                                        <Badge variant="outline" className="px-3 py-1 bg-white font-bold text-primary w-fit">
                                             {selectedBooking.bookingDate ? format(new Date(selectedBooking.bookingDate), "PPPP") : "N/A"}
                                         </Badge>
                                     </div>
                                 </div>
 
                                 {/* Information Grid */}
-                                <div className="grid grid-cols-2 gap-8">
+                                <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
                                     <div className="space-y-4">
                                         <div>
                                             <p className="text-[10px] text-slate-400 font-bold uppercase tracking-widest mb-1">Ritual Service</p>
@@ -922,8 +1007,91 @@ export default function TempleBookingsPage() {
                                     </div>
                                 </div>
 
+                                {/* Spiritual Information Grid */}
+                                {(selectedBooking.gotra || selectedBooking.rashi || selectedBooking.nakshatra || selectedBooking.dob || selectedBooking.anniversary || selectedBooking.kuldevi || selectedBooking.kuldevta) && (
+                                    <div className="grid grid-cols-2 md:grid-cols-3 gap-6 pt-6 border-t border-slate-100">
+                                        {selectedBooking.gotra && (
+                                            <div>
+                                                <p className="text-[10px] text-slate-400 font-bold uppercase tracking-widest mb-1">Gotra</p>
+                                                <p className="text-slate-700 font-bold">{selectedBooking.gotra}</p>
+                                            </div>
+                                        )}
+                                        {selectedBooking.rashi && (
+                                            <div>
+                                                <p className="text-[10px] text-slate-400 font-bold uppercase tracking-widest mb-1">Rashi</p>
+                                                <p className="text-slate-700 font-bold">{selectedBooking.rashi}</p>
+                                            </div>
+                                        )}
+                                        {selectedBooking.nakshatra && (
+                                            <div>
+                                                <p className="text-[10px] text-slate-400 font-bold uppercase tracking-widest mb-1">Nakshatra</p>
+                                                <p className="text-slate-700 font-bold">{selectedBooking.nakshatra}</p>
+                                            </div>
+                                        )}
+                                        {selectedBooking.dob && (
+                                            <div>
+                                                <p className="text-[10px] text-slate-400 font-bold uppercase tracking-widest mb-1">Birthday</p>
+                                                <p className="text-slate-700 font-bold">{format(new Date(selectedBooking.dob), "dd MMM yyyy")}</p>
+                                            </div>
+                                        )}
+                                        {selectedBooking.anniversary && (
+                                            <div>
+                                                <p className="text-[10px] text-slate-400 font-bold uppercase tracking-widest mb-1">Anniversary</p>
+                                                <p className="text-slate-700 font-bold">{format(new Date(selectedBooking.anniversary), "dd MMM yyyy")}</p>
+                                            </div>
+                                        )}
+                                        {selectedBooking.kuldevi && (
+                                            <div>
+                                                <p className="text-[10px] text-slate-400 font-bold uppercase tracking-widest mb-1">Kuldevi</p>
+                                                <p className="text-slate-700 font-bold">{selectedBooking.kuldevi}</p>
+                                            </div>
+                                        )}
+                                        {selectedBooking.kuldevta && (
+                                            <div>
+                                                <p className="text-[10px] text-slate-400 font-bold uppercase tracking-widest mb-1">Kuldevta</p>
+                                                <p className="text-slate-700 font-bold">{selectedBooking.kuldevta}</p>
+                                            </div>
+                                        )}
+                                    </div>
+                                )}
+
+                                {/* Additional Devotees */}
+                                {selectedBooking.additionalDevotees && selectedBooking.additionalDevotees.length > 0 && (
+                                    <div className="pt-6 border-t border-slate-100">
+                                        <p className="text-[10px] text-slate-400 font-bold uppercase tracking-widest mb-3">Additional Devotees</p>
+                                        <div className="space-y-3">
+                                            {selectedBooking.additionalDevotees.map((dev: any, i: number) => (
+                                                <div key={i} className="bg-slate-50 p-4 rounded-xl border border-slate-100 grid grid-cols-1 sm:grid-cols-2 md:grid-cols-4 gap-4">
+                                                    <div>
+                                                        <p className="text-[10px] text-slate-400 font-bold uppercase tracking-tight">Name</p>
+                                                        <p className="text-sm font-bold text-slate-700">{dev.name}</p>
+                                                    </div>
+                                                    {dev.gothra && (
+                                                        <div>
+                                                            <p className="text-[10px] text-slate-400 font-bold uppercase tracking-tight">Gotra</p>
+                                                            <p className="text-sm font-bold text-slate-700">{dev.gothra}</p>
+                                                        </div>
+                                                    )}
+                                                    {dev.kuldevi && (
+                                                        <div>
+                                                            <p className="text-[10px] text-slate-400 font-bold uppercase tracking-tight">Kuldevi</p>
+                                                            <p className="text-sm font-bold text-slate-700">{dev.kuldevi}</p>
+                                                        </div>
+                                                    )}
+                                                    {dev.kuldevta && (
+                                                        <div>
+                                                            <p className="text-[10px] text-slate-400 font-bold uppercase tracking-tight">Kuldevta</p>
+                                                            <p className="text-sm font-bold text-slate-700">{dev.kuldevta}</p>
+                                                        </div>
+                                                    )}
+                                                </div>
+                                            ))}
+                                        </div>
+                                    </div>
+                                )}
+
                                 {/* Extended Details */}
-                                <div className="grid grid-cols-2 gap-6 pt-6 border-t border-slate-100">
+                                <div className="grid grid-cols-1 md:grid-cols-2 gap-6 pt-6 border-t border-slate-100">
                                     <div>
                                         <p className="text-[10px] text-slate-400 font-bold uppercase tracking-widest mb-1">Delivery Address</p>
                                         <p className="text-sm text-slate-700 font-medium bg-slate-50 p-3 rounded-xl border border-dashed border-slate-200 min-h-[80px]">
@@ -931,7 +1099,7 @@ export default function TempleBookingsPage() {
                                         </p>
                                     </div>
                                     <div>
-                                        <p className="text-[10px] text-slate-400 font-bold uppercase tracking-widest mb-1">Special Requests / Gotra</p>
+                                        <p className="text-[10px] text-slate-400 font-bold uppercase tracking-widest mb-1">Special Requests</p>
                                         <p className="text-sm text-slate-700 font-medium bg-slate-50 p-3 rounded-xl border border-dashed border-slate-200 min-h-[80px] italic">
                                             "{selectedBooking.specialRequests || "No specific instructions."}"
                                         </p>
@@ -943,8 +1111,8 @@ export default function TempleBookingsPage() {
                                         <p className="text-[10px] text-slate-400 font-bold uppercase tracking-widest mb-3">Pooja Completion Proof</p>
                                         <div className="grid grid-cols-2 gap-4">
                                             {selectedBooking.proofPhotos.map((photo: string, i: number) => (
-                                                <a key={i} href={photo} target="_blank" rel="noopener noreferrer" className="relative aspect-video rounded-xl overflow-hidden border border-slate-100 group">
-                                                    <img src={photo} alt="Proof" className="w-full h-full object-cover transition-transform group-hover:scale-110" />
+                                                <a key={i} href={photo.startsWith('http') ? photo : `${BASE_URL}${photo}`} target="_blank" rel="noopener noreferrer" className="relative aspect-video rounded-xl overflow-hidden border border-slate-100 group">
+                                                    <img src={photo.startsWith('http') ? photo : `${BASE_URL}${photo}`} alt="Proof" className="w-full h-full object-cover transition-transform group-hover:scale-110" />
                                                     <div className="absolute inset-0 bg-black/20 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center">
                                                         <Eye className="w-5 h-5 text-white" />
                                                     </div>
@@ -955,7 +1123,7 @@ export default function TempleBookingsPage() {
                                 )}
 
                                 {/* Summary & Actions */}
-                                <div className="pt-6 border-t border-slate-100 space-y-4">
+                                <div className="pt-6 border-t border-slate-100 sticky bottom-0 bg-white pb-2">
                                     <div className="flex items-center justify-between">
                                         <div>
                                             <p className="text-[10px] text-slate-400 font-bold uppercase tracking-widest mb-1">Total Offering</p>
@@ -971,18 +1139,7 @@ export default function TempleBookingsPage() {
                                                     Mark Completed
                                                 </Button>
                                             )}
-                                            {/* <Button
-                                                variant="outline"
-                                                onClick={() => setSelectedBooking(null)}
-                                                className="rounded-xl px-6 border-slate-200 text-slate-600"
-                                            >
-                                                Close View
-                                            </Button> */}
                                         </div>
-                                    </div>
-                                    <div className="flex items-center justify-between text-[11px] text-slate-400 font-medium uppercase tracking-wider">
-                                        {/* <span>Reference ID: {selectedBooking.id?.toUpperCase()}</span> */}
-                                        {/* <span>Secured payment with GST invoice</span> */}
                                     </div>
                                 </div>
                             </div>

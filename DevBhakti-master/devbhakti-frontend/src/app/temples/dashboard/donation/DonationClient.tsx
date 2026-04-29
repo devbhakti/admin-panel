@@ -424,7 +424,6 @@ export default function DonationClient() {
                                                             </div>
                                                             <div>
                                                                 <p className="font-semibold text-sm group-hover:text-primary transition-colors">{donation.donorName}</p>
-                                                                <p className="text-[10px] text-muted-foreground font-mono">{donation.id}</p>
                                                             </div>
                                                         </div>
                                                     </td>

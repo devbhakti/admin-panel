@@ -11,6 +11,7 @@ import path from 'path';
 import fs from 'fs';
 import { sendOrderInvoiceEmail } from "../../services/orderMailService";
 import { localize, getLang, getEnglish } from "../../utils/localization";
+import { generateCustomId } from "../../utils/idGenerator";
 
 export const calculateFees = async (req: Request, res: Response) => {
   try {
@@ -116,6 +117,7 @@ export const createOrder = async (req: Request, res: Response) => {
  */
 export const createVerifiedOrder = async (orderData: any, userId: string) => {
   const { items, totalAmount, shippingAddress, paymentMethod } = orderData;
+  const displayId = await generateCustomId('OID');
 
   const { order, groups, productMap } = await prisma.$transaction(async (tx) => {
     const productIds = items.map((item: any) => item.productId);
@@ -139,6 +141,7 @@ export const createVerifiedOrder = async (orderData: any, userId: string) => {
     // 2. Create Master Order
     const order = await tx.order.create({
       data: {
+        displayId,
         userId,
         totalAmount,
         paymentMethod,
@@ -227,7 +230,7 @@ export const createVerifiedOrder = async (orderData: any, userId: string) => {
             commission: commissionAmount,
             type: "MARKETPLACE_EARNING",
             sourceId: order.id,
-            description: `Earning from Order #${order.id.slice(-6).toUpperCase()}`,
+            description: `Earning from Order #${displayId}`,
             status: "COMPLETED"
           }
         });
@@ -311,7 +314,7 @@ export const createVerifiedOrder = async (orderData: any, userId: string) => {
         try {
           await notifyUser(vendorUserId, templeId ? 'temple_admin' : 'seller', {
             title: 'New Product Order! 📦',
-            body: `You have received a new order #${subOrder.id.slice(-6).toUpperCase()} for ₹${subOrderTotal}.`,
+            body: `You have received a new order #${subOrder.id.slice(-6).toUpperCase()} (Ref: ${displayId}) for ₹${subOrderTotal}.`,
             data: { link: templeId ? `/temples/dashboard/orders/${subOrder.id}` : `/seller/dashboard/orders/${subOrder.id}`, orderId: subOrder.id }
           });
         } catch (notifyErr) {
@@ -328,7 +331,7 @@ export const createVerifiedOrder = async (orderData: any, userId: string) => {
   try {
     await notifyUser(userId, 'devotee', {
       title: 'Order Placed Successfully! 🎉',
-      body: `Your order #${order.id.slice(-6).toUpperCase()} has been placed. We'll update you when it's shipped!`,
+      body: `Your order #${displayId} has been placed. We'll update you when it's shipped!`,
       data: { link: `/profile/orders`, orderId: order.id }
     });
   } catch (notifyErr) {
@@ -514,7 +517,7 @@ export const getOrderInvoice = async (req: Request, res: Response) => {
         <html lang="en">
         <head>
             <meta charset="UTF-8">
-            <title>Invoice #${locOrder.id.slice(-8).toUpperCase()}</title>
+            <title>Invoice #${locOrder.displayId || locOrder.id.slice(-8).toUpperCase()}</title>
             <link href="https://fonts.googleapis.com/css2?family=Roboto:wght@400;500;700&display=swap" rel="stylesheet">
             <style>
                 body { 
@@ -746,7 +749,7 @@ export const getOrderInvoice = async (req: Request, res: Response) => {
                         <div class="column-content">
                             <div class="detail-row">
                                 <span class="detail-label">INVOICE NO</span>
-                                <span class="detail-value">: INV-${order.id.slice(-6).toUpperCase()}</span>
+                                <span class="detail-value">: INV-${locOrder.displayId || locOrder.id.slice(-6).toUpperCase()}</span>
                             </div>
                             <div class="detail-row">
                                 <span class="detail-label">INVOICE DATE</span>
@@ -754,7 +757,7 @@ export const getOrderInvoice = async (req: Request, res: Response) => {
                             </div>
                             <div class="detail-row">
                                 <span class="detail-label">ORDER NO</span>
-                                <span class="detail-value">: ${locOrder.id.slice(-8).toUpperCase()}</span>
+                                <span class="detail-value">: ${locOrder.displayId || locOrder.id.slice(-8).toUpperCase()}</span>
                             </div>
                             <div class="detail-row">
                                 <span class="detail-label">ORDER DATE</span>

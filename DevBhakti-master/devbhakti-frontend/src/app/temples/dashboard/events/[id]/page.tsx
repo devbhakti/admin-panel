@@ -148,13 +148,7 @@ export default function TempleViewEventPage() {
                                         
                                         {event.time && (
                                             <div className="flex items-center gap-4">
-                                                <div className="w-12 h-12 rounded-2xl bg-white/15 flex items-center justify-center shrink-0 shadow-inner">
-                                                    <Clock className="w-6 h-6 text-orange-300" />
-                                                </div>
-                                                <div>
-                                                    <p className="text-white/50 text-[10px] font-black uppercase">Kick-off Time</p>
-                                                    <p className="text-xl font-bold tracking-tight">{event.time}</p>
-                                                </div>
+                                                {/*          */}
                                             </div>
                                         )}
                                     </div>

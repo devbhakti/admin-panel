@@ -2,11 +2,6 @@ import { Request, Response } from "express";
 import { prisma } from "../../lib/prisma";
 import { isPayoutAllowed, nextPayoutDate } from "../../utils/payoutSchedule";
 
-// Helper to get sellerId from userId (Bypassed in favor of injection)
-const getSellerStoreId = async (userId: string) => {
-    return null;
-};
-
 // Get Ledger Entries for a Seller
 export const getSellerLedger = async (req: Request, res: Response) => {
     try {
@@ -21,8 +16,58 @@ export const getSellerLedger = async (req: Request, res: Response) => {
             orderBy: { createdAt: "desc" }
         });
 
-        return res.status(200).json({ success: true, data: entries });
+        // Enriched response mapping
+        let enrichedEntries = entries;
+        
+        try {
+            const marketplaceEntries = entries.filter(e => e.type === "MARKETPLACE_EARNING" && e.sourceId);
+            const orderIds = Array.from(new Set(marketplaceEntries.map(e => e.sourceId as string)));
+
+            if (orderIds.length > 0) {
+                const orders = await prisma.order.findMany({
+                    where: { id: { in: orderIds } },
+                    include: {
+                        user: { select: { name: true } },
+                        subOrders: {
+                            where: { sellerId: sellerId }
+                        }
+                    }
+                });
+
+                const orderMap = new Map(orders.map(o => [o.id, o]));
+
+                enrichedEntries = entries.map(entry => {
+                    try {
+                        if (entry.type === "MARKETPLACE_EARNING" && entry.sourceId) {
+                            const order = orderMap.get(entry.sourceId);
+                            if (order) {
+                                const subOrder = order.subOrders[0]; // Filtered by sellerId in the query
+                                return {
+                                    ...entry,
+                                    orderDetail: {
+                                        displayId: order.displayId || "N/A",
+                                        customerName: order.user?.name || "N/A",
+                                        paymentStatus: order.paymentStatus || "PENDING",
+                                        deliveryStatus: subOrder?.status || "PENDING"
+                                    }
+                                };
+                            }
+                        }
+                    } catch (mapErr) {
+                        console.error("Map iteration error:", mapErr);
+                    }
+                    return entry;
+                });
+            }
+        } catch (enrichErr) {
+            console.error("Enrichment logic failed:", enrichErr);
+            // Fallback to raw entries
+            enrichedEntries = entries;
+        }
+
+        return res.status(200).json({ success: true, data: enrichedEntries });
     } catch (error: any) {
+        console.error("Seller Ledger API Error:", error);
         return res.status(500).json({ success: false, message: error.message });
     }
 };
@@ -36,7 +81,6 @@ export const getSellerFinanceSummary = async (req: Request, res: Response) => {
             return res.status(404).json({ success: false, message: "Seller store not found" });
         }
 
-        // Fetch data in parallel
         const [ledger, withdrawals] = await Promise.all([
             prisma.templeLedger.findMany({ where: { sellerId } }),
             prisma.withdrawalRequest.findMany({
@@ -45,11 +89,8 @@ export const getSellerFinanceSummary = async (req: Request, res: Response) => {
         ]);
 
         const now = new Date();
-        // 3 Days escrow window
-        // const escrowThreshold = new Date(now.getTime() - (3 * 24 * 60 * 60 * 1000)); // Original
-        const escrowThreshold = new Date(now.getTime()); // Testing: 0 Days
+        const escrowThreshold = new Date(now.getTime());
 
-        // --- 1. Income Analysis ---
         const validIncomeEntries = ledger.filter((e: any) =>
             e.type !== "WITHDRAWAL" && e.status !== "CANCELLED"
         );
@@ -58,7 +99,6 @@ export const getSellerFinanceSummary = async (req: Request, res: Response) => {
         const totalCommission = validIncomeEntries.reduce((sum: number, e: any) => sum + (e.commission || 0), 0);
         const netEarnings = totalEarnings - totalCommission;
 
-        // --- 2. Settlement Analysis ---
         const completedIncomeEntries = validIncomeEntries.filter((e: any) => e.status === "COMPLETED");
 
         const settledIncome = completedIncomeEntries
@@ -73,7 +113,6 @@ export const getSellerFinanceSummary = async (req: Request, res: Response) => {
             .filter((e: any) => e.status === "PENDING")
             .reduce((sum: number, e: any) => sum + e.amount, 0);
 
-        // --- 3. Payout Analysis ---
         const totalPaidPayouts = withdrawals
             .filter((w: any) => w.status === "PAID")
             .reduce((sum: number, w: any) => sum + w.amount, 0);
@@ -82,22 +121,18 @@ export const getSellerFinanceSummary = async (req: Request, res: Response) => {
             .filter((w: any) => w.status === "PENDING" || w.status === "APPROVED")
             .reduce((sum: number, w: any) => sum + w.amount, 0);
 
-        // --- 4. Final Balance ---
         let finalAvailable = settledIncome - totalPaidPayouts - processingWithdrawals;
 
-        // Payout Schedule Restricted: If not 15th or 28th, the "Available" for withdrawal is 0
         if (!isPayoutAllowed(now)) {
             finalAvailable = 0;
         }
 
         const pendingOrdersCount = validIncomeEntries.filter((e: any) => e.status === "PENDING").length;
 
-
-        // --- 5. Revenue History (Last 30 Days) ---
         const revenueHistory = [];
         for (let i = 29; i >= 0; i--) {
             const d = new Date(now.getTime() - (i * 24 * 60 * 60 * 1000));
-            const dateStr = d.toISOString().split('T')[0]; // YYYY-MM-DD
+            const dateStr = d.toISOString().split('T')[0];
             const displayDate = d.toLocaleDateString('en-US', { day: 'numeric', month: 'short' });
 
             const dailySum = validIncomeEntries
@@ -110,7 +145,7 @@ export const getSellerFinanceSummary = async (req: Request, res: Response) => {
         return res.status(200).json({
             success: true,
             data: {
-                totalEarnings, // Gross Sales
+                totalEarnings,
                 totalCommission,
                 netEarnings,
                 availableBalance: Math.max(0, finalAvailable),
@@ -144,15 +179,11 @@ export const requestSellerWithdrawal = async (req: Request, res: Response) => {
 
         await prisma.$transaction(async (tx) => {
             const now = new Date();
-
-            // ---- NEW SCHEDULE CHECK ----
             if (!isPayoutAllowed(now)) {
                 const next = nextPayoutDate(now);
                 throw new Error(`Payouts are only processed on the 15th and 28th. Next allowed date: ${next.toLocaleDateString('en-IN', { day: 'numeric', month: 'short', year: 'numeric' })}`);
             }
 
-            // Original 3 Days escrow window check is still valid for "settled" income, 
-            // but we use the schedule check as a hard gate.
             const escrowThreshold = new Date(now.getTime() - (3 * 24 * 60 * 60 * 1000));
 
             const ledger = await tx.templeLedger.findMany({
@@ -186,20 +217,6 @@ export const requestSellerWithdrawal = async (req: Request, res: Response) => {
                 }
             });
         });
-
-        try {
-            const { notifyAdmins } = require("../../services/firebaseService");
-            await notifyAdmins({
-                title: 'New Seller Withdrawal Request 🏪',
-                body: `A seller has requested a withdrawal of ₹${amount}.`,
-                data: {
-                    link: '/admin/finance',
-                    type: 'SELLER_WITHDRAWAL_REQUEST'
-                }
-            });
-        } catch (notifyErr) {
-            console.error("Failed to notify admins for withdrawal:", notifyErr);
-        }
 
         return res.status(201).json({ success: true, message: "Withdrawal request submitted successfully" });
 

@@ -4,6 +4,7 @@ import { createShiprocketPickupLocation } from '../../services/shiprocketService
 import { SlabType, CommissionCategory } from "@prisma/client";
 import { parseLocation, extractPincode } from '../../lib/shiprocketUtils';
 import { buildLangJson, getLang, localize } from "../../utils/localization";
+import { generateCustomId } from "../../utils/idGenerator";
 
 // Helper to normalize phone number to +91XXXXXXXXXX format
 const normalizePhone = (phone: string): string => {
@@ -70,8 +71,12 @@ export const createSeller = async (req: Request, res: Response) => {
         // Transaction to create User and associated SellerProfile (Store)
         const result = await prisma.$transaction(async (tx) => {
             // 1. Create User
+            const userDisplayId = await generateCustomId('UID');
+            const sellerDisplayId = await generateCustomId('SLID');
+
             const user = await tx.user.create({
                 data: {
+                    displayId: userDisplayId,
                     name: sellerName as string,
                     email: email as string,
                     phone: normalizedPhone,
@@ -83,6 +88,7 @@ export const createSeller = async (req: Request, res: Response) => {
             // 2. Create SellerProfile (Store entity)
             const sellerProfile = await tx.sellerProfile.create({
                 data: {
+                    displayId: sellerDisplayId,
                     name: buildLangJson(storeName_en || req.body.storeName, storeName_hi, storeName_mr),
                     location: buildLangJson(address_en || req.body.address, address_hi, address_mr),
                     fullAddress: buildLangJson(address_en || req.body.address, address_hi, address_mr),
@@ -189,6 +195,8 @@ export const getAllSellers = async (req: Request, res: Response) => {
                 address: store?.fullAddress || '',
                 productCommissionRate: store?.productCommissionRate || 0,
                 sellerId: store?.id,
+                displayId: store?.displayId || user.displayId || 'N/A',
+                userDisplayId: user.displayId,
 
                 // Stats
                 totalProducts: store?.products?.length || 0,
@@ -256,6 +264,8 @@ export const getSellerById = async (req: Request, res: Response) => {
             address: userAny.sellerProfile?.fullAddress || '',
             productCommissionRate: userAny.sellerProfile?.productCommissionRate || 0,
             sellerId: userAny.sellerProfile?.id,
+            displayId: userAny.sellerProfile?.displayId || userAny.displayId || 'N/A',
+            userDisplayId: userAny.displayId,
             products: userAny.sellerProfile?.products || [],
 
             // Add missing fields

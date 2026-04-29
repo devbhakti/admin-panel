@@ -14,7 +14,65 @@ export const getTempleLedger = async (req: Request, res: Response) => {
       orderBy: { createdAt: "desc" }
     });
 
-    return res.status(200).json({ success: true, data: entries });
+    // --- Enriched Response Mapping ---
+    let enrichedEntries = entries;
+    try {
+      const sourceIds = entries.filter(e => e.sourceId).map(e => e.sourceId as string);
+      
+      if (sourceIds.length > 0) {
+        // Fetch bookings and donations in parallel
+        const [bookings, donations] = await Promise.all([
+          prisma.poojaBooking.findMany({
+            where: { id: { in: sourceIds } },
+            include: { user: { select: { name: true } } }
+          }),
+          prisma.donation.findMany({
+            where: { id: { in: sourceIds } },
+            include: { user: { select: { name: true } } }
+          })
+        ]);
+
+        const bookingMap = new Map(bookings.map(b => [b.id, b]));
+        const donationMap = new Map(donations.map(d => [d.id, d]));
+
+        enrichedEntries = entries.map(entry => {
+          if (entry.sourceId) {
+            if (entry.type === "POOJA_EARNING") {
+              const booking = bookingMap.get(entry.sourceId);
+              if (booking) {
+                return {
+                  ...entry,
+                  orderDetail: {
+                    displayId: booking.displayId || "N/A",
+                    customerName: booking.devoteeName || booking.user?.name || "N/A",
+                    paymentStatus: booking.status === "PENDING" ? "PENDING" : "PAID",
+                    deliveryStatus: booking.status
+                  }
+                };
+              }
+            } else if (entry.type === "DONATION_EARNING") {
+              const donation = donationMap.get(entry.sourceId);
+              if (donation) {
+                return {
+                  ...entry,
+                  orderDetail: {
+                    displayId: donation.id.slice(-8).toUpperCase(),
+                    customerName: donation.user?.name || "Anonymous",
+                    paymentStatus: "PAID",
+                    deliveryStatus: "COMPLETED"
+                  }
+                };
+              }
+            }
+          }
+          return entry;
+        });
+      }
+    } catch (enrichErr) {
+      console.error("Temple ledger enrichment failed:", enrichErr);
+    }
+
+    return res.status(200).json({ success: true, data: enrichedEntries });
   } catch (error: any) {
     return res.status(500).json({ success: false, message: error.message });
   }

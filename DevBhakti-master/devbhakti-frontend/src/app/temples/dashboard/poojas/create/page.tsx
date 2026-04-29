@@ -14,6 +14,14 @@ import { useToast } from "@/hooks/use-toast";
 import { useEffect } from "react";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from "@/components/ui/dialog";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { cn } from "@/lib/utils";
+import { parseLocalizedValue } from "@/utils/textUtils";
+import {
+    Tooltip,
+    TooltipContent,
+    TooltipProvider,
+    TooltipTrigger,
+} from "@/components/ui/tooltip";
 
 export default function TempleCreatePoojaPage() {
     const router = useRouter();
@@ -43,11 +51,21 @@ export default function TempleCreatePoojaPage() {
     };
 
     const toggleCategory = (catName: string) => {
-        setSelectedCats(prev =>
-            prev.includes(catName)
-                ? prev.filter(c => c !== catName)
-                : [...prev, catName]
-        );
+        setSelectedCats(prev => {
+            if (prev.includes(catName)) {
+                return prev.filter(c => c !== catName);
+            } else {
+                if (prev.length >= 5) {
+                    toast({
+                        title: "Limit Exceeded",
+                        description: "You can only select up to 5 categories.",
+                        variant: "destructive"
+                    });
+                    return prev;
+                }
+                return [...prev, catName];
+            }
+        });
     };
 
     const handleSuggestCategory = async () => {
@@ -138,9 +156,20 @@ export default function TempleCreatePoojaPage() {
     };
 
     const updatePackage = (index: number, field: string, value: any) => {
-        const newPackages = [...formData.packages];
-        newPackages[index] = { ...newPackages[index], [field]: value };
-        setFormData({ ...formData, packages: newPackages });
+        setFormData(prev => {
+            const newPackages = [...prev.packages];
+            if (newPackages[index]) {
+                newPackages[index] = { ...newPackages[index], [field]: value };
+
+                const update: any = { packages: newPackages };
+                // If it's a Single package and price changed, sync top price
+                if (newPackages[index].name === "Single" && field === 'price') {
+                    update.price = value;
+                }
+                return { ...prev, ...update };
+            }
+            return prev;
+        });
     };
 
     const handleSubmit = async (e: React.FormEvent) => {
@@ -213,7 +242,7 @@ export default function TempleCreatePoojaPage() {
                     <ArrowLeft className="w-5 h-5" />
                 </Button>
                 <div>
-                    <h1 className="text-3xl font-serif font-bold text-[#7b4623]">Offer New Pooja</h1>
+                    <h1 className="text-3xl font-serif font-bold text-[#7b4623]">Create New Pooja</h1>
                     <p className="text-slate-500">Add a new ritual or service for your devotees.</p>
                 </div>
             </div>
@@ -301,7 +330,7 @@ export default function TempleCreatePoojaPage() {
                 <div className="space-y-6">
                     <div className="space-y-4 md:col-span-2">
                         <div className="flex items-center justify-between">
-                            <Label className="text-base font-semibold text-[#7b4623]">Category/Purpose *</Label>
+                            <Label className="text-base font-semibold text-[#7b4623]">Category/Purpose </Label>
                             <Button
                                 type="button"
                                 variant="outline"
@@ -315,38 +344,46 @@ export default function TempleCreatePoojaPage() {
 
                         <DropdownMenu>
                             <DropdownMenuTrigger asChild>
-                                <Button variant="outline" className="w-full justify-between h-11 rounded-xl border-slate-200 text-slate-600 hover:bg-transparent">
-                                    <span>Select purposes...</span>
-                                    <ChevronDown className="w-4 h-4 opacity-50" />
+                                <Button 
+                                    variant="outline" 
+                                    className="w-full justify-between h-14 rounded-2xl px-4 border-slate-200 bg-slate-50/50 hover:bg-white transition-all text-left font-normal"
+                                >
+                                    <div className="flex flex-wrap gap-1.5 items-center overflow-hidden py-1">
+                                        {selectedCats.length > 0 ? (
+                                            selectedCats.map((catName) => (
+                                                <span key={catName} className="bg-[#7b4623]/10 text-[#7b4623] text-[12px] font-medium px-3 py-1 rounded-lg border border-[#7b4623]/20 whitespace-nowrap">
+                                                    {parseLocalizedValue(catName)}
+                                                </span>
+                                            ))
+                                        ) : (
+                                            <span className="text-slate-400">Select categories for this pooja...</span>
+                                        )}
+                                    </div>
+                                    <ChevronDown className="w-4 h-4 opacity-50 shrink-0 ml-2 text-[#7b4623]" />
                                 </Button>
                             </DropdownMenuTrigger>
-                            <DropdownMenuContent className="w-[var(--radix-dropdown-menu-trigger-width)] max-h-64 overflow-y-auto">
+                            <DropdownMenuContent className="w-[var(--radix-dropdown-menu-trigger-width)] max-h-[400px] overflow-y-auto rounded-2xl shadow-2xl border-slate-100 p-2 animate-in slide-in-from-top-2 duration-200">
                                 {poojaCategories.map((cat) => (
                                     <DropdownMenuCheckboxItem
                                         key={cat.id}
                                         checked={selectedCats.includes(cat.name)}
+                                        onSelect={(e) => e.preventDefault()}
                                         onCheckedChange={() => toggleCategory(cat.name)}
+                                        className="rounded-xl mb-1 last:mb-0 h-10 cursor-pointer focus:bg-orange-50 focus:text-[#7b4623]"
                                     >
-                                        {cat.name}
+                                        {parseLocalizedValue(cat.name)}
                                     </DropdownMenuCheckboxItem>
                                 ))}
                             </DropdownMenuContent>
                         </DropdownMenu>
 
-                        <div className="flex flex-wrap gap-2 mt-3">
-                            {selectedCats.map(catName => (
-                                <div key={catName} className="flex items-center gap-1.5 bg-[#7b4623] text-white px-3 py-1.5 rounded-full text-sm">
-                                    <span>{catName}</span>
-                                    <X
-                                        className="w-3.5 h-3.5 cursor-pointer hover:text-red-300"
-                                        onClick={() => toggleCategory(catName)}
-                                    />
-                                </div>
-                            ))}
-                        </div>
-
                         {selectedCats.length === 0 && (
-                            <p className="text-[10px] text-slate-400 italic">Select one or more purposes for this pooja</p>
+                            <p className="text-[11px] text-slate-400 italic pl-1">Select one or more purposes for this pooja (Max 5)</p>
+                        )}
+                        {selectedCats.length > 0 && (
+                            <p className="text-[11px] text-[#7b4623] font-medium pl-1">
+                                Selected {selectedCats.length} of 5 categories
+                            </p>
                         )}
                     </div>
                 </div>
@@ -396,24 +433,32 @@ export default function TempleCreatePoojaPage() {
 
                     <div className="space-y-3">
                         <Label className="text-sm font-medium">Select Packages to Offer</Label>
-                        <div className="flex flex-wrap gap-3">
-                            {STATIC_PACKAGE_TYPES.map((ptype) => {
-                                const isSelected = formData.packages.some(p => p.name === ptype.name);
-                                return (
-                                    <Button
-                                        key={ptype.name}
-                                        type="button"
-                                        variant={isSelected ? "default" : "outline"}
-                                        onClick={() => togglePackage(ptype)}
-                                        className={`rounded-full px-6 transition-all ${isSelected ? 'bg-[#7b4623] hover:bg-[#5d351a] shadow-md' : 'hover:border-[#7b4623] hover:text-[#7b4623]'}`}
-                                    >
-                                        {isSelected && <Plus className="w-4 h-4 mr-2 rotate-45" />}
-                                        {!isSelected && <Plus className="w-4 h-4 mr-2" />}
-                                        {ptype.name}
-                                    </Button>
-                                );
-                            })}
-                        </div>
+                        <TooltipProvider>
+                            <div className="flex flex-wrap gap-3">
+                                {STATIC_PACKAGE_TYPES.map((ptype) => {
+                                    const isSelected = formData.packages.some(p => p.name === ptype.name);
+                                    return (
+                                        <Tooltip key={ptype.name}>
+                                            <TooltipTrigger asChild>
+                                            <Button
+                                                type="button"
+                                                variant={isSelected ? "default" : "outline"}
+                                                onClick={() => togglePackage(ptype)}
+                                                className={`rounded-full px-6 transition-all ${isSelected ? 'bg-[#7b4623] hover:bg-[#5d351a] shadow-md' : 'hover:border-[#7b4623] hover:text-[#7b4623]'}`}
+                                            >
+                                                {isSelected && <Plus className="w-4 h-4 mr-2 rotate-45" />}
+                                                {!isSelected && <Plus className="w-4 h-4 mr-2" />}
+                                                {ptype.name}
+                                            </Button>
+                                            </TooltipTrigger>
+                                            <TooltipContent>
+                                                <p>{ptype.description}</p>
+                                            </TooltipContent>
+                                        </Tooltip>
+                                    );
+                                })}
+                            </div>
+                        </TooltipProvider>
                     </div>
 
                     {formData.packages.length > 0 ? (
@@ -443,8 +488,8 @@ export default function TempleCreatePoojaPage() {
                                         <Input
                                             placeholder="e.g. Special prasad included"
                                             value={pkg.description}
-                                            onChange={(e) => updatePackage(index, 'description', e.target.value)}
-                                            className="rounded-lg h-10 border-slate-200"
+                                            readOnly
+                                            className="rounded-lg h-10 border-slate-200 bg-slate-50 cursor-not-allowed"
                                         />
                                     </div>
                                     <div className="sm:col-span-1 flex justify-center">

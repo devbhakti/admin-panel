@@ -144,7 +144,9 @@ function TempleOrdersClient() {
     const filteredOrders = orders.filter((o) => {
         const matchesSearch =
             (o.id || "").toLowerCase().includes(searchQuery.toLowerCase()) ||
-            (o.order?.user?.name || "").toLowerCase().includes(searchQuery.toLowerCase());
+            (o.displayId || "").toLowerCase().includes(searchQuery.toLowerCase()) ||
+            (o.order?.user?.name || "").toLowerCase().includes(searchQuery.toLowerCase()) ||
+            (o.order?.displayId || "").toLowerCase().includes(searchQuery.toLowerCase());
 
         const matchesStatus = statusFilter ? o.status === statusFilter : true;
 
@@ -279,7 +281,7 @@ function TempleOrdersClient() {
                     { label: "Total Orders", value: orders.length, color: "text-slate-900", icon: ShoppingBag },
                     { label: "Pending", value: orders.filter(o => o.status === "PENDING").length, color: "text-amber-600", icon: Clock },
                     { label: "Ready to Ship", value: orders.filter(o => o.status === "ACCEPTED").length, color: "text-blue-400", icon: Package },
-                    { label: "Revenue", value: `₹${orders.filter(o => o.status !== "CANCELLED").reduce((acc, curr) => acc + curr.totalAmount, 0).toLocaleString()}`, color: "text-emerald-700", icon: IndianRupee },
+                    { label: "Revenue", value: `₹${orders.filter(o => o.status !== "CANCELLED").reduce((acc, curr) => acc + Number(curr.totalAmount || 0), 0).toLocaleString()}`, color: "text-emerald-700", icon: IndianRupee },
                 ].map((stat) => (
                     <Card key={stat.label} className="border-none shadow-sm bg-white/50 backdrop-blur-sm hover:shadow-md transition-shadow">
                         <CardContent className="p-6">
@@ -368,7 +370,7 @@ function TempleOrdersClient() {
                                                 ? order.items.map((i: any) => parseLocalizedValue(i.product?.name)).join(", ").substring(0, 30) + "..."
                                                 : order.items.map((i: any) => parseLocalizedValue(i.product?.name)).join(", ")}
                                         </span>
-                                        <p className="text-[10px] text-slate-400 font-mono mt-0.5">#{order.id.slice(-8).toUpperCase()}</p>
+                                        <p className="text-[10px] text-slate-400 font-mono mt-0.5">{order.displayId || `#${order.id.slice(-8).toUpperCase()}`}</p>
                                     </td>
                                     <td className="py-6">
                                         <div className="flex items-center gap-3">
@@ -382,7 +384,7 @@ function TempleOrdersClient() {
                                         <span className="text-sm font-bold text-slate-700">{order.items.length} Product(s)</span>
                                     </td>
                                     <td className="py-6">
-                                        <span className="text-sm font-extrabold text-[#794A05]">₹{order.totalAmount.toLocaleString()}</span>
+                                        <span className="text-sm font-extrabold text-[#794A05]">₹{Number(order.totalAmount || 0).toLocaleString()}</span>
                                     </td>
                                     <td className="py-6">
                                         <span className="text-xs font-bold text-slate-500">
@@ -432,7 +434,7 @@ function TempleOrdersClient() {
                                         <DialogTitle className="text-2xl font-bold text-slate-900 font-serif">
                                             {selectedOrder.items.map((i: any) => parseLocalizedValue(i.product?.name)).join(", ")}
                                         </DialogTitle>
-                                        <p className="text-[10px] font-mono text-slate-400 mt-1">ID: #{selectedOrder.id.toUpperCase()}</p>
+                                        <p className="text-[10px] font-mono text-slate-400 mt-1">ID: {selectedOrder.displayId || `#${selectedOrder.id.slice(-8).toUpperCase()}`}</p>
                                         <p className="text-slate-500 font-bold mt-1 text-xs uppercase tracking-widest">
                                             Placed on {format(new Date(selectedOrder.createdAt), "dd MMMM yyyy")}
                                         </p>
@@ -559,7 +561,7 @@ function TempleOrdersClient() {
                                         <div className="bg-[#794A05]/5 p-6 space-y-3 px-8 border-t border-slate-100">
                                             <div className="flex justify-between items-center text-sm">
                                                 <span className="text-slate-500 font-bold font-serif">Items Subtotal</span>
-                                                <span className="text-slate-900 font-extrabold tracking-tight">₹{selectedOrder.totalAmount.toLocaleString()}</span>
+                                                <span className="text-slate-900 font-extrabold tracking-tight">₹{Number(selectedOrder.totalAmount || 0).toLocaleString()}</span>
                                             </div>
                                             
                                             <div className="flex justify-between items-center text-sm">
@@ -567,13 +569,13 @@ function TempleOrdersClient() {
                                                     <span className="text-slate-500 font-bold font-serif">Platform Service Fee</span>
                                                     <span className="text-[10px] text-slate-400 font-medium leading-none">(Charged to devotee)</span>
                                                 </div>
-                                                <span className="text-slate-900 font-extrabold tracking-tight">₹{selectedOrder.commissionAmount.toLocaleString()}</span>
+                                                <span className="text-slate-900 font-extrabold tracking-tight">₹{Number(selectedOrder.commissionAmount || 0).toLocaleString()}</span>
                                             </div>
 
                                             {selectedOrder.order?.shippingCost > 0 && (
                                                 <div className="flex justify-between items-center text-sm">
                                                     <span className="text-slate-500 font-bold font-serif">Shipping & Handling</span>
-                                                    <span className="text-slate-900 font-extrabold tracking-tight">₹{selectedOrder.order.shippingCost.toLocaleString()}</span>
+                                                    <span className="text-slate-900 font-extrabold tracking-tight">₹{Number(selectedOrder.order.shippingCost || 0).toLocaleString()}</span>
                                                 </div>
                                             )}
 
@@ -582,7 +584,7 @@ function TempleOrdersClient() {
                                                     <span className="text-xs font-black text-slate-900 uppercase tracking-widest">Customer Total Paid</span>
                                                     <span className="text-[10px] text-slate-400 font-bold uppercase tracking-tight">Amount paid by devotee during checkout</span>
                                                 </div>
-                                                <span className="text-2xl font-black text-[#794A05] tracking-tighter">₹{(selectedOrder.totalAmount + selectedOrder.commissionAmount + (selectedOrder.order?.shippingCost || 0)).toLocaleString()}</span>
+                                                <span className="text-2xl font-black text-[#794A05] tracking-tighter">₹{(Number(selectedOrder.totalAmount || 0) + Number(selectedOrder.commissionAmount || 0) + Number(selectedOrder.order?.shippingCost || 0)).toLocaleString()}</span>
                                             </div>
 
                                             <div className="flex justify-between items-center pt-2 bg-emerald-50/50 -mx-8 px-8 py-2 border-y border-emerald-100/50 mt-4">
@@ -590,7 +592,7 @@ function TempleOrdersClient() {
                                                     <span className="text-xs font-black text-emerald-700 uppercase tracking-widest">Your Earnings</span>
                                                     <span className="text-[10px] text-emerald-600 font-bold uppercase tracking-tight">Net amount credited to your ledger</span>
                                                 </div>
-                                                <span className="text-xl font-black text-emerald-700 tracking-tighter">₹{selectedOrder.totalAmount.toLocaleString()}</span>
+                                                <span className="text-xl font-black text-emerald-700 tracking-tighter">₹{Number(selectedOrder.totalAmount || 0).toLocaleString()}</span>
                                             </div>
                                         </div>
                                     </div>

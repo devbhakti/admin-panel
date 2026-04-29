@@ -234,7 +234,7 @@ export default function TempleEventsPage() {
         try {
             const payload = {
                 ...formData,
-                time: getFormattedTime(timeData.hours, timeData.minutes, timeData.period),
+                // time: getFormattedTime(timeData.hours, timeData.minutes, timeData.period),
                 recommendedPoojaIds: selectedPoojaIds,
             };
 
@@ -380,7 +380,7 @@ export default function TempleEventsPage() {
                             name_hi: String(row.Name_HI || "").trim(),
                             name_mr: String(row.Name_MR || "").trim(),
                             date: String(row.Date || "").trim(),
-                            time: String(row.Time || "10:00 AM").trim(),
+                            // time: String(row.Time || "10:00 AM").trim(),
                             description_en: String(row.Description_EN || "").trim(),
                             description_hi: String(row.Description_HI || "").trim(),
                             description_mr: String(row.Description_MR || "").trim(),
@@ -722,7 +722,7 @@ export default function TempleEventsPage() {
                                 </Popover>
                             </div>
 
-                            <div className="space-y-2">
+                            {/* <div className="space-y-2">
                                 <Label className="text-slate-700 font-medium">Time *</Label>
                                 <div className="flex gap-1">
                                     <select
@@ -752,7 +752,7 @@ export default function TempleEventsPage() {
                                         <option value="PM">PM</option>
                                     </select>
                                 </div>
-                            </div>
+                            </div> */}
                         </div>
 
                         <div className="flex items-center justify-between p-4 border rounded-xl bg-slate-50">

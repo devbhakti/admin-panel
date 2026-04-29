@@ -84,7 +84,7 @@ export default function AvailabilityManager() {
         if (!selectedDate) return;
         setDate(selectedDate);
 
-        const dateStr = selectedDate.toISOString().split('T')[0];
+        const dateStr = format(selectedDate, 'yyyy-MM-dd');
         const rule = availabilityRules.find(r => r.date === dateStr);
 
         setSelectedDateRule(rule);
@@ -97,7 +97,7 @@ export default function AvailabilityManager() {
         if (!date) return;
         setIsSaving(true);
         try {
-            const dateStr = date.toISOString().split('T')[0];
+            const dateStr = format(date, 'yyyy-MM-dd');
             const res = await setTempleAvailability({
                 date: dateStr,
                 isClosed,
@@ -126,12 +126,12 @@ export default function AvailabilityManager() {
     // Custom modifier to styling dates in calendar
     const modifiers = {
         closed: (date: Date) => {
-            const dateStr = date.toISOString().split('T')[0];
+            const dateStr = format(date, 'yyyy-MM-dd');
             const rule = availabilityRules.find(r => r.date === dateStr);
             return rule?.isClosed === true;
         },
         limited: (date: Date) => {
-            const dateStr = date.toISOString().split('T')[0];
+            const dateStr = format(date, 'yyyy-MM-dd');
             const rule = availabilityRules.find(r => r.date === dateStr);
             return rule && !rule.isClosed;
         }
@@ -144,7 +144,7 @@ export default function AvailabilityManager() {
 
     const CustomDayContent = (props: any) => {
         const { date } = props;
-        const dateStr = date.toISOString().split('T')[0];
+        const dateStr = format(date, 'yyyy-MM-dd');
         const rule = availabilityRules.find(r => r.date === dateStr);
 
         return (
@@ -202,7 +202,7 @@ export default function AvailabilityManager() {
                     <DialogContent>
                         <DialogHeader>
                             <DialogTitle>
-                                File Availability for {date ? format(date, "PPP") : ""}
+                               {date ? format(date, "PPP") : ""}
                             </DialogTitle>
                             <DialogDescription>
                                 Set global booking limits or close bookings for this date.
@@ -210,7 +210,7 @@ export default function AvailabilityManager() {
                         </DialogHeader>
                         <div className="space-y-6 py-4">
                             <div className="flex items-center justify-between space-x-2 border p-4 rounded-lg bg-muted/30">
-                                <FormLabel label="Accept Bookings?" description="Toggle to stop/start taking bookings." />
+                                
                                 <div className="flex items-center space-x-2">
                                     <Switch
                                         checked={!isClosed}

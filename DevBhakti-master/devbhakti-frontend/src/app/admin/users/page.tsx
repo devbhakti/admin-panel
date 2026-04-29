@@ -54,6 +54,7 @@ import {
 import { fetchAllUsersAdmin, downloadUsersExcelAdmin, downloadUsersAiSensyCSVAdmin, toggleUserStatusAdmin, bulkToggleUserStatusAdmin, sendBulkWhatsAppAdmin } from "@/api/adminController";
 import { toast } from "sonner"; // Assuming sonner is used for notifications
 import { parseLocalizedValue } from "@/utils/textUtils";
+import { BASE_URL } from "@/config/apiConfig";
 
 import {
     Pagination,
@@ -699,7 +700,7 @@ export default function AdminUsersPage() {
                                                 <div className="relative flex-shrink-0">
                                                     {user.profileImage ? (
                                                         <img
-                                                            src={user.profileImage}
+                                                            src={user.profileImage.startsWith('http') ? user.profileImage : `${BASE_URL}${user.profileImage}`}
                                                             alt={parseLocalizedValue(user.name)}
                                                             className="w-12 h-12 rounded-2xl object-cover shadow-sm border border-primary/10"
                                                         />
@@ -708,11 +709,11 @@ export default function AdminUsersPage() {
                                                             {formatAvatar(parseLocalizedValue(user.name))}
                                                         </div>
                                                     )}
-                                                    <div className={`absolute -bottom-1 -right-1 w-4 h-4 rounded-full border-2 border-white ${user.isActive ? 'bg-emerald-500' : 'bg-slate-300'}`} />
+                                                    <div className={`absolute -bottom-1 -right-1 w-4 h-4 rounded-full border-2 border-white ${user.isActive ? (user.isVerified ? 'bg-emerald-500' : 'bg-red-500') : 'bg-slate-300'}`} />
                                                 </div>
                                                 <div className="min-w-0 flex-1">
                                                     <p className="font-bold text-foreground group-hover:text-primary transition-colors truncate">{parseLocalizedValue(user.name)}</p>
-                                                    <p className="text-[10px] text-primary/60 font-mono font-bold mt-0.5 uppercase">ID: #{user.id.substring(user.id.length - 6)}</p>
+                                                    <p className="text-[10px] text-primary/60 font-mono font-bold mt-0.5 uppercase">ID: {user.displayId || `#${user.id.substring(user.id.length - 6)}`}</p>
                                                 </div>
                                             </div>
                                             <div className="flex items-center gap-1">
@@ -833,7 +834,7 @@ export default function AdminUsersPage() {
                                                     <div className="relative">
                                                         {user.profileImage ? (
                                                             <img
-                                                                src={user.profileImage}
+                                                                src={user.profileImage.startsWith('http') ? user.profileImage : `${BASE_URL}${user.profileImage}`}
                                                                 alt={parseLocalizedValue(user.name)}
                                                                 className="w-10 h-10 rounded-xl object-cover shadow-sm border border-primary/10"
                                                             />
@@ -842,11 +843,11 @@ export default function AdminUsersPage() {
                                                                 {formatAvatar(parseLocalizedValue(user.name))}
                                                             </div>
                                                         )}
-                                                        <div className={`absolute -bottom-1 -right-1 w-3 h-3 rounded-full border-2 border-white ${user.isActive ? 'bg-emerald-500' : 'bg-slate-300'}`} />
+                                                        <div className={`absolute -bottom-1 -right-1 w-3 h-3 rounded-full border-2 border-white ${user.isActive ? (user.isVerified ? 'bg-emerald-500' : 'bg-red-500') : 'bg-slate-300'}`} />
                                                     </div>
                                                     <div className="min-w-0">
                                                         <p className="font-bold text-foreground group-hover:text-primary transition-colors text-sm truncate">{parseLocalizedValue(user.name)}</p>
-                                                        <p className="text-[10px] text-primary/60 font-mono font-bold uppercase tracking-tighter">ID: #{user.id.substring(user.id.length - 6)}</p>
+                                                        <p className="text-[10px] text-primary/60 font-mono font-bold uppercase tracking-tighter">ID: {user.displayId || `#${user.id.substring(user.id.length - 6)}`}</p>
                                                     </div>
                                                 </div>
                                             </td>

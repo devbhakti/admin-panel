@@ -114,7 +114,7 @@ export default function TempleViewPoojaPage() {
                         </div>
                         <CardContent className="p-6 space-y-6 relative z-10">
                             <div>
-                                <p className="text-orange-200/70 text-[10px] uppercase tracking-widest font-black">Standard Unit Price</p>
+                                <p className="text-orange-200/70 text-[10px] uppercase tracking-widest font-black">Single Person  Price</p>
                                 <div className="flex items-center text-4xl font-black mt-1">
                                     <IndianRupee className="w-6 h-6 mr-1 text-orange-400" />
                                     {pooja.price?.toLocaleString()}
@@ -127,7 +127,7 @@ export default function TempleViewPoojaPage() {
                                         <Tag className="w-5 h-5 text-orange-300" />
                                     </div>
                                     <div>
-                                        <p className="text-white/60 text-[10px] uppercase font-bold tracking-wider">Service Category</p>
+                                        <p className="text-white/60 text-[10px] uppercase font-bold tracking-wider"> Category</p>
                                         <p className="font-bold text-sm">{parseLocalizedValue(pooja.category, 'en')}</p>
                                     </div>
                                 </div>
@@ -145,7 +145,7 @@ export default function TempleViewPoojaPage() {
                     </Card>
 
                     {/* Quick Badge Table */}
-                    <Card className="rounded-2xl border border-slate-100 shadow-sm bg-white overflow-hidden">
+                    {/* <Card className="rounded-2xl border border-slate-100 shadow-sm bg-white overflow-hidden">
                         <CardContent className="p-0">
                             <div className="p-4 bg-slate-50 border-b border-slate-100 flex items-center gap-2">
                                 <Package className="w-4 h-4 text-slate-400" />
@@ -156,7 +156,7 @@ export default function TempleViewPoojaPage() {
                                 <Badge className="bg-emerald-100 text-emerald-700 hover:bg-emerald-100 border-none px-3">Active</Badge>
                             </div>
                         </CardContent>
-                    </Card>
+                    </Card> */}
                 </div>
 
                 {/* Right Column - Localized Content & Packages */}
@@ -186,7 +186,7 @@ export default function TempleViewPoojaPage() {
                                     <Card className="rounded-3xl border-none shadow-sm bg-white overflow-hidden group">
                                         <CardHeader className="bg-slate-50/50 border-b border-slate-50 pb-4">
                                             <CardTitle className="flex items-center gap-2 text-[#7b4623] font-serif text-lg">
-                                                <Info className="w-5 h-5" /> Significance
+                                                <Info className="w-5 h-5" /> About the Pooja
                                             </CardTitle>
                                         </CardHeader>
                                         <CardContent className="p-6">

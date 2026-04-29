@@ -283,7 +283,15 @@ export const deleteMyProduct = async (id: string) => {
     return response.data;
 };
 
-export const fetchMyTempleDevotees = async (params?: { page?: number; limit?: number; search?: string; dob?: string; anniversary?: string }) => {
+export const fetchMyTempleDevotees = async (params?: { 
+    page?: number; 
+    limit?: number; 
+    search?: string; 
+    dobStart?: string; 
+    dobEnd?: string; 
+    anniversaryStart?: string; 
+    anniversaryEnd?: string;
+}) => {
     const token = localStorage.getItem("token");
     let url = `${API_URL}/temple-admin/devotees`;
     if (params) {
@@ -291,8 +299,10 @@ export const fetchMyTempleDevotees = async (params?: { page?: number; limit?: nu
         if (params.page !== undefined) query.append('page', params.page.toString());
         if (params.limit !== undefined) query.append('limit', params.limit.toString());
         if (params.search) query.append('search', params.search);
-        if (params.dob) query.append('dob', params.dob);
-        if (params.anniversary) query.append('anniversary', params.anniversary);
+        if (params.dobStart) query.append('dobStart', params.dobStart);
+        if (params.dobEnd) query.append('dobEnd', params.dobEnd);
+        if (params.anniversaryStart) query.append('anniversaryStart', params.anniversaryStart);
+        if (params.anniversaryEnd) query.append('anniversaryEnd', params.anniversaryEnd);
         url += `?${query.toString()}`;
     }
     const response = await axios.get(url, {

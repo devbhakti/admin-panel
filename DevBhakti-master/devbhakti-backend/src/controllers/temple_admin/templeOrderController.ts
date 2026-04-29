@@ -31,10 +31,10 @@ export const getTempleOrders = async (req: Request, res: Response) => {
     const formattedSubOrders = localizedSubOrders.map((sub: any) => {
       return {
         ...sub,
-        totalAmount: sub.totalAmount ? Number(sub.totalAmount).toFixed(2) : "0.00",
+        totalAmount: sub.totalAmount ? Number(sub.totalAmount) : 0,
         order: sub.order ? {
           ...sub.order,
-          totalAmount: sub.order.totalAmount ? Number(sub.order.totalAmount).toFixed(2) : "0.00"
+          totalAmount: sub.order.totalAmount ? Number(sub.order.totalAmount) : 0
         } : sub.order
       };
     });

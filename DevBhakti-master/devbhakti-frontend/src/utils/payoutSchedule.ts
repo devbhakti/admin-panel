@@ -1,9 +1,11 @@
+export const PAYOUT_DAYS = [1, 15];
+
 /**
- * Returns true only on the 15th or 28th of the month.
+ * Returns true only on the allowed payout days of the month.
  */
 export const isPayoutAllowed = (date: Date = new Date()): boolean => {
     const day = date.getDate();
-    return day === 15 || day === 28;
+    return PAYOUT_DAYS.includes(day);
 };
 
 /**
@@ -14,12 +16,14 @@ export const nextPayoutDate = (from: Date = new Date()): Date => {
     const month = from.getMonth(); // 0-based
     const year = from.getFullYear();
 
-    if (day < 15) {
-        return new Date(year, month, 15);
+    // Find the next available payout day in the current month
+    const nextDay = PAYOUT_DAYS.find(d => d > day);
+
+    if (nextDay) {
+        return new Date(year, month, nextDay);
     }
-    if (day < 28) {
-        return new Date(year, month, 28);
-    }
-    // after the 28th -> next month's 15th
-    return new Date(year, month + 1, 15);
+    
+    // If no more payout days this month, return the first payout day of the next month
+    return new Date(year, month + 1, PAYOUT_DAYS[0]);
 };
+

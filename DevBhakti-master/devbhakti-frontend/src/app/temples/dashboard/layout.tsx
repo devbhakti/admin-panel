@@ -108,7 +108,6 @@ const sidebarItems = [
             { label: "All Bookings", href: "/temples/dashboard/bookings" },
             { label: "Booked Poojas", href: "/temples/dashboard/bookings?status=BOOKED" },
             { label: "Completed", href: "/temples/dashboard/bookings?status=COMPLETED" },
-            { label: "Cancelled", href: "/temples/dashboard/bookings?status=CANCELLED" },
         ]
     },
     // {
@@ -581,7 +580,7 @@ export default function TempleAdminLayout({ children }: { children: React.ReactN
                     </div>
 
                     <div className="flex items-center gap-3">
-                        {/* <NotificationBell userId={user?.id || user?.email || ''} userType="temple_admin" /> */}
+                        <NotificationBell userId={user?.id || user?.email || ''} userType="temple_admin" />
                         <Button variant="outline" size="sm" asChild>
                             <Link href="/">View Site</Link>
                         </Button>

@@ -27,7 +27,7 @@ import {
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { fetchSellerFinanceSummary, fetchSellerWithdrawalHistory, requestSellerWithdrawal } from "@/api/sellerController";
-import { isPayoutAllowed, nextPayoutDate } from "@/utils/payoutSchedule";
+import { isPayoutAllowed, nextPayoutDate, PAYOUT_DAYS } from "@/utils/payoutSchedule";
 import { format } from "date-fns";
 import { useToast } from "@/hooks/use-toast";
 import { BASE_URL } from "@/config/apiConfig";
@@ -152,8 +152,8 @@ export default function SellerWithdrawalsPage() {
                         isPayoutAllowed() ? "text-emerald-700/80" : "text-amber-700/80"
                     )}>
                         {isPayoutAllowed() 
-                            ? "Marketplace payouts are currently being processed (15th / 28th). Your settled funds are ready for withdrawal."
-                            : `Payouts are processed on the 15th and 28th of every month. The next window opens on ${format(nextPayoutDate(), "do MMMM yyyy")}.`
+                            ? `Marketplace payouts are currently being processed (${PAYOUT_DAYS.map(d => d + (d === 1 ? 'st' : 'th')).join(' / ')}). Your settled funds are ready for withdrawal.`
+                            : `Payouts are processed on the ${PAYOUT_DAYS.map(d => d + (d === 1 ? 'st' : 'th')).join(' and ')} of every month. The next window opens on ${format(nextPayoutDate(), "do MMMM yyyy")}.`
                         }
                     </p>
                 </div>
