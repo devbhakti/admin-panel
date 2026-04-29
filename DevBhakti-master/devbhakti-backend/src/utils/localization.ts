@@ -35,23 +35,29 @@ export const getLang = (req: any): SupportedLang => {
 const isLangObject = (value: any): boolean => {
   if (!value) return false;
   
-  // If it's already an object
-  if (typeof value === 'object' && !Array.isArray(value)) {
-    return 'en' in value || 'hi' in value || 'mr' in value ||
-           'En' in value || 'Hi' in value || 'Mr' in value;
-  }
-  
-  // If it's a string, it might be a JSON-encoded lang object
-  if (typeof value === 'string' && value.trim().startsWith('{')) {
+  let obj = value;
+  if (typeof value === 'string') {
+    const trimmed = value.trim();
+    // Quick check: must contain at least one language key pattern
+    if (!trimmed.includes('"en":') && !trimmed.includes('"hi":') && !trimmed.includes('"mr":') && 
+        !trimmed.includes('"En":') && !trimmed.includes('"Hi":') && !trimmed.includes('"Mr":')) {
+      return false;
+    }
+    
     try {
-      const parsed = JSON.parse(value);
-      if (typeof parsed === 'object' && parsed !== null && !Array.isArray(parsed)) {
-        return 'en' in parsed || 'hi' in parsed || 'mr' in parsed ||
-               'En' in parsed || 'Hi' in parsed || 'Mr' in parsed;
+      obj = JSON.parse(trimmed);
+      // Handle double-stringification
+      if (typeof obj === 'string') {
+        obj = JSON.parse(obj);
       }
     } catch (e) {
-      // Not valid JSON or not a lang object
+      return false;
     }
+  }
+  
+  if (typeof obj === 'object' && obj !== null && !Array.isArray(obj)) {
+    return 'en' in obj || 'hi' in obj || 'mr' in obj ||
+           'En' in obj || 'Hi' in obj || 'Mr' in obj;
   }
   
   return false;
@@ -84,7 +90,10 @@ export const localize = <T extends Record<string, any>>(
       // Pick the lang object (autodetect if it's a string)
       let langObj = value;
       if (typeof value === 'string') {
-        try { langObj = JSON.parse(value); } catch(e) {}
+        try { 
+          langObj = JSON.parse(value); 
+          if (typeof langObj === 'string') langObj = JSON.parse(langObj);
+        } catch(e) {}
       }
 
       // This is a multilingual field → pick selected lang, fallback to 'en'
@@ -97,7 +106,8 @@ export const localize = <T extends Record<string, any>>(
       result[key] = getValue(langVal) || 
                     getValue(langObj['en'] || langObj['En']) || 
                     getValue(langObj['hi'] || langObj['Hi']) || 
-                    getValue(langObj['mr'] || langObj['Mr']);
+                    getValue(langObj['mr'] || langObj['Mr']) ||
+                    (typeof value === 'string' ? value : JSON.stringify(value)); // Final fallback if all lang keys empty
     } else if (Array.isArray(value)) {
       // Array of values
       result[key] = value.map(item => {

@@ -250,7 +250,7 @@ export const GlobalSearch = ({ isOpen, onClose }: { isOpen: boolean; onClose: ()
                                                             <div className="text-muted-foreground text-sm flex items-center gap-1.5 font-sans font-medium opacity-70">
                                                                 <MapPin size={14} className="text-primary/60" /> {item.location}
                                                             </div>
-                                                        ) : item.type ? (
+                                                        ) : (item.type && item.category !== 'Product') ? (
                                                             <div className="text-muted-foreground text-sm font-sans font-medium opacity-70">
                                                                 {item.type}
                                                             </div>
@@ -280,7 +280,22 @@ export const GlobalSearch = ({ isOpen, onClose }: { isOpen: boolean; onClose: ()
                                                 <p className="mb-3 text-sm">{t('landing.landing_search.no_results_for')} "{query}"</p>
                                                 <p className="text-foreground font-bold">{t('landing.landing_search.did_you_mean')}</p>
                                                 <button 
-                                                    onClick={() => setQuery(suggestion)}
+                                                    onClick={async () => {
+                                                        setIsLoading(true);
+                                                        try {
+                                                            const response = await fetch(`${API_URL}/search?query=${encodeURIComponent(suggestion)}`);
+                                                            const data = await response.json();
+                                                            if (data.success && data.data.length > 0) {
+                                                                handleItemClick(data.data[0]);
+                                                            } else {
+                                                                setQuery(suggestion);
+                                                            }
+                                                        } catch (error) {
+                                                            setQuery(suggestion);
+                                                        } finally {
+                                                            setIsLoading(false);
+                                                        }
+                                                    }}
                                                     className="mt-2 text-2xl font-serif text-primary font-bold hover:scale-105 transition-transform"
                                                 >
                                                     {suggestion}

@@ -210,14 +210,7 @@ const MarketplaceSection: React.FC = () => {
                         </span>
                       </div>
 
-                      {/* Out of Stock Label */}
-                      {product.variants?.every(v => v.stock === 0) && (
-                        <div className="absolute inset-0 bg-black/40 backdrop-blur-[2px] z-10 flex items-center justify-center">
-                          <span className="px-4 py-1.5 bg-red-600 text-white text-xs font-bold uppercase tracking-widest rounded-full shadow-lg">
-                            {t('marketplace.out_of_stock')}
-                          </span>
-                        </div>
-                      )}
+
 
                       {/* Favorite Button */}
                       <button
@@ -235,8 +228,13 @@ const MarketplaceSection: React.FC = () => {
                       <p className="text-[10px] font-bold text-[#794A05]/60 uppercase tracking-widest truncate">
                         {getLocalized(product.temple, 'name', language) || t('landing.landing_marketplace.exclusive')}
                       </p>
-                      <h4 className="font-display font-bold text-[#2a1b01] text-lg line-clamp-1 group-hover:text-[#794A05] transition-colors">
+                      <h4 className="font-display font-bold text-[#2a1b01] text-lg line-clamp-1 group-hover:text-[#794A05] transition-colors flex items-center flex-wrap gap-2">
                         {getLocalized(product, 'name', language)}
+                        {product.variants?.every(v => v.stock === 0) && (
+                          <span className="text-red-600 text-[10px] font-bold uppercase tracking-wider">
+                            ({t('marketplace.out_of_stock')})
+                          </span>
+                        )}
                       </h4>
 
                       <div className="flex items-center justify-between pt-3">

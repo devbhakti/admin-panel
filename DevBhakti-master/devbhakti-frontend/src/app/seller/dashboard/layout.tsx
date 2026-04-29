@@ -151,6 +151,12 @@ function SellerDashboardContent({ children }: { children: React.ReactNode }) {
 
     if (!isAuthenticated) return null;
 
+    const isPrintPage = pathname?.endsWith("/print");
+
+    if (isPrintPage) {
+        return <main className="min-h-screen bg-white">{children}</main>;
+    }
+
     return (
         <div className="min-h-screen bg-background flex">
             {/* Sidebar */}

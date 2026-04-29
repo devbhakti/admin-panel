@@ -4,12 +4,15 @@ import { useSearchParams } from "next/navigation";
 import { useEffect, useState, Suspense } from "react";
 import { fetchTempleOrders, fetchMyTempleProfile } from "@/api/templeAdminController";
 import { format } from "date-fns";
+import { parseLocalizedValue } from "@/utils/textUtils";
+import { useLanguage } from "@/context/LanguageContext";
 
 function PrintLabelsContent() {
     const searchParams = useSearchParams();
     const [orders, setOrders] = useState<any[]>([]);
     const [templeData, setTempleData] = useState<any>(null);
     const [isLoading, setIsLoading] = useState(true);
+    const { language } = useLanguage();
 
     const orderIds = searchParams.get("ids")?.split(",") ?? [];
 
@@ -291,8 +294,8 @@ function PrintLabelsContent() {
                                     <h4>SOLD BY:</h4>
                                     <div className="column-content">
                                         <div style={{ marginBottom: 0 }}>
-                                            <strong>{templeData?.name || order.temple?.name || "DevBhakti Seller"}</strong><br />
-                                            {templeData?.location || order.temple?.fullAddress || "Indore, MP"}
+                                            <strong>{parseLocalizedValue(templeData?.name, language) || parseLocalizedValue(order.temple?.name, language) || "DevBhakti Seller"}</strong><br />
+                                            {parseLocalizedValue(templeData?.location, language) || parseLocalizedValue(order.temple?.fullAddress, language) || "Indore, MP"}
                                         </div>
                                         <br />
                                         Website: DevBhakti.in<br />
@@ -355,7 +358,7 @@ function PrintLabelsContent() {
                                         <tr key={item.id}>
                                             <td className="text-left">{idx + 1}</td>
                                             <td className="text-left">
-                                                <strong>{item.product?.name || "Item"}</strong> ({item.variantName || "Standard"})<br />
+                                                <strong>{parseLocalizedValue(item.product?.name, language) || "Item"}</strong> ({item.variantName || "Standard"})<br />
                                                 <span style={{ color: "#666", fontSize: "10px" }}>SKU: {item.variantId || "N/A"}</span>
                                             </td>
                                             <td>0</td>
@@ -376,7 +379,7 @@ function PrintLabelsContent() {
                                     <div className="footer-box"></div>
                                     <div className="footer-sign">
                                         Authorized Signature for<br />
-                                        {templeData?.name || order.temple?.name || "DevBhakti Seller"}
+                                        {parseLocalizedValue(templeData?.name, language) || parseLocalizedValue(order.temple?.name, language) || "DevBhakti Seller"}
                                     </div>
                                 </div>
 

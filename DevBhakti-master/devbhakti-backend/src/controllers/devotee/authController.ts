@@ -7,6 +7,7 @@ import jwt from 'jsonwebtoken';
 import { sendSMS } from '../../services/mobicommService';
 import { sendWhatsAppMessage } from '../../services/whatsappService';
 import { generateCustomId } from '../../utils/idGenerator';
+import { getLang, localize } from '../../utils/localization';
 
 const JWT_SECRET = process.env.JWT_SECRET || 'devbhakti_secret_key_2026';
 
@@ -674,7 +675,8 @@ export const getProfile = async (req: Request, res: Response) => {
             return res.status(404).json({ success: false, message: 'User not found' });
         }
 
-        res.json({ success: true, data: { user } });
+        const lang = getLang(req);
+        res.json({ success: true, data: { user: localize(user, lang) } });
     } catch (error) {
         console.error('Error fetching profile:', error);
         res.status(500).json({ success: false, message: 'Internal server error' });

@@ -394,6 +394,12 @@ export default function TempleAdminLayout({ children }: { children: React.ReactN
         return null;
     }
 
+    const isPrintPage = pathname?.endsWith("/print");
+
+    if (isPrintPage) {
+        return <main className="min-h-screen bg-white print:p-0">{children}</main>;
+    }
+
     return (
         <div className="min-h-screen bg-background flex">
             {/* Sidebar */}

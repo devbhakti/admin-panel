@@ -5,6 +5,7 @@ import { useEffect, useState, Suspense } from "react";
 import { fetchAllOrdersAdmin } from "@/api/adminController";
 import { format } from "date-fns";
 import { useLanguage } from "@/context/LanguageContext";
+import { parseLocalizedValue } from "@/utils/textUtils";
 
 function PrintLabelsContent() {
     const searchParams = useSearchParams();
@@ -14,7 +15,7 @@ function PrintLabelsContent() {
 
     const getLocalizedName = (item: any) => {
         if (!item) return "";
-        return item[`name_${language}`] || item.name_en || item.name || "";
+        return parseLocalizedValue(item.name || item.storeName, language);
     };
 
     const orderIds = searchParams.get("ids")?.split(",") ?? [];
@@ -294,7 +295,7 @@ function PrintLabelsContent() {
                                         {order.subOrders.map((so: any, sIdx: number) => (
                                             <div key={so.id} style={{ marginBottom: sIdx < order.subOrders.length - 1 ? 8 : 0 }}>
                                                 <strong>{getLocalizedName(so.temple) || getLocalizedName(so.seller) || "DevBhakti Seller"}</strong><br />
-                                                {so.temple?.fullAddress || so.seller?.fullAddress || "Indore, MP"}
+                                                {parseLocalizedValue(so.temple?.fullAddress || so.temple?.location || so.seller?.fullAddress || so.seller?.address || "Indore, MP", language)}
                                             </div>
                                         ))}
                                         <br />

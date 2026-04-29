@@ -148,8 +148,20 @@ function TemplesContent() {
 
     const getLoc = (jsonObj: any, lang: string) => {
         if (!jsonObj) return "";
-        if (typeof jsonObj === "string") return lang === "en" ? jsonObj : "";
-        return jsonObj[lang] || "";
+        let parsed = jsonObj;
+        if (typeof jsonObj === "string" && jsonObj.trim().startsWith("{")) {
+            try {
+                parsed = JSON.parse(jsonObj);
+            } catch (e) {
+                return lang === "en" ? jsonObj : "";
+            }
+        }
+        
+        if (typeof parsed === "object" && parsed !== null) {
+            return parsed[lang] || parsed["en"] || "";
+        }
+        
+        return lang === "en" ? String(jsonObj) : "";
     };
 
     const handleExportExcel = async (scope: 'all' | 'verified' | 'unverified') => {
@@ -1189,7 +1201,7 @@ function TemplesContent() {
                                                             ? (inst.isVerified ? 'bg-emerald-50 text-emerald-700 border border-emerald-200' : 'bg-red-50 text-red-700 border border-red-200')
                                                             : 'bg-slate-50 text-slate-500 border border-slate-200'
                                                             }`}>
-                                                            {inst.temple?.isActive ? (
+                                                            {inst.isVerified && inst.temple?.isActive ? (
                                                                 <><Power className="w-3 h-3" /> Active</>
                                                             ) : (
                                                                 <><PowerOff className="w-3 h-3" /> Inactive</>
@@ -1319,11 +1331,11 @@ function TemplesContent() {
                                                             <span className="text-xs font-semibold">Pending</span>
                                                         </div>
                                                     )}
-                                                    <div className={`flex items-center gap-1.5 px-2.5 py-1 rounded-md text-xs font-medium ${inst.temple?.isActive
+                                                    <div className={`flex items-center gap-1.5 px-2.5 py-1 rounded-md text-xs font-medium ${inst.isVerified && inst.temple?.isActive
                                                         ? 'bg-emerald-50 text-emerald-700 border border-emerald-200'
-                                                        : 'bg-slate-50 text-slate-500 border border-slate-200'
+                                                        : 'bg-red-50 text-red-700 border border-red-200'
                                                         }`}>
-                                                        {inst.temple?.isActive ? (
+                                                        {inst.isVerified && inst.temple?.isActive ? (
                                                             <><Power className="w-3 h-3" /> Active</>
                                                         ) : (
                                                             <><PowerOff className="w-3 h-3" /> Inactive</>
@@ -1518,7 +1530,7 @@ function TemplesContent() {
                                                             ? (inst.isVerified ? 'bg-emerald-50 text-emerald-700 border border-emerald-200' : 'bg-red-50 text-red-700 border border-red-200')
                                                             : 'bg-slate-50 text-slate-500 border border-slate-200'
                                                             }`}>
-                                                            {inst.temple?.isActive ? (
+                                                            {inst.isVerified && inst.temple?.isActive ? (
                                                                 <><Power className="w-3 h-3" /> Active</>
                                                             ) : (
                                                                 <><PowerOff className="w-3 h-3" /> Inactive</>
@@ -1648,11 +1660,11 @@ function TemplesContent() {
                                                             <span className="text-xs font-semibold">Pending</span>
                                                         </div>
                                                     )}
-                                                    <div className={`flex items-center gap-1.5 px-2.5 py-1 rounded-md text-xs font-medium ${inst.temple?.isActive
+                                                    <div className={`flex items-center gap-1.5 px-2.5 py-1 rounded-md text-xs font-medium ${inst.isVerified && inst.temple?.isActive
                                                         ? 'bg-emerald-50 text-emerald-700 border border-emerald-200'
-                                                        : 'bg-slate-50 text-slate-500 border border-slate-200'
+                                                        : 'bg-red-50 text-red-700 border border-red-200'
                                                         }`}>
-                                                        {inst.temple?.isActive ? (
+                                                        {inst.isVerified && inst.temple?.isActive ? (
                                                             <><Power className="w-3 h-3" /> Active</>
                                                         ) : (
                                                             <><PowerOff className="w-3 h-3" /> Inactive</>

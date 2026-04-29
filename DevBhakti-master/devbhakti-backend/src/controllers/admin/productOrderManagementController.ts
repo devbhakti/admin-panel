@@ -132,7 +132,7 @@ export const downloadOrdersExcelAdmin = async (req: Request, res: Response) => {
       worksheet.addRow({
         displayId: o.displayId || "N/A",
         id: o.id,
-        devoteeName: o.user?.name || "N/A",
+        devoteeName: getEnglish(o.user?.name) || "N/A",
         phone: o.user?.phone || "N/A",
         totalAmount: o.totalAmount,
         paymentStatus: o.paymentStatus,

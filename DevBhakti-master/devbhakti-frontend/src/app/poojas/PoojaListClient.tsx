@@ -56,7 +56,7 @@ const PoojaListClient: React.FC = () => {
         return [{ id: "All", name: t('poojas_list.all') || "All" }, ...filters.poojaCategories];
     }, [filters.poojaCategories, language, t]);
 
-    React.useEffect(() => {
+    useEffect(() => {
         const savedUser = localStorage.getItem("user");
         if (savedUser) {
             setUser(JSON.parse(savedUser));
@@ -64,6 +64,13 @@ const PoojaListClient: React.FC = () => {
         }
         loadFilters();
         loadRatingsSettings();
+
+        // Handle search query from URL
+        const urlParams = new URLSearchParams(window.location.search);
+        const searchParam = urlParams.get("search");
+        if (searchParam) {
+            setSearchQuery(searchParam);
+        }
     }, [language]);
 
     useEffect(() => {

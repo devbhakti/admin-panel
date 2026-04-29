@@ -135,6 +135,10 @@ export default function MarketplaceClient() {
     if (categoryParam) {
       setSelectedCategory(categoryParam);
     }
+    const searchParam = searchParams.get("search");
+    if (searchParam) {
+      setSearchQuery(searchParam);
+    }
   }, [searchParams]);
 
   useEffect(() => {
@@ -546,14 +550,7 @@ export default function MarketplaceClient() {
                     <div className="relative aspect-[5/4] overflow-hidden bg-muted">
                       {product.image ? <img src={`${BASE_URL}${product.image}`} alt={getLocalized(product, 'name', language)} className="w-full h-full object-cover" /> : <div className="w-full h-full flex items-center justify-center"><Package className="w-12 h-12 text-muted-foreground" /></div>}
                       
-                      {/* Out of Stock Label */}
-                      {product.variants?.every(v => v.stock === 0) && (
-                        <div className="absolute inset-0 bg-black/40 backdrop-blur-[2px] z-10 flex items-center justify-center pointer-events-none">
-                          <span className="px-4 py-1.5 bg-red-600 text-white text-xs font-bold uppercase tracking-widest rounded-full shadow-lg">
-                            {t('marketplace.out_of_stock')}
-                          </span>
-                        </div>
-                      )}
+
 
                       <Button variant="secondary" size="icon" className="absolute top-3 right-3 rounded-full transition-opacity" onClick={(e) => { e.preventDefault(); e.stopPropagation(); toggleFavorite(product.id); }}><Heart className={`h-4 w-4 ${favorites.includes(product.id) ? "fill-red-500 text-red-500" : ""}`} /></Button>
                     </div>
@@ -570,7 +567,14 @@ export default function MarketplaceClient() {
                           </div>
                         )}
                     </div>
-                    <h3 className="font-semibold text-[#2a1b01] mb-1 line-clamp-1 truncate block"><Link href={`/marketplace/product/${product.id}`}>{getLocalized(product, 'name', language)}</Link></h3>
+                    <h3 className="font-semibold text-[#2a1b01] mb-1 line-clamp-1 truncate flex items-center flex-wrap gap-2">
+                      <Link href={`/marketplace/product/${product.id}`}>{getLocalized(product, 'name', language)}</Link>
+                      {product.variants?.every(v => v.stock === 0) && (
+                        <span className="text-red-600 text-[10px] font-bold uppercase tracking-wider">
+                          ({t('marketplace.out_of_stock')})
+                        </span>
+                      )}
+                    </h3>
                     <div className="flex items-center justify-between mt-4">
                       <span className="font-bold text-[#794A05]">{getPriceRange(product)}</span>
                       <Button 
