@@ -94,9 +94,22 @@ router.get('/', async (req: Request, res: Response) => {
     const { getLang, localize } = require('../utils/localization');
     const lang = getLang(req);
 
+    // Backend se UTC time ko IST (UTC+5:30) mein badal kar bhej rahe hain
+    const formattedNotifications = notifications.map(notif => {
+      const utcDate = new Date(notif.createdAt);
+      // IST is +5:30 ahead of UTC
+      const istTime = new Date(utcDate.getTime() + (5.5 * 60 * 60 * 1000));
+      
+      return {
+        ...notif,
+        // String format: 2026-04-30T13:30:18.137 (Z hata diya taaki frontend isko local samjhe)
+        createdAt: istTime.toISOString().replace('Z', '')
+      };
+    });
+
     return res.json({ 
       success: true, 
-      data: localize(notifications, lang),
+      data: localize(formattedNotifications, lang),
       unreadCount
     });
   } catch (error: any) {
