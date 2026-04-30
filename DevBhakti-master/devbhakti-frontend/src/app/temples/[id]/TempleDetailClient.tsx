@@ -722,14 +722,14 @@ export default function TempleDetail() {
                                             <ChevronRight className="h-4 w-4 text-primary/30 group-hover:text-primary transition-all group-hover:translate-x-1" />
                                         </a>
 
-                                        {/* <Button
+                                        <Button
                                             variant="outline"
                                             className="w-full h-12 rounded-2xl border-dashed border-primary/30 text-primary hover:bg-primary/5 font-bold gap-2"
                                             onClick={handleDonation}
                                         >
                                             <Heart className="h-4 w-4" />
-                                            Contribute to Temple Development
-                                        </Button> */}
+                                           Donation
+                                        </Button>
                                     </div>
                                 )}
 

@@ -143,21 +143,36 @@ const PoojaDetailClient = ({ id }: PoojaDetailClientProps) => {
             <Navbar />
 
             <main className="pt-28 pb-20">
-                <div className="container mx-auto px-4 max-w-[1440px]">
+                <div className="container mx-auto px-4">
+                    {/* Breadcrumb */}
+                    <nav className="flex items-center gap-2 text-xs font-medium uppercase tracking-[0.1em] text-[#794A05]/60 mb-8 overflow-x-auto whitespace-nowrap">
+                        <Link href="/" className="hover:text-[#794A05] transition-colors">
+                            {t('common.home') || "Home"}
+                        </Link>
+                        <span className="opacity-30">/</span>
+                        <Link href="/poojas" className="hover:text-[#794A05] transition-colors">
+                            {t('navbar.poojas') || "Poojas"}
+                        </Link>
+                        <span className="opacity-30">/</span>
+                        <span className="text-[#4A2c01]">{getLocalized(pooja, 'name', language)}</span>
+                    </nav>
+
                     {/* Hero Section */}
                     <div className="grid grid-cols-1 lg:grid-cols-12 gap-4 items-start mb-16">
                         {/* Left: Info Section */}
-                        <div className="lg:col-span-8 flex flex-col h-full justify-between py-2">
+                        <div className="lg:col-span-7 flex flex-col h-full justify-between py-2">
+
                             <motion.div
                                 initial={{ opacity: 0, y: 20 }}
                                 animate={{ opacity: 1, y: 0 }}
                                 transition={{ delay: 0.1 }}
                             >
-                                <h1 className="text-5xl md:text-6xl font-serif font-bold text-[#1a1a1a] mb-6 leading-tight">
+                                <h1 className="text-3xl sm:text-4xl md:text-5xl lg:text-6xl font-serif font-bold text-[#1a1a1a] mb-6 leading-tight">
                                     {getLocalized(pooja, 'name', language)}
                                 </h1>
-                                <p className="text-lg text-[#555] leading-relaxed mb-8">
-                                    {pooja.about?.split('.')[0]}. {pooja.about?.split('.')[1] || ""}
+                                <p className="text-base md:text-lg text-[#555] leading-relaxed mb-8">
+
+                                    {pooja.about}
                                 </p>
 
                                 {/* Booking Bar */}
@@ -166,7 +181,8 @@ const PoojaDetailClient = ({ id }: PoojaDetailClientProps) => {
                         </div>
 
                         {/* Right: Image Card */}
-                        <div className="lg:col-span-4 relative">
+                        <div className="lg:col-span-5 relative">
+
                             <motion.div
                                 initial={{ opacity: 0, scale: 0.95 }}
                                 animate={{ opacity: 1, scale: 1 }}
@@ -184,7 +200,8 @@ const PoojaDetailClient = ({ id }: PoojaDetailClientProps) => {
                                 </div>
                             </motion.div>
                             {/* Price below image */}
-                             <div className="bg-[#FFEAD1] py-2 px-3 rounded-[2rem] border border-primary/10 flex flex-col md:flex-row items-center justify-between gap-4 shadow-lg shadow-primary/5">
+                             <div className="bg-[#FFEAD1] py-3 px-4 rounded-[2rem] border border-primary/10 flex flex-col sm:flex-row items-center justify-between gap-4 shadow-lg shadow-primary/5 mt-4">
+
                                     <div className="px-4">
                                         <div className="text-primary/70 text-[9px] font-bold uppercase tracking-[0.2em] mb-1">{t('pooja_detail.starting_from')}</div>
                                         <div className="flex items-center gap-1 text-2xl font-bold text-primary">
@@ -230,7 +247,8 @@ const PoojaDetailClient = ({ id }: PoojaDetailClientProps) => {
 
                     {/* Temple Section (Direct Content, No Tabs) */}
                     <div id="temple-section" className="mt-20">
-                        <div className="max-w-6xl mx-auto">
+                        <div className="w-full">
+
                             <div className="text-center">
                                 <h2 className="text-4xl font-serif font-bold mb-2 text-primary">{t('pooja_detail.participating_temples')}</h2>
                                 <p className="text-[#888] mt-4 mb-16 italic font-serif">{t('pooja_detail.sacred_locations_performed')}</p>
@@ -432,7 +450,8 @@ const PoojaDetailClient = ({ id }: PoojaDetailClientProps) => {
 
                     {/* FAQs Section (Direct Content) */}
                     <div className="mt-20">
-                        <div className="max-w-6xl mx-auto">
+                        <div className="w-full">
+
                             <h2 className="text-4xl font-serif font-bold mb-12 text-center text-primary text-gradient-sacred pb-2">{t('pooja_detail.questions_answers_title')}</h2>
                             <div className="space-y-6">
                                 {(() => {
