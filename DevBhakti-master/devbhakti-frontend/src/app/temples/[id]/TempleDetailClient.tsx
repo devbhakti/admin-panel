@@ -1006,15 +1006,8 @@ export default function TempleDetail() {
                                                         size="sm"
                                                         className="rounded-full bg-primary hover:bg-[#a05a2c] text-[10px] font-black uppercase tracking-wider px-4 h-8 shadow-sm"
                                                         onClick={() => {
-                                                            const bookingUrl = `/booking?temple=${temple.id}&pooja=${encodeURIComponent(pooja.slug || pooja.id)}`;
-                                                            const token = localStorage.getItem("token");
-                                                            const savedUser = localStorage.getItem("user");
-                                                            const parsedUser = savedUser ? JSON.parse(savedUser) : null;
-                                                            if (!token || !parsedUser || parsedUser.role !== "DEVOTEE") {
-                                                                router.push(`/auth?redirect=${encodeURIComponent(bookingUrl)}`);
-                                                                return;
-                                                            }
-                                                            router.push(bookingUrl);
+                                                            setSelectedEvent(null);
+                                                            router.push(`/poojas/${pooja.slug || pooja.id}?temple=${temple.id}`);
                                                         }}
                                                     >
                                                         Book Now

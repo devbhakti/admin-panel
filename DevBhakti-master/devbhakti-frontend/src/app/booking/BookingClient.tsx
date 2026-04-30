@@ -163,6 +163,7 @@ function BookingForm() {
     const loadData = async () => {
       try {
         const poojaIdInUrl = searchParams.get("pooja");
+        const templeIdFromUrl = searchParams.get("temple"); // Temple passed from temple detail page event modal
         const poojasData = await fetchPublicPoojas({ lang: language });
         const requestedPooja = poojaIdInUrl
           ? poojasData.find((p: any) => p.id === poojaIdInUrl || p.slug === poojaIdInUrl)
@@ -170,8 +171,12 @@ function BookingForm() {
         const poojaFamilyId = requestedPooja?.isMaster
           ? requestedPooja.id
           : requestedPooja?.masterPoojaId || poojaIdInUrl || undefined;
+
+        // If temple is pre-specified in URL (coming from temple event modal),
+        // fetch ALL temples without pooja filter so the dropdown is fully populated.
+        // Otherwise filter by pooja family to show only relevant temples.
         const templesData = await fetchPublicTemples({
-          ...(poojaFamilyId ? { poojaId: poojaFamilyId } : {}),
+          ...(templeIdFromUrl ? {} : (poojaFamilyId ? { poojaId: poojaFamilyId } : {})),
           lang: language
         });
         setAllTemples(templesData);
@@ -195,20 +200,24 @@ function BookingForm() {
           }));
         }
 
-        // If a pooja is selected via URL, try to auto-select its temple and normalize pooja ID
-        const poojaId = searchParams.get("pooja");
-        if (poojaId) {
-          const pooja = poojasData.find((p: any) => p.id === poojaId || p.slug === poojaId);
+        // If a pooja is selected via URL, normalize slug → ID and set temple
+        if (poojaIdInUrl) {
+          const pooja = requestedPooja;
           if (pooja) {
-            if (pooja.templeId) {
+            // Priority: URL temple param > pooja's own templeId
+            if (templeIdFromUrl) {
+              setSelectedTemple(templeIdFromUrl);
+            } else if (pooja.templeId) {
               setSelectedTemple(pooja.templeId);
             }
-            // Normalize selectedPooja to ID even if slug was used in URL
-            if (pooja.id !== poojaId) {
-              console.log(`Normalizing pooja slug "${poojaId}" to ID "${pooja.id}"`);
+            // Normalize selectedPooja to actual ID if slug was used
+            if (pooja.id !== poojaIdInUrl) {
+              console.log(`Normalizing pooja slug "${poojaIdInUrl}" to ID "${pooja.id}"`);
               setSelectedPooja(pooja.id);
             }
           }
+        } else if (templeIdFromUrl) {
+          setSelectedTemple(templeIdFromUrl);
         }
       } catch (error) {
         console.error("Failed to load booking data:", error);
@@ -720,7 +729,31 @@ function BookingForm() {
                   </CardTitle>
                 </CardHeader>
                 <CardContent>
-                  {requestedPoojaParam && sourceOptions.length > 0 ? (
+                  {/* When temple is pre-specified from URL (temple event modal flow):
+                      Show ALL temples dropdown with that temple pre-selected.
+                      User can change to any other temple. */}
+                  {searchParams.get("temple") ? (
+                    <Select
+                      value={selectedTemple}
+                      onValueChange={(val) => {
+                        setSelectedTemple(val);
+                        setSelectedDate("");
+                        setSelectedPackage("");
+                        setAvailabilityStatus(null);
+                      }}
+                    >
+                      <SelectTrigger className="w-full">
+                        <SelectValue placeholder={t("booking_client.choose_temple")} />
+                      </SelectTrigger>
+                      <SelectContent>
+                        {allTemples.map((temple: any) => (
+                          <SelectItem key={temple.id} value={temple.id}>
+                            {parseLocalizedValue(temple.name, language)} {temple.location ? `- ${parseLocalizedValue(temple.location, language)}` : ""}
+                          </SelectItem>
+                        ))}
+                      </SelectContent>
+                    </Select>
+                  ) : requestedPoojaParam && sourceOptions.length > 0 ? (
                     <Select
                       value={selectedSourceKey}
                       onValueChange={(value) => {

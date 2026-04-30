@@ -117,6 +117,7 @@ model Temple {
   ledgerEntries         TempleLedger[]
   updateRequests        TempleUpdateRequest[]
   withdrawals           WithdrawalRequest[]
+  poojaCategories       PoojaCategory[]
 }
 
 model BookingAvailability {
@@ -233,6 +234,8 @@ model PoojaCategory {
   status    String   @default("APPROVED")
   createdAt DateTime @default(now())
   poojas    Pooja[]
+  templeId  String?
+  temple    Temple?  @relation(fields: [templeId], references: [id])
 }
 
 model Event {

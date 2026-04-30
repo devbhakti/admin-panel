@@ -1,4 +1,4 @@
-import React from "react";
+import React, { Suspense } from "react";
 import { poojas } from "@/data/poojas";
 import PoojaDetailClient from "./PoojaDetailClient";
 
@@ -14,7 +14,11 @@ interface PageProps {
 
 const PoojaDetailPage = async ({ params }: PageProps) => {
     const { slug } = await params;
-    return <PoojaDetailClient id={slug} />;
+    return (
+        <Suspense fallback={<div className="min-h-screen flex items-center justify-center">Loading...</div>}>
+            <PoojaDetailClient id={slug} />
+        </Suspense>
+    );
 };
 
 export default PoojaDetailPage;

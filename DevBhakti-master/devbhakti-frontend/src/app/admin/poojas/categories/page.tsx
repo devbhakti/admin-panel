@@ -399,6 +399,11 @@ export default function AdminPoojaCategoriesPage() {
                             {getL(cat.name_mr || cat.name, "mr")}
                         </p>
                     )}
+                    {cat.temple && (
+                        <p className="text-xs text-[#7b4623] font-medium mt-1 truncate">
+                            Temple: {getL(cat.temple.name, "en", "Unknown Temple")}
+                        </p>
+                    )}
                 </div>
                 {getStatusBadge(cat.status)}
             </div>
@@ -603,6 +608,7 @@ export default function AdminPoojaCategoriesPage() {
                                     <th className="text-left px-4 lg:px-6 py-3.5 font-semibold text-slate-900 whitespace-nowrap">English Name</th>
                                     <th className="text-left px-4 lg:px-6 py-3.5 font-semibold text-slate-900 whitespace-nowrap">हिंदी</th>
                                     <th className="text-left px-4 lg:px-6 py-3.5 font-semibold text-slate-900 whitespace-nowrap">मराठी</th>
+                                    <th className="text-left px-4 lg:px-6 py-3.5 font-semibold text-slate-900 whitespace-nowrap">Suggested By</th>
                                     <th className="text-left px-4 lg:px-6 py-3.5 font-semibold text-slate-900 whitespace-nowrap">Status</th>
                                     <th className="text-left px-4 lg:px-6 py-3.5 font-semibold text-slate-900 whitespace-nowrap">Created</th>
                                     <th className="text-right px-4 lg:px-6 py-3.5 font-semibold text-slate-900 whitespace-nowrap">Actions</th>
@@ -622,6 +628,15 @@ export default function AdminPoojaCategoriesPage() {
                                         <td className="px-4 lg:px-6 py-3.5 text-slate-600 max-w-[160px] lg:max-w-none truncate">
                                             {getL(cat.name_mr || cat.name, "mr") || (
                                                 <span className="text-slate-300 italic text-xs">not set</span>
+                                            )}
+                                        </td>
+                                        <td className="px-4 lg:px-6 py-3.5">
+                                            {cat.temple ? (
+                                                <span className="text-xs font-semibold text-[#7b4623] bg-[#7b4623]/10 px-2 py-1 rounded-md">
+                                                    {getL(cat.temple.name, "en", "Unknown Temple")}
+                                                </span>
+                                            ) : (
+                                                <span className="text-xs text-slate-400 font-medium">DevBhakti (Admin)</span>
                                             )}
                                         </td>
                                         <td className="px-4 lg:px-6 py-3.5">

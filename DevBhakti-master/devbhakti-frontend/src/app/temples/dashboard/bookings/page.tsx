@@ -990,6 +990,12 @@ export default function TempleBookingsPage() {
                                                 <User className="w-3.5 h-3.5 text-slate-400" />
                                                 {selectedBooking.devoteeName}
                                             </p>
+                                            {selectedBooking.gothra && (
+                                                <p className="text-xs font-semibold text-slate-500 mt-1 ml-0.5">
+                                                    <span className="text-[10px] text-slate-400 font-bold uppercase tracking-widest">Gothra: </span>
+                                                    {selectedBooking.gothra}
+                                                </p>
+                                            )}
                                         </div>
                                         <div>
                                             <p className="text-[10px] text-slate-400 font-bold uppercase tracking-widest mb-1">Contact Details</p>
@@ -1008,26 +1014,8 @@ export default function TempleBookingsPage() {
                                 </div>
 
                                 {/* Spiritual Information Grid */}
-                                {(selectedBooking.gotra || selectedBooking.rashi || selectedBooking.nakshatra || selectedBooking.dob || selectedBooking.anniversary || selectedBooking.kuldevi || selectedBooking.kuldevta) && (
+                                {(selectedBooking.gothra || selectedBooking.dob || selectedBooking.anniversary || selectedBooking.kuldevi || selectedBooking.kuldevta || selectedBooking.nativePlace) && (
                                     <div className="grid grid-cols-2 md:grid-cols-3 gap-6 pt-6 border-t border-slate-100">
-                                        {selectedBooking.gotra && (
-                                            <div>
-                                                <p className="text-[10px] text-slate-400 font-bold uppercase tracking-widest mb-1">Gotra</p>
-                                                <p className="text-slate-700 font-bold">{selectedBooking.gotra}</p>
-                                            </div>
-                                        )}
-                                        {selectedBooking.rashi && (
-                                            <div>
-                                                <p className="text-[10px] text-slate-400 font-bold uppercase tracking-widest mb-1">Rashi</p>
-                                                <p className="text-slate-700 font-bold">{selectedBooking.rashi}</p>
-                                            </div>
-                                        )}
-                                        {selectedBooking.nakshatra && (
-                                            <div>
-                                                <p className="text-[10px] text-slate-400 font-bold uppercase tracking-widest mb-1">Nakshatra</p>
-                                                <p className="text-slate-700 font-bold">{selectedBooking.nakshatra}</p>
-                                            </div>
-                                        )}
                                         {selectedBooking.dob && (
                                             <div>
                                                 <p className="text-[10px] text-slate-400 font-bold uppercase tracking-widest mb-1">Birthday</p>
@@ -1050,6 +1038,12 @@ export default function TempleBookingsPage() {
                                             <div>
                                                 <p className="text-[10px] text-slate-400 font-bold uppercase tracking-widest mb-1">Kuldevta</p>
                                                 <p className="text-slate-700 font-bold">{selectedBooking.kuldevta}</p>
+                                            </div>
+                                        )}
+                                        {selectedBooking.nativePlace && (
+                                            <div>
+                                                <p className="text-[10px] text-slate-400 font-bold uppercase tracking-widest mb-1">Native Place</p>
+                                                <p className="text-slate-700 font-bold">{selectedBooking.nativePlace}</p>
                                             </div>
                                         )}
                                     </div>

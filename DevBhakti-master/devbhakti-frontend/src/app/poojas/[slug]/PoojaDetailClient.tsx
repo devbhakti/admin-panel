@@ -27,7 +27,7 @@ import { fetchPublicPoojaById, fetchRatingsSettings } from "@/api/publicControll
 import { API_URL } from "@/config/apiConfig";
 import { toast } from "@/hooks/use-toast";
 import { getTempleUrl } from "@/lib/utils/templeUtils";
-import { useRouter } from "next/navigation";
+import { useRouter, useSearchParams } from "next/navigation";
 import { useLanguage } from "@/context/LanguageContext";
 import { getLocalized, getLocalizedArray } from "@/utils/localization";
 
@@ -47,6 +47,8 @@ const PoojaDetailClient = ({ id }: PoojaDetailClientProps) => {
     const [showRatings, setShowRatings] = useState(false);
     const [showAllFaqs, setShowAllFaqs] = useState(false);
     const router = useRouter();
+    const searchParams = useSearchParams();
+    const templeIdFromUrl = searchParams.get("temple");
     const { language, t } = useLanguage();
 
     useEffect(() => {
@@ -197,8 +199,11 @@ const PoojaDetailClient = ({ id }: PoojaDetailClientProps) => {
                                             const savedUser = localStorage.getItem("user");
                                             const parsedUser = savedUser ? JSON.parse(savedUser) : null;
 
-                                            const bookingUrl = pooja.temple?.id
-                                                ? `/booking?pooja=${id}&temple=${pooja.temple.id}`
+                                            // Use temple from URL param (passed from temple detail page event modal)
+                                            // OR from pooja's own temple, OR nothing (master pooja)
+                                            const effectiveTempleId = templeIdFromUrl || pooja.temple?.id || null;
+                                            const bookingUrl = effectiveTempleId
+                                                ? `/booking?pooja=${id}&temple=${effectiveTempleId}`
                                                 : `/booking?pooja=${id}`;
 
                                             if (!token || !parsedUser || parsedUser.role !== "DEVOTEE") {
@@ -207,11 +212,11 @@ const PoojaDetailClient = ({ id }: PoojaDetailClientProps) => {
                                                 return;
                                             }
 
-                                            // If temple is available OR it's a master pooja, navigate directly to booking
-                                            if (pooja.temple?.id || pooja.isMaster) {
+                                            // If temple is known OR it's a master pooja, go directly to booking
+                                            if (effectiveTempleId || pooja.isMaster) {
                                                 router.push(bookingUrl);
                                             } else {
-                                                // Otherwise scroll to temple section
+                                                // Otherwise scroll to temple selection section
                                                 document.getElementById('temple-section')?.scrollIntoView({ behavior: 'smooth' });
                                             }
                                         }}

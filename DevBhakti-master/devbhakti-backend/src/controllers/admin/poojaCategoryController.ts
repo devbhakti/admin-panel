@@ -17,6 +17,13 @@ export const getAllPoojaCategoriesAdmin = async (req: Request, res: Response) =>
 
         const categories = await prisma.poojaCategory.findMany({
             where: where,
+            include: {
+                temple: {
+                    select: {
+                        name: true
+                    }
+                }
+            },
             orderBy: { createdAt: "desc" }
         });
 
@@ -57,7 +64,8 @@ export const createPoojaCategory = async (req: Request, res: Response) => {
             data: {
                 name: buildLangJson(final_name_en, name_hi, name_mr),
                 nameSlug,
-                status
+                status,
+                ...(req.body.templeId ? { templeId: req.body.templeId } : {})
             }
         });
 

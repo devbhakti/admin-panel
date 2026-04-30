@@ -20,8 +20,8 @@ import {
     ChevronRight,
     ShieldCheck,
     MapPin,
-    Search
-
+    Search,
+    Loader2
 } from "lucide-react";
 
 import Navbar from "@/components/landing/Navbar";
@@ -89,6 +89,7 @@ function DonationForm() {
 
     const [temples, setTemples] = useState<Temple[]>([]);
     const [loading, setLoading] = useState(false);
+    const [isPaymentLoading, setIsPaymentLoading] = useState(false);
     const [donatingTo, setDonatingTo] = useState<Temple | null>(null);
     const [transactionId, setTransactionId] = useState("");
     const [donationId, setDonationId] = useState("");
@@ -223,6 +224,7 @@ function DonationForm() {
     const handleConfirmDonation = async () => {
         try {
             setLoading(true);
+            setIsPaymentLoading(true);
             const savedUser = localStorage.getItem("user");
             const user = savedUser ? JSON.parse(savedUser) : null;
 
@@ -291,6 +293,8 @@ function DonationForm() {
                         }
                     } catch (err: any) {
                         toast({ title: t("toasts.verification_error"), description: err.message, variant: "destructive" });
+                    } finally {
+                        setIsPaymentLoading(false);
                     }
                 },
                 prefill: {
@@ -305,6 +309,7 @@ function DonationForm() {
 
             rzp.on('payment.failed', function (response: any) {
                 console.error("Payment failed event:", response.error);
+                setIsPaymentLoading(false);
                 notifyFailedPayment({
                     orderType: "DONATION",
                     referenceId: initiateData.donationId,
@@ -316,6 +321,7 @@ function DonationForm() {
 
             rzp.on('modal.dismiss', function () {
                 console.log("Payment modal dismissed");
+                setIsPaymentLoading(false);
                 notifyFailedPayment({
                     orderType: "DONATION",
                     referenceId: initiateData.donationId,
@@ -329,6 +335,7 @@ function DonationForm() {
         } catch (error: any) {
             console.error("Donation Error:", error);
             toast({ title: t("toasts.donation_failed"), description: error.message, variant: "destructive" });
+            setIsPaymentLoading(false);
         } finally {
             setLoading(false);
         }
@@ -352,6 +359,18 @@ function DonationForm() {
 
     return (
         <div className="min-h-screen bg-background relative overflow-hidden">
+            {isPaymentLoading && (
+                <div className="fixed inset-0 z-[100] flex items-center justify-center bg-black/40 backdrop-blur-sm">
+                    <div className="flex flex-col items-center gap-4 rounded-2xl bg-[#fdf6e9] px-8 py-7 text-center shadow-2xl border border-[#e6d5c8]">
+                        <Loader2 className="h-10 w-10 animate-spin text-[#7c4624]" />
+                        <div>
+                            <p className="text-lg font-bold text-[#2a1b01]">Loading Payment</p>
+                            <p className="mt-1 text-sm text-muted-foreground">Please wait while we confirm your payment.</p>
+                        </div>
+                    </div>
+                </div>
+            )}
+            
             {/* Decorative Background Elements */}
             <div className="fixed inset-0 pointer-events-none z-0">
                 {/* Replaced orange/amber colors with #7c4624 variants */}
@@ -822,7 +841,7 @@ function DonationForm() {
                                 <h2 className="text-3xl font-display font-bold text-foreground mb-4">{t("step5.title")}</h2>
                                 <div className="max-w-md mx-auto mb-8">
                                     <p className="text-dark text-lg">
-                                        {t("step5.thank_you")}, <span className="font-semibold text-white">{isAnonymous ? t("step5.devotee") : formData.name.split(' ')[0]}</span>.
+                                        {t("step5.thank_you")}, <span className="font-semibold text-dark">{isAnonymous ? t("step5.devotee") : formData.name.split(' ')[0]}</span>.
                                     </p>
                                     <p className="text-dark mt-2">
                                         {t("step5.contribution_received")} <span className="font-bold text-green-600">₹{parseInt(finalAmount).toLocaleString()}</span> {t("step5.has_been_received")}
