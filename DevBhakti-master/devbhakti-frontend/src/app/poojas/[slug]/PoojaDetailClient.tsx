@@ -158,31 +158,9 @@ const PoojaDetailClient = ({ id }: PoojaDetailClientProps) => {
                     </nav>
 
                     {/* Hero Section */}
-                    <div className="grid grid-cols-1 lg:grid-cols-12 gap-4 items-start mb-16">
-                        {/* Left: Info Section */}
-                        <div className="lg:col-span-7 flex flex-col h-full justify-between py-2">
-
-                            <motion.div
-                                initial={{ opacity: 0, y: 20 }}
-                                animate={{ opacity: 1, y: 0 }}
-                                transition={{ delay: 0.1 }}
-                            >
-                                <h1 className="text-3xl sm:text-4xl md:text-5xl lg:text-6xl font-serif font-bold text-[#1a1a1a] mb-6 leading-tight">
-                                    {getLocalized(pooja, 'name', language)}
-                                </h1>
-                                <p className="text-base md:text-lg text-[#555] leading-relaxed mb-8">
-
-                                    {pooja.about}
-                                </p>
-
-                                {/* Booking Bar */}
-                               
-                            </motion.div>
-                        </div>
-
-                        {/* Right: Image Card */}
+                    <div className="grid grid-cols-1 lg:grid-cols-12 gap-12 items-start mb-16">
+                        {/* Left: Image Card */}
                         <div className="lg:col-span-5 relative">
-
                             <motion.div
                                 initial={{ opacity: 0, scale: 0.95 }}
                                 animate={{ opacity: 1, scale: 1 }}
@@ -199,9 +177,25 @@ const PoojaDetailClient = ({ id }: PoojaDetailClientProps) => {
                                     </Badge>
                                 </div>
                             </motion.div>
-                            {/* Price below image */}
-                             <div className="bg-[#FFEAD1] py-3 px-4 rounded-[2rem] border border-primary/10 flex flex-col sm:flex-row items-center justify-between gap-4 shadow-lg shadow-primary/5 mt-4">
+                        </div>
 
+                        {/* Right: Info Section */}
+                        <div className="lg:col-span-7 flex flex-col py-2">
+                            <motion.div
+                                initial={{ opacity: 0, y: 20 }}
+                                animate={{ opacity: 1, y: 0 }}
+                                transition={{ delay: 0.1 }}
+                                className="flex flex-col h-full"
+                            >
+                                <h1 className="text-3xl sm:text-4xl md:text-5xl lg:text-6xl font-serif font-bold text-[#1a1a1a] mb-6 leading-tight">
+                                    {getLocalized(pooja, 'name', language)}
+                                </h1>
+                                <p className="text-base md:text-lg text-[#555] leading-relaxed mb-8">
+                                    {pooja.about}
+                                </p>
+
+                                {/* Booking Bar */}
+                                <div className="bg-[#FFEAD1] py-3 px-4 rounded-[2rem] border border-primary/10 flex flex-col sm:flex-row items-center justify-between gap-4 shadow-lg shadow-primary/5 mt-auto">
                                     <div className="px-4">
                                         <div className="text-primary/70 text-[9px] font-bold uppercase tracking-[0.2em] mb-1">{t('pooja_detail.starting_from')}</div>
                                         <div className="flex items-center gap-1 text-2xl font-bold text-primary">
@@ -216,8 +210,6 @@ const PoojaDetailClient = ({ id }: PoojaDetailClientProps) => {
                                             const savedUser = localStorage.getItem("user");
                                             const parsedUser = savedUser ? JSON.parse(savedUser) : null;
 
-                                            // Use temple from URL param (passed from temple detail page event modal)
-                                            // OR from pooja's own temple, OR nothing (master pooja)
                                             const effectiveTempleId = templeIdFromUrl || pooja.temple?.id || null;
                                             const bookingUrl = effectiveTempleId
                                                 ? `/booking?pooja=${id}&temple=${effectiveTempleId}`
@@ -229,11 +221,9 @@ const PoojaDetailClient = ({ id }: PoojaDetailClientProps) => {
                                                 return;
                                             }
 
-                                            // If temple is known OR it's a master pooja, go directly to booking
                                             if (effectiveTempleId || pooja.isMaster) {
                                                 router.push(bookingUrl);
                                             } else {
-                                                // Otherwise scroll to temple selection section
                                                 document.getElementById('temple-section')?.scrollIntoView({ behavior: 'smooth' });
                                             }
                                         }}
@@ -242,6 +232,7 @@ const PoojaDetailClient = ({ id }: PoojaDetailClientProps) => {
                                         {t('common.book_now')} <ArrowRight className="ml-3 w-5 h-5 group-hover:translate-x-1 transition-transform" />
                                     </Button>
                                 </div>
+                            </motion.div>
                         </div>
                     </div>
 
