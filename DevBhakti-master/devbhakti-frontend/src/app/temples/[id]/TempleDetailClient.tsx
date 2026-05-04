@@ -367,13 +367,16 @@ export default function TempleDetail() {
                                     )} */}
                                 </div>
 
-                                <div className="flex flex-wrap gap-3">
-
+                                <div className="space-y-2">
                                     <span className="font-bold">{t('temple_detail.description')}</span>
-                                    <span>{getLocalized(temple, 'description', language)}</span>
-
-                                    {/* <span className="font-bold">History</span>
-                                    <span>{temple.history}</span> */}
+                                    <div
+                                        className="prose prose-sm max-w-none text-muted-foreground
+                                            prose-headings:text-foreground prose-headings:font-bold
+                                            prose-strong:text-foreground prose-p:text-muted-foreground
+                                            prose-ul:text-muted-foreground prose-ol:text-muted-foreground
+                                            prose-blockquote:border-l-primary prose-blockquote:text-muted-foreground"
+                                        dangerouslySetInnerHTML={{ __html: getLocalized(temple, 'description', language) || '' }}
+                                    />
                                 </div>
 
                                 {/* <div className="flex flex-wrap gap-3">
@@ -410,11 +413,14 @@ export default function TempleDetail() {
                                                 <Info className="h-3.5 w-3.5" />
                                                 <span className="text-[10px] font-black uppercase tracking-widest">Divine History</span>
                                             </div>
-                                            <div className="prose prose-orange max-w-none">
-                                                <p className="text-foreground/80 leading-relaxed text-lg font-medium italic">
-                                                    {getLocalized(temple, 'description', language)}
-                                                </p>
-                                            </div>
+                                            <div
+                                                className="prose prose-orange max-w-none
+                                                    prose-headings:text-foreground prose-headings:font-bold
+                                                    prose-strong:text-foreground prose-p:text-foreground/80
+                                                    prose-ul:text-foreground/80 prose-ol:text-foreground/80
+                                                    prose-blockquote:border-l-primary"
+                                                dangerouslySetInnerHTML={{ __html: getLocalized(temple, 'description', language) || '' }}
+                                            />
                                         </div>
                                         {temple.history && (
                                             <div>
@@ -721,16 +727,17 @@ export default function TempleDetail() {
                                             </div>
                                             <ChevronRight className="h-4 w-4 text-primary/30 group-hover:text-primary transition-all group-hover:translate-x-1" />
                                         </a>
-                      <Button
-                                            variant="outline"
-                                            className="w-full h-12 rounded-2xl border-dashed border-primary/30 text-primary hover:bg-primary/5 font-bold gap-2"
-                                            onClick={handleDonation}
-                                        >
-                                            <Heart className="h-4 w-4" />
-                                           Donation
-                                        </Button>
                                     </div>
                                 )}
+
+                                <Button
+                                    variant="outline"
+                                    className="w-full h-12 rounded-2xl border-dashed border-primary/30 text-primary hover:bg-primary/5 font-bold gap-2"
+                                    onClick={handleDonation}
+                                >
+                                    <Heart className="h-4 w-4" />
+                                    Donation
+                                </Button>
 
                                 {/* Compact Upcoming Events */}
                                 {temple.events && temple.events.length > 0 && (
@@ -972,9 +979,10 @@ export default function TempleDetail() {
                                 {selectedEvent.description && (
                                     <div className="space-y-2">
                                         <h3 className="text-xs font-black uppercase tracking-widest text-muted-foreground">About the Event</h3>
-                                        <p className="text-sm text-muted-foreground leading-relaxed">
-                                            {selectedEvent.description}
-                                        </p>
+                                        <div 
+                                            className="text-sm text-muted-foreground leading-relaxed prose prose-sm max-w-none"
+                                            dangerouslySetInnerHTML={{ __html: selectedEvent.description }}
+                                        />
                                     </div>
                                 )}
 

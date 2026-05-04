@@ -41,6 +41,8 @@ import { useLanguage } from "@/context/LanguageContext";
 import { getLocalized, Language } from "@/utils/localization";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { useToast } from "@/hooks/use-toast";
+import { RichTextEditor } from "@/components/ui/rich-text-editor";
+import { stripHtml } from "@/utils/textUtils";
 
 export default function PoojaFAQsPage() {
     const [faqs, setFaqs] = useState<any[]>([]);
@@ -381,7 +383,7 @@ export default function PoojaFAQsPage() {
                                     <TableCell>
                                         <div className="font-medium">{getLocalized(faq, 'question', language as Language)}</div>
                                         <div className="text-xs text-muted-foreground truncate max-w-[400px]">
-                                            {getLocalized(faq, 'answer', language as Language)}
+                                            {stripHtml(getLocalized(faq, 'answer', language as Language))}
                                         </div>
                                     </TableCell>
                                     <TableCell>
@@ -501,9 +503,10 @@ export default function PoojaFAQsPage() {
                                                         Answer
                                                     </div>
                                                     <div className="p-4 bg-emerald-50/50 rounded-2xl border border-emerald-100/50">
-                                                        <p className="text-sm text-slate-700 whitespace-pre-wrap leading-relaxed">
-                                                            {viewingFaq.answer?.[lang] || 'Not provided'}
-                                                        </p>
+                                                        <div 
+                                                            className="text-sm text-slate-700 prose prose-sm max-w-none leading-relaxed"
+                                                            dangerouslySetInnerHTML={{ __html: viewingFaq.answer?.[lang] || 'Not provided' }}
+                                                        />
                                                     </div>
                                                 </div>
                                             </div>
@@ -558,16 +561,14 @@ export default function PoojaFAQsPage() {
                                         />
                                     </div>
                                     <div className="space-y-2">
-                                        <Label htmlFor={`answer_${lang}`}>
+                                        <Label>
                                             Answer ({lang.toUpperCase()}) {lang === 'en' ? '*' : ''}
                                         </Label>
-                                        <Textarea
-                                            id={`answer_${lang}`}
-                                            placeholder="Answer..."
+                                        <RichTextEditor
                                             value={(formData as any)[`answer_${lang}`]}
-                                            onChange={(e) => setFormData({ ...formData, [`answer_${lang}`]: e.target.value })}
-                                            className="h-32"
-                                            required={lang === 'en'}
+                                            onChange={(content) => setFormData({ ...formData, [`answer_${lang}`]: content })}
+                                            placeholder="Answer..."
+                                            minHeight="150px"
                                         />
                                     </div>
                                 </TabsContent>

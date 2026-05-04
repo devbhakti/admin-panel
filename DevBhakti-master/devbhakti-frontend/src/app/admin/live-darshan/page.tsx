@@ -1,7 +1,7 @@
 "use client";
 
 import React, { useEffect, useState } from "react";
-import { Eye, Loader2, Radio, Video, Power, PowerOff, Star, Info, Pencil, Search } from "lucide-react";
+import { Eye, Loader2, Radio, Video, Power, PowerOff, Star, Info, Pencil, Search, Trash2 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Switch } from "@/components/ui/switch";
@@ -30,6 +30,16 @@ import {
   TooltipProvider,
   TooltipTrigger,
 } from "@/components/ui/tooltip";
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+} from "@/components/ui/alert-dialog";
 import { fetchAllTemplesAdmin, toggleTempleStatusAdmin, updateTempleLiveConfigAdmin, setPrimaryLiveAdmin } from "@/api/adminController";
 import { useLanguage } from "@/context/LanguageContext";
 import { getLocalized } from "@/utils/localization";
@@ -72,6 +82,8 @@ export default function AdminLiveDarshanPage() {
   const [mainSearchQuery, setMainSearchQuery] = useState("");
   const [isSearchingTemples, setIsSearchingTemples] = useState(false);
   const [isPopoverOpen, setIsPopoverOpen] = useState(false);
+  const [templeToDelete, setTempleToDelete] = useState<any | null>(null);
+  const [deleting, setDeleting] = useState(false);
 
   useEffect(() => {
     const load = async () => {
@@ -324,6 +336,65 @@ export default function AdminLiveDarshanPage() {
     }
   };
 
+  const handleDeleteLive = async () => {
+    if (!templeToDelete) return;
+    setDeleting(true);
+    try {
+      // 1. Reset live config
+      await updateTempleLiveConfigAdmin(templeToDelete.userId, {
+        isLive: false,
+        liveUrl: "",
+        channelId: "",
+      });
+
+      // 2. Hide from website visibility as well
+      await toggleTempleStatusAdmin(
+        templeToDelete.userId,
+        templeToDelete.isVerified,
+        templeToDelete.temple?.isActive ?? true,
+        { liveStatus: false }
+      );
+
+      toast({
+        title: "Deleted",
+        description: "Live Darshan configuration removed successfully.",
+      });
+
+      // Refresh list
+      const res = await fetchAllTemplesAdmin();
+      const data = Array.isArray(res) ? res : (res.data || []);
+      const actualTemples = data
+        .filter((user: any) => user.temple)
+        .map((user: any) => ({
+          userId: user.id,
+          userName: user.name,
+          userEmail: user.email,
+          userPhone: user.phone,
+          isVerified: user.isVerified,
+          temple: user.temple,
+        }));
+      
+      const liveCandidates = actualTemples.filter((t: any) => {
+        const temple = t.temple;
+        if (!temple) return false;
+        const hasSelfLive = temple.isLive;
+        const hasUrlOrChannel = temple.liveUrl || temple.channelId;
+        return hasSelfLive && hasUrlOrChannel;
+      });
+      setTemples(liveCandidates);
+    } catch (error: any) {
+      console.error("Delete live error:", error);
+      toast({
+        title: "Error",
+        description: error.response?.data?.message || "Failed to delete live configuration",
+        variant: "destructive",
+      });
+    } finally {
+      setDeleting(false);
+      setTempleToDelete(null);
+    }
+  };
+
   const previewEmbed = getEmbedUrl(editLiveUrl);
 
   return (
@@ -503,6 +574,16 @@ export default function AdminLiveDarshanPage() {
                           >
                             <Pencil className="w-4 h-4" />
                           </Button>
+
+                          <Button
+                            variant="ghost"
+                            size="icon"
+                            className="h-8 w-8 text-rose-600 hover:text-rose-700 hover:bg-rose-50"
+                            onClick={() => setTempleToDelete(entry)}
+                            title="Delete Live Config"
+                          >
+                            <Trash2 className="w-4 h-4" />
+                          </Button>
                         </div>
                       </TableCell>
                     </TableRow>
@@ -647,6 +728,38 @@ export default function AdminLiveDarshanPage() {
             </div>
           </DialogContent>
         </Dialog>
+
+        <AlertDialog open={!!templeToDelete} onOpenChange={(open) => !open && setTempleToDelete(null)}>
+          <AlertDialogContent>
+            <AlertDialogHeader>
+              <AlertDialogTitle>Are you absolutely sure?</AlertDialogTitle>
+              <AlertDialogDescription>
+                This will remove the Live Darshan configuration for <strong>{getLocalized(templeToDelete?.temple, 'name', language)}</strong>. 
+                The live stream will no longer be visible on the website. You can add it back later if needed.
+              </AlertDialogDescription>
+            </AlertDialogHeader>
+            <AlertDialogFooter>
+              <AlertDialogCancel disabled={deleting}>Cancel</AlertDialogCancel>
+              <AlertDialogAction 
+                onClick={(e) => {
+                  e.preventDefault();
+                  handleDeleteLive();
+                }}
+                className="bg-rose-600 hover:bg-rose-700 text-white"
+                disabled={deleting}
+              >
+                {deleting ? (
+                  <>
+                    <Loader2 className="w-4 h-4 mr-2 animate-spin" />
+                    Deleting...
+                  </>
+                ) : (
+                  "Delete Live Darshan"
+                )}
+              </AlertDialogAction>
+            </AlertDialogFooter>
+          </AlertDialogContent>
+        </AlertDialog>
       </div>
     </TooltipProvider>
   );

@@ -79,7 +79,8 @@ import {
 } from "@/api/templeAdminController";
 import { useToast } from "@/hooks/use-toast";
 import { Switch } from "@/components/ui/switch";
-import { parseLocalizedValue } from '@/utils/textUtils';
+import { parseLocalizedValue, stripHtml } from '@/utils/textUtils';
+import { RichTextEditor } from "@/components/ui/rich-text-editor";
 import { useAdminAuth } from "@/hooks/use-admin-auth";
 
 export default function TempleEventsPage() {
@@ -559,7 +560,7 @@ export default function TempleEventsPage() {
                                     </TableCell>
                                     <TableCell>
                                         <div className="text-sm text-muted-foreground line-clamp-1 max-w-[400px]">
-                                            {getL(event.description, 'en') || "No description"}
+                                            {stripHtml(getL(event.description, 'en')) || "No description"}
                                         </div>
                                     </TableCell>
                                     <TableCell>
@@ -671,16 +672,12 @@ export default function TempleEventsPage() {
                                         />
                                     </div>
                                     <div className="space-y-2">
-                                        <Label htmlFor={`description_${lang}`} className="text-slate-700 font-medium">Description ({lang.toUpperCase()})</Label>
-                                        <Textarea
-                                            id={`description_${lang}`}
-                                            placeholder="Briefly describe what happens during this event..."
+                                        <Label className="text-slate-700 font-medium">Description ({lang.toUpperCase()})</Label>
+                                        <RichTextEditor
                                             value={(formData as any)[`description_${lang}`]}
-                                            onChange={(e) =>
-                                                setFormData({ ...formData, [`description_${lang}`]: e.target.value })
-                                            }
-                                            className="h-32 rounded-xl resize-none border-slate-200 focus:border-[#7b4623] focus:ring-[#7b4623]/10"
-                                            maxLength={1000}
+                                            onChange={(content) => setFormData({ ...formData, [`description_${lang}`]: content })}
+                                            placeholder="Briefly describe what happens during this event..."
+                                            minHeight="150px"
                                         />
                                     </div>
                                 </TabsContent>

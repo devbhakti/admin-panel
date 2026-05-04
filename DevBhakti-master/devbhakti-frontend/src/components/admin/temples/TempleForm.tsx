@@ -25,6 +25,7 @@ import { checkPhoneGlobal, checkEmailExists, checkInstitutionPhone } from "@/api
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
+import { RichTextEditor } from "@/components/ui/rich-text-editor";
 import { Separator } from "@/components/ui/separator";
 import { useToast } from "@/hooks/use-toast";
 import { ImageCropper } from "@/components/admin/ImageCropper";
@@ -374,15 +375,9 @@ export function TempleForm({
     const handleHeroImagesChange = (e: React.ChangeEvent<HTMLInputElement>) => {
         const files = Array.from(e.target.files || []);
         if (files.length > 0) {
-            const reader = new FileReader();
-            reader.onload = () => {
-                setTempImage(reader.result as string);
-                setCropType("hero");
-                setCropTitle(t('registration_form.crop_modal.banner_title'));
-                setInitialAspect(1920 / 800);
-                setShowCropper(true);
-            };
-            reader.readAsDataURL(files[0]);
+            setHeroImages(prev => [...prev, ...files]);
+            const newPreviews = files.map(file => URL.createObjectURL(file));
+            setHeroPreviews(prev => [...prev, ...newPreviews]);
             e.target.value = '';
         }
     };
@@ -651,11 +646,12 @@ export function TempleForm({
                                     </div>
                                     <div className="space-y-2 md:col-span-full">
                                         <label className="text-sm font-semibold text-slate-700">{t('registration_form.labels.description')}</label>
-                                        <Textarea
+                                        <RichTextEditor
                                             value={(formData as any)[`description_${lang}`]}
-                                            onChange={e => setFormData({ ...formData, [`description_${lang}`]: e.target.value })}
+                                            onChange={(html) => setFormData({ ...formData, [`description_${lang}`]: html })}
                                             placeholder={t('registration_form.placeholders.description')}
-                                            rows={3}
+                                            minHeight="120px"
+                                            maxLength={5000}
                                         />
                                     </div>
                                     

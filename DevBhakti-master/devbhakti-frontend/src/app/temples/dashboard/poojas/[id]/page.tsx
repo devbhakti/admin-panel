@@ -190,9 +190,10 @@ export default function TempleViewPoojaPage() {
                                             </CardTitle>
                                         </CardHeader>
                                         <CardContent className="p-6">
-                                            <p className="text-slate-600 text-sm leading-relaxed whitespace-pre-wrap">
-                                                {parseLocalizedValue(pooja.about, lang) || `No ${lang === 'en' ? 'English' : lang === 'hi' ? 'Hindi' : 'Marathi'} description available.`}
-                                            </p>
+                                            <div 
+                                                className="text-slate-600 text-sm leading-relaxed prose prose-orange max-w-none"
+                                                dangerouslySetInnerHTML={{ __html: parseLocalizedValue(pooja.about, lang) || `No ${lang === 'en' ? 'English' : lang === 'hi' ? 'Hindi' : 'Marathi'} description available.` }}
+                                            />
                                         </CardContent>
                                     </Card>
 

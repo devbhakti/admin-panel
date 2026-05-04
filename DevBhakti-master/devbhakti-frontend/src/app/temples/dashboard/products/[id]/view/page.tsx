@@ -212,11 +212,10 @@ export default function ViewTempleProductPage() {
                                             <div className="flex items-center gap-2 text-[10px] font-black uppercase tracking-[0.2em] text-slate-400">
                                                 <Info className="w-3 h-3" /> Description
                                             </div>
-                                            <div className="prose prose-slate max-w-none text-slate-600 leading-relaxed text-base min-h-[100px] whitespace-pre-wrap">
-                                                {parseLocalizedValue(product.description, l as Language) || (
-                                                    <p className="text-slate-300 italic">No description provided in this language.</p>
-                                                )}
-                                            </div>
+                                            <div 
+                                                className="prose prose-orange max-w-none text-slate-600 leading-relaxed text-base min-h-[100px]"
+                                                dangerouslySetInnerHTML={{ __html: parseLocalizedValue(product.description, l as Language) || "<p class='text-slate-300 italic'>No description provided in this language.</p>" }}
+                                            />
                                         </div>
 
                                         {/* Highlights if any */}

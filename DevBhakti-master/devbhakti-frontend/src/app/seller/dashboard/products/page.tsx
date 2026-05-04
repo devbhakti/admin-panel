@@ -27,7 +27,7 @@ import { Separator } from "@/components/ui/separator";
 import { useToast } from "@/hooks/use-toast";
 import { fetchSellerProducts, deleteSellerProduct, createSellerProduct, fetchCategories } from "@/api/sellerController";
 import { API_URL, BASE_URL } from "@/config/apiConfig";
-import { parseLocalizedValue } from "@/utils/textUtils";
+import { parseLocalizedValue, stripHtml } from "@/utils/textUtils";
 import {
     Select,
     SelectContent,
@@ -531,7 +531,7 @@ export default function SellerProductsPage() {
                                                 {parseLocalizedValue(product.name, 'en')}
                                             </h3>
                                             <p className="text-sm text-slate-500 line-clamp-2 mb-4 h-10 leading-relaxed">
-                                                {parseLocalizedValue(product.description, 'en')}
+                                                {stripHtml(parseLocalizedValue(product.description, 'en'))}
                                             </p>
 
                                             <div className="mt-auto">

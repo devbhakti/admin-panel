@@ -19,8 +19,9 @@ import {
     Languages,
     Download,
     Upload,
-    Loader2
+    Loader2,
 } from "lucide-react";
+import { RichTextEditor } from "@/components/ui/rich-text-editor";
 import * as XLSX from 'xlsx';
 import { format } from "date-fns";
 import { hi } from "date-fns/locale";
@@ -85,7 +86,7 @@ import { useDebounce } from "@/hooks/use-debounce";
 import { useAdminAuth } from "@/hooks/use-admin-auth";
 import { useLanguage } from "@/context/LanguageContext";
 import { getLocalized, Language } from "@/utils/localization";
-import { parseLocalizedValue } from '@/utils/textUtils';
+import { parseLocalizedValue, stripHtml } from '@/utils/textUtils';
 
 
 export default function AdminEventsPage() {
@@ -703,7 +704,7 @@ export default function AdminEventsPage() {
                                     </TableCell>
                                     <TableCell>
                                          <div className="text-sm text-muted-foreground line-clamp-1 max-w-[300px]">
-                                             {getLocalized(event, 'description', language as Language) || t('common.no_description') || "No description"}
+                                             {stripHtml(getLocalized(event, 'description', language as Language)) || t('common.no_description') || "No description"}
                                          </div>
 
                                      </TableCell>
@@ -948,11 +949,13 @@ export default function AdminEventsPage() {
                                                         <h3 className="text-[10px] font-bold text-slate-400 uppercase tracking-widest mb-4 border-b border-orange-50 pb-4">
                                                             {t('admin.events.about_event')} ({l.toUpperCase()})
                                                         </h3>
-                                                        <p className="text-slate-600 leading-relaxed font-semibold text-lg whitespace-pre-wrap break-words">
-                                                            {getLocalized(viewingEvent, 'description', l as Language) || (
+                                                        <div className="text-slate-600 leading-relaxed font-semibold text-lg break-words">
+                                                            {getLocalized(viewingEvent, 'description', l as Language) ? (
+                                                                <div dangerouslySetInnerHTML={{ __html: getLocalized(viewingEvent, 'description', l as Language) }} />
+                                                            ) : (
                                                                 <span className="italic text-slate-400">No description provided in this language.</span>
                                                             )}
-                                                        </p>
+                                                        </div>
                                                     </div>
                                                 </div>
                                             </TabsContent>
@@ -1004,14 +1007,13 @@ export default function AdminEventsPage() {
                                 <div className="space-y-2">
                                     <Label htmlFor={`description_${lang}`}>{t('admin.events.description_label')} ({t(`common.${lang}_short`)})</Label>
 
-                                    <Textarea
-                                        id={`description_${lang}`}
-                                        placeholder={t('admin.events.description_label') + "..."}
+                                    <RichTextEditor
                                         value={(formData as any)[`description_${lang}`]}
-                                        onChange={(e) =>
-                                            setFormData({ ...formData, [`description_${lang}`]: e.target.value })
+                                        onChange={(html) =>
+                                            setFormData({ ...formData, [`description_${lang}`]: html })
                                         }
-                                        className="h-24"
+                                        placeholder={t('admin.events.description_label') + "..."}
+                                        minHeight="150px"
                                     />
                                 </div>
 

@@ -145,7 +145,7 @@ function DonationForm() {
                 return;
             }
         }
-        if (step === 2 && !finalAmount) {
+        if (step === 2 && (!finalAmount || parseFloat(finalAmount) <= 0)) {
             toast({ title: t("toasts.enter_amount"), variant: "destructive" });
             return;
         }
@@ -596,16 +596,20 @@ function DonationForm() {
                                                 placeholder={t("step2.other_placeholder")}
                                                 className="pl-8 text-lg font-semibold h-12 border-[#e6d5c8] focus:border-[#7c4624] focus:ring-[#7c4624]/20"
                                                 value={customAmount}
+                                                min={0}
                                                 max={10000000}
                                                 onChange={(e) => {
                                                     const val = e.target.value;
-                                                    if (parseFloat(val) > 10000000) {
+                                                    const numericVal = parseFloat(val);
+                                                    if (numericVal > 10000000) {
                                                         setCustomAmount("10000000");
                                                         toast({
                                                             title: "Amount Restricted",
                                                             description: "Maximum donation amount is ₹1 Crore",
                                                             variant: "destructive"
                                                         });
+                                                    } else if (numericVal < 0) {
+                                                        setCustomAmount("0");
                                                     } else {
                                                         setCustomAmount(val);
                                                     }

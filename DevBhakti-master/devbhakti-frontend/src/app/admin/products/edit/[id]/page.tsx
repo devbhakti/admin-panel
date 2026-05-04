@@ -22,6 +22,7 @@ import { ImageCropper } from "@/components/admin/ImageCropper";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
+import { RichTextEditor } from "@/components/ui/rich-text-editor";
 import { Label } from "@/components/ui/label";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import {
@@ -440,11 +441,11 @@ export default function EditProductPage() {
 
                     <div className="space-y-2">
                       <Label>{t("admin.products.description")} {lang === "en" && <span className="text-red-500">*</span>}</Label>
-                      <Textarea
+                      <RichTextEditor
                         value={formData[f("description", lang)]}
-                        onChange={(e) => setFormData({ ...formData, [f("description", lang)]: e.target.value })}
+                        onChange={(html) => setFormData({ ...formData, [f("description", lang)]: html })}
                         placeholder={lang === "en" ? "Enter product description" : `${t("admin.products.description")}...`}
-                        rows={4}
+                        minHeight="150px"
                         className={lang === "en" && errors.description_en ? "border-red-500" : ""}
                       />
                       {lang === "en" && errors.description_en && <p className="text-sm text-red-500">{errors.description_en}</p>}

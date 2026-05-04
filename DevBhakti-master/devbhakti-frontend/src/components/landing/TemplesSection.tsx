@@ -16,6 +16,7 @@ import { API_URL } from "@/config/apiConfig";
 import { getTempleUrl } from "@/lib/utils/templeUtils";
 import { useLanguage } from "@/context/LanguageContext";
 import { getLocalized } from "@/utils/localization";
+import { stripHtml } from "@/utils/textUtils";
 
 const TemplesSection: React.FC = () => {
   const scrollContainerRef = React.useRef<HTMLDivElement>(null);
@@ -228,7 +229,7 @@ const TemplesSection: React.FC = () => {
                         </div>
 
                         <p className="text-sm text-foreground mb-3 line-clamp-2">
-                          {getLocalized(temple, 'description', language)}
+                          {stripHtml(getLocalized(temple, 'description', language))}
                         </p>
 
 

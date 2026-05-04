@@ -17,6 +17,7 @@ import { cn } from "@/lib/utils";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
+import { RichTextEditor } from "@/components/ui/rich-text-editor";
 import { Label } from "@/components/ui/label";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import {
@@ -392,14 +393,10 @@ export default function EditTempleProductPage() {
 
                                             <div className="space-y-2">
                                                 <Label htmlFor={`description_${lang}`}>Short Description * ({lang.toUpperCase()})</Label>
-                                                <Textarea
-                                                    id={`description_${lang}`}
-                                                    value={(formData as any)[`description_${lang}`]}
-                                                    onChange={(e) => setFormData({ ...formData, [`description_${lang}`]: e.target.value })}
-                                                    placeholder="Enter product description"
-                                                    rows={4}
-                                                    className={cn("placeholder:text-muted-foreground/50", lang === 'en' && errors.description ? "border-red-500" : "")}
-                                                    required={lang === 'en'}
+                                                <RichTextEditor 
+                                                    value={(formData as any)[`description_${lang}`]} 
+                                                    onChange={content => setFormData({...formData, [`description_${lang}`]: content})} 
+                                                    minHeight="150px"
                                                 />
                                             </div>
 

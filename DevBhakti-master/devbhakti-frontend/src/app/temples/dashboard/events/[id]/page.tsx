@@ -243,10 +243,11 @@ export default function TempleViewEventPage() {
                                             </CardTitle>
                                         </CardHeader>
                                         <CardContent className="p-10">
-                                            <div className="prose prose-slate max-w-none">
-                                                <p className="text-slate-600 text-lg leading-loose whitespace-pre-wrap font-medium">
-                                                    {parseLocalizedValue(event.description, lang) || `No content structure defined for ${lang === 'en' ? 'English' : lang === 'hi' ? 'Hindi' : 'Marathi'} yet.`}
-                                                </p>
+                                            <div className="prose prose-orange max-w-none">
+                                                <div 
+                                                    className="text-slate-600 text-lg leading-loose font-medium"
+                                                    dangerouslySetInnerHTML={{ __html: parseLocalizedValue(event.description, lang) || `No content structure defined for ${lang === 'en' ? 'English' : lang === 'hi' ? 'Hindi' : 'Marathi'} yet.` }}
+                                                />
                                             </div>
                                         </CardContent>
                                     </Card>

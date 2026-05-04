@@ -59,6 +59,7 @@ import { getTempleUrl } from "@/lib/utils/templeUtils";
 import { cn } from "@/lib/utils";
 import { useLanguage } from "@/context/LanguageContext";
 import { getLocalized } from "@/utils/localization";
+import { stripHtml } from "@/utils/textUtils";
 
 
 
@@ -663,7 +664,7 @@ export function TemplesList() {
                             {getLocalized(temple, 'name', language)}
                           </h3>
                           <p className="text-sm text-foreground mb-3 line-clamp-2">
-                            {getLocalized(temple, 'description', language)}
+                            {stripHtml(getLocalized(temple, 'description', language))}
                           </p>
 
                           <div className="flex items-center gap-2 text-foreground mb-3">

@@ -62,7 +62,7 @@ import { useToast } from "@/hooks/use-toast";
 import { BASE_URL } from "@/config/apiConfig";
 import { useAdminAuth } from "@/hooks/use-admin-auth";
 import { useLanguage } from "@/context/LanguageContext";
-import { parseLocalizedValue } from "@/utils/textUtils";
+import { parseLocalizedValue, stripHtml } from "@/utils/textUtils";
 
 import { Suspense } from "react";
 import { useSearchParams } from "next/navigation";
@@ -701,8 +701,8 @@ function ProductsContent() {
                       <div className="flex flex-col min-w-0">
                         <span className="font-semibold text-slate-900 truncate">{getLocalizedName(product)}</span>
                         <p className="text-sm text-muted-foreground mt-0.5 line-clamp-2">
-                          {truncateText(parseLocalizedValue(product.description, language), 60)}
-                          {(parseLocalizedValue(product.description, language))?.length > 60 && (
+                          {truncateText(stripHtml(parseLocalizedValue(product.description, language)), 60)}
+                          {stripHtml(parseLocalizedValue(product.description, language))?.length > 60 && (
                             <button
                               onClick={() => router.push(`/admin/products/${product.id}/view`)}
                               className="ml-1 text-primary hover:underline font-medium"

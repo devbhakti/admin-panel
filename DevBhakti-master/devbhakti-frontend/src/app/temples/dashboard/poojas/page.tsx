@@ -41,7 +41,7 @@ import { fetchMyPoojas, deleteMyPooja, togglePoojaStatus, fetchPoojaCategories }
 import { useToast } from "@/hooks/use-toast";
 import { useAdminAuth } from "@/hooks/use-admin-auth";
 import { API_URL } from "@/config/apiConfig";
-import { parseLocalizedValue } from '@/utils/textUtils';
+import { parseLocalizedValue, stripHtml } from '@/utils/textUtils';
 
 export default function TemplePoojasListPage() {
     const router = useRouter();
@@ -392,7 +392,7 @@ export default function TemplePoojasListPage() {
                                             <div className="font-semibold text-slate-900">{parseLocalizedValue(pooja.name)}</div>
                                             {/* Description hidden on very small screens via line-clamp, but visible if table scrolls */}
                                             <div className="text-xs text-muted-foreground line-clamp-1 max-w-[200px] sm:max-w-[250px]">
-                                                {parseLocalizedValue(pooja.about) || (pooja.description && pooja.description[0])}
+                                                {stripHtml(parseLocalizedValue(pooja.about)) || (pooja.description && stripHtml(pooja.description[0]))}
                                             </div>
                                         </TableCell>
                                         <TableCell className="whitespace-nowrap">

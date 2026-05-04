@@ -55,6 +55,7 @@ import { useToast } from "@/hooks/use-toast";
 import { API_URL } from "@/config/apiConfig";
 import { ImageCropper } from "@/components/admin/ImageCropper";
 import { parseLocalizedValue } from "@/utils/textUtils";
+import { RichTextEditor } from "@/components/ui/rich-text-editor";
 import { useLanguage } from "@/context/LanguageContext";
 import { useAdminAuth } from "@/hooks/use-admin-auth";
 
@@ -269,16 +270,10 @@ export default function TempleProfilePage() {
         if (files.length > 0) {
             const validFiles = files.filter(f => f.size <= MAX_SIZE).slice(0, remaining);
             if (validFiles.length > 0) {
-                const reader = new FileReader();
-                reader.onload = () => {
-                    setTempImage(reader.result as string);
-                    setCroppingTarget({ type: 'hero' });
-                    setCropTitle("Crop Gallery Image");
-                    setInitialAspect(1920 / 800);
-                    setShowCropper(true);
-                };
-                reader.readAsDataURL(validFiles[0]);
-            } else {
+                setSelectedHeroFiles(prev => [...prev, ...validFiles]);
+                const newPreviews = validFiles.map(file => URL.createObjectURL(file));
+                setHeroPreviews(prev => [...prev, ...newPreviews]);
+            } else if (files.length > 0) {
                 toast({ title: "Files Too Large", description: "Selected files exceed 5MB limit.", variant: "destructive" });
             }
             e.target.value = '';
@@ -674,9 +669,27 @@ export default function TempleProfilePage() {
                                                 <TabsTrigger value="hi" className="flex-1 text-[10px] font-bold">हिंदी</TabsTrigger>
                                                 <TabsTrigger value="mr" className="flex-1 text-[10px] font-bold">मराठी</TabsTrigger>
                                             </TabsList>
-                                            <TabsContent value="en"><Textarea value={formData.description_en} onChange={e => setFormData({...formData, description_en: e.target.value})} className="min-h-[120px] rounded-2xl" /></TabsContent>
-                                            <TabsContent value="hi"><Textarea value={formData.description_hi} onChange={e => setFormData({...formData, description_hi: e.target.value})} className="min-h-[120px] rounded-2xl" /></TabsContent>
-                                            <TabsContent value="mr"><Textarea value={formData.description_mr} onChange={e => setFormData({...formData, description_mr: e.target.value})} className="min-h-[120px] rounded-2xl" /></TabsContent>
+                                            <TabsContent value="en">
+                                                <RichTextEditor 
+                                                    value={formData.description_en} 
+                                                    onChange={content => setFormData({...formData, description_en: content})} 
+                                                    minHeight="150px"
+                                                />
+                                            </TabsContent>
+                                            <TabsContent value="hi">
+                                                <RichTextEditor 
+                                                    value={formData.description_hi} 
+                                                    onChange={content => setFormData({...formData, description_hi: content})} 
+                                                    minHeight="150px"
+                                                />
+                                            </TabsContent>
+                                            <TabsContent value="mr">
+                                                <RichTextEditor 
+                                                    value={formData.description_mr} 
+                                                    onChange={content => setFormData({...formData, description_mr: content})} 
+                                                    minHeight="150px"
+                                                />
+                                            </TabsContent>
                                         </Tabs>
                                     </div>
 

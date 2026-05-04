@@ -31,7 +31,7 @@ import Navbar from "@/components/landing/Navbar";
 import Footer from "@/components/landing/Footer";
 import { useLanguage } from "@/context/LanguageContext";
 import { getLocalized } from "@/utils/localization";
-import { getDeduplicatedPoojas } from "@/utils/textUtils";
+import { getDeduplicatedPoojas, stripHtml } from "@/utils/textUtils";
 
 
 
@@ -493,7 +493,7 @@ const PoojaListClient: React.FC = () => {
                                                 </h3>
 
                                                 <p className="text-zinc-600 mb-2 leading-relaxed line-clamp-2 text-sm font-medium">
-                                                    {pooja.about || getLocalized(pooja, 'description', language)}
+                                                    {stripHtml(pooja.about || getLocalized(pooja, 'description', language))}
                                                 </p>
 
                                                 {pooja.temple && (

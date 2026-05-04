@@ -22,6 +22,7 @@ import {
     TooltipProvider,
     TooltipTrigger,
 } from "@/components/ui/tooltip";
+import { RichTextEditor } from "@/components/ui/rich-text-editor";
 
 export default function TempleCreatePoojaPage() {
     const router = useRouter();
@@ -313,13 +314,12 @@ export default function TempleCreatePoojaPage() {
                                 </div>
 
                                 <div className="space-y-2">
-                                    <Label htmlFor={`about_${lang}`}>About the Pooja ({lang.toUpperCase()})</Label>
-                                    <Textarea
-                                        id={`about_${lang}`}
-                                        placeholder={lang === 'en' ? "Describe the significance and process..." : lang === 'hi' ? "इस पूजा के महत्व और प्रक्रिया का वर्णन करें..." : "या पूजेचे महत्व आणि प्रक्रिया स्पष्ट करा..."}
+                                    <Label>About the Pooja ({lang.toUpperCase()})</Label>
+                                    <RichTextEditor
                                         value={(formData as any)[`about_${lang}`]}
-                                        onChange={(e) => setFormData({ ...formData, [`about_${lang}`]: e.target.value })}
-                                        className="h-32 rounded-xl resize-none border-slate-200 focus:border-[#7b4623] focus:ring-[#7b4623]/10"
+                                        onChange={(content) => setFormData({ ...formData, [`about_${lang}`]: content })}
+                                        placeholder={lang === 'en' ? "Describe the significance and process..." : lang === 'hi' ? "इस पूजा के महत्व और प्रक्रिया का वर्णन करें..." : "या पूजेचे महत्व आणि प्रक्रिया स्पष्ट करा..."}
+                                        minHeight="150px"
                                     />
                                 </div>
                             </div>

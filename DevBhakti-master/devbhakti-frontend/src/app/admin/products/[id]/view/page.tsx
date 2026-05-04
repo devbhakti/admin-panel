@@ -226,8 +226,10 @@ export default function ViewProductPage() {
                                     <h3 className="font-bold text-slate-900 mb-4 flex items-center gap-2 border-b pb-4">
                                         Description ({l.toUpperCase()})
                                     </h3>
-                                    <div className="prose prose-slate max-w-none text-slate-600 leading-relaxed whitespace-pre-wrap">
-                                        {parseLocalizedValue(product.description, l) || (
+                                    <div className="prose prose-slate max-w-none text-slate-600 leading-relaxed">
+                                        {parseLocalizedValue(product.description, l) ? (
+                                            <div dangerouslySetInnerHTML={{ __html: parseLocalizedValue(product.description, l) }} />
+                                        ) : (
                                             <p className="italic text-slate-400">No description provided in {l === 'en' ? 'English' : l === 'hi' ? 'Hindi' : 'Marathi'}.</p>
                                         )}
                                     </div>

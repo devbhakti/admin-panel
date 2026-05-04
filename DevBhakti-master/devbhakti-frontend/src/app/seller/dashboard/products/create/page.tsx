@@ -19,6 +19,7 @@ import {
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
+import { RichTextEditor } from "@/components/ui/rich-text-editor";
 import { Label } from "@/components/ui/label";
 import {
     Select,
@@ -368,14 +369,10 @@ export default function CreateSellerProductPage() {
 
                                             <div className="space-y-2">
                                                 <Label htmlFor={`description_${lang}`}>Brief Description ({lang.toUpperCase()}) *</Label>
-                                                <Textarea 
-                                                    id={`description_${lang}`} 
+                                                <RichTextEditor 
                                                     value={(formData as any)[`description_${lang}`]} 
-                                                    onChange={(e) => setFormData({ ...formData, [`description_${lang}`]: e.target.value })} 
+                                                    onChange={(value) => setFormData({ ...formData, [`description_${lang}`]: value })} 
                                                     placeholder="Enter product description" 
-                                                    rows={4} 
-                                                    className={errors.description && lang === 'en' ? "border-red-500" : ""} 
-                                                    required={lang === 'en'}
                                                 />
                                                 {errors.description && lang === 'en' && <p className="text-sm text-red-500">{errors.description}</p>}
                                             </div>

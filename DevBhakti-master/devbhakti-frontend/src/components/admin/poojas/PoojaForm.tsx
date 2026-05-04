@@ -6,6 +6,7 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
+import { RichTextEditor } from "@/components/ui/rich-text-editor";
 import { Badge } from "@/components/ui/badge";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { useLanguage, Language  } from "@/context/LanguageContext";
@@ -537,11 +538,12 @@ export const PoojaForm: React.FC<PoojaFormProps> = ({
                         {/* 3. About Section */}
                         <div className="space-y-2.5">
                             <Label className="text-sm font-bold text-slate-700">{t('admin_pooja_form.labels.about')}</Label>
-                            <Textarea
-                                placeholder={t('admin_pooja_form.placeholders.about')}
+                            <RichTextEditor
                                 value={(formData.about as any)[lang]}
-                                onChange={e => handleInputChange("about", e.target.value, lang as Language)}
-                                className="min-h-[120px] rounded-2xl focus:ring-primary/20 border-slate-200 bg-white resize-none p-4"
+                                onChange={(html) => handleInputChange("about", html, lang as Language)}
+                                placeholder={t('admin_pooja_form.placeholders.about')}
+                                minHeight="120px"
+                                maxLength={3000}
                             />
                         </div>
 

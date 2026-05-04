@@ -73,7 +73,7 @@ export const registerTemple = async (req: Request, res: Response) => {
 
     // Check if phone number is already registered with ANY role
     const existingUser = await prisma.user.findFirst({
-        where: { phone: data.phone }
+        where: { phone: data.phone, role: 'INSTITUTION' }
     });
 
 
@@ -250,7 +250,7 @@ export const updateMyTempleProfile = async (req: Request, res: Response) => {
       const normalizedAdminPhone = normalizePhone(adminPhone);
       if (normalizedAdminPhone !== temple.user?.phone) {
         const conflict = await prisma.user.findFirst({
-          where: { phone: normalizedAdminPhone, id: { not: temple.userId } }
+          where: { phone: normalizedAdminPhone, role: 'INSTITUTION', id: { not: temple.userId } }
         });
         if (conflict) {
           return res.status(400).json({ success: false, message: `Phone ${normalizedAdminPhone} is already registered. Use a different number.` });
@@ -282,6 +282,7 @@ export const updateMyTempleProfile = async (req: Request, res: Response) => {
       const conflictingUser = await prisma.user.findFirst({
         where: {
           phone: data.phone,
+          role: 'INSTITUTION',
           id: { not: temple.userId }
         }
       });

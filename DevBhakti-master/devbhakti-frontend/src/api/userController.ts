@@ -17,10 +17,15 @@ export const fetchPublicTemples = async () => {
 export const fetchUserFavorites = async () => {
     const token = localStorage.getItem("token");
     if (!token) return { success: false, data: [] };
-    const response = await axios.get(`${API_URL}/favorites`, {
-        headers: { Authorization: `Bearer ${token}` }
-    });
-    return response.data;
+    try {
+        const response = await axios.get(`${API_URL}/favorites`, {
+            headers: { Authorization: `Bearer ${token}` }
+        });
+        return response.data;
+    } catch (error) {
+        console.error("Fetch favorites failed", error);
+        return { success: false, data: [] };
+    }
 };
 
 export const addFavorite = async (data: { templeId?: string; poojaId?: string; productId?: string }) => {
@@ -48,10 +53,15 @@ export const removeFavorite = async (data: { templeId?: string; poojaId?: string
 export const fetchMyBookings = async () => {
     const token = localStorage.getItem("token");
     if (!token) return { success: false, data: [] };
-    const response = await axios.get(`${API_URL}/bookings/my`, {
-        headers: { Authorization: `Bearer ${token}` }
-    });
-    return response.data;
+    try {
+        const response = await axios.get(`${API_URL}/bookings/my`, {
+            headers: { Authorization: `Bearer ${token}` }
+        });
+        return response.data;
+    } catch (error) {
+        console.error("Fetch bookings failed", error);
+        return { success: false, data: [] };
+    }
 };
 
 export const fetchMyDonations = async () => {

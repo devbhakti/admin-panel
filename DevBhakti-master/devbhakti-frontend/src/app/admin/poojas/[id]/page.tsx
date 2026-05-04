@@ -184,9 +184,10 @@ export default function ViewPoojaPage() {
                                 {parseLocalizedValue(pooja.about, l) !== "N/A" && (
                                     <div className="bg-white border border-orange-100 rounded-xl p-6 shadow-sm border-l-4 border-l-orange-400">
                                         <h3 className="font-semibold text-lg mb-3">About</h3>
-                                        <p className="text-muted-foreground leading-relaxed">
-                                            {parseLocalizedValue(pooja.about, l)}
-                                        </p>
+                                        <div 
+                                            className="prose prose-sm max-w-none text-muted-foreground leading-relaxed"
+                                            dangerouslySetInnerHTML={{ __html: parseLocalizedValue(pooja.about, l) }}
+                                        />
                                     </div>
                                 )}
 
@@ -220,9 +221,10 @@ export default function ViewPoojaPage() {
                                         <div className="flex items-start justify-between">
                                             <div className="flex-1">
                                                 <h4 className="font-semibold">{parseLocalizedValue(pkg.name)}</h4>
-                                                <p className="text-sm text-muted-foreground mt-1">
-                                                    {parseLocalizedValue(pkg.description)}
-                                                </p>
+                                                <div 
+                                                    className="prose prose-sm max-w-none text-muted-foreground mt-1"
+                                                    dangerouslySetInnerHTML={{ __html: parseLocalizedValue(pkg.description) }}
+                                                />
                                             </div>
                                             <div className="text-right">
                                                 <p className="font-bold text-primary text-lg">₹{pkg.price}</p>

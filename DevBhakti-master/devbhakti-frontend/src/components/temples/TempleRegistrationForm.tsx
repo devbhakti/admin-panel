@@ -32,6 +32,7 @@ import { ImageCropper } from "@/components/admin/ImageCropper";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
+import { RichTextEditor } from "@/components/ui/rich-text-editor";
 import { useToast } from "@/hooks/use-toast";
 import { registerTemple, fetchAllPoojasPublic } from "@/api/templeAdminController";
 import { checkInstitutionPhone } from "@/api/authController";
@@ -167,9 +168,6 @@ export default function TempleRegistrationForm({ onClose }: { onClose?: () => vo
         if (cropType === "main") {
             setMainImage(croppedFile);
             setMainImagePreview(URL.createObjectURL(croppedFile));
-        } else {
-            setHeroImages(prev => [...prev, croppedFile]);
-            setHeroPreviews(prev => [...prev, URL.createObjectURL(croppedFile)]);
         }
         setShowCropper(false);
         setTempImage(null);
@@ -204,16 +202,8 @@ export default function TempleRegistrationForm({ onClose }: { onClose?: () => vo
 
             const validFiles = files.filter(f => f.size <= MAX_SIZE).slice(0, remaining);
             if (validFiles.length > 0) {
-                // Process first valid file for cropping
-                const reader = new FileReader();
-                reader.onload = () => {
-                    setTempImage(reader.result as string);
-                    setCropType("hero");
-                    setCropTitle(t('registration_form.buttons.adjust_banner'));
-                    setInitialAspect(1920 / 800);
-                    setShowCropper(true);
-                };
-                reader.readAsDataURL(validFiles[0]);
+                setHeroImages(prev => [...prev, ...validFiles]);
+                setHeroPreviews(prev => [...prev, ...validFiles.map(file => URL.createObjectURL(file))]);
             }
 
             if (files.filter(f => f.size <= MAX_SIZE).length > remaining) {
@@ -706,11 +696,12 @@ export default function TempleRegistrationForm({ onClose }: { onClose?: () => vo
                         </div> */}
                         <div className="space-y-2">
                             <label className="text-sm font-bold text-slate-600 ml-1">{t('registration_form.labels.description')}</label>
-                            <Textarea
+                            <RichTextEditor
                                 value={formData.description}
-                                onChange={e => setFormData({ ...formData, description: e.target.value })}
+                                onChange={(html) => setFormData({ ...formData, description: html })}
                                 placeholder={t('registration_form.placeholders.description')}
-                                className="min-h-[100px] border-slate-200 focus:border-orange-500 rounded-xl resize-none"
+                                minHeight="120px"
+                                maxLength={3000}
                             />
                         </div>
                     </div>

@@ -29,6 +29,15 @@ export const parseLocalizedValue = (value: any, lang: string = 'en'): string => 
 };
 
 /**
+ * Removes all HTML tags from a string and returns plain text.
+ * Useful for card previews.
+ */
+export const stripHtml = (html: string): string => {
+    if (!html) return "";
+    return html.replace(/<[^>]*>?/gm, '').replace(/&nbsp;/g, ' ').trim();
+};
+
+/**
  * Deduplicates a list of poojas by their localized name,
  * preferring Master poojas when duplicates are found.
  */

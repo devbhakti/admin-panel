@@ -190,9 +190,13 @@ const PoojaDetailClient = ({ id }: PoojaDetailClientProps) => {
                                 <h1 className="text-3xl sm:text-4xl md:text-5xl lg:text-6xl font-serif font-bold text-[#1a1a1a] mb-6 leading-tight">
                                     {getLocalized(pooja, 'name', language)}
                                 </h1>
-                                <p className="text-base md:text-lg text-[#555] leading-relaxed mb-8">
-                                    {pooja.about}
-                                </p>
+                                <div 
+                                    className="prose prose-orange max-w-none text-[#555] leading-relaxed mb-8
+                                        prose-headings:text-[#1a1a1a] prose-headings:font-bold
+                                        prose-strong:text-[#1a1a1a] prose-p:text-[#555]
+                                        prose-ul:text-[#555] prose-ol:text-[#555]"
+                                    dangerouslySetInnerHTML={{ __html: pooja.about || '' }}
+                                />
 
                                 {/* Booking Bar */}
                                 <div className="bg-[#FFEAD1] py-3 px-4 rounded-[2rem] border border-primary/10 flex flex-col sm:flex-row items-center justify-between gap-4 shadow-lg shadow-primary/5 mt-auto">
@@ -462,9 +466,10 @@ const PoojaDetailClient = ({ id }: PoojaDetailClientProps) => {
                                                         <HelpCircle className="w-6 h-6 text-primary mt-0.5 shrink-0 opacity-50" />
                                                         {faq.question || faq.q}
                                                     </h4>
-                                                    <p className="text-[#666] leading-relaxed pl-10 italic">
-                                                        {faq.answer || faq.a}
-                                                    </p>
+                                                    <div 
+                                                        className="text-[#666] leading-relaxed pl-10 italic prose prose-sm max-w-none"
+                                                        dangerouslySetInnerHTML={{ __html: faq.answer || faq.a }}
+                                                    />
                                                 </motion.div>
                                             ))}
                                             

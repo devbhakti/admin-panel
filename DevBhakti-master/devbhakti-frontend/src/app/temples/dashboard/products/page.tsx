@@ -48,7 +48,7 @@ import { Separator } from "@/components/ui/separator";
 import { fetchMyProducts, deleteMyProduct, createMyProduct, fetchCategories } from "@/api/templeAdminController";
 import { useToast } from "@/hooks/use-toast";
 import { BASE_URL } from "@/config/apiConfig";
-import { parseLocalizedValue } from '@/utils/textUtils';
+import { parseLocalizedValue, stripHtml } from '@/utils/textUtils';
 
 
 
@@ -539,7 +539,7 @@ export default function TempleProductsPage() {
                                             {parseLocalizedValue(product.name)}
                                         </h3>
                                         <p className="text-sm text-slate-500 line-clamp-2 mb-3 h-10">
-                                            {parseLocalizedValue(product.description)}
+                                            {stripHtml(parseLocalizedValue(product.description))}
                                         </p>
 
                                             <Separator className="my-3" />

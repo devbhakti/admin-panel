@@ -120,15 +120,9 @@ export default function SellerProfilePage() {
     const handleHeroImagesChange = (e: React.ChangeEvent<HTMLInputElement>) => {
         const files = Array.from(e.target.files || []);
         if (files.length > 0) {
-            const reader = new FileReader();
-            reader.onload = () => {
-                setTempImage(reader.result as string);
-                setCropType("hero");
-                setCropTitle("Adjust Showcase Image");
-                setInitialAspect(1920 / 800);
-                setShowCropper(true);
-            };
-            reader.readAsDataURL(files[0]);
+            setSelectedHeroFiles(prev => [...prev, ...files]);
+            const newPreviews = files.map(file => URL.createObjectURL(file));
+            setHeroPreviews(prev => [...prev, ...newPreviews.map((url, index) => ({ url, file: files[index], isNew: true }))]);
             e.target.value = '';
         }
     };
@@ -325,7 +319,7 @@ export default function SellerProfilePage() {
                             <div className="grid grid-cols-2 gap-4 pt-2">
                                 <div className="bg-white/10 rounded-2xl p-4 backdrop-blur-md border border-white/10">
                                     <p className="text-[10px] uppercase font-bold tracking-widest text-white/60 mb-1">Products</p>
-                                    <p className="text-2xl font-black">{profile?.productCommissionRate || 10}%</p>
+                                    <p className="text-2xl font-black">{profile?.productCommissionRate}%</p>
                                     <p className="text-[10px] text-white/50 font-bold mt-1">Fee per sale</p>
                                 </div>
                                 {/* <div className="bg-white/10 rounded-2xl p-4 backdrop-blur-md border border-white/10">

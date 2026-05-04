@@ -23,6 +23,7 @@ import {
     TooltipTrigger,
 } from "@/components/ui/tooltip";
 import { parseLocalizedValue } from "@/utils/textUtils";
+import { RichTextEditor } from "@/components/ui/rich-text-editor";
 
 export default function TempleEditPoojaPage() {
     const router = useRouter();
@@ -389,12 +390,12 @@ export default function TempleEditPoojaPage() {
                                 </div>
 
                                 <div className="space-y-2">
-                                    <Label htmlFor={`about_${lang}`}>About the Pooja ({lang.toUpperCase()})</Label>
-                                    <Textarea
-                                        id={`about_${lang}`}
+                                    <Label>About the Pooja ({lang.toUpperCase()})</Label>
+                                    <RichTextEditor
                                         value={(formData as any)[`about_${lang}`]}
-                                        onChange={(e) => setFormData({ ...formData, [`about_${lang}`]: e.target.value })}
-                                        className="h-32 rounded-xl resize-none border-slate-200 focus:border-[#7b4623] focus:ring-[#7b4623]/10"
+                                        onChange={(content) => setFormData({ ...formData, [`about_${lang}`]: content })}
+                                        placeholder="Describe the significance and process..."
+                                        minHeight="150px"
                                     />
                                 </div>
                             </div>

@@ -256,19 +256,39 @@ export default function CreateSellerPage() {
                                 <CardDescription>Basic details about the seller's storefront.</CardDescription>
                             </CardHeader>
                             <CardContent className="p-6 space-y-4">
-                                <div className="space-y-2">
-                                    <Label htmlFor="storeName">Store Name</Label>
-                                    <div className="relative">
-                                        <Store className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-400" />
-                                        <Input
-                                            id="storeName"
-                                            name="storeName"
-                                            placeholder="e.g. Sacred Items Store"
-                                            className="pl-10"
-                                            value={formData.storeName}
-                                            onChange={handleChange}
-                                            required
-                                        />
+                                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                                    <div className="space-y-2">
+                                        <Label htmlFor="storeName">Store Name</Label>
+                                        <div className="relative">
+                                            <Store className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-400" />
+                                            <Input
+                                                id="storeName"
+                                                name="storeName"
+                                                placeholder="e.g. Sacred Items Store"
+                                                className="pl-10"
+                                                value={formData.storeName}
+                                                onChange={handleChange}
+                                                required
+                                            />
+                                        </div>
+                                    </div>
+
+                                    <div className="space-y-2">
+                                        <Label htmlFor="productCommissionRate">Base Commission Rate (%)</Label>
+                                        <div className="relative">
+                                            <IndianRupee className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-400" />
+                                            <Input
+                                                id="productCommissionRate"
+                                                name="productCommissionRate"
+                                                type="number"
+                                                step="0.1"
+                                                placeholder="10.0"
+                                                className="pl-10"
+                                                value={formData.productCommissionRate}
+                                                onChange={handleChange}
+                                                required
+                                            />
+                                        </div>
                                     </div>
                                 </div>
 

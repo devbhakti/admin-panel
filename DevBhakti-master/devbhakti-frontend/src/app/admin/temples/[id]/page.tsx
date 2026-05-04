@@ -32,6 +32,7 @@ import { fetchAllTemplesAdmin, fetchCommissionSlabsAdmin, fetchProductsByTempleA
 import { API_URL } from "@/config/apiConfig";
 import { Card, CardContent } from "@/components/ui/card";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
+import { stripHtml } from "@/utils/textUtils";
 
 export default function ViewTemplePage() {
     const router = useRouter();
@@ -320,9 +321,14 @@ export default function ViewTemplePage() {
                                                 Temple Overview ({l.toUpperCase()})
                                             </h2>
                                             {parseLStrict(temple?.description, l) ? (
-                                                <p className="text-slate-600 leading-relaxed italic border-l-4 border-primary/20 pl-4">
-                                                    {parseLStrict(temple?.description, l)}
-                                                </p>
+                                                <div
+                                                    className="prose prose-sm max-w-none text-slate-600 leading-relaxed border-l-4 border-primary/20 pl-4
+                                                        prose-headings:text-slate-800 prose-headings:font-bold
+                                                        prose-strong:text-slate-900 prose-p:text-slate-600
+                                                        prose-ul:text-slate-600 prose-ol:text-slate-600
+                                                        prose-blockquote:border-l-[#88542b] prose-blockquote:text-slate-500"
+                                                    dangerouslySetInnerHTML={{ __html: parseLStrict(temple?.description, l) }}
+                                                />
                                             ) : (
                                                 <div className="flex items-center gap-2 p-3 rounded-lg bg-slate-50 border border-dashed border-slate-200">
                                                     <span className="text-xs text-slate-400 italic">No description available in {l.toUpperCase()}. Please add a translation in the Edit form.</span>
@@ -336,9 +342,14 @@ export default function ViewTemplePage() {
                                                     <History className="w-6 h-6 text-primary" />
                                                     Spiritual History ({l.toUpperCase()})
                                                 </h2>
-                                                <p className="text-slate-600 leading-relaxed whitespace-pre-line">
-                                                    {parseLStrict(temple?.history, l)}
-                                                </p>
+                                                <div
+                                                    className="prose prose-sm max-w-none text-slate-600 leading-relaxed
+                                                        prose-headings:text-slate-800 prose-headings:font-bold
+                                                        prose-strong:text-slate-900 prose-p:text-slate-600
+                                                        prose-ul:text-slate-600 prose-ol:text-slate-600
+                                                        prose-blockquote:border-l-[#88542b] prose-blockquote:text-slate-500"
+                                                    dangerouslySetInnerHTML={{ __html: parseLStrict(temple?.history, l) }}
+                                                />
                                             </div>
                                         )}
                                     </CardContent>
@@ -498,7 +509,7 @@ export default function ViewTemplePage() {
                                         </div>
                                         <div>
                                             <h4 className="font-bold text-slate-800">{parseL(ev.name, activeTab)}</h4>
-                                            <p className="text-sm text-slate-500">{parseL(ev.description, activeTab) || "Divine celebration at the temple."}</p>
+                                            <p className="text-sm text-slate-500">{stripHtml(parseL(ev.description, activeTab)) || "Divine celebration at the temple."}</p>
                                         </div>
                                     </div>
                                 ))}

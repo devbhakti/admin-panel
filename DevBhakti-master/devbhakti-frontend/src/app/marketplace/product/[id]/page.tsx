@@ -495,9 +495,10 @@ export default function ProductDetailsPage() {
                 {/* Description */}
                 <div className="space-y-3">
                   <h3 className="text-sm font-black uppercase tracking-widest text-[#794A05] opacity-70">{t('marketplace.description')}</h3>
-                  <p className="text-slate-600 leading-relaxed text-base">
-                    {getLocalized(product, 'description', language)}
-                  </p>
+                  <div 
+                    className="prose prose-sm max-w-none text-slate-600 leading-relaxed"
+                    dangerouslySetInnerHTML={{ __html: getLocalized(product, 'description', language) || '' }}
+                  />
                 </div>
 
                 {/* Meta Information Grid (Moved Up) */}
