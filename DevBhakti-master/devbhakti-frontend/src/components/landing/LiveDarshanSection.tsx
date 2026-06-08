@@ -13,33 +13,20 @@ import { API_URL } from "@/config/apiConfig";
 import { getTempleUrl, getLiveDarshanUrl } from "@/lib/utils/templeUtils";
 import { useLanguage } from "@/context/LanguageContext";
 import { getLocalized } from "@/utils/localization";
+import { getVideoRenderInfo } from "@/lib/utils/videoUtils";
+import { HlsVideoPlayer } from "@/components/video/HlsVideoPlayer";
 
 const LiveDarshanSection: React.FC = () => {
   const [liveTemples, setLiveTemples] = React.useState<any[]>([]);
   const [loading, setLoading] = React.useState(true);
   const { t, language } = useLanguage();
 
-  const getEmbedUrl = (value?: string | null) => {
-    if (!value) return "";
-    const url = value.trim();
-
-    // Raw Channel ID (UC...) -> permanent live link
-    if (url.startsWith("UC") && !url.includes("/") && !url.includes(".")) {
-      return `https://www.youtube.com/embed/live_stream?channel=${url}`;
+  const getPlayerSrc = (src: string, platform: string | null) => {
+    if (!src) return "";
+    if (platform === "youtube") {
+      return src.includes("?") ? `${src}&autoplay=1&mute=1&rel=0` : `${src}?autoplay=1&mute=1&rel=0`;
     }
-    // Short link
-    if (url.includes("youtu.be/")) {
-      return url.replace("youtu.be/", "www.youtube.com/embed/");
-    }
-    // Watch URL
-    if (url.includes("watch?v=")) {
-      return url.replace("watch?v=", "embed/");
-    }
-    
-    if (url.includes("youtube.com")) {
-      return url;
-    }
-    return "";
+    return src;
   };
 
   React.useEffect(() => {
@@ -66,7 +53,7 @@ const LiveDarshanSection: React.FC = () => {
 
   const primaryTemple = liveTemples[0];
   const primarySource = primaryTemple?.liveUrl || primaryTemple?.channelId;
-  const primaryEmbedUrl = getEmbedUrl(primarySource);
+  const primaryInfo = getVideoRenderInfo(primarySource);
 
   return (
     <section id="darshan" className="py-16 md:py-20 bg-warm-brown relative overflow-hidden">
@@ -89,14 +76,22 @@ const LiveDarshanSection: React.FC = () => {
             <Link href={getLiveDarshanUrl(primaryTemple)}>
               <div className="relative rounded-2xl overflow-hidden bg-sidebar-accent aspect-video shadow-elevated group cursor-pointer">
                 {/* Primary live video or fallback image */}
-                {primaryEmbedUrl ? (
+                {primaryInfo.kind === "iframe" ? (
                   <iframe
-                    src={`${primaryEmbedUrl}?autoplay=1&mute=1&rel=0`}
+                    src={getPlayerSrc(primaryInfo.src, primaryInfo.platform)}
                     title="Live darshan preview"
                     className="w-full h-full"
                     allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share"
                     allowFullScreen
                     frameBorder={0}
+                  />
+                ) : primaryInfo.kind === "video" ? (
+                  <HlsVideoPlayer
+                    src={primaryInfo.src}
+                    className="w-full h-full object-cover"
+                    autoPlay
+                    muted
+                    playsInline
                   />
                 ) : (
                   <img
@@ -112,18 +107,6 @@ const LiveDarshanSection: React.FC = () => {
                   />
                 )}
                 <div className="absolute inset-0 bg-foreground/20" />
-
-                {/* Play button overlay */}
-                <div className="absolute inset-0 flex items-center justify-end pointer-events-none">
-                  <div className="text-right m-4">
-                    <div className="w-16 h-16 rounded-full bg-primary/80 backdrop-blur-sm flex items-center justify-center ml-auto mb-2 group-hover:bg-primary transition-colors shadow-lg">
-                      <Play className="w-6 h-6 text-primary-foreground fill-primary-foreground group-hover:scale-110 transition-transform" />
-                    </div>
-                    <p className="text-primary-foreground font-medium text-sm drop-shadow-lg">
-                      {t('landing.landing_live_darshan.click_to_watch')}
-                    </p>
-                  </div>
-                </div>
 
                 {/* Live indicator */}
                 <div className="absolute top-4 left-4 flex items-center gap-2 bg-destructive/90 text-primary-foreground px-3 py-1.5 rounded-full">
@@ -164,10 +147,6 @@ const LiveDarshanSection: React.FC = () => {
                         </p>
                       </div>
                     </div>
-                    {/* <div className="flex items-center gap-1 text-sidebar-foreground/60">
-                      <Users className="w-3 h-3" />
-                      <span className="text-xs">{temple.viewers || "0"}</span>
-                    </div> */}
                   </Link>
                 </motion.div>
               ))}

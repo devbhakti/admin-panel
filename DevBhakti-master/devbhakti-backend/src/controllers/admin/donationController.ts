@@ -4,6 +4,10 @@ import ExcelJS from 'exceljs';
 import { localize } from "../../utils/localization";
 import { sendEmail } from "../../utils/sendEmail";
 import { generateReceiptHTML } from "../../utils/donationReceipt";
+import { generateDonationDisplayId } from "../../utils/idGenerator";
+import { getCommissionForAmount } from "../admin/commissionSlabController";
+import { CommissionCategory, SlabType } from "@prisma/client";
+import { validateDonationAmount, validatePhoneNumber } from "../../utils/donationValidation";
 
 export const getAllDonations = async (req: Request, res: Response) => {
     try {
@@ -134,6 +138,86 @@ export const deleteDonation = async (req: Request, res: Response) => {
         res.status(200).json({ success: true, message: "Donation record deleted" });
     } catch (error: any) {
         console.error("Delete Donation Error:", error);
+        res.status(500).json({ success: false, message: error.message });
+    }
+};
+
+export const createDonation = async (req: Request, res: Response) => {
+    try {
+        const {
+            templeId,
+            amount,
+            donorName,
+            donorPhone,
+            donorEmail,
+            isAnonymous,
+            is80GRequired,
+            panNumber,
+            address,
+            message,
+            paymentMethod,
+            status = "SUCCESS",
+            createdAt,
+        } = req.body;
+
+        if (!templeId || !amount || !donorName || !donorPhone || !donorEmail) {
+            return res.status(400).json({ success: false, message: "Missing required fields" });
+        }
+
+        if (!validateDonationAmount(amount)) {
+            return res.status(400).json({
+                success: false,
+                message: "Donation amount must be between ₹1 and ₹999,999,999."
+            });
+        }
+
+        if (!validatePhoneNumber(donorPhone)) {
+            return res.status(400).json({
+                success: false,
+                message: "Donor phone must be 10 or 11 digits."
+            });
+        }
+
+        const temple = await prisma.temple.findUnique({ where: { id: templeId } });
+        if (!temple) {
+            return res.status(404).json({ success: false, message: "Temple not found" });
+        }
+
+        const commissionData = await getCommissionForAmount(
+            Number(amount),
+            SlabType.GLOBAL,
+            undefined,
+            CommissionCategory.DONATION
+        );
+
+        const commissionAmount = commissionData.totalCommission || 0;
+        const netEarning = Number(amount);
+        const displayId = await generateDonationDisplayId();
+
+        const donation = await prisma.donation.create({
+            data: {
+                displayId,
+                templeId,
+                amount: Number(amount),
+                commissionAmount,
+                netEarning,
+                donorName,
+                donorPhone,
+                donorEmail,
+                isAnonymous: !!isAnonymous,
+                is80GRequired: !!is80GRequired,
+                panNumber,
+                address,
+                message,
+                paymentMethod,
+                status,
+                createdAt: createdAt ? new Date(createdAt) : undefined,
+            }
+        });
+
+        res.status(200).json({ success: true, data: donation, message: "Donation created successfully" });
+    } catch (error: any) {
+        console.error("Create Donation Error:", error);
         res.status(500).json({ success: false, message: error.message });
     }
 };

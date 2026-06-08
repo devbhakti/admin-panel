@@ -14,41 +14,11 @@ import axios from "axios";
 import { API_URL, BASE_URL } from "@/config/apiConfig";
 import { useLanguage } from "@/context/LanguageContext";
 import { getLocalized } from "@/utils/localization";
-
-// Helper to convert any YouTube URL to Embed format
-const getEmbedUrl = (url: string) => {
-  if (!url) return "";
-  try {
-    if (url.includes("view_stream?channel=")) return url;
-    if (url.includes("watch?v=")) {
-      return url.replace("watch?v=", "embed/");
-    }
-    if (url.trim().startsWith("UC") && !url.includes("/") && !url.includes(".")) {
-      return `https://www.youtube.com/embed/live_stream?channel=${url.trim()}`;
-    }
-    if (url.includes("youtu.be/")) {
-      return url.replace("youtu.be/", "youtube.com/embed/");
-    }
-    if (!url.includes("embed") && url.includes("youtube.com")) {
-      return url;
-    }
-    return url;
-  } catch (e) {
-    return url;
-  }
-};
+import { getVideoRenderInfo, extractYouTubeId } from "@/lib/utils/videoUtils";
+import { HlsVideoPlayer } from "@/components/video/HlsVideoPlayer";
 
 const getYouTubeVideoId = (url: string): string | null => {
-  if (!url) return null;
-  try {
-    const watchMatch = url.match(/[?&]v=([^&]+)/);
-    if (watchMatch) return watchMatch[1];
-    const shortMatch = url.match(/youtu\.be\/([^?&/]+)/);
-    if (shortMatch) return shortMatch[1];
-    const embedMatch = url.match(/embed\/([^?&/]+)/);
-    if (embedMatch) return embedMatch[1];
-  } catch (e) {}
-  return null;
+  return extractYouTubeId(url);
 };
 
 // --- Divine Animation Components ---
@@ -205,6 +175,11 @@ export default function LiveDarshanClient() {
   const router = useRouter();
   const { language, t: baseT } = useLanguage();
   const t = (key: string) => baseT(`live_darshan_page.${key}`);
+  const selectedVideoInfo = getVideoRenderInfo(selectedTemple?.liveUrl || selectedTemple?.channelId || "");
+  const getYouTubeThumbnail = (url: string) => {
+    const videoId = getYouTubeVideoId(url);
+    return videoId ? `https://img.youtube.com/vi/${videoId}/maxresdefault.jpg` : null;
+  };
   const scrollRef = useRef<HTMLDivElement>(null);
 
   const scroll = (direction: "left" | "right") => {
@@ -241,7 +216,8 @@ export default function LiveDarshanClient() {
 
             const initialTemple = matched || liveTemples[0];
             setSelectedTemple(initialTemple);
-            setIsPlaying(false);
+            const initialInfo = getVideoRenderInfo(initialTemple?.liveUrl || initialTemple?.channelId || "");
+            setIsPlaying(initialInfo.kind !== "unknown");
           }
         }
       } catch (error) {
@@ -362,28 +338,42 @@ export default function LiveDarshanClient() {
       <main className="relative p-0 overflow-x-hidden">
         <section className="relative w-full h-[60vh] md:h-[85vh] bg-black overflow-hidden group">
           <div className="absolute inset-0 z-0">
-            {isPlaying && selectedTemple.liveUrl ? (
+            {isPlaying && selectedVideoInfo.kind !== "unknown" ? (
               <>
-                <iframe
-                  id="yt-player"
-                  src={`${getEmbedUrl(selectedTemple.liveUrl)}?autoplay=1&mute=0&controls=0&rel=0&disablekb=1&modestbranding=1&playsinline=1&iv_load_policy=3`}
-                  title="Live Darshan"
-                  className="w-full h-full object-cover pointer-events-none select-none"
-                  frameBorder="0"
-                  allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share"
-                  allowFullScreen
-                ></iframe>
-                <div
-                  className="absolute inset-0 z-10 cursor-pointer bg-transparent"
-                  onClick={() => setIsPlaying(false)}
-                ></div>
+                {selectedVideoInfo.kind === "iframe" ? (
+                  <iframe
+                    id="live-player"
+                    src={selectedVideoInfo.src}
+                    title="Live Darshan"
+                    className="w-full h-full object-cover"
+                    frameBorder="0"
+                    allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share"
+                    allowFullScreen
+                  ></iframe>
+                ) : selectedVideoInfo.kind === "video" ? (
+                  <HlsVideoPlayer
+                    src={selectedVideoInfo.src}
+                    className="w-full h-full object-cover"
+                    controls
+                    autoPlay
+                    playsInline
+                    muted
+                  />
+                ) : selectedVideoInfo.kind === "html" ? (
+                  <div
+                    className="w-full h-full"
+                    dangerouslySetInnerHTML={{ __html: selectedVideoInfo.src }}
+                  />
+                ) : null}
               </>
             ) : (
               <>
                 {(() => {
-                  const videoId = getYouTubeVideoId(selectedTemple.liveUrl || "");
+                  const videoId = getYouTubeVideoId(selectedTemple.liveUrl || selectedTemple.channelId || "");
                   const thumbSrc = videoId
                     ? `https://img.youtube.com/vi/${videoId}/maxresdefault.jpg`
+                    : selectedTemple.image
+                    ? getImageUrl(selectedTemple.image)
                     : "/images/sacred_live_darshan_hero_bg.png";
                   return (
                     <img
@@ -421,18 +411,6 @@ export default function LiveDarshanClient() {
               </motion.div>
             </div>
           </div>
-          {!isPlaying && (
-            <div className="absolute inset-0 flex items-center justify-center pointer-events-none">
-              <motion.div
-                whileHover={{ scale: 1.1 }}
-                whileTap={{ scale: 0.95 }}
-                onClick={() => setIsPlaying(true)}
-                className="w-24 h-24 md:w-32 md:h-32 rounded-full bg-sacred/90 flex items-center justify-center cursor-pointer shadow-[0_0_50px_rgba(255,107,0,0.6)] backdrop-blur-md border-2 border-white/20 z-20 pointer-events-auto"
-              >
-                <Play className="fill-white text-white ml-2" size={48} />
-              </motion.div>
-            </div>
-          )}
         </section>
 
         <section className="bg-[#7b4623] border-y border-[#7b4623]/30 py-4 sticky top-0 z-20 shadow-lg">

@@ -26,7 +26,13 @@ import {
     FileText,
     MapPin,
     Calendar as CalendarIcon,
-    ShieldCheck
+    ShieldCheck,
+    CreditCard,
+    Banknote,
+    QrCode,
+    Wallet,
+    Landmark,
+    AlertCircle
 } from "lucide-react";
 import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -74,8 +80,6 @@ const statusConfig = {
     },
 };
 
-
-
 export default function DonationClient() {
     const [searchQuery, setSearchQuery] = useState("");
     const debouncedSearch = useDebounce(searchQuery, 500);
@@ -88,6 +92,20 @@ export default function DonationClient() {
     const [loading, setLoading] = useState(true);
     const [selectedDonation, setSelectedDonation] = useState<any | null>(null);
     const [sendingEmail, setSendingEmail] = useState(false);
+    const [addModalOpen, setAddModalOpen] = useState(false);
+    const [isCreateSubmitting, setIsCreateSubmitting] = useState(false);
+    const [addTempleSearch, setAddTempleSearch] = useState("");
+    const [addTempleId, setAddTempleId] = useState("");
+    const [addAmount, setAddAmount] = useState("");
+    const [addPaymentMethod, setAddPaymentMethod] = useState("CASH");
+    const [addDonorName, setAddDonorName] = useState("");
+    const [addDonorPhone, setAddDonorPhone] = useState("");
+    const [addDonorEmail, setAddDonorEmail] = useState("");
+    const [addAddress, setAddAddress] = useState("");
+    const [addMessage, setAddMessage] = useState("");
+    const [addPanNumber, setAddPanNumber] = useState("");
+    const [addStatus, setAddStatus] = useState("SUCCESS");
+    const amountPresets = [101, 501, 1001, 2101, 5001];
     
     const [temples, setTemples] = useState<any[]>([]);
     const [selectedTempleId, setSelectedTempleId] = useState("all");
@@ -96,7 +114,6 @@ export default function DonationClient() {
     const [importProgress, setImportProgress] = useState({ total: 0, current: 0, success: 0, failed: 0 });
     const { toast } = useToast();
 
-    // Stats state
     const [stats, setStats] = useState({
         totalAmount: 0,
         successCount: 0,
@@ -104,12 +121,18 @@ export default function DonationClient() {
         failedCount: 0,
     });
 
-    // Pagination state
     const [currentPage, setCurrentPage] = useState(1);
     const [totalPages, setTotalPages] = useState(1);
     const [totalItems, setTotalItems] = useState(0);
     const itemsPerPage = 10;
 
+    const paymentMethods = [
+        { value: "CASH", label: "Cash", icon: Banknote, color: "bg-emerald-50 text-emerald-700 border-emerald-200" },
+        { value: "UPI", label: "UPI", icon: QrCode, color: "bg-blue-50 text-blue-700 border-blue-200" },
+        { value: "CARD", label: "Card", icon: CreditCard, color: "bg-purple-50 text-purple-700 border-purple-200" },
+        { value: "CHEQUE", label: "Cheque", icon: Wallet, color: "bg-amber-50 text-amber-700 border-amber-200" },
+        { value: "BANK", label: "Bank Transfer", icon: Landmark, color: "bg-indigo-50 text-indigo-700 border-indigo-200" },
+    ];
 
     const fetchDonations = async () => {
         try {
@@ -144,8 +167,103 @@ export default function DonationClient() {
             const res = await fetchAllTemplesAdmin({ page: 1, limit: 1000 });
             const data = Array.isArray(res) ? res : (res.data || []);
             setTemples(data);
+            if (selectedTempleId !== "all" && !addTempleId) {
+                setAddTempleId(selectedTempleId);
+            }
         } catch (error) {
             console.error("Load Temples Error:", error);
+        }
+    };
+
+    const resetAddDonationForm = () => {
+        setAddTempleSearch("");
+        setAddTempleId(selectedTempleId !== "all" ? selectedTempleId : "");
+        setAddAmount("");
+        setAddPaymentMethod("CASH");
+        setAddDonorName("");
+        setAddDonorPhone("");
+        setAddDonorEmail("");
+        setAddAddress("");
+        setAddMessage("");
+        setAddPanNumber("");
+        setAddStatus("SUCCESS");
+    };
+
+    const openAddDonationModal = () => {
+        resetAddDonationForm();
+        setAddModalOpen(true);
+    };
+
+    const filteredTemples = temples.filter((t: any) => {
+        const name = parseLocalizedValue(t.temple?.name || t.name || "");
+        return name.toLowerCase().includes(addTempleSearch.toLowerCase());
+    });
+
+    const selectedAddTemple = temples.find((t: any) => (t.temple?.id || t.id) === addTempleId);
+    const hideTempleSelector = selectedTempleId !== "all" && !!addTempleId;
+    const sanitizePhone = (phone: string) => phone.replace(/\D/g, "").slice(0, 11);
+    const isValidPhone = (phone: string) => /^\d{10,11}$/.test(phone);
+
+    const handleCreateDonation = async () => {
+        const templeOption = temples.find((t: any) => (t.temple?.id || t.id) === addTempleId);
+
+        if (!addTempleId) {
+            toast({ title: "Validation Error", description: "Please select a temple.", variant: "destructive" });
+            return;
+        }
+
+        if (!addAmount || Number(addAmount) <= 0) {
+            toast({ title: "Validation Error", description: "Please enter a valid donation amount.", variant: "destructive" });
+            return;
+        }
+
+        if (!addDonorName.trim() || !addDonorPhone.trim() || !addDonorEmail.trim()) {
+            toast({ title: "Validation Error", description: "Please fill donor name, phone and email.", variant: "destructive" });
+            return;
+        }
+
+        if (!isValidPhone(addDonorPhone.trim())) {
+            toast({ title: "Validation Error", description: "Please enter a valid 10 or 11 digit phone number.", variant: "destructive" });
+            return;
+        }
+
+        try {
+            setIsCreateSubmitting(true);
+            const payload = {
+                templeId: addTempleId,
+                amount: Number(addAmount),
+                donorName: addDonorName.trim(),
+                donorPhone: addDonorPhone.trim(),
+                donorEmail: addDonorEmail.trim(),
+                panNumber: addPanNumber.trim(),
+                address: addAddress.trim(),
+                message: addMessage.trim(),
+                paymentMethod: addPaymentMethod,
+                status: addStatus,
+            };
+            const data = await createDonationAdmin(payload);
+
+            if (data.success) {
+                toast({ title: "Donation recorded", description: "Donation has been created successfully.", variant: "success" });
+                setAddModalOpen(false);
+                fetchDonations();
+                fetchStats();
+
+                if (payload.status === "SUCCESS") {
+                    const donationObject = {
+                        ...data.data,
+                        templeName: parseLocalizedValue(templeOption?.temple?.name || templeOption?.name || "DevBhakti"),
+                    };
+                    handlePrintReceipt(donationObject);
+                }
+            } else {
+                toast({ title: "Failed", description: data.message || "Could not create donation.", variant: "destructive" });
+            }
+        } catch (error: any) {
+            console.error("Create Donation Error:", error);
+            toast({ title: "Error", description: error?.message || "Failed to create donation.", variant: "destructive" });
+        } finally {
+            setIsCreateSubmitting(false);
         }
     };
 
@@ -212,7 +330,7 @@ export default function DonationClient() {
             if (data.success) {
                 setDonations(donations.filter(d => d.id !== id));
                 toast({ title: "Success", description: data.message || "Donation record removed", variant: "success" });
-                fetchStats(); // Update stats
+                fetchStats();
             } else {
                 toast({ title: "Error", description: data.message, variant: "destructive" });
             }
@@ -221,11 +339,6 @@ export default function DonationClient() {
             toast({ title: "Error", description: "Failed to delete donation", variant: "destructive" });
         }
     };
-
-
-
-
-    // ... handleDelete function ends here ...
 
     const handleDownloadExcel = async () => {
         try {
@@ -274,108 +387,6 @@ export default function DonationClient() {
         }
     };
 
-    const downloadTemplate = () => {
-        const templateData = [{
-            "Donor_Name": "John Doe",
-            "Donor_Email": "john@example.com",
-            "Donor_Phone": "9876543210",
-            "Amount": "501",
-            "Temple_ID": "temple_uuid_here",
-            "Status": "SUCCESS",
-            "Payment_Method": "CASH",
-            "Message": "Pranam",
-            "Address": "Mumbai, India",
-            "Date": "2024-04-22"
-        }];
-        const worksheet = XLSX.utils.json_to_sheet(templateData);
-        const workbook = XLSX.utils.book_new();
-        XLSX.utils.book_append_sheet(workbook, worksheet, "Template");
-        XLSX.writeFile(workbook, `donation_import_template.xlsx`);
-    };
-
-    const handleImportExcel = async (e: React.ChangeEvent<HTMLInputElement>) => {
-        const file = e.target.files?.[0];
-        if (!file) return;
-
-        const reader = new FileReader();
-        reader.onload = async (evt) => {
-            try {
-                const bstr = evt.target?.result;
-                const wb = XLSX.read(bstr, { type: 'binary' });
-                const wsname = wb.SheetNames[0];
-                const ws = wb.Sheets[wsname];
-                const data: any[] = XLSX.utils.sheet_to_json(ws);
-
-                if (data.length === 0) {
-                    toast({ title: "Empty File", description: "No records found in Excel sheet", variant: "destructive"});
-                    return;
-                }
-
-                setIsImporting(true);
-                setImportProgress({ total: data.length, current: 0, success: 0, failed: 0 });
-                let successCount = 0;
-                let failCount = 0;
-                const errors: string[] = [];
-
-                for (let i = 0; i < data.length; i++) {
-                    const row = data[i];
-                    const rowNum = i + 2;
-                    setImportProgress(p => ({ ...p, current: i + 1 }));
-                    
-                    try {
-                        const payload = {
-                            donorName: row.Donor_Name,
-                            donorEmail: row.Donor_Email,
-                            donorPhone: row.Donor_Phone,
-                            amount: parseFloat(row.Amount),
-                            templeId: row.Temple_ID,
-                            status: row.Status || "SUCCESS",
-                            paymentMethod: row.Payment_Method || "CASH",
-                            message: row.Message || "",
-                            address: row.Address || "",
-                            createdAt: row.Date ? new Date(row.Date) : new Date()
-                        };
-                        
-                        await createDonationAdmin(payload);
-                        successCount++;
-                    } catch (err: any) {
-                        const errorMsg = err.response?.data?.message || err.response?.data?.error || err.message || "Unknown error";
-                        console.error(`Failed to import row ${rowNum}:`, errorMsg, err);
-                        failCount++;
-                        errors.push(`Row ${rowNum}: ${errorMsg}`);
-                    }
-                }
-                
-                setImportProgress(p => ({ ...p, success: successCount, failed: failCount }));
-                
-                if (failCount > 0) {
-                    toast({
-                        title: "Import Partially Failed",
-                        description: `Success: ${successCount}, Failed: ${failCount}. Check console or fix these: ${errors.slice(0, 3).join(", ")}${errors.length > 3 ? "..." : ""}`,
-                        variant: "destructive"
-                    });
-                } else {
-                    toast({ 
-                        title: "Import Successful", 
-                        description: `Successfully imported ${successCount} donations.`,
-                        variant: "success"
-                    });
-                }
-                
-                setTimeout(() => {
-                    setIsImporting(false);
-                    fetchDonations();
-                    fetchStats();
-                }, 2000);
-            } catch (err) {
-                console.error(err);
-                toast({ title: "Format Error", description: "Could not parse Excel file.", variant: "destructive" });
-                setIsImporting(false);
-            }
-        };
-        reader.readAsBinaryString(file);
-        if (e.target) e.target.value = "";
-    };
     const handleSendEmail = async (id: string) => {
         try {
             setSendingEmail(true);
@@ -394,6 +405,7 @@ export default function DonationClient() {
         }
     };
 
+    const selectedPaymentMethod = paymentMethods.find(m => m.value === addPaymentMethod) || paymentMethods[0];
 
     return (
         <div className="space-y-6">
@@ -408,37 +420,15 @@ export default function DonationClient() {
                     </p>
                 </div>
                 <div className="flex flex-wrap items-center gap-2 sm:gap-3">
-                    {/* <Button
-                        onClick={downloadTemplate}
+                    <Button
+                        onClick={openAddDonationModal}
                         variant="outline"
-                        className="w-full sm:w-auto flex-shrink-0 border-primary/20 hover:bg-primary/5"
+                        className="w-full sm:w-auto flex-shrink-0 border-primary/20 hover:bg-primary/5 hover:text-primary"
                     >
-                        <FileText className="w-4 h-4 mr-2" />
-                        Template
-                    </Button> */}
-                    {/* <div className="relative w-full sm:w-auto">
-                        <input
-                            type="file"
-                            accept=".xlsx, .xls"
-                            className="hidden"
-                            id="import-excel"
-                            onChange={handleImportExcel}
-                            disabled={isImporting}
-                        />
-                        <Button
-                            onClick={() => document.getElementById('import-excel')?.click()}
-                            variant="outline"
-                            className="w-full sm:w-auto flex-shrink-0 border-primary/20 hover:bg-primary/5"
-                            disabled={isImporting}
-                        >
-                            {isImporting ? (
-                                <Sparkles className="w-4 h-4 mr-2 animate-spin" />
-                            ) : (
-                                <Building2 className="w-4 h-4 mr-2" />
-                            )}
-                            {isImporting ? "Importing..." : "Import Excel"}
-                        </Button>
-                    </div> */}
+                        <Gift className="w-4 h-4 mr-2" />
+                        <span className="hidden sm:inline">Add Donation</span>
+                        <span className="sm:hidden">Add</span>
+                    </Button>
                     <Button
                         onClick={handleDownloadExcel}
                         variant="sacred"
@@ -451,9 +441,259 @@ export default function DonationClient() {
                 </div>
             </div>
 
+            {/* Enhanced Add Donation Modal */}
+            <AnimatePresence>
+                {addModalOpen && (
+                    <div className="fixed inset-0 z-[60] flex items-center justify-center p-2 sm:p-4">
+                        <motion.div
+                            initial={{ opacity: 0 }}
+                            animate={{ opacity: 1 }}
+                            exit={{ opacity: 0 }}
+                            onClick={() => setAddModalOpen(false)}
+                            className="absolute inset-0 bg-slate-900/70 backdrop-blur-sm"
+                        />
+                        <motion.div
+                            initial={{ scale: 0.95, opacity: 0, y: 20 }}
+                            animate={{ scale: 1, opacity: 1, y: 0 }}
+                            exit={{ scale: 0.95, opacity: 0, y: 20 }}
+                            className="bg-white rounded-[24px] w-full max-w-[95vw] sm:max-w-3xl max-h-[95vh] overflow-hidden shadow-2xl relative z-10 flex flex-col"
+                        >
+                            {/* Modal Header - Premium Design */}
+                            <div className="relative overflow-hidden bg-gradient-to-r from-[#7c4624] to-[#a0522d] p-5 sm:p-6 text-white">
+                                <div className="absolute right-0 top-0 w-32 h-32 opacity-10">
+                                    <Gift className="w-32 h-32" />
+                                </div>
+                                <button
+                                    onClick={() => setAddModalOpen(false)}
+                                    className="absolute right-3 top-3 w-9 h-9 rounded-full bg-white/10 hover:bg-white/20 flex items-center justify-center transition-colors z-10"
+                                >
+                                    <X className="w-4 h-4" />
+                                </button>
+                                <div className="flex items-center gap-3 sm:gap-4 relative z-0">
+                                    <div className="w-12 h-12 rounded-2xl bg-white/20 backdrop-blur-sm flex items-center justify-center shadow-lg">
+                                        <Gift className="w-6 h-6" />
+                                    </div>
+                                    <div>
+                                        <h2 className="text-xl sm:text-2xl font-serif font-bold">Sacred Donation Entry</h2>
+                                        <p className="text-sm text-white/80 mt-0.5">Record a manual donation with instant receipt</p>
+                                    </div>
+                                </div>
+                            </div>
 
+                            <div className="p-5 sm:p-7 overflow-y-auto flex-1 custom-scrollbar">
+                                <div className="grid grid-cols-1 gap-6">
+                                    <div>
+                                        <label className="text-xs text-slate-500 uppercase tracking-[0.2em] mb-2 block font-semibold">
+                                            Select Temple <span className="text-rose-500">*</span>
+                                        </label>
+                                        <select
+                                            value={addTempleId}
+                                            onChange={(e) => setAddTempleId(e.target.value)}
+                                            className="w-full rounded-xl border border-slate-200 bg-slate-50 px-4 py-3 text-sm focus:border-[#7c4624] focus:ring-[#7c4624]/20"
+                                            disabled={selectedTempleId !== "all"}
+                                        >
+                                            <option value="">Select temple...</option>
+                                            {temples.map((temple: any) => {
+                                                const id = temple.temple?.id || temple.id;
+                                                const name = parseLocalizedValue(temple.temple?.name || temple.name);
+                                                return (
+                                                    <option key={id} value={id}>
+                                                        {name}
+                                                    </option>
+                                                );
+                                            })}
+                                        </select>
+                                        {selectedTempleId !== "all" && (
+                                            <p className="mt-2 text-[11px] text-slate-500">Temple fixed by filter.</p>
+                                        )}
+                                    </div>
 
-            {/* Donations Table */}            {/* Stats Overview */}
+                                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-5">
+                                        {/* Donation Amount */}
+                                        <div>
+                                            <label className="text-xs text-slate-500 uppercase tracking-[0.2em] mb-2 block font-semibold">
+                                                Donation Amount <span className="text-rose-500">*</span>
+                                            </label>
+                                            <div className="relative">
+                                                <span className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-400 font-bold">₹</span>
+                                                <Input
+                                                    type="number"
+                                                    placeholder="Enter amount"
+                                                    value={addAmount}
+                                                    onChange={(e) => setAddAmount(e.target.value)}
+                                                    className="pl-7 bg-slate-50 border-slate-200 rounded-xl text-lg font-semibold focus:border-[#7c4624] focus:ring-[#7c4624]/20"
+                                                />
+                                            </div>
+                                            <div className="mt-3 flex flex-wrap gap-2">
+                                                {amountPresets.map((value) => (
+                                                    <button
+                                                        type="button"
+                                                        key={value}
+                                                        onClick={() => setAddAmount(value.toString())}
+                                                        className={cn(
+                                                            "px-3 py-1.5 rounded-full text-xs font-medium transition-all",
+                                                            addAmount === value.toString()
+                                                                ? "bg-[#7c4624] text-white shadow-md"
+                                                                : "bg-slate-100 text-slate-600 hover:bg-slate-200"
+                                                        )}
+                                                    >
+                                                        ₹{value}
+                                                    </button>
+                                                ))}
+                                            </div>
+                                        </div>
+
+                                        {/* Payment Method */}
+                                        <div>
+                                            <label className="text-xs text-slate-500 uppercase tracking-[0.2em] mb-2 block font-semibold">
+                                                Payment Method <span className="text-rose-500">*</span>
+                                            </label>
+                                            <select
+                                                value={addPaymentMethod}
+                                                onChange={(e) => setAddPaymentMethod(e.target.value)}
+                                                className="w-full rounded-xl border border-slate-200 bg-slate-50 px-4 py-3 text-sm focus:border-[#7c4624] focus:ring-[#7c4624]/20"
+                                            >
+                                                {paymentMethods.map((method) => (
+                                                    <option key={method.value} value={method.value}>
+                                                        {method.label}
+                                                    </option>
+                                                ))}
+                                            </select>
+                                        </div>
+                                    </div>
+
+                                    {/* Donation Status */}
+                                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-5">
+                                        <div>
+                                            <label className="text-xs text-slate-500 uppercase tracking-[0.2em] mb-2 block font-semibold">
+                                                Donation Status <span className="text-rose-500">*</span>
+                                            </label>
+                                            <select
+                                                value={addStatus}
+                                                onChange={(e) => setAddStatus(e.target.value)}
+                                                className="w-full rounded-xl border border-slate-200 bg-slate-50 px-4 py-3 text-sm focus:border-[#7c4624] focus:ring-[#7c4624]/20"
+                                            >
+                                                {["SUCCESS", "PENDING", "FAILED"].map((status) => (
+                                                    <option key={status} value={status}>
+                                                        {statusConfig[status as keyof typeof statusConfig]?.label || status}
+                                                    </option>
+                                                ))}
+                                            </select>
+                                        </div>
+                                        <div className="bg-amber-50 rounded-xl p-3 flex items-start gap-2">
+                                            <AlertCircle className="w-4 h-4 text-amber-600 mt-0.5 flex-shrink-0" />
+                                            <p className="text-xs text-amber-700">Manual donation recorded with selected payment method. Receipt will be generated automatically.</p>
+                                        </div>
+                                    </div>
+
+                                    {/* Donor Information */}
+                                    <div className="border-t pt-4">
+                                        <label className="text-xs text-slate-500 uppercase tracking-[0.2em] mb-3 block font-semibold">
+                                            Donor Information
+                                        </label>
+                                        <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                                            <div>
+                                                <label className="text-sm font-medium text-slate-700 mb-1 block">Full Name <span className="text-rose-500">*</span></label>
+                                                <Input
+                                                    placeholder="Enter donor's full name"
+                                                    value={addDonorName}
+                                                    onChange={(e) => setAddDonorName(e.target.value)}
+                                                    className="bg-slate-50 border-slate-200 rounded-xl"
+                                                />
+                                            </div>
+                                            <div>
+                                                <label className="text-sm font-medium text-slate-700 mb-1 block">Phone Number <span className="text-rose-500">*</span></label>
+                                                <Input
+                                                    placeholder="10 or 11 digit mobile number"
+                                                    value={addDonorPhone}
+                                                    onChange={(e) => setAddDonorPhone(sanitizePhone(e.target.value))}
+                                                    className="bg-slate-50 border-slate-200 rounded-xl"
+                                                />
+                                            </div>
+                                            <div>
+                                                <label className="text-sm font-medium text-slate-700 mb-1 block">Email Address <span className="text-rose-500">*</span></label>
+                                                <Input
+                                                    type="email"
+                                                    placeholder="donor@example.com"
+                                                    value={addDonorEmail}
+                                                    onChange={(e) => setAddDonorEmail(e.target.value)}
+                                                    className="bg-slate-50 border-slate-200 rounded-xl"
+                                                />
+                                            </div>
+                                            <div>
+                                                <label className="text-sm font-medium text-slate-700 mb-1 block">PAN Number (Optional)</label>
+                                                <Input
+                                                    placeholder="ABCDE1234F"
+                                                    value={addPanNumber}
+                                                    onChange={(e) => setAddPanNumber(e.target.value.toUpperCase())}
+                                                    className="bg-slate-50 border-slate-200 rounded-xl uppercase"
+                                                />
+                                            </div>
+                                        </div>
+                                    </div>
+
+                                    {/* Address */}
+                                    <div>
+                                        <label className="text-xs text-slate-500 uppercase tracking-[0.2em] mb-2 block font-semibold">
+                                            Address (Optional)
+                                        </label>
+                                        <Input
+                                            placeholder="Full address for receipt"
+                                            value={addAddress}
+                                            onChange={(e) => setAddAddress(e.target.value)}
+                                            className="bg-slate-50 border-slate-200 rounded-xl"
+                                        />
+                                    </div>
+
+                                    {/* Prayer Message */}
+                                    <div>
+                                        <label className="text-xs text-slate-500 uppercase tracking-[0.2em] mb-2 block font-semibold">
+                                            Prayer / Sankalp Message
+                                        </label>
+                                        <textarea
+                                            value={addMessage}
+                                            onChange={(e) => setAddMessage(e.target.value)}
+                                            rows={3}
+                                            className="w-full rounded-xl border border-slate-200 bg-slate-50 p-3 text-sm focus:outline-none focus:border-[#7c4624] focus:ring-2 focus:ring-[#7c4624]/20"
+                                            placeholder="Enter prayer, sankalp or special message..."
+                                        />
+                                    </div>
+                                </div>
+                            </div>
+
+                            {/* Modal Footer */}
+                            <div className="p-5 sm:p-6 bg-slate-50 flex flex-col sm:flex-row items-stretch sm:items-center justify-between gap-3 border-t border-slate-200">
+                                <Button
+                                    variant="outline"
+                                    onClick={resetAddDonationForm}
+                                    className="w-full sm:w-auto order-2 sm:order-1"
+                                >
+                                    Clear Form
+                                </Button>
+                                <Button
+                                    onClick={handleCreateDonation}
+                                    disabled={isCreateSubmitting}
+                                    className="w-full sm:w-auto bg-gradient-to-r from-[#7c4624] to-[#a0522d] hover:from-[#63361c] hover:to-[#7c4624] text-white shadow-lg order-1 sm:order-2"
+                                >
+                                    {isCreateSubmitting ? (
+                                        <>
+                                            <Sparkles className="w-4 h-4 mr-2 animate-spin" />
+                                            Saving...
+                                        </>
+                                    ) : (
+                                        <>
+                                            <Gift className="w-4 h-4 mr-2" />
+                                            Record Donation & Print Receipt
+                                        </>
+                                    )}
+                                </Button>
+                            </div>
+                        </motion.div>
+                    </div>
+                )}
+            </AnimatePresence>
+
+            {/* Stats Section - Rest remains same as your original code */}
             <div className="grid grid-cols-1 xs:grid-cols-2 sm:grid-cols-2 lg:grid-cols-4 gap-3 sm:gap-4 mb-6">
                 <Card className="bg-white border-primary/10 shadow-sm hover:shadow-md transition-shadow">
                     <CardContent className="p-4 sm:p-6">
@@ -512,7 +752,7 @@ export default function DonationClient() {
                 </Card>
             </div>
 
-            {/* Filter Bar */}
+            {/* Filter Bar and Donations Table - Keep your existing working code here */}
             <div className="flex flex-col gap-4 bg-white p-3 sm:p-4 rounded-2xl border border-border shadow-sm">
                 <div className="flex flex-col lg:flex-row lg:items-center lg:justify-between gap-4">
                     <div className="relative w-full lg:w-96">
@@ -624,7 +864,8 @@ export default function DonationClient() {
                     </div>
                 </div>
             </div>
-            {/* Donations Table */}
+
+            {/* Donations Table - Keep your existing working code here */}
             <Card className="border-none shadow-sacred overflow-hidden bg-white/50 backdrop-blur-sm">
                 <CardContent className="p-0">
                     <div className="overflow-x-auto overflow-y-hidden">
@@ -669,11 +910,10 @@ export default function DonationClient() {
                                                     {donation.displayId ? donation.displayId : `#${donation.id.slice(-8).toUpperCase()}`}
                                                 </p>
                                             </td>
-
                                             <td className="p-3 sm:p-4">
                                                 <div className="flex items-center gap-2 sm:gap-3 min-w-0">
                                                     <div className={`w-8 h-8 sm:w-10 sm:h-10 rounded-xl flex items-center justify-center text-xs sm:text-sm font-bold shadow-sm flex-shrink-0 ${donation.isAnonymous ? "bg-slate-100 text-slate-400" : "bg-primary/10 text-primary border border-primary/20"}`}>
-                                                        {donation.isAnonymous ? "?" : donation.donorName.split(' ')[0][0]}
+                                                        {donation.isAnonymous ? "?" : donation.donorName?.split(' ')[0]?.[0] || "D"}
                                                     </div>
                                                     <div className="min-w-0">
                                                         <p className="font-bold text-foreground group-hover:text-primary transition-colors text-sm sm:text-base truncate">{parseLocalizedValue(donation.donorName)}</p>
@@ -691,7 +931,6 @@ export default function DonationClient() {
                                                     </span>
                                                 </div>
                                             </td>
-
                                             <td className="p-3 sm:p-4">
                                                 <p className="font-bold text-sm sm:text-lg text-primary whitespace-nowrap">₹{donation.amount.toLocaleString()}</p>
                                             </td>
@@ -739,7 +978,6 @@ export default function DonationClient() {
                     </div>
                 </CardContent>
 
-                {/* Pagination Controls */}
                 {totalPages > 1 && (
                     <div className="p-4 sm:p-6 border-t border-primary/5 bg-primary/2">
                         <div className="overflow-x-auto">
@@ -752,10 +990,8 @@ export default function DonationClient() {
                                             className={currentPage === 1 ? "pointer-events-none opacity-50" : "cursor-pointer hover:bg-primary/10 hover:text-primary rounded-xl transition-all min-w-[40px] sm:min-w-auto"}
                                         />
                                     </PaginationItem>
-
                                     {[...Array(totalPages)].map((_, i) => {
                                         const pageNum = i + 1;
-                                        // Logic to show only a few page numbers if totalPages is large
                                         if (
                                             pageNum === 1 ||
                                             pageNum === totalPages ||
@@ -773,10 +1009,7 @@ export default function DonationClient() {
                                                     </PaginationLink>
                                                 </PaginationItem>
                                             );
-                                        } else if (
-                                            pageNum === currentPage - 2 ||
-                                            pageNum === currentPage + 2
-                                        ) {
+                                        } else if (pageNum === currentPage - 2 || pageNum === currentPage + 2) {
                                             return (
                                                 <PaginationItem key={pageNum}>
                                                     <PaginationEllipsis className="hidden sm:flex" />
@@ -786,7 +1019,6 @@ export default function DonationClient() {
                                         }
                                         return null;
                                     })}
-
                                     <PaginationItem>
                                         <PaginationNext
                                             href="#"
@@ -804,7 +1036,7 @@ export default function DonationClient() {
                 )}
             </Card>
 
-            {/* Donation Detail Modal */}
+            {/* Donation Detail Modal - Keep your existing working code here */}
             <AnimatePresence>
                 {selectedDonation && (
                     <div className="fixed inset-0 z-[60] flex items-center justify-center p-2 sm:p-4">
@@ -840,7 +1072,6 @@ export default function DonationClient() {
                             </div>
 
                             <div className="p-4 sm:p-8 space-y-5 sm:space-y-8 overflow-y-auto flex-1 custom-scrollbar">
-                                {/* Status & ID */}
                                 <div className="grid grid-cols-2 gap-3 p-3 sm:p-4 bg-slate-50 rounded-2xl border border-slate-100">
                                     <div className="flex items-center gap-2 sm:gap-3 border-r border-slate-200 pr-2">
                                         <div className={`p-1.5 sm:p-2 rounded-lg flex-shrink-0 shadow-sm ${(statusConfig[selectedDonation.status as keyof typeof statusConfig] || statusConfig.SUCCESS).color}`}>
@@ -857,7 +1088,6 @@ export default function DonationClient() {
                                     </div>
                                 </div>
 
-                                {/* Main Info Grid */}
                                 <div className="grid grid-cols-1 sm:grid-cols-2 gap-6 sm:gap-8">
                                     <div className="space-y-5">
                                         <div>
@@ -881,7 +1111,6 @@ export default function DonationClient() {
                                                 )}
                                             </div>
                                         </div>
- 
                                         <div>
                                             <p className="text-[7px] sm:text-[10px] text-slate-400 font-bold uppercase tracking-widest mb-1 shadow-sm inline-block px-1.5 py-0.5 bg-slate-100 rounded">Temple</p>
                                             <p className="text-slate-800 font-bold flex items-center gap-2 mt-2 text-xs sm:text-base">
@@ -890,13 +1119,12 @@ export default function DonationClient() {
                                             </p>
                                         </div>
                                     </div>
- 
                                     <div className="space-y-4">
                                         <div>
                                             <p className="text-[7px] sm:text-[10px] text-slate-400 font-bold uppercase tracking-widest mb-1 shadow-sm inline-block px-1.5 py-0.5 bg-slate-100 rounded">Amount Details</p>
                                             <div className="bg-[#7c4624]/5 p-3 sm:p-4 rounded-xl border border-[#7c4624]/10 mt-2 relative overflow-hidden group">
                                                 <div className="absolute right-0 top-0 opacity-5 -rotate-12 transform group-hover:rotate-0 transition-transform duration-500">
-                                                     <IndianRupee className="w-16 h-16 text-[#7c4624]" />
+                                                    <IndianRupee className="w-16 h-16 text-[#7c4624]" />
                                                 </div>
                                                 <div className="mb-3">
                                                     <span className="text-[10px] sm:text-xs text-slate-500 font-medium">Sacred Contribution:</span>
@@ -918,7 +1146,6 @@ export default function DonationClient() {
                                     </div>
                                 </div>
 
-                                {/* Long Text Fields */}
                                 <div className="grid grid-cols-1 gap-4 sm:gap-6 pt-4 sm:pt-6 border-t border-slate-100">
                                     {(selectedDonation.address && !selectedDonation.isAnonymous) && (
                                         <div>
@@ -929,7 +1156,6 @@ export default function DonationClient() {
                                             </p>
                                         </div>
                                     )}
-
                                     {selectedDonation.message && (
                                         <div>
                                             <p className="text-[8px] sm:text-[10px] text-slate-400 font-bold uppercase tracking-widest mb-1">Prayer / Sankalp Message</p>
@@ -981,6 +1207,6 @@ export default function DonationClient() {
                     </div>
                 )}
             </AnimatePresence>
-        </div >
+        </div>
     );
 }

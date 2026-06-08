@@ -43,6 +43,8 @@ import {
 import { fetchAllTemplesAdmin, toggleTempleStatusAdmin, updateTempleLiveConfigAdmin, setPrimaryLiveAdmin } from "@/api/adminController";
 import { useLanguage } from "@/context/LanguageContext";
 import { getLocalized } from "@/utils/localization";
+import { getVideoRenderInfo, convertLiveboxToHls } from "@/lib/utils/videoUtils";
+import { HlsVideoPlayer } from "@/components/video/HlsVideoPlayer";
 
 const getEmbedUrl = (value: string) => {
   if (!value) return "";
@@ -84,6 +86,18 @@ export default function AdminLiveDarshanPage() {
   const [isPopoverOpen, setIsPopoverOpen] = useState(false);
   const [templeToDelete, setTempleToDelete] = useState<any | null>(null);
   const [deleting, setDeleting] = useState(false);
+
+  const resetLiveModal = () => {
+    setSelectedTemple(null);
+    setEditLiveUrl("");
+    setIsAddMode(false);
+    setIsEditMode(false);
+    setIsViewOnly(false);
+    setTempleSearchQuery("");
+    setIsPopoverOpen(false);
+  };
+
+  const previewInfo = getVideoRenderInfo(editLiveUrl);
 
   useEffect(() => {
     const load = async () => {
@@ -240,16 +254,14 @@ export default function AdminLiveDarshanPage() {
   };
 
   const openEditModal = (entry: any) => {
-    setIsAddMode(false);
+    resetLiveModal();
     setIsEditMode(true);
-    setIsViewOnly(false);
     setSelectedTemple(entry);
     setEditLiveUrl(entry.temple?.liveUrl || "");
   };
 
   const openViewModal = (entry: any) => {
-    setIsAddMode(false);
-    setIsEditMode(false);
+    resetLiveModal();
     setIsViewOnly(true);
     setSelectedTemple(entry);
     setEditLiveUrl(entry.temple?.liveUrl || "");
@@ -264,14 +276,13 @@ export default function AdminLiveDarshanPage() {
       });
       return;
     }
+    resetLiveModal();
     const entry = allTemples[0];
     setIsAddMode(true);
     setIsEditMode(true);
-    setIsViewOnly(false);
-    setTempleSearchQuery("");
-    setAllTemples(recentTemples);
     setSelectedTemple(entry);
     setEditLiveUrl(entry.temple?.liveUrl || "");
+    setAllTemples(recentTemples);
   };
 
   const handleSaveConfig = async () => {
@@ -279,11 +290,14 @@ export default function AdminLiveDarshanPage() {
     setSavingConfig(true);
     try {
       const trimmedUrl = editLiveUrl.trim();
+      // If admin pasted a Livebox player URL, prefer saving direct HLS stream URL
+      const derivedHls = convertLiveboxToHls(trimmedUrl);
+      const urlToSave = derivedHls || trimmedUrl;
 
       // Admin add mode: mark temple live + visible by default
       if (isAddMode) {
         await updateTempleLiveConfigAdmin(selectedTemple.userId, {
-          liveUrl: trimmedUrl,
+          liveUrl: urlToSave,
           isLive: true,
         });
         await toggleTempleStatusAdmin(
@@ -294,7 +308,7 @@ export default function AdminLiveDarshanPage() {
         );
       } else {
         await updateTempleLiveConfigAdmin(selectedTemple.userId, {
-          liveUrl: trimmedUrl,
+          liveUrl: urlToSave,
         });
       }
       toast({
@@ -322,8 +336,7 @@ export default function AdminLiveDarshanPage() {
         return hasSelfLive && hasUrlOrChannel;
       });
       setTemples(liveCandidates);
-      setSelectedTemple(null);
-      setIsAddMode(false);
+      resetLiveModal();
     } catch (error: any) {
       console.error("Save live config error:", error);
       toast({
@@ -594,8 +607,8 @@ export default function AdminLiveDarshanPage() {
           </CardContent>
         </Card>
 
-        <Dialog open={!!selectedTemple} onOpenChange={(open) => !open && setSelectedTemple(null)}>
-          <DialogContent className={isViewOnly ? "max-w-2xl" : "max-w-4xl"}>
+        <Dialog open={!!selectedTemple} onOpenChange={(open) => !open && resetLiveModal()}>
+          <DialogContent className="max-w-3xl">
             <DialogHeader>
               <DialogTitle className="flex flex-col gap-1">
                 {isViewOnly ? "View Live Stream" : isAddMode ? "Add Live Darshan" : "Edit Live Config"} – {getLocalized(selectedTemple?.temple, 'name', language)}
@@ -604,7 +617,7 @@ export default function AdminLiveDarshanPage() {
                 </span>
               </DialogTitle>
             </DialogHeader>
-            <div className={`grid grid-cols-1 ${isViewOnly ? "" : "md:grid-cols-2"} gap-6 pt-2`}>
+            <div className="grid grid-cols-1 gap-6 pt-2">
               {!isViewOnly && (
                 <div className="space-y-4">
                   {isAddMode && (
@@ -676,9 +689,20 @@ export default function AdminLiveDarshanPage() {
                     <Input
                       value={editLiveUrl}
                       onChange={(e) => setEditLiveUrl(e.target.value)}
-                      placeholder="https://www.youtube.com/watch?v=..."
-                      className="h-9 text-sm"
+                      placeholder="Paste any video URL or iframe embed code"
+                      className="w-full h-11 text-sm"
                     />
+                     {(() => {
+                       const derived = convertLiveboxToHls(editLiveUrl);
+                       return derived ? (
+                         <div className="mt-2 flex items-center gap-2">
+                           <Button size="sm" variant="outline" onClick={() => setEditLiveUrl(derived)}>
+                             Use direct HLS stream
+                           </Button>
+                           <a href={derived} target="_blank" rel="noreferrer" className="text-xs text-slate-500 underline">Open HLS</a>
+                         </div>
+                       ) : null;
+                     })()}
                   </div>
                   <p className="text-[11px] text-slate-500">
                     The temple can also change these values from their panel. You can correct them here in case of emergency.
@@ -687,7 +711,7 @@ export default function AdminLiveDarshanPage() {
                     <Button
                       variant="outline"
                       size="sm"
-                      onClick={() => setSelectedTemple(null)}
+                      onClick={resetLiveModal}
                     >
                       Cancel
                     </Button>
@@ -703,12 +727,12 @@ export default function AdminLiveDarshanPage() {
                 </div>
               )}
 
-              <div className="space-y-3">
+              <div className="space-y-3 max-w-2xl mx-auto">
                 <Label className="text-slate-700 text-xs">Preview</Label>
-                {previewEmbed ? (
+                {previewInfo.kind === "iframe" ? (
                   <div className="aspect-video w-full rounded-lg overflow-hidden bg-black">
                     <iframe
-                      src={`${previewEmbed}?autoplay=1&mute=1&rel=0`}
+                      src={previewInfo.src}
                       title="Live Preview"
                       className="w-full h-full"
                       frameBorder="0"
@@ -716,9 +740,23 @@ export default function AdminLiveDarshanPage() {
                       allowFullScreen
                     ></iframe>
                   </div>
+                ) : previewInfo.kind === "video" ? (
+                  <div className="aspect-video w-full rounded-lg overflow-hidden bg-black">
+                    <HlsVideoPlayer
+                      src={previewInfo.src}
+                      className="w-full h-full object-cover"
+                      controls
+                      muted
+                      playsInline
+                    />
+                  </div>
+                ) : previewInfo.kind === "html" ? (
+                  <div className="aspect-video w-full rounded-lg overflow-hidden bg-black">
+                    <div className="w-full h-full" dangerouslySetInnerHTML={{ __html: previewInfo.src }} />
+                  </div>
                 ) : (
                   <div className="aspect-video w-full rounded-lg border border-dashed border-slate-200 bg-slate-50 flex items-center justify-center text-xs text-slate-400 text-center px-4">
-                    Enter Watch URL for preview.
+                    Enter a supported video URL or iframe embed code for preview.
                   </div>
                 )}
                 <p className="text-[11px] text-slate-500">

@@ -316,7 +316,7 @@ export default function SellerProfilePage() {
                                 <CheckCircle2 className="w-8 h-8 text-emerald-400" />
                             </div>
 
-                            <div className="grid grid-cols-2 gap-4 pt-2">
+                         <div className="grid grid-cols-2 gap-4 pt-2">
                                 <div className="bg-white/10 rounded-2xl p-4 backdrop-blur-md border border-white/10">
                                     <p className="text-[10px] uppercase font-bold tracking-widest text-white/60 mb-1">Products</p>
                                     <p className="text-2xl font-black">{profile?.productCommissionRate}%</p>

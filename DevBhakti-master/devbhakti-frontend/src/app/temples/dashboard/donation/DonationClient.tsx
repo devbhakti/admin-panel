@@ -5,7 +5,6 @@ import { motion, AnimatePresence } from "framer-motion";
 import {
     Heart,
     Search,
-    Filter,
     Clock,
     CheckCircle2,
     XCircle,
@@ -32,7 +31,7 @@ import { Badge } from "@/components/ui/badge";
 import { 
     Popover, 
     PopoverContent, 
-    PopoverTrigger 
+    PopoverTrigger
 } from "@/components/ui/popover";
 import { Calendar } from "@/components/ui/calendar";
 import { DateRange } from "react-day-picker";
@@ -43,6 +42,7 @@ import { useDebounce } from "@/hooks/use-debounce";
 
 import { fetchMyTempleProfile } from "@/api/templeAdminController";
 import { generateReceiptHTML } from "@/utils/donationReceipt";
+import { parseLocalizedValue } from "@/utils/textUtils";
 import { API_URL } from "@/config/apiConfig";
 import axios from "axios";
 
@@ -52,16 +52,6 @@ const statusConfig = {
         color: "bg-emerald-100 text-emerald-700 border-emerald-200",
         icon: CheckCircle2,
     },
-    // PENDING: {
-    //     label: "Pending",
-    //     color: "bg-amber-100 text-amber-700 border-amber-200",
-    //     icon: Clock,
-    // },
-    // FAILED: {
-    //     label: "Failed",
-    //     color: "bg-rose-100 text-rose-700 border-rose-200",
-    //     icon: XCircle,
-    // },
 };
 
 export default function DonationClient() {
@@ -73,9 +63,23 @@ export default function DonationClient() {
     const [selectedDonation, setSelectedDonation] = useState<any | null>(null);
     const [loading, setLoading] = useState(true);
     const [templeId, setTempleId] = useState<string | null>(null);
+    const [templeName, setTempleName] = useState<string | null>(null);
     const [currentPage, setCurrentPage] = useState(1);
     const [totalPages, setTotalPages] = useState(1);
     const [totalItems, setTotalItems] = useState(0);
+    const [addModalOpen, setAddModalOpen] = useState(false);
+    const [isCreateSubmitting, setIsCreateSubmitting] = useState(false);
+    const [sendingEmail, setSendingEmail] = useState(false);
+    const [addAmount, setAddAmount] = useState("");
+    const [addPaymentMethod, setAddPaymentMethod] = useState("CASH");
+    const [addDonorName, setAddDonorName] = useState("");
+    const [addDonorPhone, setAddDonorPhone] = useState("");
+    const [addDonorEmail, setAddDonorEmail] = useState("");
+    const [addAddress, setAddAddress] = useState("");
+    const [addMessage, setAddMessage] = useState("");
+    const [addPanNumber, setAddPanNumber] = useState("");
+    const [addStatus, setAddStatus] = useState("SUCCESS");
+    const amountPresets = [101, 501, 1001, 2101, 5001];
     const { toast } = useToast();
 
     const [stats, setStats] = useState({
@@ -86,12 +90,33 @@ export default function DonationClient() {
         trend: [40, 70, 45, 90, 65, 80, 95]
     });
 
+    const sanitizePhone = (phone: string) => phone.replace(/\D/g, "").slice(0, 11);
+    const isValidPhone = (phone: string) => /^\d{10,11}$/.test(phone);
+
+    const resetAddDonationForm = () => {
+        setAddAmount("");
+        setAddPaymentMethod("CASH");
+        setAddDonorName("");
+        setAddDonorPhone("");
+        setAddDonorEmail("");
+        setAddAddress("");
+        setAddMessage("");
+        setAddPanNumber("");
+        setAddStatus("SUCCESS");
+    };
+
+    const openAddDonationModal = () => {
+        resetAddDonationForm();
+        setAddModalOpen(true);
+    };
+
     useEffect(() => {
         const loadInitialData = async () => {
             try {
                 const profile = await fetchMyTempleProfile();
                 if (profile.success && profile.data.id) {
                     setTempleId(profile.data.id);
+                    setTempleName(parseLocalizedValue(profile.data.name, "en") || "Temple");
                 }
             } catch (error) {
                 console.error("Load Initial Data Error:", error);
@@ -130,6 +155,63 @@ export default function DonationClient() {
         }
     };
 
+    const handleCreateDonation = async () => {
+        if (!addAmount || Number(addAmount) <= 0) {
+            toast({ title: "Validation Error", description: "Please enter a valid donation amount.", variant: "destructive" });
+            return;
+        }
+
+        if (!addDonorName.trim() || !addDonorPhone.trim() || !addDonorEmail.trim()) {
+            toast({ title: "Validation Error", description: "Please fill donor name, phone and email.", variant: "destructive" });
+            return;
+        }
+
+        if (!isValidPhone(addDonorPhone.trim())) {
+            toast({ title: "Validation Error", description: "Please enter a 10 or 11 digit phone number.", variant: "destructive" });
+            return;
+        }
+
+        if (!templeId) {
+            toast({ title: "Error", description: "Temple not selected.", variant: "destructive" });
+            return;
+        }
+
+        try {
+            setIsCreateSubmitting(true);
+            const payload = {
+                amount: Number(addAmount),
+                donorName: addDonorName.trim(),
+                donorPhone: addDonorPhone.trim(),
+                donorEmail: addDonorEmail.trim(),
+                panNumber: addPanNumber.trim(),
+                address: addAddress.trim(),
+                message: addMessage.trim(),
+                paymentMethod: addPaymentMethod,
+                status: addStatus,
+            };
+
+            const response = await axios.post(`${API_URL}/temple-admin/donations/${templeId}`, payload, {
+                validateStatus: () => true,
+            });
+            const data = response.data;
+
+            if (data.success) {
+                toast({ title: "Donation Recorded", description: "Donation entry saved successfully.", variant: "success" });
+                setAddModalOpen(false);
+                resetAddDonationForm();
+                fetchDonations(currentPage);
+                fetchStats();
+            } else {
+                toast({ title: "Error", description: data.message || "Could not save donation.", variant: "destructive" });
+            }
+        } catch (error: any) {
+            console.error("Create Donation Error:", error);
+            toast({ title: "Error", description: error?.message || "Failed to create donation.", variant: "destructive" });
+        } finally {
+            setIsCreateSubmitting(false);
+        }
+    };
+
     const fetchStats = async () => {
         if (!templeId) return;
         try {
@@ -164,7 +246,7 @@ export default function DonationClient() {
     const handlePrintReceipt = (donation: any) => {
         const html = generateReceiptHTML({
             ...donation,
-            templeName: donation.templeName || "Temple" // Assuming profile data has temple name
+            templeName: parseLocalizedValue(donation.templeName, "en") || "Temple"
         });
         const printWindow = window.open('', '_blank');
         if (printWindow) {
@@ -173,6 +255,24 @@ export default function DonationClient() {
             setTimeout(() => {
                 printWindow.print();
             }, 500);
+        }
+    };
+
+    const handleSendEmail = async (id: string) => {
+        try {
+            setSendingEmail(true);
+            const response = await axios.post(`${API_URL}/temple-admin/donations/send-email/${id}`, {}, { validateStatus: () => true });
+            const data = response.data;
+            if (data.success) {
+                toast({ title: "Success", description: data.message || "Receipt sent successfully via email!", variant: "success" });
+            } else {
+                toast({ title: "Error", description: data.message || "Failed to send email", variant: "destructive" });
+            }
+        } catch (error) {
+            console.error("Send Email Error:", error);
+            toast({ title: "Error", description: "An error occurred while sending the receipt email", variant: "destructive" });
+        } finally {
+            setSendingEmail(false);
         }
     };
 
@@ -221,10 +321,17 @@ export default function DonationClient() {
                         Manage and track all donations received for your temple
                     </p>
                 </div>
-                <div className="flex items-center gap-3">
+                <div className="flex flex-wrap items-center gap-3">
+                    <Button
+                        variant="secondary"
+                        className="rounded-xl border-primary/20 text-primary hover:bg-primary/5"
+                        onClick={openAddDonationModal}
+                    >
+                        Add Donation
+                    </Button>
                     <Button variant="outline" className="rounded-xl border-primary/20 text-primary hover:bg-primary/5" onClick={handleDownloadReport}>
                         <Download className="w-4 h-4 mr-2" />
-                        Download PDF
+                        Download Excel
                     </Button>
                 </div>
             </div>
@@ -420,7 +527,7 @@ export default function DonationClient() {
                                                     <td className="p-4">
                                                         <div className="flex items-center gap-3">
                                                             <div className={`w-10 h-10 rounded-2xl flex items-center justify-center text-sm font-bold shadow-sm ${donation.isAnonymous ? "bg-slate-100 text-slate-400" : "bg-primary/10 text-primary border border-primary/20"}`}>
-                                                                {donation.isAnonymous ? "?" : donation.donorName.split(' ')[0][0]}
+                                                                {donation.isAnonymous ? "?" : donation.donorName?.split(' ')[0]?.[0] || "D"}
                                                             </div>
                                                             <div>
                                                                 <p className="font-semibold text-sm group-hover:text-primary transition-colors">{donation.donorName}</p>
@@ -469,12 +576,180 @@ export default function DonationClient() {
                         </div>
                     )}
                 </div>
-
-                {/* Sidebar Column - Top Donors & Activity */}
-
             </div>
 
-            {/* Donation Detail Modal (Reusing Admin Style for consistency but refined) */}
+            {/* Add Donation Modal */}
+            <AnimatePresence>
+                {addModalOpen && (
+                    <div className="fixed inset-0 z-[60] flex items-center justify-center p-4">
+                        <motion.div
+                            initial={{ opacity: 0 }}
+                            animate={{ opacity: 1 }}
+                            exit={{ opacity: 0 }}
+                            onClick={() => setAddModalOpen(false)}
+                            className="absolute inset-0 bg-slate-900/70 backdrop-blur-sm"
+                        />
+                        <motion.div
+                            initial={{ scale: 0.95, opacity: 0, y: 20 }}
+                            animate={{ scale: 1, opacity: 1, y: 0 }}
+                            exit={{ scale: 0.95, opacity: 0, y: 20 }}
+                            className="bg-white rounded-[24px] w-full max-w-[95vw] sm:max-w-3xl max-h-[95vh] overflow-hidden shadow-2xl relative z-10 flex flex-col"
+                        >
+                            <div className="bg-[#7c4624] p-5 sm:p-6 text-white relative">
+                                <button
+                                    onClick={() => setAddModalOpen(false)}
+                                    className="absolute right-3 top-3 w-9 h-9 rounded-full bg-white/10 hover:bg-white/20 flex items-center justify-center transition-colors"
+                                >
+                                    <X className="w-4 h-4" />
+                                </button>
+                                <div className="flex items-center gap-3 sm:gap-4">
+                                    <div className="w-10 h-10 rounded-2xl bg-white/15 flex items-center justify-center">
+                                        <Heart className="w-5 h-5 text-white" />
+                                    </div>
+                                    <div>
+                                        <h2 className="text-lg sm:text-2xl font-serif font-bold">Temple Donation Entry</h2>
+                                        {templeName && (
+                                            <p className="text-sm text-white/80 mt-1">
+                                                Recording donation for <span className="font-semibold">{templeName}</span>
+                                            </p>
+                                        )}
+                                    </div>
+                                </div>
+                            </div>
+                            <div className="p-5 sm:p-7 overflow-y-auto flex-1 custom-scrollbar">
+                                <div className="grid grid-cols-1 gap-6">
+                                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                                        <div>
+                                            <p className="text-xs text-slate-500 uppercase tracking-[0.2em] mb-3">Donation Amount</p>
+                                            <Input
+                                                type="number"
+                                                placeholder="Amount"
+                                                value={addAmount}
+                                                onChange={(e) => setAddAmount(e.target.value)}
+                                                className="h-9 text-sm bg-background/50 border-primary/10 rounded-xl"
+                                            />
+                                            <div className="mt-3 flex flex-wrap gap-2">
+                                                {amountPresets.map((value) => (
+                                                    <button
+                                                        type="button"
+                                                        key={value}
+                                                        onClick={() => setAddAmount(value.toString())}
+                                                        className={cn(
+                                                            "rounded-full border px-3 py-2 text-xs font-semibold transition-all",
+                                                            addAmount === value.toString()
+                                                                ? "bg-[#7c4624] border-[#7c4624] text-white"
+                                                                : "bg-white border-slate-200 text-slate-700 hover:border-slate-300"
+                                                        )}
+                                                    >
+                                                        ₹{value}
+                                                    </button>
+                                                ))}
+                                            </div>
+                                        </div>
+                                        
+                                        {/* Payment Method - Fixed Dropdown */}
+                                        <div>
+                                            <p className="text-xs text-slate-500 uppercase tracking-[0.2em] mb-2">Payment Method</p>
+                                            <select
+                                                value={addPaymentMethod}
+                                                onChange={(e) => setAddPaymentMethod(e.target.value)}
+                                                className="w-full rounded-2xl border border-slate-200 bg-white p-3 text-sm text-slate-800 focus:outline-none focus:ring-2 focus:ring-[#7c4624]/20"
+                                            >
+                                                <option value="CASH"> Cash</option>
+                                                <option value="UPI"> UPI</option>
+                                                <option value="CARD"> Card</option>
+                                                <option value="CHEQUE">Cheque</option>
+                                                <option value="BANK">🏦 Bank Transfer</option>
+                                            </select>
+                                            <p className="mt-2 text-[11px] text-slate-500">
+                                                The donation will be recorded for the currently selected temple.
+                                            </p>
+                                        </div>
+                                    </div>
+
+                                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                                        <div>
+                                            <p className="text-xs text-slate-500 uppercase tracking-[0.2em] mb-2">Full Name</p>
+                                            <Input
+                                                placeholder="Full name"
+                                                value={addDonorName}
+                                                onChange={(e) => setAddDonorName(e.target.value)}
+                                                className="h-9 text-sm bg-background/50 border-primary/10 rounded-xl"
+                                            />
+                                        </div>
+                                        <div>
+                                            <p className="text-xs text-slate-500 uppercase tracking-[0.2em] mb-2">Phone</p>
+                                            <Input
+                                                placeholder="Phone"
+                                                value={addDonorPhone}
+                                                onChange={(e) => setAddDonorPhone(sanitizePhone(e.target.value))}
+                                                className="h-9 text-sm bg-background/50 border-primary/10 rounded-xl"
+                                            />
+                                        </div>
+                                    </div>
+                                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                                        <div>
+                                            <p className="text-xs text-slate-500 uppercase tracking-[0.2em] mb-2">Email</p>
+                                            <Input
+                                                placeholder="Email"
+                                                value={addDonorEmail}
+                                                onChange={(e) => setAddDonorEmail(e.target.value)}
+                                                className="h-9 text-sm bg-background/50 border-primary/10 rounded-xl"
+                                            />
+                                        </div>
+                                        <div>
+                                            <p className="text-xs text-slate-500 uppercase tracking-[0.2em] mb-2">PAN Number</p>
+                                            <Input
+                                                placeholder="PAN number"
+                                                value={addPanNumber}
+                                                onChange={(e) => setAddPanNumber(e.target.value.toUpperCase())}
+                                                className="h-9 text-sm bg-background/50 border-primary/10 rounded-xl"
+                                            />
+                                        </div>
+                                    </div>
+                                    <div>
+                                        <p className="text-xs text-slate-500 uppercase tracking-[0.2em] mb-2">Address</p>
+                                        <Input
+                                            placeholder="Address"
+                                            value={addAddress}
+                                            onChange={(e) => setAddAddress(e.target.value)}
+                                            className="h-9 text-sm bg-background/50 border-primary/10 rounded-xl"
+                                        />
+                                    </div>
+                                    <div>
+                                        <p className="text-xs text-slate-500 uppercase tracking-[0.2em] mb-2">Prayer Message</p>
+                                        <textarea
+                                            value={addMessage}
+                                            onChange={(e) => setAddMessage(e.target.value)}
+                                            rows={3}
+                                            className="w-full rounded-xl border border-primary/10 bg-background/50 p-3 text-sm focus:outline-none focus:ring-2 focus:ring-[#7c4624]/20"
+                                            placeholder="Enter prayer or message"
+                                        />
+                                    </div>
+                                </div>
+                            </div>
+                            <div className="p-5 sm:p-6 bg-slate-50 flex flex-col sm:flex-row items-stretch sm:items-center justify-between gap-3 border-t border-slate-200">
+                                <Button
+                                    onClick={handleCreateDonation}
+                                    disabled={isCreateSubmitting}
+                                    className="w-full sm:w-auto bg-[#7c4624] hover:bg-[#63361c]"
+                                >
+                                    {isCreateSubmitting ? "Saving..." : "Record Donation"}
+                                </Button>
+                                <Button
+                                    variant="outline"
+                                    onClick={resetAddDonationForm}
+                                    className="w-full sm:w-auto"
+                                >
+                                    Clear
+                                </Button>
+                            </div>
+                        </motion.div>
+                    </div>
+                )}
+            </AnimatePresence>
+
+            {/* Donation Detail Modal */}
             <AnimatePresence>
                 {selectedDonation && (
                     <div className="fixed inset-0 z-[60] flex items-center justify-center p-4">
@@ -492,7 +767,6 @@ export default function DonationClient() {
                             transition={{ type: "spring", damping: 25, stiffness: 300 }}
                             className="bg-white rounded-[32px] w-full max-w-xl overflow-hidden shadow-2xl relative z-10"
                         >
-                            {/* Modal Header */}
                             <div className="bg-[#7c4624] p-8 text-white relative">
                                 <div className="absolute top-0 right-0 p-8 opacity-10">
                                     <Heart className="w-40 h-40" />
@@ -515,7 +789,6 @@ export default function DonationClient() {
                             </div>
 
                             <div className="p-8 space-y-6 max-h-[70vh] overflow-y-auto custom-scrollbar">
-                                {/* Amount Hero */}
                                 <div className="text-center py-6 bg-slate-50 rounded-[24px] border border-slate-100 relative overflow-hidden">
                                     <div className="absolute top-0 left-0 w-full h-1 bg-gradient-to-r from-transparent via-primary/20 to-transparent" />
                                     <p className="text-[10px] text-slate-400 font-black uppercase tracking-[0.2em] mb-2">Blessed Amount</p>
@@ -531,7 +804,6 @@ export default function DonationClient() {
                                     </div>
                                 </div>
 
-                                {/* Devotee Info */}
                                 <div className="space-y-4">
                                     <div className="flex items-center justify-between border-b border-slate-50 pb-3">
                                         <p className="text-[11px] font-bold text-slate-400 uppercase tracking-wider">Devotee</p>
@@ -570,14 +842,13 @@ export default function DonationClient() {
                                         <p className="text-sm font-bold text-slate-800">{selectedDonation.paymentMethod}</p>
                                     </div>
 
-                                    {/* Commission Split Section */}
                                     <div className="p-4 bg-orange-50/50 rounded-2xl border border-orange-100/50 space-y-2">
                                         <div className="flex items-center justify-between">
                                             <p className="text-[10px] font-bold text-orange-800/60 uppercase tracking-wider">Gross Amount</p>
                                             <p className="text-sm font-bold text-orange-900">₹{selectedDonation.amount.toLocaleString()}</p>
                                         </div>
                                         <div className="flex items-center justify-between">
-                                            <p className="text-[10px] font-bold text-orange-800/60 uppercase tracking-wider">Platform Fee (Admin)</p>
+                                            <p className="text-[10px] font-bold text-orange-800/60 uppercase tracking-wider">Platform Fee</p>
                                             <p className="text-sm font-bold text-rose-600">- ₹{(selectedDonation.commissionAmount || 0).toLocaleString()}</p>
                                         </div>
                                         <div className="pt-2 border-t border-orange-200/50 flex items-center justify-between">
@@ -585,8 +856,6 @@ export default function DonationClient() {
                                             <p className="text-base font-black text-emerald-600">₹{(selectedDonation.netEarning || selectedDonation.amount).toLocaleString()}</p>
                                         </div>
                                     </div>
-
-
 
                                     {selectedDonation.message && (
                                         <div className="pt-2">
@@ -599,13 +868,20 @@ export default function DonationClient() {
                                 </div>
                             </div>
 
-                            {/* Modal Footer */}
-                            <div className="p-8 pt-0 flex gap-3">
+                            <div className="p-8 pt-0 flex flex-col sm:flex-row gap-3">
                                 <Button
                                     className="flex-1 bg-[#7c4624] hover:bg-[#63361c] text-white rounded-[20px] h-12 font-bold shadow-lg shadow-[#7c4624]/20"
                                     onClick={() => handlePrintReceipt(selectedDonation)}
                                 >
                                     <Download className="w-4 h-4 mr-2" /> Print Receipt
+                                </Button>
+                                <Button
+                                    className="flex-1 bg-white border border-slate-200 text-slate-800 rounded-[20px] h-12 font-bold shadow-sm"
+                                    onClick={() => handleSendEmail(selectedDonation.id)}
+                                    disabled={sendingEmail || !selectedDonation.donorEmail}
+                                >
+                                    <Mail className="w-4 h-4 mr-2" />
+                                    {sendingEmail ? "Sending..." : "Send Receipt"}
                                 </Button>
                                 <Button
                                     variant="outline"

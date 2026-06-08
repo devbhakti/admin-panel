@@ -121,7 +121,7 @@ export default function MarketplaceClient() {
   const [showAllProducts, setShowAllProducts] = useState(false);
   const [totalProducts, setTotalProducts] = useState(0);
   const [totalPages, setTotalPages] = useState(0);
-  const productsPerPage = 10;
+  const productsPerPage = 12;
 
   useEffect(() => {
     const timer = setTimeout(() => {

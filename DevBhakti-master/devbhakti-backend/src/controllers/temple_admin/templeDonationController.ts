@@ -1,6 +1,12 @@
 import { Request, Response } from "express";
 import { prisma } from "../../lib/prisma";
 import { getLang, localize, getEnglish } from "../../utils/localization";
+import { sendEmail } from "../../utils/sendEmail";
+import { generateReceiptHTML } from "../../utils/donationReceipt";
+import { generateDonationDisplayId } from "../../utils/idGenerator";
+import { getCommissionForAmount } from "../admin/commissionSlabController";
+import { CommissionCategory, SlabType } from "@prisma/client";
+import { validateDonationAmount, validatePhoneNumber, validatePincode } from "../../utils/donationValidation";
 
 export const getTempleDonations = async (req: Request, res: Response) => {
     try {
@@ -104,6 +110,133 @@ export const getTempleDonationStats = async (req: Request, res: Response) => {
         res.status(200).json({ success: true, data: result });
     } catch (error: any) {
         console.error("Get Temple Donation Stats Error:", error);
+        res.status(500).json({ success: false, message: error.message });
+    }
+};
+
+export const createTempleDonation = async (req: Request, res: Response) => {
+    try {
+        const templeId = String(req.params.templeId || "");
+        const {
+            amount,
+            donorName,
+            donorPhone,
+            donorEmail,
+            panNumber,
+            address,
+            message,
+            paymentMethod,
+            status = "SUCCESS",
+            createdAt,
+            pincode,
+        } = req.body;
+
+        if (!templeId || !amount || !donorName || !donorPhone || !donorEmail) {
+            return res.status(400).json({ success: false, message: "Missing required fields" });
+        }
+
+        if (!validateDonationAmount(amount)) {
+            return res.status(400).json({
+                success: false,
+                message: "Donation amount must be between ₹1 and ₹999,999,999."
+            });
+        }
+
+        if (!validatePhoneNumber(donorPhone)) {
+            return res.status(400).json({
+                success: false,
+                message: "Donor phone must be 10 or 11 digits."
+            });
+        }
+
+        if (!validatePincode(pincode)) {
+            return res.status(400).json({
+                success: false,
+                message: "Pin code must be a 6 digit number."
+            });
+        }
+
+        const temple = await prisma.temple.findUnique({ where: { id: templeId } });
+        if (!temple) {
+            return res.status(404).json({ success: false, message: "Temple not found" });
+        }
+
+        const commissionData = await getCommissionForAmount(
+            Number(amount),
+            SlabType.GLOBAL,
+            undefined,
+            CommissionCategory.DONATION
+        );
+
+        const commissionAmount = commissionData.totalCommission || 0;
+        const netEarning = Number(amount);
+        const displayId = await generateDonationDisplayId();
+
+        const donation = await prisma.donation.create({
+            data: {
+                displayId,
+                templeId,
+                amount: Number(amount),
+                commissionAmount,
+                netEarning,
+                donorName,
+                donorPhone,
+                donorEmail,
+                panNumber,
+                address,
+                message,
+                paymentMethod,
+                status,
+                createdAt: createdAt ? new Date(createdAt) : undefined,
+            }
+        });
+
+        res.status(200).json({ success: true, data: donation, message: "Donation created successfully" });
+    } catch (error: any) {
+        console.error("Create Temple Donation Error:", error);
+        res.status(500).json({ success: false, message: error.message });
+    }
+};
+
+export const sendTempleDonationEmail = async (req: Request, res: Response) => {
+    try {
+        const { id } = req.params;
+        const lang = (req.headers['x-lang'] as string) || (req.query.lang as string) || 'en';
+
+        const donation = await prisma.donation.findUnique({
+            where: { id: id as string },
+            include: { temple: { select: { name: true } } as any }
+        });
+
+        if (!donation) {
+            return res.status(404).json({ success: false, message: "Donation not found" });
+        }
+
+        if (!donation.donorEmail) {
+            return res.status(400).json({ success: false, message: "Donor email not available" });
+        }
+
+        const localizedTemple = donation.temple ? localize(donation.temple, lang) : null;
+        const receiptData = {
+            ...donation,
+            templeName: localizedTemple?.name || "Dev Bhakti Sacred Offering"
+        };
+
+        const html = generateReceiptHTML(receiptData as any);
+        const emailResult = await sendEmail(
+            donation.donorEmail,
+            `Dev Bhakti - Donation Receipt (${donation.displayId || donation.id})`,
+            `Thank you for your donation of ₹${donation.amount}. Your receipt is attached.`,
+            html
+        );
+
+        if (emailResult.success) {
+            return res.status(200).json({ success: true, message: "Receipt sent successfully" });
+        }
+
+        return res.status(500).json({ success: false, message: "Failed to send email" });
+    } catch (error: any) {
+        console.error("Send Temple Donation Email Error:", error);
         res.status(500).json({ success: false, message: error.message });
     }
 };
