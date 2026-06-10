@@ -22,7 +22,9 @@ export default function TempleQrDialog({ temple, buttonLabel = "QR" }: TempleQrD
   const [qrDataUrl, setQrDataUrl] = useState<string>("");
   const [copied, setCopied] = useState(false);
 
-  const qrUrl = typeof window !== "undefined" ? `${window.location.origin}/qr/${temple.id}` : "";
+  // Force the QR link to point to the main public user site instead of the admin origin
+  const baseUrl = "https://devbhakti.com";
+  const qrUrl = `${baseUrl}/qr/${temple.id}`;
 
   useEffect(() => {
     if (!open || !qrUrl) return;
@@ -73,10 +75,10 @@ export default function TempleQrDialog({ temple, buttonLabel = "QR" }: TempleQrD
           </div>
 
           <div className="grid gap-3 sm:grid-cols-2">
-            <Button variant="secondary" className="gap-2" onClick={handleCopy} disabled={!qrUrl}>
+            {/* <Button variant="secondary" className="gap-2" onClick={handleCopy} disabled={!qrUrl}>
               <Copy className="w-4 h-4" />
               {copied ? "Copied" : "Copy Link"}
-            </Button>
+            </Button> */}
             <Button variant="outline" className="gap-2" onClick={handleDownload} disabled={!qrDataUrl}>
               <Download className="w-4 h-4" />
               Download PNG
