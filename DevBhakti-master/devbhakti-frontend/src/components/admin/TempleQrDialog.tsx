@@ -22,8 +22,8 @@ export default function TempleQrDialog({ temple, buttonLabel = "QR" }: TempleQrD
   const [qrDataUrl, setQrDataUrl] = useState<string>("");
   const [copied, setCopied] = useState(false);
 
-  // Force the QR link to point to the main public user site instead of the admin origin
-  const baseUrl = "https://devbhakti.com";
+  // Use the current origin so that local testing works across devices on the same network
+  const baseUrl = typeof window !== "undefined" ? window.location.origin : "https://devbhakti.com";
   const qrUrl = `${baseUrl}/qr/${temple.id}`;
 
   useEffect(() => {

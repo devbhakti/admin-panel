@@ -246,28 +246,28 @@ export default function MobileTempleDetail({
                         )}
 
                         {/* Photography */}
-                        {/* <button onClick={() => { setPhotoStep(1); setIsPhotoDialogOpen(true); }} className="flex flex-col items-center p-1.5 rounded-2xl hover:bg-orange-50/50 active:scale-95 transition-all text-center">
+                        <button onClick={() => { setPhotoStep(1); setIsPhotoDialogOpen(true); }} className="flex flex-col items-center p-1.5 rounded-2xl hover:bg-orange-50/50 active:scale-95 transition-all text-center">
                             <div className="h-12 w-12 bg-amber-100/60 rounded-2xl flex items-center justify-center mb-2 text-amber-700 shadow-sm">
                                 <Camera className="h-6 w-6" />
                             </div>
                             <span className="text-[11px] font-bold leading-tight">Photography</span>
-                        </button> */}
+                        </button>
 
                         {/* Temple Shop */}
-                        {/* <button onClick={() => document.getElementById("mobile-shop-section")?.scrollIntoView({ behavior: "smooth" })} className="flex flex-col items-center p-1.5 rounded-2xl hover:bg-orange-50/50 active:scale-95 transition-all text-center">
+                        <button onClick={() => document.getElementById("mobile-shop-section")?.scrollIntoView({ behavior: "smooth" })} className="flex flex-col items-center p-1.5 rounded-2xl hover:bg-orange-50/50 active:scale-95 transition-all text-center">
                             <div className="h-12 w-12 bg-[#3c2a21]/10 rounded-2xl flex items-center justify-center mb-2 text-[#3c2a21] shadow-sm">
                                 <ShoppingBag className="h-6 w-6" />
                             </div>
                             <span className="text-[11px] font-bold leading-tight">Temple Shop</span>
-                        </button> */}
+                        </button>
 
                         {/* Darshan Tickets */}
-                        {/* <button onClick={handleBookPooja} className="flex flex-col items-center p-1.5 rounded-2xl hover:bg-orange-50/50 active:scale-95 transition-all text-center">
+                        <button onClick={handleBookPooja} className="flex flex-col items-center p-1.5 rounded-2xl hover:bg-orange-50/50 active:scale-95 transition-all text-center">
                             <div className="h-12 w-12 bg-amber-500/10 rounded-2xl flex items-center justify-center mb-2 text-amber-600 shadow-sm">
                                 <Ticket className="h-6 w-6" />
                             </div>
                             <span className="text-[11px] font-bold leading-tight">Darshan Tickets</span>
-                        </button> */}
+                        </button>
 
                     </div>
                 </div>
