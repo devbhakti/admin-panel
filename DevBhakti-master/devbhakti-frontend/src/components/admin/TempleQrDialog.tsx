@@ -25,8 +25,12 @@ export default function TempleQrDialog({ temple, buttonLabel = "QR" }: TempleQrD
   // Use the current origin so that local testing works across devices on the same network
   const baseUrl = typeof window !== "undefined" ? window.location.origin : "https://devbhakti.com";
   
-  // Use slug or subdomain if available, otherwise fallback to id
-  const identifier = temple.slug || temple.subdomain || temple.id;
+  // Use slug or subdomain if available, otherwise fallback to id.
+  // Guard against invalid string values like "undefined" / "null".
+  const rawIdentifier = temple.slug || temple.subdomain || temple.id || "";
+  const identifier = rawIdentifier && !["undefined", "null"].includes(rawIdentifier.toString().trim().toLowerCase())
+    ? rawIdentifier.toString().trim()
+    : "";
   const qrUrl = identifier ? `${baseUrl}/qr/${identifier}` : "";
 
   useEffect(() => {
