@@ -3,9 +3,16 @@ import { API_URL } from "@/config/apiConfig";
 
 type Props = { params: { id: string } };
 
+const INVALID_QR_IDS = new Set(["", "undefined", "null"]);
+
 export default async function QrRedirectPage({ params }: Props) {
+  const safeId = params.id?.toString().trim();
+  if (!safeId || INVALID_QR_IDS.has(safeId.toLowerCase())) {
+    return redirect("/");
+  }
+
   try {
-    const response = await fetch(`${API_URL}/temples/${params.id}`, {
+    const response = await fetch(`${API_URL}/temples/${safeId}`, {
       cache: "no-store",
     });
 
