@@ -246,28 +246,28 @@ export default function MobileTempleDetail({
                         )}
 
                         {/* Photography */}
-                        {/* <button onClick={() => { setPhotoStep(1); setIsPhotoDialogOpen(true); }} className="flex flex-col items-center p-1.5 rounded-2xl hover:bg-orange-50/50 active:scale-95 transition-all text-center">
+                        <button onClick={() => { setPhotoStep(1); setIsPhotoDialogOpen(true); }} className="flex flex-col items-center p-1.5 rounded-2xl hover:bg-orange-50/50 active:scale-95 transition-all text-center">
                             <div className="h-12 w-12 bg-amber-100/60 rounded-2xl flex items-center justify-center mb-2 text-amber-700 shadow-sm">
                                 <Camera className="h-6 w-6" />
                             </div>
                             <span className="text-[11px] font-bold leading-tight">Photography</span>
-                        </button> */}
+                        </button>
 
                         {/* Temple Shop */}
-                        {/* <button onClick={() => document.getElementById("mobile-shop-section")?.scrollIntoView({ behavior: "smooth" })} className="flex flex-col items-center p-1.5 rounded-2xl hover:bg-orange-50/50 active:scale-95 transition-all text-center">
+                        <button onClick={() => document.getElementById("mobile-shop-section")?.scrollIntoView({ behavior: "smooth" })} className="flex flex-col items-center p-1.5 rounded-2xl hover:bg-orange-50/50 active:scale-95 transition-all text-center">
                             <div className="h-12 w-12 bg-[#3c2a21]/10 rounded-2xl flex items-center justify-center mb-2 text-[#3c2a21] shadow-sm">
                                 <ShoppingBag className="h-6 w-6" />
                             </div>
                             <span className="text-[11px] font-bold leading-tight">Temple Shop</span>
-                        </button> */}
+                        </button>
 
                         {/* Darshan Tickets */}
-                        {/* <button onClick={handleBookPooja} className="flex flex-col items-center p-1.5 rounded-2xl hover:bg-orange-50/50 active:scale-95 transition-all text-center">
+                        <button onClick={handleBookPooja} className="flex flex-col items-center p-1.5 rounded-2xl hover:bg-orange-50/50 active:scale-95 transition-all text-center">
                             <div className="h-12 w-12 bg-amber-500/10 rounded-2xl flex items-center justify-center mb-2 text-amber-600 shadow-sm">
                                 <Ticket className="h-6 w-6" />
                             </div>
                             <span className="text-[11px] font-bold leading-tight">Darshan Tickets</span>
-                        </button> */}
+                        </button>
 
                     </div>
                 </div>
@@ -631,10 +631,10 @@ export default function MobileTempleDetail({
             </div> */}
 
             {/* ───── DevBhakti App Banner ───── */}
-            <div className="mt-5 px-4">
+            <div className="mt-5 px-4 mb-8">
                 <div className="bg-gradient-to-r from-[#3c2a21] to-[#5c3a21] text-white rounded-3xl p-5 flex items-center gap-4 shadow-md overflow-hidden">
                     <div className="flex-1">
-                        <h4 className="font-bold text-sm leading-snug">GET MORE ON DEV BHAKTI APP</h4>
+                        <h4 className="font-bold text-sm leading-snug">Get in touch with {getLocalized(temple, 'name')}</h4>
                         <p className="text-[10px] text-white/70 mt-1 leading-normal">Pooja booking, reminders, live darshan, receipts & more.</p>
                         <div className="flex items-center gap-1 mt-2">
                             <span className="text-xs font-bold text-amber-400">4.8</span>
@@ -642,8 +642,15 @@ export default function MobileTempleDetail({
                             <span className="text-[9px] text-white/50">(25K+)</span>
                         </div>
                     </div>
-                    <div className="w-16 h-16 bg-white p-1 rounded-xl shrink-0">
-                        <img src="https://api.qrserver.com/v1/create-qr-code/?size=150x150&data=https://devbhakti.com" alt="QR code" className="w-full h-full" />
+                    <div className="shrink-0 flex flex-col items-center">
+                        <a 
+                            href="https://play.google.com/store/search?q=devbhakti&c=apps&hl=en_IN" 
+                            target="_blank" 
+                            rel="noopener noreferrer"
+                            className="bg-white text-[#3c2a21] px-3 py-2 rounded-xl text-xs font-bold shadow-sm hover:bg-orange-50 transition-colors whitespace-nowrap"
+                        >
+                            Download App
+                        </a>
                     </div>
                 </div>
             </div>
