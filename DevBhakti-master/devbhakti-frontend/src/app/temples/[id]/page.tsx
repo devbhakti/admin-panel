@@ -1,4 +1,4 @@
-import TempleDetailClient from "./TempleDetailClient";
+import TempleDetail from "./TempleDetail";
 import { temples } from "@/data/temples";
 
 export async function generateStaticParams() {
@@ -8,5 +8,5 @@ export async function generateStaticParams() {
 }
 
 export default function TempleDetailPage() {
-  return <TempleDetailClient />;
+  return <TempleDetail />;
 }

@@ -387,3 +387,30 @@ export const downloadDonationsExcel = async (req: Request, res: Response) => {
         return res.status(500).json({ success: false, message: error.message });
     }
 };
+
+export const deleteTempleDonation = async (req: Request, res: Response) => {
+    try {
+        const { templeId, id } = req.params as { templeId?: string; id?: string };
+
+        if (!id) {
+            return res.status(400).json({ success: false, message: "Donation id is required" });
+        }
+
+        const donation = await prisma.donation.findUnique({ where: { id: id as string } });
+        if (!donation) {
+            return res.status(404).json({ success: false, message: "Donation not found" });
+        }
+
+        // Ensure the donation belongs to the requested temple
+        if (templeId && donation.templeId !== templeId) {
+            return res.status(403).json({ success: false, message: "Not authorized to delete this donation" });
+        }
+
+        await prisma.donation.delete({ where: { id: id as string } });
+
+        return res.status(200).json({ success: true, message: "Donation deleted successfully" });
+    } catch (error: any) {
+        console.error("Delete Temple Donation Error:", error);
+        return res.status(500).json({ success: false, message: error.message });
+    }
+};

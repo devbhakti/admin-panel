@@ -58,6 +58,7 @@ import { parseLocalizedValue } from "@/utils/textUtils";
 import { RichTextEditor } from "@/components/ui/rich-text-editor";
 import { useLanguage } from "@/context/LanguageContext";
 import { useAdminAuth } from "@/hooks/use-admin-auth";
+import TempleQrDialog from "@/components/admin/TempleQrDialog";
 
 export default function TempleProfilePage() {
     const [isLoading, setIsLoading] = useState(true);
@@ -420,6 +421,16 @@ export default function TempleProfilePage() {
                     )}
                     {!isEditing ? (
                         <>
+                            <TempleQrDialog
+                                temple={{
+                                    id: profile?.id || "",
+                                    slug: profile?.slug,
+                                    subdomain: profile?.subdomain,
+                                    urlType: profile?.urlType,
+                                    name: formData.name_en || profile?.name
+                                }}
+                                buttonLabel="QR Code"
+                            />
                             <Button
                                 variant="outline"
                                 onClick={() => window.open(`${window.location.origin}/temples/${formData.slug || profile?.id}`, '_blank')}

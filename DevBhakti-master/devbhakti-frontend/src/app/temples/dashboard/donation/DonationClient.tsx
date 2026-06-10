@@ -70,6 +70,8 @@ export default function DonationClient() {
     const [addModalOpen, setAddModalOpen] = useState(false);
     const [isCreateSubmitting, setIsCreateSubmitting] = useState(false);
     const [sendingEmail, setSendingEmail] = useState(false);
+    const [deletingId, setDeletingId] = useState<string | null>(null);
+    const [pendingDeleteId, setPendingDeleteId] = useState<string | null>(null);
     const [addAmount, setAddAmount] = useState("");
     const [addPaymentMethod, setAddPaymentMethod] = useState("CASH");
     const [addDonorName, setAddDonorName] = useState("");
@@ -273,6 +275,38 @@ export default function DonationClient() {
             toast({ title: "Error", description: "An error occurred while sending the receipt email", variant: "destructive" });
         } finally {
             setSendingEmail(false);
+        }
+    };
+
+    const handleDeleteDonation = async (id: string) => {
+        if (!templeId) {
+            toast({ title: "Error", description: "Temple not selected.", variant: "destructive" });
+            return;
+        }
+
+        try {
+            setDeletingId(id);
+            const token = localStorage.getItem("token");
+            const response = await axios.delete(`${API_URL}/temple-admin/donations/${templeId}/${id}`, {
+                validateStatus: () => true,
+                headers: {
+                    Authorization: `Bearer ${token}`,
+                },
+            });
+            const data = response.data;
+            if (data && data.success) {
+                toast({ title: "Deleted", description: data.message || "Donation deleted successfully.", variant: "success" });
+                fetchDonations(currentPage);
+                fetchStats();
+            } else {
+                toast({ title: "Error", description: data?.message || "Failed to delete donation.", variant: "destructive" });
+            }
+        } catch (error) {
+            console.error("Delete Donation Error:", error);
+            toast({ title: "Error", description: "An error occurred while deleting the donation.", variant: "destructive" });
+        } finally {
+            setDeletingId(null);
+            setPendingDeleteId(null);
         }
     };
 
@@ -555,9 +589,20 @@ export default function DonationClient() {
                                                         </div>
                                                     </td>
                                                     <td className="p-4 text-right">
-                                                        <Button variant="ghost" size="icon" className="h-8 w-8 rounded-lg hover:bg-primary/10 hover:text-primary" onClick={() => setSelectedDonation(donation)}>
-                                                            <Eye className="w-4 h-4" />
-                                                        </Button>
+                                                        <div className="flex items-center justify-end gap-2">
+                                                            <Button variant="ghost" size="icon" className="h-8 w-8 rounded-lg hover:bg-primary/10 hover:text-primary" onClick={() => setSelectedDonation(donation)}>
+                                                                <Eye className="w-4 h-4" />
+                                                            </Button>
+                                                            <Button
+                                                                variant="ghost"
+                                                                size="icon"
+                                                                className="h-8 w-8 rounded-lg hover:bg-rose-50 hover:text-rose-600"
+                                                                onClick={() => setPendingDeleteId(donation.id)}
+                                                                disabled={deletingId === donation.id}
+                                                            >
+                                                                <Trash2 className="w-4 h-4" />
+                                                            </Button>
+                                                        </div>
                                                     </td>
                                                 </motion.tr>
                                             );
@@ -659,7 +704,7 @@ export default function DonationClient() {
                                                 <option value="UPI"> UPI</option>
                                                 <option value="CARD"> Card</option>
                                                 <option value="CHEQUE">Cheque</option>
-                                                <option value="BANK">🏦 Bank Transfer</option>
+                                                <option value="BANK">Bank Transfer</option>
                                             </select>
                                             <p className="mt-2 text-[11px] text-slate-500">
                                                 The donation will be recorded for the currently selected temple.
@@ -890,6 +935,44 @@ export default function DonationClient() {
                                 >
                                     Close
                                 </Button>
+                            </div>
+                        </motion.div>
+                    </div>
+                )}
+            </AnimatePresence>
+            {/* Delete Confirmation Modal */}
+            <AnimatePresence>
+                {pendingDeleteId && (
+                    <div className="fixed inset-0 z-[70] flex items-center justify-center p-4">
+                        <motion.div
+                            initial={{ opacity: 0 }}
+                            animate={{ opacity: 1 }}
+                            exit={{ opacity: 0 }}
+                            onClick={() => setPendingDeleteId(null)}
+                            className="absolute inset-0 bg-slate-900/60 backdrop-blur-sm"
+                        />
+                        <motion.div
+                            initial={{ scale: 0.95, opacity: 0, y: 20 }}
+                            animate={{ scale: 1, opacity: 1, y: 0 }}
+                            exit={{ scale: 0.95, opacity: 0, y: 20 }}
+                            className="bg-white rounded-[16px] w-full max-w-md overflow-hidden shadow-2xl relative z-10"
+                        >
+                            <div className="p-6 text-center">
+                                <div className="flex items-center justify-center mb-4">
+                                    <XCircle className="w-12 h-12 text-rose-600" />
+                                </div>
+                                <h3 className="text-lg font-semibold mb-2">Delete Donation</h3>
+                                <p className="text-sm text-muted-foreground mb-6">Are you sure you want to delete this donation? This action cannot be undone.</p>
+                                <div className="flex items-center justify-center gap-3">
+                                    <Button variant="ghost" onClick={() => setPendingDeleteId(null)} className="w-28">Cancel</Button>
+                                    <Button
+                                        onClick={() => pendingDeleteId && handleDeleteDonation(pendingDeleteId)}
+                                        className="w-28 bg-rose-600 hover:bg-rose-700 text-white"
+                                        disabled={deletingId === pendingDeleteId}
+                                    >
+                                        {deletingId === pendingDeleteId ? 'Deleting...' : 'Delete'}
+                                    </Button>
+                                </div>
                             </div>
                         </motion.div>
                     </div>

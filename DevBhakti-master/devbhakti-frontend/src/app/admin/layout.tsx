@@ -159,6 +159,7 @@ const sidebarItems = [
     href: "#",
     permission: "settings.commission",
     subItems: [
+      { label: "Password Change", href: "/admin/settings", permission: "settings.commission" },
       { label: "Commission Slabs", href: "/admin/commission-slabs", permission: "settings.commission" },
     ]
   },

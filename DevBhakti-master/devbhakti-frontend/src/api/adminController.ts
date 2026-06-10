@@ -7,6 +7,34 @@ export const loginAdmin = async (credentials: any) => {
     return response.data;
 };
 
+export const sendAdminPasswordChangeOTP = async (oldPassword: string) => {
+    const token = getAdminToken();
+    const response = await axios.post(
+        `${API_URL}/admin/auth/send-change-password-otp`,
+        { oldPassword },
+        {
+            headers: {
+                Authorization: `Bearer ${token}`,
+            },
+        }
+    );
+    return response.data;
+};
+
+export const changeAdminPassword = async (oldPassword: string, otp: string, newPassword: string) => {
+    const token = getAdminToken();
+    const response = await axios.post(
+        `${API_URL}/admin/auth/change-password`,
+        { oldPassword, otp, newPassword },
+        {
+            headers: {
+                Authorization: `Bearer ${token}`,
+            },
+        }
+    );
+    return response.data;
+};
+
 // Admin Temple Management
 // (Consolidated below)
 

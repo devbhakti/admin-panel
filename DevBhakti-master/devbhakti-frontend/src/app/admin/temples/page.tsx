@@ -1,4 +1,4 @@
-"use client";
+﻿"use client";
 
 import React, { useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
@@ -95,6 +95,8 @@ import { Suspense } from "react";
 import { useSearchParams } from "next/navigation";
 import { useAdminAuth } from "@/hooks/use-admin-auth";
 import { parseLocalizedValue } from "@/utils/textUtils";
+import TempleQrDialog from "@/components/admin/TempleQrDialog";
+        
 
 function TemplesContent() {
     const searchParams = useSearchParams();
@@ -249,31 +251,31 @@ function TemplesContent() {
     const downloadTemplate = () => {
         const templateData = [{
             "Admin_Name_EN": "Admin User",
-            "Admin_Name_HI": "व्यवस्थापक",
-            "Admin_Name_MR": "प्रशासक",
+            "Admin_Name_HI": "à¤µà¥à¤¯à¤µà¤¸à¥à¤¥à¤¾à¤ªà¤•",
+            "Admin_Name_MR": "à¤ªà¥à¤°à¤¶à¤¾à¤¸à¤•",
             "Email": "temple@example.com",
             "Phone": "9876543210",
             "Name_EN": "Shri Ram Temple",
-            "Name_HI": "श्री राम मंदिर",
-            "Name_MR": "श्री राम मंदिर",
+            "Name_HI": "à¤¶à¥à¤°à¥€ à¤°à¤¾à¤® à¤®à¤‚à¤¦à¤¿à¤°",
+            "Name_MR": "à¤¶à¥à¤°à¥€ à¤°à¤¾à¤® à¤®à¤‚à¤¦à¤¿à¤°",
             "Location_EN": "Ayodhya",
-            "Location_HI": "अयोध्या",
-            "Location_MR": "अयोध्या",
+            "Location_HI": "à¤…à¤¯à¥‹à¤§à¥à¤¯à¤¾",
+            "Location_MR": "à¤…à¤¯à¥‹à¤§à¥à¤¯à¤¾",
             "Address_EN": "Ram Janmabhoomi, Ayodhya, UP",
-            "Address_HI": "राम जन्मभूमि, अयोध्या",
-            "Address_MR": "राम जन्मभूमी, अयोध्या",
+            "Address_HI": "à¤°à¤¾à¤® à¤œà¤¨à¥à¤®à¤­à¥‚à¤®à¤¿, à¤…à¤¯à¥‹à¤§à¥à¤¯à¤¾",
+            "Address_MR": "à¤°à¤¾à¤® à¤œà¤¨à¥à¤®à¤­à¥‚à¤®à¥€, à¤…à¤¯à¥‹à¤§à¥à¤¯à¤¾",
             "Category_EN": "Rama",
-            "Category_HI": "राम",
-            "Category_MR": "राम",
+            "Category_HI": "à¤°à¤¾à¤®",
+            "Category_MR": "à¤°à¤¾à¤®",
             "Description_EN": "Historic and divine temple of Lord Ram.",
-            "Description_HI": "भगवान राम का ऐतिहासिक और दिव्य मंदिर।",
-            "Description_MR": "भगवान रामाचे ऐतिहासिक आणि दिव्य मंदिर.",
+            "Description_HI": "à¤­à¤—à¤µà¤¾à¤¨ à¤°à¤¾à¤® à¤•à¤¾ à¤à¤¤à¤¿à¤¹à¤¾à¤¸à¤¿à¤• à¤”à¤° à¤¦à¤¿à¤µà¥à¤¯ à¤®à¤‚à¤¦à¤¿à¤°à¥¤",
+            "Description_MR": "à¤­à¤—à¤µà¤¾à¤¨ à¤°à¤¾à¤®à¤¾à¤šà¥‡ à¤à¤¤à¤¿à¤¹à¤¾à¤¸à¤¿à¤• à¤†à¤£à¤¿ à¤¦à¤¿à¤µà¥à¤¯ à¤®à¤‚à¤¦à¤¿à¤°.",
             "History_EN": "Ancient temple built at the birthplace of Lord Ram.",
-            "History_HI": "भगवान राम के जन्मस्थान पर बना प्राचीन मंदिर।",
-            "History_MR": "भगवान रामाच्या जन्मस्थानी बांधलेले प्राचीन मंदिर.",
+            "History_HI": "à¤­à¤—à¤µà¤¾à¤¨ à¤°à¤¾à¤® à¤•à¥‡ à¤œà¤¨à¥à¤®à¤¸à¥à¤¥à¤¾à¤¨ à¤ªà¤° à¤¬à¤¨à¤¾ à¤ªà¥à¤°à¤¾à¤šà¥€à¤¨ à¤®à¤‚à¤¦à¤¿à¤°à¥¤",
+            "History_MR": "à¤­à¤—à¤µà¤¾à¤¨ à¤°à¤¾à¤®à¤¾à¤šà¥à¤¯à¤¾ à¤œà¤¨à¥à¤®à¤¸à¥à¤¥à¤¾à¤¨à¥€ à¤¬à¤¾à¤‚à¤§à¤²à¥‡à¤²à¥‡ à¤ªà¥à¤°à¤¾à¤šà¥€à¤¨ à¤®à¤‚à¤¦à¤¿à¤°.",
             "Pickup_Location_EN": "Main Gate, Ram Temple",
-            "Pickup_Location_HI": "मुख्य द्वार, राम मंदिर",
-            "Pickup_Location_MR": "मुख्य द्वार, राम मंदिर",
+            "Pickup_Location_HI": "à¤®à¥à¤–à¥à¤¯ à¤¦à¥à¤µà¤¾à¤°, à¤°à¤¾à¤® à¤®à¤‚à¤¦à¤¿à¤°",
+            "Pickup_Location_MR": "à¤®à¥à¤–à¥à¤¯ à¤¦à¥à¤µà¤¾à¤°, à¤°à¤¾à¤® à¤®à¤‚à¤¦à¤¿à¤°",
             "Open_Time": "06:00 AM - 09:00 PM",
             "Temple_Phone": "9876543211",
             "Website": "https://ramtemple.com",
@@ -662,7 +664,7 @@ function TemplesContent() {
                         : errorData.error || "Cannot delete this temple. It has existing data.";
 
                     toast({
-                        title: "❌ Cannot Delete Temple",
+                        title: "âŒ Cannot Delete Temple",
                         description: detailedMessage,
                         variant: "destructive",
                     });
@@ -1217,6 +1219,16 @@ function TemplesContent() {
                                             </TableCell>
                                             <TableCell className="text-right">
                                                 <div className="flex justify-end gap-1">
+                                                    <TempleQrDialog
+                                                        temple={{
+                                                            id: inst.temple?.id || inst.templeId,
+                                                            slug: inst.temple?.slug,
+                                                            subdomain: inst.temple?.subdomain,
+                                                            urlType: inst.temple?.urlType,
+                                                            name: inst.templeName || inst.temple?.name
+                                                        }}
+                                                        buttonLabel="QR"
+                                                    />
                                                     <Button
                                                         variant="ghost"
                                                         size="icon"
@@ -1376,6 +1388,16 @@ function TemplesContent() {
                                                     )}
                                                 </div>
                                                 <div className="flex gap-1">
+                                                    <TempleQrDialog
+                                                        temple={{
+                                                            id: inst.temple?.id || inst.templeId,
+                                                            slug: inst.temple?.slug,
+                                                            subdomain: inst.temple?.subdomain,
+                                                            urlType: inst.temple?.urlType,
+                                                            name: inst.templeName || inst.temple?.name
+                                                        }}
+                                                        buttonLabel="QR"
+                                                    />
                                                     <Button
                                                         variant="ghost"
                                                         size="icon"
@@ -1546,6 +1568,16 @@ function TemplesContent() {
                                             </TableCell>
                                             <TableCell className="text-right">
                                                 <div className="flex justify-end gap-1">
+                                                    <TempleQrDialog
+                                                        temple={{
+                                                            id: inst.temple?.id || inst.templeId,
+                                                            slug: inst.temple?.slug,
+                                                            subdomain: inst.temple?.subdomain,
+                                                            urlType: inst.temple?.urlType,
+                                                            name: inst.templeName || inst.temple?.name
+                                                        }}
+                                                        buttonLabel="QR"
+                                                    />
                                                     <Button
                                                         variant="ghost"
                                                         size="icon"
@@ -1705,6 +1737,16 @@ function TemplesContent() {
                                                     )}
                                                 </div>
                                                 <div className="flex gap-1">
+                                                    <TempleQrDialog
+                                                        temple={{
+                                                            id: inst.temple?.id || inst.templeId,
+                                                            slug: inst.temple?.slug,
+                                                            subdomain: inst.temple?.subdomain,
+                                                            urlType: inst.temple?.urlType,
+                                                            name: inst.templeName || inst.temple?.name
+                                                        }}
+                                                        buttonLabel="QR"
+                                                    />
                                                     <Button
                                                         variant="ghost"
                                                         size="icon"
@@ -1819,7 +1861,7 @@ function TemplesContent() {
                     <div className="space-y-4 py-4">
                         {/* URL Configuration Section */}
                         <div className="space-y-4 p-4 bg-gradient-to-br from-blue-50 to-indigo-50 rounded-xl border border-blue-200">
-                            <label className="text-sm font-bold text-slate-800 uppercase tracking-widest text-[11px]">🌐 Public URL Configuration</label>
+                            <label className="text-sm font-bold text-slate-800 uppercase tracking-widest text-[11px]">ðŸŒ Public URL Configuration</label>
 
                             {/* URL Type Selection */}
                             <div className="flex items-center gap-6 mb-2">
@@ -1894,7 +1936,7 @@ function TemplesContent() {
                         {/* Slab management - Pooja */}
                         <div className="space-y-4">
                             <div className="flex items-center justify-between">
-                                <label className="text-sm font-bold text-slate-800 uppercase tracking-widest text-[11px]">🕉️ Pooja Platform Fee Slabs</label>
+                                <label className="text-sm font-bold text-slate-800 uppercase tracking-widest text-[11px]">ðŸ•‰ï¸ Pooja Platform Fee Slabs</label>
                                 <div className="flex items-center gap-3 bg-slate-100/50 p-1 rounded-lg border border-slate-200">
                                     <span className={`text-[9px] font-bold ${approvalData.poojaRateType === "DEFAULT" ? "text-primary" : "text-muted-foreground"}`}>DEFAULT</span>
                                     <Switch
@@ -1910,11 +1952,11 @@ function TemplesContent() {
                                     approvalData.poojaSlabs.map((slab: any, index: number) => (
                                         <div key={index} className="grid grid-cols-2 gap-3 items-center pb-3 border-b border-slate-200 last:border-0 last:pb-0">
                                             <div className="text-[11px] font-semibold text-slate-600">
-                                                ₹{slab.minAmount} - {slab.maxAmount ? `₹${slab.maxAmount}` : '∞'}
+                                                â‚¹{slab.minAmount} - {slab.maxAmount ? `â‚¹${slab.maxAmount}` : 'âˆž'}
                                             </div>
                                             <div className="flex gap-2">
                                                 <div className="relative flex-1">
-                                                    <span className="absolute left-2 top-1/2 -translate-y-1/2 text-[10px] text-slate-400">₹</span>
+                                                    <span className="absolute left-2 top-1/2 -translate-y-1/2 text-[10px] text-slate-400">â‚¹</span>
                                                     <Input
                                                         type="number"
                                                         value={slab.platformFee}
@@ -1956,7 +1998,7 @@ function TemplesContent() {
                         {/* Slab management - Marketplace */}
                         <div className="space-y-4">
                             <div className="flex items-center justify-between">
-                                <label className="text-sm font-bold text-slate-800 uppercase tracking-widest text-[11px]">🛍️ Marketplace Platform Fee Slabs</label>
+                                <label className="text-sm font-bold text-slate-800 uppercase tracking-widest text-[11px]">ðŸ›ï¸ Marketplace Platform Fee Slabs</label>
                                 <div className="flex items-center gap-3 bg-slate-100/50 p-1 rounded-lg border border-slate-200">
                                     <span className={`text-[9px] font-bold ${approvalData.marketplaceRateType === "DEFAULT" ? "text-primary" : "text-muted-foreground"}`}>DEFAULT</span>
                                     <Switch
@@ -1972,11 +2014,11 @@ function TemplesContent() {
                                     approvalData.marketplaceSlabs.map((slab: any, index: number) => (
                                         <div key={index} className="grid grid-cols-2 gap-3 items-center pb-3 border-b border-slate-200 last:border-0 last:pb-0">
                                             <div className="text-[11px] font-semibold text-slate-600">
-                                                ₹{slab.minAmount} - {slab.maxAmount ? `₹${slab.maxAmount}` : '∞'}
+                                                â‚¹{slab.minAmount} - {slab.maxAmount ? `â‚¹${slab.maxAmount}` : 'âˆž'}
                                             </div>
                                             <div className="flex gap-2">
                                                 <div className="relative flex-1">
-                                                    <span className="absolute left-2 top-1/2 -translate-y-1/2 text-[10px] text-slate-400">₹</span>
+                                                    <span className="absolute left-2 top-1/2 -translate-y-1/2 text-[10px] text-slate-400">â‚¹</span>
                                                     <Input
                                                         type="number"
                                                         value={slab.platformFee}
@@ -2017,7 +2059,7 @@ function TemplesContent() {
 
                         {/* Slab management - Donation */}
                         <div className="space-y-4">
-                            <label className="text-sm font-bold text-slate-800 uppercase tracking-widest text-[11px]">💳 Donation Platform Fee</label>
+                            <label className="text-sm font-bold text-slate-800 uppercase tracking-widest text-[11px]">ðŸ’³ Donation Platform Fee</label>
                             <div className="space-y-3 bg-slate-50 p-4 rounded-xl border border-slate-200">
                                 {approvalData.donationSlabs?.length > 0 ? (
                                     <div className="flex flex-wrap gap-2">
@@ -2052,7 +2094,7 @@ function TemplesContent() {
                         <DialogTitle>Importing Temples</DialogTitle>
                     </DialogHeader>
                     <div className="flex flex-col items-center justify-center p-6 space-y-4">
-                        <div className="text-4xl animate-bounce">📦</div>
+                        <div className="text-4xl animate-bounce">ðŸ“¦</div>
                         <h3 className="text-lg font-medium text-slate-900">
                             Processing Row {importProgress.current} of {importProgress.total}
                         </h3>
@@ -2082,3 +2124,4 @@ export default function TemplesManagementPage() {
         </Suspense>
     );
 }
+
