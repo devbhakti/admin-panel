@@ -42,7 +42,7 @@ export default async function QrRedirectPage({ params }: Props) {
     }
 
     if (temple.urlType === "subdomain" && temple.subdomain) {
-      const headersList = headers();
+      const headersList = await headers();
       const host = headersList.get("host") || "devbhakti.in";
       const hostname = host.split(":")[0];
       const port = host.split(":")[1] ? `:${host.split(":")[1]}` : "";
