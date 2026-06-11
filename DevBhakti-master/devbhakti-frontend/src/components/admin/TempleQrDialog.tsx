@@ -23,11 +23,11 @@ export default function TempleQrDialog({ temple, buttonLabel = "QR" }: TempleQrD
   const [copied, setCopied] = useState(false);
 
   // Use the current origin so that local testing works across devices on the same network
-  const baseUrl = typeof window !== "undefined" ? window.location.origin : "https://devbhakti.com";
+  const baseUrl = typeof window !== "undefined" ? window.location.origin : "https://devbhakti.in";
   
-  // Use slug or subdomain if available, otherwise fallback to id.
-  // Guard against invalid string values like "undefined" / "null".
-  const rawIdentifier = temple.slug || temple.subdomain || temple.id || "";
+  // Use strictly the stable temple.id (UUID) to ensure the QR code never changes or breaks
+  // even if the temple's slug or subdomain is modified later.
+  const rawIdentifier = temple.id || "";
   const identifier = rawIdentifier && !["undefined", "null"].includes(rawIdentifier.toString().trim().toLowerCase())
     ? rawIdentifier.toString().trim()
     : "";
