@@ -36,8 +36,8 @@ export default async function QrRedirectPage({ params }: Props) {
     //   );
     // }
 if (!response.ok) {
-  console.log(`[QR] API Failed - Status: ${response.status}`);
-  return redirect("/");
+  console.log(`[QR] API Failed - Status: ${response.status}. Falling back to /temples/${safeId}`);
+  return redirect(`/temples/${safeId}`);
 }
     const json = await response.json();
     const temple = json?.data;
@@ -52,8 +52,8 @@ if (!response.ok) {
     //   );
     // }
 if (!temple) {
-  console.log(`[QR] No temple data, JSON: ${JSON.stringify(json)}`);
-  return redirect("/");
+  console.log(`[QR] No temple data, JSON: ${JSON.stringify(json)}. Falling back to /temples/${safeId}`);
+  return redirect(`/temples/${safeId}`);
 }
     if (temple.urlType === "subdomain" && temple.subdomain) {
       const headersList = await headers();
@@ -99,7 +99,8 @@ if (!temple) {
     return redirect(`/temples/${slug}`);
    } catch (error: any) {
   console.error("QR redirect failed", error);
-  return redirect("/");
+  console.log(`[QR] Catch error. Falling back to /temples/${safeId}`);
+  return redirect(`/temples/${safeId}`);
 }
   //catch (error: any) {
   //   console.error("QR redirect failed", error);
