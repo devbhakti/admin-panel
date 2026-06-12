@@ -142,6 +142,9 @@ export const deleteDonation = async (req: Request, res: Response) => {
     }
 };
 
+
+
+
 export const createDonation = async (req: Request, res: Response) => {
     try {
         const {
@@ -183,24 +186,22 @@ export const createDonation = async (req: Request, res: Response) => {
             return res.status(404).json({ success: false, message: "Temple not found" });
         }
 
-        const commissionData = await getCommissionForAmount(
-            Number(amount),
-            SlabType.GLOBAL,
-            undefined,
-            CommissionCategory.DONATION
-        );
+        // ✅ Donation commission calculation (2%)
+        const DONATION_COMMISSION_RATE = 0.02;
+        const templeAmount = Number(amount);
+        const commissionAmount = templeAmount * DONATION_COMMISSION_RATE;
+        const grossAmount = templeAmount + commissionAmount;
 
-        const commissionAmount = commissionData.totalCommission || 0;
-        const netEarning = Number(amount);
         const displayId = await generateDonationDisplayId();
 
+        // 1️⃣ Create donation record
         const donation = await prisma.donation.create({
             data: {
                 displayId,
                 templeId,
-                amount: Number(amount),
+                amount: templeAmount,
                 commissionAmount,
-                netEarning,
+                netEarning: templeAmount,
                 donorName,
                 donorPhone,
                 donorEmail,
@@ -215,13 +216,29 @@ export const createDonation = async (req: Request, res: Response) => {
             }
         });
 
+        // 2️⃣ Create ledger entry for transaction list (if status is SUCCESS)
+        if (status === "SUCCESS") {
+            await prisma.templeLedger.create({
+                data: {
+                    templeId: templeId,
+                    amount: templeAmount,           // Net (temple gets)
+                    grossAmount: grossAmount,        // Gross (devotee paid)
+                    commission: commissionAmount,    // Platform commission (2%)
+                    type: "DONATION_EARNING",
+                    sourceId: donation.id,
+                    description: `Donation from ${donorName || donorPhone} of ₹${templeAmount}`,
+                    status: "COMPLETED"
+                }
+            });
+            console.log(`✅ Ledger entry created for donation ${donation.id}`);
+        }
+
         res.status(200).json({ success: true, data: donation, message: "Donation created successfully" });
     } catch (error: any) {
         console.error("Create Donation Error:", error);
         res.status(500).json({ success: false, message: error.message });
     }
 };
-
 export const downloadDonationsExcel = async (req: Request, res: Response) => {
     try {
         const lang = (req.headers['x-lang'] as string) || (req.query.lang as string) || 'en';

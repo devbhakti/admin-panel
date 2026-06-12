@@ -38,7 +38,15 @@ export const getAllPoojas = async (req: Request, res: Response) => {
         const where: any = {};
         if (poojaId) where.id = String(poojaId);
         if (isMaster !== undefined) where.isMaster = isMaster === 'true';
-        if (templeId) where.templeId = String(templeId);
+        if (templeId) {
+            if (templeId === 'null') {
+                where.templeId = null;
+            } else if (templeId === 'not_null') {
+                where.templeId = { not: null };
+            } else {
+                where.templeId = String(templeId);
+            }
+        }
         if (search) {
             where.OR = [
                 { name: { path: ['en'], string_contains: String(search) } },
@@ -189,7 +197,7 @@ export const createPooja = async (req: Request, res: Response) => {
                 ),
                 templeId: (templeId && templeId !== 'null') ? String(templeId) : null,
                 isMaster: isMaster === 'true' || isMaster === true,
-                masterPoojaId: masterPoojaId || null,
+                masterPoojaId: (masterPoojaId && masterPoojaId !== 'null' && masterPoojaId !== 'undefined' && masterPoojaId !== '') ? String(masterPoojaId) : null,
                 categoryId: (categoryId && categoryId !== 'null') ? String(categoryId) : null,
                 categoryIds: safeParse(categoryIds, []),
                 packages: safeParse(packages),
@@ -227,7 +235,8 @@ export const updatePooja = async (req: Request, res: Response) => {
             packages,
             faqs,
             templeDetails_en, templeDetails_hi, templeDetails_mr,
-            categoryId, categoryIds
+            categoryId, categoryIds,
+            masterPoojaId
         } = req.body;
 
         // Validate temple exists if templeId is provided
@@ -272,8 +281,9 @@ export const updatePooja = async (req: Request, res: Response) => {
                 safeParse(processSteps_hi, []),
                 safeParse(processSteps_mr, [])
             ),
-            templeId: (templeId && templeId !== 'null') ? String(templeId) : undefined,
-            categoryId: (categoryId && categoryId !== 'null') ? String(categoryId) : undefined,
+            templeId: templeId !== undefined ? ((templeId === 'null' || !templeId) ? null : String(templeId)) : undefined,
+            masterPoojaId: masterPoojaId !== undefined ? ((masterPoojaId === 'null' || masterPoojaId === 'undefined' || !masterPoojaId) ? null : String(masterPoojaId)) : undefined,
+            categoryId: categoryId !== undefined ? ((categoryId === 'null' || !categoryId) ? null : String(categoryId)) : undefined,
             categoryIds: categoryIds !== undefined ? safeParse(categoryIds, []) : undefined,
             packages: safeParse(packages),
             faqs: safeParse(faqs)

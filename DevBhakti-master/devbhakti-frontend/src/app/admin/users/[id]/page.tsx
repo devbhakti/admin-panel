@@ -340,21 +340,21 @@ export default function DevoteeDetailPage() {
                         <div className="bg-white p-2 sm:p-3 rounded-2xl shadow-sm border border-slate-100 overflow-x-auto">
                             <TabsList className="flex w-fit bg-slate-50/50 p-1 min-w-max">
                                 {user.role !== 'SELLER' && (
-                                    <TabsTrigger value="bookings" className="data-[state=active]:bg-white data-[state=active]:shadow-sm px-2 sm:px-4 font-bold whitespace-nowrap text-xs sm:text-sm">
+                                    <TabsTrigger value="bookings" className="data-[state=active]:bg-primary data-[state=active]:text-white rounded-full transition-all duration-300 px-2 sm:px-4 font-bold whitespace-nowrap text-xs sm:text-sm">
                                         <History className="w-3.5 h-3.5 sm:w-4 sm:h-4 mr-1 sm:mr-2" />
                                         <span className="hidden sm:inline">Bookings</span>
                                         <span className="sm:hidden">Bkg</span>
                                         ({(user.bookings || []).length})
                                     </TabsTrigger>
                                 )}
-                                <TabsTrigger value="orders" className="data-[state=active]:bg-white data-[state=active]:shadow-sm px-2 sm:px-4 font-bold whitespace-nowrap text-xs sm:text-sm">
+                                <TabsTrigger value="orders" className="data-[state=active]:bg-primary data-[state=active]:text-white rounded-full transition-all duration-300 px-2 sm:px-4 font-bold whitespace-nowrap text-xs sm:text-sm">
                                     <ShoppingBag className="w-3.5 h-3.5 sm:w-4 sm:h-4 mr-1 sm:mr-2" />
                                     <span className="hidden sm:inline">Orders</span>
                                     <span className="sm:hidden">Ord</span>
                                     ({(user.orders || []).length})
                                 </TabsTrigger>
                                 {(user.role === 'DEVOTEE' || user.role === 'INSTITUTION') && (
-                                    <TabsTrigger value="donations" className="data-[state=active]:bg-white data-[state=active]:shadow-sm px-2 sm:px-4 font-bold whitespace-nowrap text-xs sm:text-sm">
+                                    <TabsTrigger value="donations" className="data-[state=active]:bg-primary data-[state=active]:text-white rounded-full transition-all duration-300 px-2 sm:px-4 font-bold whitespace-nowrap text-xs sm:text-sm">
                                         <Heart className="w-3.5 h-3.5 sm:w-4 sm:h-4 mr-1 sm:mr-2" />
                                         <span className="hidden sm:inline">Donations</span>
                                         <span className="sm:hidden">Don</span>
@@ -363,13 +363,13 @@ export default function DevoteeDetailPage() {
                                 )}
                                 {(user.role === 'SELLER' || user.role === 'INSTITUTION') && (
                                     <>
-                                        <TabsTrigger value="inventory" className="data-[state=active]:bg-white data-[state=active]:shadow-sm px-2 sm:px-4 font-bold whitespace-nowrap text-xs sm:text-sm">
+                                        <TabsTrigger value="inventory" className="data-[state=active]:bg-primary data-[state=active]:text-white rounded-full transition-all duration-300 px-2 sm:px-4 font-bold whitespace-nowrap text-xs sm:text-sm">
                                             <Package className="w-3.5 h-3.5 sm:w-4 sm:h-4 mr-1 sm:mr-2" />
                                             <span className="hidden sm:inline">Products</span>
                                             <span className="sm:hidden">Prd</span>
                                             ({(user.sellerProfile?.products || user.temple?.products || []).length})
                                         </TabsTrigger>
-                                        <TabsTrigger value="withdrawals" className="data-[state=active]:bg-white data-[state=active]:shadow-sm px-2 sm:px-4 font-bold whitespace-nowrap text-xs sm:text-sm">
+                                        <TabsTrigger value="withdrawals" className="data-[state=active]:bg-primary data-[state=active]:text-white rounded-full transition-all duration-300 px-2 sm:px-4 font-bold whitespace-nowrap text-xs sm:text-sm">
                                             <Wallet className="w-3.5 h-3.5 sm:w-4 sm:h-4 mr-1 sm:mr-2" />
                                             <span className="hidden sm:inline">Withdrawals</span>
                                             <span className="sm:hidden">Wth</span>

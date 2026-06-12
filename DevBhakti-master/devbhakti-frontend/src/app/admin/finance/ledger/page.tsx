@@ -21,12 +21,7 @@ import {
     TrendingUp,
     FileText
 } from "lucide-react";
-import {
-    Dialog,
-    DialogContent,
-    DialogHeader,
-    DialogTitle,
-} from "@/components/ui/dialog";
+
 import {
     Tooltip,
     TooltipContent,
@@ -65,7 +60,7 @@ function LedgerContent() {
     const [isMoreLoading, setIsMoreLoading] = useState(false);
     const [transactions, setTransactions] = useState<any[]>([]);
     const [platformSummary, setPlatformSummary] = useState<any>(null);
-    const [searchTerm, setSearchTerm] = useState("");
+   
     const [statusFilter, setStatusFilter] = useState("ALL");
     const [typeFilter, setTypeFilter] = useState("ALL");
     const [dateRangeSelection, setDateRangeSelection] = useState<any>({ from: undefined, to: undefined });
@@ -82,35 +77,7 @@ function LedgerContent() {
     const sellerId = searchParams.get('sellerId');
     const [merchantName, setMerchantName] = useState<string | null>(null);
 
-    // Merchant detail modal
-    const [selectedMerchant, setSelectedMerchant] = useState<{ id: string; name: string; type: 'temple' | 'seller' } | null>(null);
-    const [merchantTxs, setMerchantTxs] = useState<any[]>([]);
-    const [merchantLoading, setMerchantLoading] = useState(false);
-
-    const openMerchantModal = async (id: string, name: string, type: 'temple' | 'seller') => {
-        setSelectedMerchant({ id, name, type });
-        setMerchantLoading(true);
-        setMerchantTxs([]);
-        try {
-            const res = await fetchAllTransactionsAdmin({
-                page: 1,
-                limit: 100,
-                ...(type === 'temple' ? { templeId: id } : { sellerId: id })
-            });
-            if (res.success) setMerchantTxs(res.data);
-        } catch (e) {
-            console.error(e);
-        } finally {
-            setMerchantLoading(false);
-        }
-    };
-
-    const merchantSummary = {
-        total: merchantTxs.length,
-        gross: merchantTxs.reduce((s, t) => s + (t.grossAmount || 0), 0),
-        commission: merchantTxs.reduce((s, t) => s + (t.commission || 0), 0),
-        net: merchantTxs.reduce((s, t) => s + (t.amount || 0), 0),
-    };
+    const [searchTerm, setSearchTerm] = useState("");
 
     const loadSummary = async () => {
         try {
@@ -145,7 +112,6 @@ function LedgerContent() {
                 setTotalTransactions(transRes.pagination.total);
                 setHasMore(transRes.pagination.page < transRes.pagination.totalPages);
 
-                // Update Merchant Name if filtering
                 if (templeId || sellerId) {
                     const firstTx = transRes.data[0];
                     if (firstTx) {
@@ -483,11 +449,7 @@ function LedgerContent() {
                                         <td className="py-6">
                                             {tx.templeId || tx.sellerId ? (
                                                 <button
-                                                    onClick={() => openMerchantModal(
-                                                        tx.templeId || tx.sellerId,
-                                                        tx.temple?.name || tx.seller?.name || "Merchant",
-                                                        tx.templeId ? 'temple' : 'seller'
-                                                    )}
+                                                    onClick={() => router.push(`/admin/finance/merchant/${tx.templeId || tx.sellerId}`)}
                                                     className="flex items-center gap-2 hover:text-primary transition-colors group/merchant text-left"
                                                 >
                                                     <Building2 className="w-3.5 h-3.5 text-slate-400 group-hover/merchant:text-primary" />
@@ -528,113 +490,6 @@ function LedgerContent() {
                 </div>
             </Card>
 
-            {hasMore && (
-                <div className="flex justify-center pt-8">
-                    <Button
-                        variant="outline"
-                        onClick={handleLoadMore}
-                        disabled={isMoreLoading}
-                        className="rounded-2xl px-12 py-6 border-slate-200 hover:bg-slate-50 text-slate-600 font-bold shadow-sm"
-                    >
-                        {isMoreLoading ? <><Loader2 className="w-4 h-4 animate-spin mr-2" /> Loading...</> : "Load More Transactions"}
-                    </Button>
-                </div>
-            )}
-
-            {/* Merchant Detail Modal */}
-            <Dialog open={!!selectedMerchant} onOpenChange={(open) => !open && setSelectedMerchant(null)}>
-                <DialogContent className="max-w-4xl max-h-[90vh] overflow-hidden flex flex-col rounded-[2rem] border-none shadow-2xl p-0">
-                    <DialogHeader className="px-8 pt-8 pb-4 border-b border-slate-100">
-                        <div className="flex items-start justify-between">
-                            <div>
-                                <p className="text-[11px] font-extrabold text-slate-400 uppercase tracking-widest mb-1">
-                                    {selectedMerchant?.type === 'temple' ? 'Temple' : 'Seller'} Ledger
-                                </p>
-                                <DialogTitle className="text-2xl font-bold text-slate-900 flex items-center gap-2">
-                                    <Building2 className="w-6 h-6 text-primary" />
-                                    {selectedMerchant?.name}
-                                </DialogTitle>
-                            </div>
-                        </div>
-
-                        {/* Summary Stats */}
-                        {!merchantLoading && (
-                            <div className="grid grid-cols-4 gap-3 mt-5">
-                                {[
-                                    { label: "Transactions", value: merchantSummary.total, isCurrency: false, color: "text-slate-900" },
-                                    { label: "Gross Volume", value: merchantSummary.gross, color: "text-slate-700" },
-                                    { label: "Commission", value: merchantSummary.commission, color: "text-amber-600" },
-                                    { label: "Net Earned", value: merchantSummary.net, color: "text-emerald-600" },
-                                ].map((s, i) => (
-                                    <div key={i} className="bg-slate-50 p-4 rounded-2xl">
-                                        <p className="text-[10px] font-extrabold text-slate-400 uppercase tracking-widest mb-1">{s.label}</p>
-                                        <p className={`text-xl font-extrabold ${s.color} flex items-center gap-0.5`}>
-                                            {s.isCurrency !== false && <IndianRupee className="w-4 h-4 opacity-60" strokeWidth={3} />}
-                                            {s.value.toLocaleString()}
-                                        </p>
-                                    </div>
-                                ))}
-                            </div>
-                        )}
-                    </DialogHeader>
-
-                    <div className="overflow-y-auto flex-1 px-8 py-4">
-                        {merchantLoading ? (
-                            <div className="flex flex-col items-center justify-center py-20 gap-3">
-                                <Loader2 className="w-8 h-8 animate-spin text-primary" />
-                                <p className="text-slate-500 font-medium">Loading transactions...</p>
-                            </div>
-                        ) : merchantTxs.length === 0 ? (
-                            <div className="flex flex-col items-center justify-center py-20 gap-3 text-slate-400">
-                                <FileText className="w-10 h-10" />
-                                <p className="font-medium">No transactions found for this merchant.</p>
-                            </div>
-                        ) : (
-                            <table className="w-full text-sm">
-                                <thead>
-                                    <tr className="text-[10px] uppercase tracking-widest text-slate-400 font-extrabold border-b border-slate-100">
-                                        <th className="py-3 text-left">Date</th>
-                                        <th className="py-3 text-left">Description</th>
-                                        <th className="py-3 text-center">Type</th>
-                                        <th className="py-3 text-center">Status</th>
-                                        <th className="py-3 text-right">Gross</th>
-                                        <th className="py-3 text-right">Comm.</th>
-                                        <th className="py-3 text-right">Net</th>
-                                    </tr>
-                                </thead>
-                                <tbody className="divide-y divide-slate-50">
-                                    {merchantTxs.map((tx) => (
-                                        <tr key={tx.id} className="hover:bg-slate-50 transition-colors">
-                                            <td className="py-3 text-slate-500 text-[11px] font-bold whitespace-nowrap pr-4">
-                                                {format(new Date(tx.createdAt), "dd MMM yy")}
-                                            </td>
-                                            <td className="py-3 font-semibold text-slate-800 max-w-[180px] truncate">{tx.description}</td>
-                                            <td className="py-3 text-center">
-                                                <Badge variant="outline" className="rounded-full px-2 py-0.5 text-[9px] font-extrabold uppercase">
-                                                    {tx.type?.replace('_', ' ')}
-                                                </Badge>
-                                            </td>
-                                            <td className="py-3 text-center">
-                                                <Badge className={cn(
-                                                    "rounded-full px-2 py-0.5 text-[9px] font-bold border",
-                                                    tx.status === "COMPLETED" ? "bg-emerald-50 text-emerald-700 border-emerald-200" :
-                                                    tx.status === "PENDING" ? "bg-amber-50 text-amber-700 border-amber-200" :
-                                                    "bg-red-50 text-red-700 border-red-200"
-                                                )}>
-                                                    {tx.status}
-                                                </Badge>
-                                            </td>
-                                            <td className="py-3 text-right text-slate-500 font-bold">₹{(tx.grossAmount || 0).toLocaleString()}</td>
-                                            <td className="py-3 text-right text-amber-600 font-bold">₹{(tx.commission || 0).toLocaleString()}</td>
-                                            <td className="py-3 text-right text-emerald-700 font-extrabold">₹{(tx.amount || 0).toLocaleString()}</td>
-                                        </tr>
-                                    ))}
-                                </tbody>
-                            </table>
-                        )}
-                    </div>
-                </DialogContent>
-            </Dialog>
         </div>
     );
 }

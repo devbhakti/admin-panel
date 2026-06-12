@@ -4,7 +4,7 @@ import React, { useState, useEffect } from "react";
 import { useRouter, useParams } from "next/navigation";
 import { ArrowLeft } from "lucide-react";
 import { Button } from "@/components/ui/button";
-import { updatePoojaAdmin, fetchAllTemplesAdmin, fetchPoojaCategoriesAdmin, fetchPoojaByIdAdmin } from "@/api/adminController";
+import { updatePoojaAdmin, fetchAllTemplesAdmin, fetchPoojaCategoriesAdmin, fetchPoojaByIdAdmin, fetchAllPoojasAdmin } from "@/api/adminController";
 import { useToast } from "@/hooks/use-toast";
 import { PoojaForm } from "@/components/admin/poojas/PoojaForm";
 
@@ -16,6 +16,7 @@ export default function EditPoojaPage() {
     
     const [temples, setTemples] = useState<any[]>([]);
     const [availableCategories, setAvailableCategories] = useState<any[]>([]);
+    const [masterTemplates, setMasterTemplates] = useState<any[]>([]);
     const [poojaData, setPoojaData] = useState<any>(null);
     const [isSubmitting, setIsSubmitting] = useState(false);
     const [isLoading, setIsLoading] = useState(true);
@@ -49,12 +50,12 @@ export default function EditPoojaPage() {
             const poojaName = poojaRes.data.name?.en || poojaRes.data.name_en || "Edit Pooja";
             window.dispatchEvent(new CustomEvent('updateBreadcrumb', { detail: `Edit: ${poojaName}` }));
 
-            // Fetch auxiliary data (temples, categories) and don't fail the whole page if these fail
-            // Some staff members might not have permissions for these specifically
+            // Fetch auxiliary data (temples, categories, master templates)
             try {
-                const [templesRes, categoriesRes] = await Promise.all([
+                const [templesRes, categoriesRes, masterRes] = await Promise.all([
                     fetchAllTemplesAdmin().catch(e => { console.warn('Could not load temples:', e); return []; }),
-                    fetchPoojaCategoriesAdmin({ status: "APPROVED" }).catch(e => { console.warn('Could not load categories:', e); return { success: false, data: [] }; })
+                    fetchPoojaCategoriesAdmin({ status: "APPROVED" }).catch(e => { console.warn('Could not load categories:', e); return { success: false, data: [] }; }),
+                    fetchAllPoojasAdmin({ isMaster: true, lang: 'raw' }).catch(e => { console.warn('Could not load master templates:', e); return []; })
                 ]);
 
                 if (Array.isArray(templesRes)) {
@@ -67,9 +68,12 @@ export default function EditPoojaPage() {
                 if (categoriesRes && categoriesRes.success) {
                     setAvailableCategories(categoriesRes.data);
                 }
+
+                if (Array.isArray(masterRes)) {
+                    setMasterTemplates(masterRes);
+                }
             } catch (auxError) {
                 console.warn('Error loading auxiliary data:', auxError);
-                // We continue since the main pooja data is loaded
             }
 
         } catch (error) {
@@ -118,6 +122,7 @@ export default function EditPoojaPage() {
                 initialData={poojaData}
                 temples={temples}
                 availableCategories={availableCategories}
+                masterTemplates={masterTemplates}
                 onSubmit={handleSubmit}
                 isLoading={isSubmitting}
             />

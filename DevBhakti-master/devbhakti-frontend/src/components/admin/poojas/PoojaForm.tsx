@@ -40,6 +40,7 @@ interface PoojaFormProps {
     initialData?: any;
     temples: any[];
     availableCategories: any[];
+    masterTemplates?: any[];
     onSubmit: (formData: FormData) => Promise<void>;
     isLoading?: boolean;
 }
@@ -60,6 +61,7 @@ export const PoojaForm: React.FC<PoojaFormProps> = ({
     initialData,
     temples,
     availableCategories,
+    masterTemplates = [],
     onSubmit,
     isLoading = false
 }) => {
@@ -67,10 +69,12 @@ export const PoojaForm: React.FC<PoojaFormProps> = ({
     // Local language tab — independent of global app language
     const [activeTab, setActiveTab] = useState<Language>("en");
 
+    const [poojaType, setPoojaType] = useState<string>("template");
     const [formData, setFormData] = useState({
         price: 0,
         time: "",
         templeId: "",
+        masterPoojaId: "",
         categoryId: "",
         categoryIds: [] as string[],
         category_en: "",
@@ -94,7 +98,7 @@ export const PoojaForm: React.FC<PoojaFormProps> = ({
     const [imagePreview, setImagePreview] = useState<string>("");
     const [showCropper, setShowCropper] = useState(false);
     const [tempImage, setTempImage] = useState<string | null>(null);
-    const isMaster = formData.templeId === "platform";
+    const isMaster = poojaType === "template";
 
     useEffect(() => {
         if (mode === "edit" && initialData) {
@@ -137,6 +141,7 @@ export const PoojaForm: React.FC<PoojaFormProps> = ({
                 price: initialData.price || 0,
                 time: initialData.time || "",
                 templeId: initialData.isMaster ? "platform" : (initialData.templeId || ""),
+                masterPoojaId: initialData.masterPoojaId || "",
                 categoryId: initialData.categoryId || "",
                 categoryIds: initialData.categoryIds || (initialData.categoryId ? [initialData.categoryId] : []),
                 category_en: getL(initialData.category, "en"),
@@ -170,6 +175,13 @@ export const PoojaForm: React.FC<PoojaFormProps> = ({
                 slug: initialData.slug || ""
             });
 
+            // Resolve pooja type
+            let pType = "template";
+            if (!initialData.isMaster) {
+                pType = initialData.templeId ? "temple" : "platform";
+            }
+            setPoojaType(pType);
+
             const parseLocalizedJson = (val: any) => {
                 if (!val) return { en: [], hi: [], mr: [] };
                 if (typeof val === 'object' && (val.en || val.hi || val.mr)) {
@@ -202,8 +214,117 @@ export const PoojaForm: React.FC<PoojaFormProps> = ({
             }
         } else if (mode === "create") {
             setFormData(prev => ({ ...prev, templeId: "" }));
+            setPoojaType("template");
         }
     }, [mode, initialData, temples]);
+
+    const handleTemplateSelect = (templateId: string) => {
+        handleInputChange("masterPoojaId", templateId);
+        if (!templateId) return;
+
+        const template = masterTemplates.find(t => t.id === templateId);
+        if (!template) return;
+
+        // Auto-fill form fields from the selected template
+        const parseArray = (val: any) => {
+            if (!val) return [];
+            if (Array.isArray(val)) return val;
+            try {
+                return JSON.parse(val);
+            } catch (e) {
+                return [];
+            }
+        };
+
+        const getL = (field: any, lang: string, fallback: any = "") => {
+            if (!field) return fallback;
+            if (typeof field === "string") {
+                try {
+                    const parsed = JSON.parse(field);
+                    if (typeof parsed === "object" && parsed !== null) {
+                        return parsed[lang] !== undefined ? parsed[lang] : fallback;
+                    }
+                } catch (e) { }
+                if (lang === "en") return field;
+                return fallback;
+            }
+            if (typeof field === "object") {
+                if (field[lang] !== undefined) return field[lang];
+                if (lang === "en" && !field.hi && !field.mr) return field;
+                return fallback;
+            }
+            return fallback;
+        };
+
+        setFormData(prev => ({
+            ...prev,
+            price: template.price || prev.price,
+            time: template.time || prev.time,
+            categoryId: template.categoryId || prev.categoryId,
+            categoryIds: template.categoryIds || (template.categoryId ? [template.categoryId] : prev.categoryIds),
+            category_en: getL(template.category, "en") || prev.category_en,
+            category_hi: getL(template.category, "hi") || prev.category_hi,
+            category_mr: getL(template.category, "mr") || prev.category_mr,
+            name: {
+                en: getL(template.name, "en") || prev.name.en,
+                hi: getL(template.name, "hi") || prev.name.hi,
+                mr: getL(template.name, "mr") || prev.name.mr
+            },
+            about: {
+                en: getL(template.about, "en") || prev.about.en,
+                hi: getL(template.about, "hi") || prev.about.hi,
+                mr: getL(template.about, "mr") || prev.about.mr
+            },
+            duration: {
+                en: getL(template.duration, "en") || prev.duration.en,
+                hi: getL(template.duration, "hi") || prev.duration.hi,
+                mr: getL(template.duration, "mr") || prev.duration.mr
+            },
+            description: {
+                en: parseArray(getL(template.description, "en", [])) || prev.description.en,
+                hi: parseArray(getL(template.description, "hi", [])) || prev.description.hi,
+                mr: parseArray(getL(template.description, "mr", [])) || prev.description.mr
+            },
+            bullets: {
+                en: parseArray(getL(template.bullets, "en", [])) || prev.bullets.en,
+                hi: parseArray(getL(template.bullets, "hi", [])) || prev.bullets.hi,
+                mr: parseArray(getL(template.bullets, "mr", [])) || prev.bullets.mr
+            }
+        }));
+
+        const parseLocalizedJsonArray = (val: any) => {
+            if (!val) return [];
+            if (typeof val === 'object' && (val.en || val.hi || val.mr)) {
+                return parseArray(val.en || val.hi || val.mr);
+            }
+            return parseArray(val);
+        };
+        const parseLocalizedJson = (val: any) => {
+            if (!val) return { en: [], hi: [], mr: [] };
+            if (typeof val === 'object' && (val.en || val.hi || val.mr)) {
+                return {
+                    en: parseArray(val.en),
+                    hi: parseArray(val.hi),
+                    mr: parseArray(val.mr)
+                };
+            }
+            const parsed = parseArray(val);
+            return { en: parsed, hi: [], mr: [] };
+        };
+
+        if (template.packages) {
+            setPackages(parseLocalizedJsonArray(template.packages));
+        }
+        if (template.faqs) {
+            setFaqs(parseLocalizedJson(template.faqs));
+        }
+        if (template.image) {
+            const imageUrl = template.image.startsWith('http')
+                ? template.image
+                : `${API_URL.replace('/api', '')}${template.image}`;
+            setImagePreview(imageUrl);
+        }
+    };
 
     // Handlers
     const handleInputChange = (field: string, value: any, lang?: Language) => {
@@ -311,11 +432,14 @@ export const PoojaForm: React.FC<PoojaFormProps> = ({
         e.preventDefault();
         const fd = new FormData();
 
+        const isMasterVal = poojaType === "template";
+
         // Basic fields
         fd.append("price", formData.price.toString());
         fd.append("time", formData.time);
-        fd.append("isMaster", isMaster.toString());
-        fd.append("templeId", isMaster ? "null" : formData.templeId);
+        fd.append("isMaster", isMasterVal.toString());
+        fd.append("templeId", poojaType === "temple" ? formData.templeId : "null");
+        fd.append("masterPoojaId", (poojaType !== "template" && formData.masterPoojaId) ? formData.masterPoojaId : "null");
 
         // Localized Fields
         Object.entries(formData.name).forEach(([lang, val]) => fd.append(`name_${lang}`, val));
@@ -371,22 +495,68 @@ export const PoojaForm: React.FC<PoojaFormProps> = ({
                             <div className="bg-white border rounded-2xl p-6 shadow-sm space-y-6">
                                 <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                                     <div className="space-y-2.5">
-                                        <Label className="text-sm font-bold text-slate-700">{t('admin_pooja_form.labels.assigned_temple')} <span className="text-destructive">*</span></Label>
+                                        <Label className="text-sm font-bold text-slate-700">Pooja Type <span className="text-destructive">*</span></Label>
                                         <select
-                                            className="w-full h-12 px-4 rounded-xl border border-slate-200 bg-white text-sm focus:ring-2 focus:ring-primary/20 outline-none disabled:opacity-50 transition-all font-medium"
-                                            value={formData.templeId}
-                                            onChange={e => handleInputChange("templeId", e.target.value)}
-                                            required={!isMaster}
+                                            className="w-full h-12 px-4 rounded-xl border border-slate-200 bg-white text-sm focus:ring-2 focus:ring-primary/20 outline-none transition-all font-medium"
+                                            value={poojaType}
+                                            onChange={e => {
+                                                const val = e.target.value;
+                                                setPoojaType(val);
+                                                if (val === "template") {
+                                                    handleInputChange("templeId", "platform");
+                                                    handleInputChange("masterPoojaId", "");
+                                                } else if (val === "platform") {
+                                                    handleInputChange("templeId", "");
+                                                } else {
+                                                    handleInputChange("templeId", "");
+                                                }
+                                            }}
+                                            disabled={mode === "edit"}
                                         >
-                                            <option value="">{t('admin_pooja_form.placeholders.select_temple')}</option>
+                                            <option value="template">Template</option>
                                             <option value="platform">DevBhakti Platform Pooja</option>
-                                            {temples.map(t => (
-                                                <option key={t.id} value={t.id}>
-                                                    {parseLocalizedValue(t[`name_${activeTab}`] || t.name_en || t.name, activeTab) || 'Unnamed'}
-                                                </option>
-                                            ))}
+                                            <option value="temple">Temple Pooja</option>
                                         </select>
                                     </div>
+
+                                    {poojaType === "temple" && (
+                                        <div className="space-y-2.5">
+                                            <Label className="text-sm font-bold text-slate-700">{t('admin_pooja_form.labels.assigned_temple')} <span className="text-destructive">*</span></Label>
+                                            <select
+                                                className="w-full h-12 px-4 rounded-xl border border-slate-200 bg-white text-sm focus:ring-2 focus:ring-primary/20 outline-none disabled:opacity-50 transition-all font-medium"
+                                                value={formData.templeId}
+                                                onChange={e => handleInputChange("templeId", e.target.value)}
+                                                required={poojaType === "temple"}
+                                            >
+                                                <option value="">{t('admin_pooja_form.placeholders.select_temple')}</option>
+                                                {temples.map(t => (
+                                                    <option key={t.id} value={t.id}>
+                                                        {parseLocalizedValue(t[`name_${activeTab}`] || t.name_en || t.name, activeTab) || 'Unnamed'}
+                                                    </option>
+                                                ))}
+                                            </select>
+                                        </div>
+                                    )}
+
+                                    {(poojaType === "platform" || poojaType === "temple") && (
+                                        <div className="space-y-2.5">
+                                            <Label className="text-sm font-bold text-slate-700">Link to Master Template</Label>
+                                            <select
+                                                className="w-full h-12 px-4 rounded-xl border border-slate-200 bg-white text-sm focus:ring-2 focus:ring-primary/20 outline-none transition-all font-medium"
+                                                value={formData.masterPoojaId || ""}
+                                                onChange={e => handleTemplateSelect(e.target.value)}
+                                                disabled={mode === "edit"}
+                                            >
+                                                <option value="">-- Standalone (No Template) --</option>
+                                                {masterTemplates.map(t => (
+                                                    <option key={t.id} value={t.id}>
+                                                        {parseLocalizedValue(t.name, activeTab)}
+                                                    </option>
+                                                ))}
+                                            </select>
+                                            <p className="text-[10px] text-slate-400 font-medium">Selecting a master template will automatically pre-fill details from it.</p>
+                                        </div>
+                                    )}
 
                                     <div className="space-y-2.5">
                                         <Label className="text-sm font-bold text-slate-700">{t('admin_pooja_form.labels.price')} <span className="text-destructive">*</span></Label>

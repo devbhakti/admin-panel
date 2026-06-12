@@ -4,7 +4,7 @@ import React, { useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
 import { ArrowLeft } from "lucide-react";
 import { Button } from "@/components/ui/button";
-import { createPoojaAdmin, fetchAllTemplesAdmin, fetchPoojaCategoriesAdmin } from "@/api/adminController";
+import { createPoojaAdmin, fetchAllTemplesAdmin, fetchPoojaCategoriesAdmin, fetchAllPoojasAdmin } from "@/api/adminController";
 import { useToast } from "@/hooks/use-toast";
 import { PoojaForm } from "@/components/admin/poojas/PoojaForm";
 
@@ -13,12 +13,23 @@ export default function CreatePoojaPage() {
     const { toast } = useToast();
     const [temples, setTemples] = useState<any[]>([]);
     const [availableCategories, setAvailableCategories] = useState<any[]>([]);
+    const [masterTemplates, setMasterTemplates] = useState<any[]>([]);
     const [isSubmitting, setIsSubmitting] = useState(false);
 
     useEffect(() => {
         loadTemples();
         loadCategories();
+        loadMasterTemplates();
     }, []);
+
+    const loadMasterTemplates = async () => {
+        try {
+            const data = await fetchAllPoojasAdmin({ isMaster: true, lang: 'raw' });
+            setMasterTemplates(data || []);
+        } catch (error) {
+            console.error("Failed to load master templates", error);
+        }
+    };
 
     const loadCategories = async () => {
         try {
@@ -77,6 +88,7 @@ export default function CreatePoojaPage() {
                 mode="create"
                 temples={temples}
                 availableCategories={availableCategories}
+                masterTemplates={masterTemplates}
                 onSubmit={handleSubmit}
                 isLoading={isSubmitting}
             />
