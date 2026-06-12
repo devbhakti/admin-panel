@@ -40,23 +40,13 @@ export default function EditTemplePage() {
             ]);
             const rawPoojas = Array.isArray(poojasResponse) ? poojasResponse : (poojasResponse.data || []);
             const allAvailablePoojas = getDeduplicatedPoojas(rawPoojas);
-
+            // Filter to only master poojas (templates)
+            const masterPoojas = allAvailablePoojas.filter(pooja => pooja.isMaster);
+            
             if (templeRes.success && templeRes.data) {
-                // Merge master poojas + temple-specific poojas not in master list
-                // Merge deduplicated general poojas + temple-specific poojas
-                const templePoojas: any[] = templeRes.data.temple?.poojas || [];
+                // We only want to show master poojas, so we ignore temple-specific poojas that are not master.
+                setAllPoojas(masterPoojas);
                 
-                // Ensure temple's own poojas are in the list if they aren't already
-                const listIds = new Set(allAvailablePoojas.map((p: any) => p.id));
-                const listNames = new Set(allAvailablePoojas.map((p: any) => parseLocalizedValue(p.name, 'en').toLowerCase().trim()));
-                
-                const missingTemplePoojas = templePoojas.filter((p: any) => {
-                    const name = parseLocalizedValue(p.name, 'en').toLowerCase().trim();
-                    return !listIds.has(p.id) && !listNames.has(name);
-                });
-
-                setAllPoojas([...allAvailablePoojas, ...missingTemplePoojas]);
-
                 console.log('[EditTemple] Raw temple data loaded:', templeRes.data.temple?.name);
                 setTempleData(templeRes.data);
                 // Update breadcrumb
@@ -96,7 +86,9 @@ export default function EditTemplePage() {
                 toast({ title: "Success", description: "New pooja added to master list" });
                 const poojasResponse = await fetchAllPoojasAdmin({});
                 const rawPoojas = Array.isArray(poojasResponse) ? poojasResponse : (poojasResponse.data || []);
-                setAllPoojas(getDeduplicatedPoojas(rawPoojas));
+                const deduplicated = getDeduplicatedPoojas(rawPoojas);
+                const masterPoojas = deduplicated.filter(pooja => pooja.isMaster);
+                setAllPoojas(masterPoojas);
                 return res.data?.id || res.id;
             }
             return null;

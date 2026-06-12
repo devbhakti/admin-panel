@@ -90,33 +90,46 @@ export const updateWithdrawalStatus = async (req: Request, res: Response) => {
 };
 
 // Get Platform Financial Stats for Admin
+// financeController.ts - getPlatformFinanceSummary mein change karo
+
 export const getPlatformFinanceSummary = async (req: Request, res: Response) => {
-  console.log("Fetching platform finance summary...");
   try {
+    const DONATION_COMMISSION_RATE = 0.02; // 2%
+
+    // Ledger se Pooja aur Product earnings
     const ledger = await prisma.templeLedger.findMany({
-      where: {
-        status: { not: "CANCELLED" }
+      where: { 
+        status: { not: "CANCELLED" },
+        type: { in: ["POOJA_EARNING", "MARKETPLACE_EARNING"] }
       }
     });
 
-    const earnings = ledger.filter(e => e.type !== "WITHDRAWAL");
+    const totalRevenueFromLedger = ledger.reduce((sum, e) => sum + (Number(e.grossAmount) || 0), 0);
+    const totalCommissionFromLedger = ledger.reduce((sum, e) => sum + (Number(e.commission) || 0), 0);
 
-    const totalRevenue = earnings.reduce((sum: number, e: any) => sum + (Number(e.grossAmount) || 0), 0);
-    const totalCommission = earnings.reduce((sum: number, e: any) => sum + (Number(e.commission) || 0), 0);
+    // Donations - temple amount se gross calculate karo
+    const donationsData = await prisma.donation.aggregate({
+      where: { status: { in: ['COMPLETED', 'SUCCESS'] } },
+      _sum: { amount: true }
+    });
+    const templeDonationAmount = Number(donationsData._sum.amount) || 0;
+    
+    // Gross amount including commission (devotee pays)
+    const donationGrossAmount = templeDonationAmount * (1 + DONATION_COMMISSION_RATE);
+    const donationCommission = templeDonationAmount * DONATION_COMMISSION_RATE;
 
-    const totalPoojaBookings = earnings
+    // Totals
+    const totalPlatformGross = totalRevenueFromLedger + donationGrossAmount;
+    const totalPlatformCommission = totalCommissionFromLedger + donationCommission;
+
+    // Breakdown
+    const totalPoojaBookings = ledger
       .filter(e => e.type === "POOJA_EARNING")
-      .reduce((sum: number, e: any) => sum + (Number(e.grossAmount) || 0), 0);
+      .reduce((sum, e) => sum + (Number(e.grossAmount) || 0), 0);
 
-    const totalProductSales = earnings
+    const totalProductSales = ledger
       .filter(e => e.type === "MARKETPLACE_EARNING")
-      .reduce((sum: number, e: any) => sum + (Number(e.grossAmount) || 0), 0);
-
-    const totalDonations = earnings
-      .filter(e => e.type === "DONATION_EARNING")
-      .reduce((sum: number, e: any) => sum + (Number(e.grossAmount) || 0), 0);
-
-    console.log(`Calculated Summary: Volume=${totalRevenue}, Commission=${totalCommission}`);
+      .reduce((sum, e) => sum + (Number(e.grossAmount) || 0), 0);
 
     const pendingRequests = await prisma.withdrawalRequest.count({
       where: { status: "PENDING" }
@@ -130,17 +143,17 @@ export const getPlatformFinanceSummary = async (req: Request, res: Response) => 
     return res.status(200).json({
       success: true,
       data: {
-        totalPlatformGross: totalRevenue,
-        totalPlatformCommission: totalCommission,
+        totalPlatformGross,              // Devotee total paid
+        totalPlatformCommission,         // Platform earns
         activePayouts: pendingRequests,
         totalPaidOut: totalPayouts._sum.amount || 0,
         totalPoojaBookings,
         totalProductSales,
-        totalDonations
+        totalDonations: templeDonationAmount  // Temple gets
       }
     });
   } catch (error: any) {
-    console.error("Error in getPlatformFinanceSummary:", error);
+    console.error("Error:", error);
     return res.status(500).json({ success: false, message: error.message });
   }
 };

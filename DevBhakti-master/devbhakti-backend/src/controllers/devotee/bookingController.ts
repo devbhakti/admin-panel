@@ -109,6 +109,20 @@ export const createBooking = async (req: Request, res: Response) => {
                     console.warn(`[Booking] No temple-specific copy found for master "${masterId}" at temple "${requestedTempleId}". Using original pooja.`);
                 }
             }
+        } else if (!requestedTempleId && initialPooja.isMaster) {
+            // DevBhakti platform pooja booking - resolve to the platform-specific copy if one exists
+            const platformSpecificPooja = await prisma.pooja.findFirst({
+                where: {
+                    templeId: null,
+                    masterPoojaId: initialPooja.id,
+                    isMaster: false
+                },
+                include: { temple: true }
+            });
+            if (platformSpecificPooja) {
+                console.log(`[Booking] Resolved master pooja "${initialPooja.id}" → platform-specific pooja "${platformSpecificPooja.id}"`);
+                pooja = platformSpecificPooja;
+            }
         }
 
 

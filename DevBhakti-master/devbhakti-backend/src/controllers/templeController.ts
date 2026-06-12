@@ -365,6 +365,7 @@ export const getPoojaById = async (req: Request, res: Response) => {
           {
             OR: [
               { isMaster: true },
+              { templeId: null },
               {
                 temple: {
                   user: {
@@ -382,9 +383,10 @@ export const getPoojaById = async (req: Request, res: Response) => {
         templeCopies: {
           where: {
             status: true,
-            temple: {
-              user: { isVerified: true }
-            }
+            OR: [
+              { temple: { user: { isVerified: true } } },
+              { templeId: null }
+            ]
           },
           include: {
             temple: {
@@ -445,10 +447,22 @@ export const getAllPoojas = async (req: Request, res: Response) => {
     if (templeId) {
       where.templeId = String(templeId);
     } else {
-      // Global View: Deduplicate - Show Master poojas OR Standalone poojas
+      // Global View: Deduplicate - Show Master poojas (if they have at least one active copy) OR Standalone poojas
       where.OR = [
-        { isMaster: true },
-        { AND: [{ isMaster: false }, { masterPoojaId: null }] }
+        {
+          isMaster: true,
+          templeCopies: {
+            some: {
+              status: true
+            }
+          }
+        },
+        {
+          AND: [
+            { isMaster: false },
+            { masterPoojaId: null }
+          ]
+        }
       ];
     }
 

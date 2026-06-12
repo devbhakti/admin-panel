@@ -269,13 +269,26 @@ export default function ViewTemplePage() {
                                 </div>
                             </div>
                         </div>
-
-                        <div className="pb-4 flex justify-center w-full md:w-auto">
-                            <Button onClick={() => router.push(`/admin/temples/edit/${instId}`)} variant="sacred" className="bg-primary text-white shadow-md hover:bg-primary/90">
-                                <Edit2 className="w-4 h-4 mr-2" />
-                                Edit Profile
-                            </Button>
-                        </div>
+                    <div className="pb-4 flex justify-center w-full md:w-auto gap-3">
+    {/* View Ledger Button - USE temple?.id */}
+    <Button 
+        onClick={() => router.push(`/admin/finance/merchant/${temple?.id}`)} 
+        variant="outline" 
+        className="bg-primary text-white border-primary shadow-md hover:bg-primary hover:text-white transition-none">
+        <History className="w-4 h-4 mr-2" />
+        View Ledger
+    </Button>
+    
+    {/* Edit Profile Button - USE instId */}
+    <Button 
+        onClick={() => router.push(`/admin/temples/edit/${instId}`)} 
+        variant="sacred" 
+        className="bg-primary text-white shadow-md hover:bg-primary/90"
+    >
+        <Edit2 className="w-4 h-4 mr-2" />
+        Edit Profile
+    </Button>
+</div>
                     </div>
                 </div>
             </div>

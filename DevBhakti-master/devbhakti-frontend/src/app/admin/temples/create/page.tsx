@@ -29,7 +29,9 @@ export default function CreateTemplePage() {
             
             // Deduplicate by name, preferring Master poojas
             const deduplicated = getDeduplicatedPoojas(rawPoojas);
-            setAllPoojas(deduplicated);
+            // Filter to only master poojas (templates)
+            const masterPoojas = deduplicated.filter(pooja => pooja.isMaster);
+            setAllPoojas(masterPoojas);
         } catch (error) {
             console.error("Failed to load poojas");
         }

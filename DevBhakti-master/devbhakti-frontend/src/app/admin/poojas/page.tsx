@@ -13,7 +13,10 @@ import {
     Upload,
     FileSpreadsheet,
     Filter,
-    Loader2
+    Loader2,
+    LayoutTemplate,
+    Home,
+    Building2
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -53,7 +56,8 @@ function PoojasContent() {
     const [poojas, setPoojas] = useState<any[]>([]);
     const [isLoading, setIsLoading] = useState(true);
     const [searchTerm, setSearchTerm] = useState("");
-    const [activeTab, setActiveTab] = useState<'all' | 'master' | 'temple'>('all');
+    // CHANGED: Updated tab names
+    const [activeTab, setActiveTab] = useState<'templates' | 'platform' | 'temple'>('templates');
     const { toast } = useToast();
     const { hasPermission } = useAdminAuth();
 
@@ -97,9 +101,27 @@ function PoojasContent() {
                 poojaId: idParam || undefined,
                 lang: 'raw'
             };
-            if (activeTab === 'master') params.isMaster = true;
-            if (activeTab === 'temple') params.isMaster = false;
-            if (selectedTempleId !== "all") params.templeId = selectedTempleId;
+            
+            // CHANGED: Updated tab logic
+            if (activeTab === 'templates') {
+                // Only master templates (blueprints)
+                params.isMaster = true;
+                params.templeId = 'null';
+            }
+            else if (activeTab === 'platform') {
+                // Platform poojas: isMaster = false, templeId = null
+                params.isMaster = false;
+                params.templeId = 'null';
+            }
+            else if (activeTab === 'temple') {
+                // Temple poojas: isMaster = false, templeId != null
+                params.isMaster = false;
+                if (selectedTempleId !== "all") {
+                    params.templeId = selectedTempleId;
+                } else {
+                    params.templeId = 'not_null';
+                }
+            }
 
             const data = await fetchAllPoojasAdmin(params);
             setPoojas(data);
@@ -385,16 +407,16 @@ function PoojasContent() {
                     </p>
                 </div>
                 <div className="flex flex-wrap items-center gap-2">
-                    {/* <Button
+                    <Button
                         variant="outline"
                         onClick={downloadTemplate}
                         className="text-xs h-9"
                     >
                         <Download className="w-4 h-4 mr-2" />
                         Template
-                    </Button> */}
+                    </Button>
 
-                    {/* <div className="relative">
+                    <div className="relative">
                         <input
                             type="file"
                             accept=".xlsx, .xls"
@@ -410,16 +432,16 @@ function PoojasContent() {
                             {isImporting ? <Loader2 className="w-4 h-4 mr-2 animate-spin" /> : <Upload className="w-4 h-4 mr-2" />}
                             Import Excel
                         </Button>
-                    </div> */}
+                    </div>
 
-                    {/* <Button
+                    <Button
                         variant="outline"
                         onClick={handleExportExcel}
                         className="text-xs h-9"
                     >
                         <FileSpreadsheet className="w-4 h-4 mr-2" />
                         Export All
-                    </Button> */}
+                    </Button>
 
                     {hasPermission("poojas.create") && (
                         <Button
@@ -453,36 +475,44 @@ function PoojasContent() {
                 </div>
             )}
 
-            {/* Tabs */}
+            {/* CHANGED: Updated Tabs */}
             <div className="flex flex-col sm:flex-row border-b border-slate-200">
                 <button
-                    onClick={() => setActiveTab('all')}
-                    className={`px-3 md:px-4 py-2 md:py-3 text-xs md:text-sm font-medium transition-colors border-b-2 ${activeTab === 'all'
-                        ? 'border-primary text-primary'
-                        : 'border-transparent text-slate-500 hover:text-slate-700'
-                        }`}
+                    onClick={() => setActiveTab('templates')}
+                    className={`px-3 md:px-4 py-2 md:py-3 text-xs md:text-sm font-medium transition-colors border-b-2 flex items-center gap-2 ${
+                        activeTab === 'templates'
+                            ? 'border-primary text-primary'
+                            : 'border-transparent text-slate-500 hover:text-slate-700'
+                    }`}
                 >
-                    <span className="hidden sm:inline">Poojas & Sevas Management</span>
-                    <span className="sm:hidden">All Poojas</span>
+                    <LayoutTemplate className="w-4 h-4" />
+                    <span className="hidden sm:inline">Templates</span>
+                    <span className="sm:hidden">Templates</span>
                 </button>
+                
                 <button
-                    onClick={() => setActiveTab('master')}
-                    className={`px-3 md:px-4 py-2 md:py-3 text-xs md:text-sm font-medium transition-colors border-b-2 ${activeTab === 'master'
-                        ? 'border-primary text-primary'
-                        : 'border-transparent text-slate-500 hover:text-slate-700'
-                        }`}
+                    onClick={() => setActiveTab('platform')}
+                    className={`px-3 md:px-4 py-2 md:py-3 text-xs md:text-sm font-medium transition-colors border-b-2 flex items-center gap-2 ${
+                        activeTab === 'platform'
+                            ? 'border-primary text-primary'
+                            : 'border-transparent text-slate-500 hover:text-slate-700'
+                    }`}
                 >
-                    <span className="hidden sm:inline">Non Temple Specific</span>
-                    <span className="sm:hidden">Master</span>
+                    <Home className="w-4 h-4" />
+                    <span className="hidden sm:inline">Platform Poojas</span>
+                    <span className="sm:hidden">Platform</span>
                 </button>
+                
                 <button
                     onClick={() => setActiveTab('temple')}
-                    className={`px-3 md:px-4 py-2 md:py-3 text-xs md:text-sm font-medium transition-colors border-b-2 ${activeTab === 'temple'
-                        ? 'border-primary text-primary'
-                        : 'border-transparent text-slate-500 hover:text-slate-700'
-                        }`}
+                    className={`px-3 md:px-4 py-2 md:py-3 text-xs md:text-sm font-medium transition-colors border-b-2 flex items-center gap-2 ${
+                        activeTab === 'temple'
+                            ? 'border-primary text-primary'
+                            : 'border-transparent text-slate-500 hover:text-slate-700'
+                    }`}
                 >
-                    <span className="hidden sm:inline">Temple Specific</span>
+                    <Building2 className="w-4 h-4" />
+                    <span className="hidden sm:inline">Temple Poojas</span>
                     <span className="sm:hidden">Temple</span>
                 </button>
             </div>
@@ -499,23 +529,48 @@ function PoojasContent() {
                     />
                 </div>
 
-                <div className="flex items-center gap-2">
-                    <div className="relative w-full lg:w-64">
-                        <Filter className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
-                        <select
-                            className="w-full pl-10 pr-4 h-10 md:h-11 bg-white border border-slate-200 rounded-md text-sm focus:outline-none focus:ring-2 focus:ring-primary/20 transition-all font-medium appearance-none"
-                            value={selectedTempleId}
-                            onChange={(e) => setSelectedTempleId(e.target.value)}
-                        >
-                            <option value="all">All Temples</option>
-                            {temples.map(t => (
-                                <option key={t.id} value={t.id}>
-                                    {parseLocalizedValue(t.name)}
-                                </option>
-                            ))}
-                        </select>
+                {/* CHANGED: Show temple filter only for temple poojas tab */}
+                {activeTab === 'temple' && (
+                    <div className="flex items-center gap-2">
+                        <div className="relative w-full lg:w-64">
+                            <Filter className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
+                            <select
+                                className="w-full pl-10 pr-4 h-10 md:h-11 bg-white border border-slate-200 rounded-md text-sm focus:outline-none focus:ring-2 focus:ring-primary/20 transition-all font-medium appearance-none"
+                                value={selectedTempleId}
+                                onChange={(e) => setSelectedTempleId(e.target.value)}
+                            >
+                                <option value="all">All Temples</option>
+                                {temples.map(t => (
+                                    <option key={t.id} value={t.id}>
+                                        {parseLocalizedValue(t.name)}
+                                    </option>
+                                ))}
+                            </select>
+                        </div>
                     </div>
-                </div>
+                )}
+            </div>
+
+            {/* NEW: Info Card for each tab */}
+            <div className="bg-slate-50 border border-slate-200 rounded-lg p-3">
+                {activeTab === 'templates' && (
+                    <p className="text-sm text-slate-600">
+                        📋 <strong>Master Templates:</strong> These are blueprints that can be used to create Platform and Temple poojas. 
+                        Templates are not directly bookable by users.
+                    </p>
+                )}
+                {activeTab === 'platform' && (
+                    <p className="text-sm text-slate-600">
+                        🏠 <strong>Platform Poojas:</strong> These are DevBhakti's own poojas created from master templates. 
+                        Users can book these poojas directly.
+                    </p>
+                )}
+                {activeTab === 'temple' && (
+                    <p className="text-sm text-slate-600">
+                        🛕 <strong>Temple Poojas:</strong> These are temple-specific poojas created from master templates. 
+                        Each temple has its own customized poojas.
+                    </p>
+                )}
             </div>
 
             {/* Poojas Table */}
@@ -531,7 +586,7 @@ function PoojasContent() {
                                 <TableHead>मराठी</TableHead>
                                 <TableHead>Temple</TableHead>
                                 <TableHead>Category/Purpose</TableHead>
-                                <TableHead> Single Person Price</TableHead>
+                                <TableHead>Single Person Price</TableHead>
                                 <TableHead>Status</TableHead>
                                 {/* <TableHead>Duration</TableHead> */}
                                 <TableHead className="text-right">Actions</TableHead>
@@ -540,11 +595,15 @@ function PoojasContent() {
                         <TableBody>
                             {isLoading ? (
                                 <TableRow>
-                                    <TableCell colSpan={7} className="text-center py-10">Loading poojas...</TableCell>
+                                    <TableCell colSpan={9} className="text-center py-10">Loading poojas...</TableCell>
                                 </TableRow>
                             ) : filteredPoojas.length === 0 ? (
                                 <TableRow>
-                                    <TableCell colSpan={7} className="text-center py-10">No poojas found.</TableCell>
+                                    <TableCell colSpan={9} className="text-center py-10">
+                                        {activeTab === 'templates' && 'No templates found. Create your first template by clicking "Add New".'}
+                                        {activeTab === 'platform' && 'No platform poojas found. Create from templates.'}
+                                        {activeTab === 'temple' && 'No temple poojas found.'}
+                                    </TableCell>
                                 </TableRow>
                             ) : (
                                 filteredPoojas.map((pooja) => (
@@ -561,12 +620,27 @@ function PoojasContent() {
                                         <TableCell>
                                             <div className="font-medium text-slate-900 flex items-center gap-2">
                                                 {getRawLangValue(pooja.name, 'en') || parseLocalizedValue(pooja.name)}
-                                                {pooja.isMaster && (
+                                                {/* CHANGED: Updated badges */}
+                                                {pooja.isMaster ? (
+                                                    <Badge variant="secondary" className="bg-purple-50 text-purple-700 border-purple-200 text-[10px] scale-90">
+                                                        📋 TEMPLATE
+                                                    </Badge>
+                                                ) : pooja.templeId === null ? (
                                                     <Badge variant="secondary" className="bg-blue-50 text-blue-700 border-blue-200 text-[10px] scale-90">
-                                                        MASTER
+                                                        🏠 PLATFORM
+                                                    </Badge>
+                                                ) : (
+                                                    <Badge variant="secondary" className="bg-green-50 text-green-700 border-green-200 text-[10px] scale-90">
+                                                        🛕 TEMPLE
                                                     </Badge>
                                                 )}
                                             </div>
+                                            {/* Show template source for non-master poojas */}
+                                            {!pooja.isMaster && pooja.masterPoojaId && (
+                                                <div className="text-xs text-muted-foreground mt-1">
+                                                    From template: {parseLocalizedValue(pooja.masterPooja?.name)}
+                                                </div>
+                                            )}
                                         </TableCell>
                                         <TableCell>
                                             <div className="text-[14px] text-slate-600">
@@ -579,7 +653,9 @@ function PoojasContent() {
                                             </div>
                                         </TableCell>
                                         <TableCell>
-                                            <div className="text-[14px] font-medium text-slate-600">{parseLocalizedValue(pooja.temple?.name)}</div>
+                                            <div className="text-[14px] font-medium text-slate-600">
+                                                {pooja.isMaster ? '—' : (parseLocalizedValue(pooja.temple?.name) || '-')}
+                                            </div>
                                         </TableCell>
                                         <TableCell>
                                             <Badge variant="outline" className="bg-slate-50">
@@ -676,7 +752,11 @@ function PoojasContent() {
                             </div>
                         </div>
                     ) : filteredPoojas.length === 0 ? (
-                        <div className="text-center py-10 text-muted-foreground">No poojas found.</div>
+                        <div className="text-center py-10 text-muted-foreground">
+                            {activeTab === 'templates' && 'No templates found.'}
+                            {activeTab === 'platform' && 'No platform poojas found.'}
+                            {activeTab === 'temple' && 'No temple poojas found.'}
+                        </div>
                     ) : (
                         filteredPoojas.map((pooja) => (
                             <div key={pooja.id} className="bg-white border border-slate-200 rounded-lg p-3 space-y-3 hover:border-primary/30 transition-all">
@@ -690,13 +770,22 @@ function PoojasContent() {
                                         />
                                     </div>
                                     <div className="flex-1 min-w-0">
-                                        <div className="flex items-center gap-2 mb-1">
+                                        <div className="flex items-center gap-2 mb-1 flex-wrap">
                                             <h3 className="font-semibold text-slate-900 truncate text-sm">
                                                 {getRawLangValue(pooja.name, 'en') || parseLocalizedValue(pooja.name)}
                                             </h3>
-                                            {pooja.isMaster && (
+                                            {/* CHANGED: Updated badges */}
+                                            {pooja.isMaster ? (
+                                                <Badge variant="secondary" className="bg-purple-50 text-purple-700 border-purple-200 text-[9px] scale-90">
+                                                    📋 TEMPLATE
+                                                </Badge>
+                                            ) : pooja.templeId === null ? (
                                                 <Badge variant="secondary" className="bg-blue-50 text-blue-700 border-blue-200 text-[9px] scale-90">
-                                                    MASTER
+                                                    🏠 PLATFORM
+                                                </Badge>
+                                            ) : (
+                                                <Badge variant="secondary" className="bg-green-50 text-green-700 border-green-200 text-[9px] scale-90">
+                                                    🛕 TEMPLE
                                                 </Badge>
                                             )}
                                         </div>
@@ -704,6 +793,11 @@ function PoojasContent() {
                                             <div className="truncate">{getRawLangValue(pooja.name, 'hi') || <span className="text-slate-300 italic">not set</span>}</div>
                                             <div className="truncate">{getRawLangValue(pooja.name, 'mr') || <span className="text-slate-300 italic">not set</span>}</div>
                                         </div>
+                                        {!pooja.isMaster && pooja.masterPoojaId && (
+                                            <p className="text-xs text-muted-foreground mt-1">
+                                                From: {parseLocalizedValue(pooja.masterPooja?.name)}
+                                            </p>
+                                        )}
                                     </div>
                                 </div>
 
@@ -711,7 +805,9 @@ function PoojasContent() {
                                 <div className="grid grid-cols-2 gap-3 text-xs">
                                     <div>
                                         <p className="text-slate-400 font-medium mb-1">Temple</p>
-                                        <p className="text-slate-700 truncate">{parseLocalizedValue(pooja.temple?.name) || 'N/A'}</p>
+                                        <p className="text-slate-700 truncate">
+                                            {pooja.isMaster ? '—' : (parseLocalizedValue(pooja.temple?.name) || 'N/A')}
+                                        </p>
                                     </div>
                                     <div>
                                         <p className="text-slate-400 font-medium mb-1">Category</p>

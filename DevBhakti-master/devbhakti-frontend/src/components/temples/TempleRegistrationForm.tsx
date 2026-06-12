@@ -125,12 +125,21 @@ export default function TempleRegistrationForm({ onClose }: { onClose?: () => vo
         try {
             const data = await fetchAllPoojasPublic();
             const poojas = Array.isArray(data) ? data : data.data || [];
+            console.log('Fetched poojas count:', poojas.length);
+            console.log('First few poojas:', poojas.slice(0, 3).map(p => ({id: p.id, name: p.name, isMaster: p.isMaster})));
             
             // Deduplicate poojas by name, preferring Master poojas
             const deduplicated = getDeduplicatedPoojas(poojas);
-            setAllPoojas(deduplicated);
+            console.log('After deduplication count:', deduplicated.length);
+            console.log('After deduplication first few:', deduplicated.slice(0, 3).map(p => ({id: p.id, name: p.name, isMaster: p.isMaster})));
+            
+            // Filter to only master poojas (templates)
+            const masterPoojas = deduplicated.filter(pooja => pooja.isMaster);
+            console.log('Master poojas count:', masterPoojas.length);
+            console.log('Master poojas:', masterPoojas.map(p => ({id: p.id, name: p.name, isMaster: p.isMaster})));
+            setAllPoojas(masterPoojas);
         } catch (error) {
-            console.error("Failed to load poojas");
+            console.error("Failed to load poojas:", error);
         }
     };
 

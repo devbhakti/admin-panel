@@ -138,6 +138,8 @@ const PoojaDetailClient = ({ id }: PoojaDetailClientProps) => {
         );
     }
 
+    const validTempleCopies = pooja.templeCopies ? pooja.templeCopies.filter((copy: any) => copy.temple !== null) : [];
+
     return (
         <div className="min-h-screen bg-[#FFF8F0] selection:bg-primary/20">
             <Navbar />
@@ -328,7 +330,7 @@ const PoojaDetailClient = ({ id }: PoojaDetailClientProps) => {
                                 )}
 
                                 {/* Associated Temples (Copies) - First 6 */}
-                                {pooja.templeCopies && pooja.templeCopies.slice(0, 6).map((copy: any) => (
+                                {validTempleCopies.slice(0, 6).map((copy: any) => (
                                     <div key={copy.temple.id} className="bg-white p-6 rounded-[2.5rem] border border-primary/10 shadow-xl w-full group overflow-hidden relative text-center">
                                         <div className="absolute top-0 right-0 w-32 h-32 bg-primary/5 rounded-full -mr-16 -mt-16 blur-2xl group-hover:bg-primary/10 transition-colors" />
                                         <div className="relative w-full h-52 mx-auto mb-4 rounded-2xl overflow-hidden border-4 border-white shadow-xl group-hover:scale-105 transition-transform">
@@ -372,7 +374,7 @@ const PoojaDetailClient = ({ id }: PoojaDetailClientProps) => {
                             </div>
 
                             {/* Load More Button */}
-                            {pooja.templeCopies && pooja.templeCopies.length > 6 && (
+                            {validTempleCopies.length > 6 && (
                                 <div className="text-center mt-12">
                                     <Button
                                         variant="outline"
@@ -385,16 +387,16 @@ const PoojaDetailClient = ({ id }: PoojaDetailClientProps) => {
                                             }
                                         }}
                                     >
-                                        Load More Temples ({pooja.templeCopies.length - 6} more)
+                                        Load More Temples ({validTempleCopies.length - 6} more)
                                     </Button>
                                 </div>
                             )}
 
                             {/* Hidden Temples (More than 6) */}
-                            {pooja.templeCopies && pooja.templeCopies.length > 6 && (
+                            {validTempleCopies.length > 6 && (
                                 <div id="all-temples" className="hidden mt-8">
                                     <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
-                                        {pooja.templeCopies.slice(6).map((copy: any) => (
+                                        {validTempleCopies.slice(6).map((copy: any) => (
                                             <div key={copy.temple.id} className="bg-white p-6 rounded-[2.5rem] border border-primary/10 shadow-xl w-full group overflow-hidden relative text-center">
                                                 <div className="absolute top-0 right-0 w-32 h-32 bg-primary/5 rounded-full -mr-16 -mt-16 blur-2xl group-hover:bg-primary/10 transition-colors" />
                                                 <div className="relative w-full h-52 mx-auto mb-4 rounded-2xl overflow-hidden border-4 border-white shadow-xl group-hover:scale-105 transition-transform">

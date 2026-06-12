@@ -262,7 +262,12 @@ function BookingForm() {
     if (!masterId) return;
 
     if (!selectedTemple) {
-      if (!currentPoojaData.isMaster) {
+      const platformCopy = allPoojas.find(p => p.masterPoojaId === masterId && p.templeId === null && !p.isMaster);
+      if (platformCopy) {
+        if (platformCopy.id !== selectedPooja) {
+          setSelectedPooja(platformCopy.id);
+        }
+      } else {
         const masterPooja = allPoojas.find(p => p.id === masterId);
         if (masterPooja && masterPooja.id !== selectedPooja) {
           setSelectedPooja(masterPooja.id);
@@ -293,6 +298,10 @@ function BookingForm() {
     : selectedPoojaData?.masterPoojaId || null;
   const platformPoojaOption = React.useMemo(() => {
     if (!poojaFamilyId) return null;
+    // 1. Search for platform copy
+    const platformCopy = allPoojas.find((p: any) => p.masterPoojaId === poojaFamilyId && p.templeId === null && !p.isMaster);
+    if (platformCopy) return platformCopy;
+    // 2. Fallback to master template
     return allPoojas.find((p: any) => p.id === poojaFamilyId && p.isMaster) || null;
   }, [allPoojas, poojaFamilyId]);
   const sourceOptions = React.useMemo(() => {
@@ -339,10 +348,10 @@ function BookingForm() {
 
     return options;
   }, [allPoojas, allTemples, language, platformPoojaOption, poojaFamilyId, requestedPoojaParam, selectedPoojaData]);
-  const selectedSourceKey = selectedTemple || (selectedPoojaData?.isMaster ? "platform" : "");
+  const selectedSourceKey = selectedTemple || (selectedPoojaData && (selectedPoojaData.isMaster || selectedPoojaData.templeId === null) ? "platform" : "");
 
-  // If selected pooja is a Master Pooja, show DevBhakti as the platform instead of temple dropdown
-  const isMasterPoojaSelected = selectedPoojaData?.isMaster === true;
+  // If selected pooja is a Master Pooja or Platform copy, show DevBhakti as the platform instead of temple dropdown
+  const isMasterPoojaSelected = selectedPoojaData && (selectedPoojaData.isMaster || (selectedPoojaData.templeId === null && !selectedPoojaData.isMaster));
 
   const handleSourceSelect = (option: {
     templeId: string;
