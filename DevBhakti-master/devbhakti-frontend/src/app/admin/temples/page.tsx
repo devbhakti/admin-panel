@@ -251,31 +251,31 @@ function TemplesContent() {
     const downloadTemplate = () => {
         const templateData = [{
             "Admin_Name_EN": "Admin User",
-            "Admin_Name_HI": "à¤µà¥à¤¯à¤µà¤¸à¥à¤¥à¤¾à¤ªà¤•",
-            "Admin_Name_MR": "à¤ªà¥à¤°à¤¶à¤¾à¤¸à¤•",
+            "Admin_Name_HI": "व्यवस्थापक",
+            "Admin_Name_MR": "प्रशासक",
             "Email": "temple@example.com",
             "Phone": "9876543210",
             "Name_EN": "Shri Ram Temple",
-            "Name_HI": "à¤¶à¥à¤°à¥€ à¤°à¤¾à¤® à¤®à¤‚à¤¦à¤¿à¤°",
-            "Name_MR": "à¤¶à¥à¤°à¥€ à¤°à¤¾à¤® à¤®à¤‚à¤¦à¤¿à¤°",
+            "Name_HI": "श्री राम मंदिर",
+            "Name_MR": "श्री राम मंदिर",
             "Location_EN": "Ayodhya",
-            "Location_HI": "à¤…à¤¯à¥‹à¤§à¥à¤¯à¤¾",
-            "Location_MR": "à¤…à¤¯à¥‹à¤§à¥à¤¯à¤¾",
+            "Location_HI": "अयोध्या",
+            "Location_MR": "अयोध्या",
             "Address_EN": "Ram Janmabhoomi, Ayodhya, UP",
-            "Address_HI": "à¤°à¤¾à¤® à¤œà¤¨à¥à¤®à¤­à¥‚à¤®à¤¿, à¤…à¤¯à¥‹à¤§à¥à¤¯à¤¾",
-            "Address_MR": "à¤°à¤¾à¤® à¤œà¤¨à¥à¤®à¤­à¥‚à¤®à¥€, à¤…à¤¯à¥‹à¤§à¥à¤¯à¤¾",
+            "Address_HI": "राम जन्मभूमि, अयोध्या",
+            "Address_MR": "राम जन्मभूमी, अयोध्या",
             "Category_EN": "Rama",
-            "Category_HI": "à¤°à¤¾à¤®",
-            "Category_MR": "à¤°à¤¾à¤®",
+            "Category_HI": "राम",
+            "Category_MR": "राम",
             "Description_EN": "Historic and divine temple of Lord Ram.",
-            "Description_HI": "à¤­à¤—à¤µà¤¾à¤¨ à¤°à¤¾à¤® à¤•à¤¾ à¤à¤¤à¤¿à¤¹à¤¾à¤¸à¤¿à¤• à¤”à¤° à¤¦à¤¿à¤µà¥à¤¯ à¤®à¤‚à¤¦à¤¿à¤°à¥¤",
-            "Description_MR": "à¤­à¤—à¤µà¤¾à¤¨ à¤°à¤¾à¤®à¤¾à¤šà¥‡ à¤à¤¤à¤¿à¤¹à¤¾à¤¸à¤¿à¤• à¤†à¤£à¤¿ à¤¦à¤¿à¤µà¥à¤¯ à¤®à¤‚à¤¦à¤¿à¤°.",
+            "Description_HI": "भगवान राम का ऐतिहासिक और दिव्य मंदिर।",
+            "Description_MR": "भगवान रामाचे ऐतिहासिक आणि दिव्य मंदिर.",
             "History_EN": "Ancient temple built at the birthplace of Lord Ram.",
-            "History_HI": "à¤­à¤—à¤µà¤¾à¤¨ à¤°à¤¾à¤® à¤•à¥‡ à¤œà¤¨à¥à¤®à¤¸à¥à¤¥à¤¾à¤¨ à¤ªà¤° à¤¬à¤¨à¤¾ à¤ªà¥à¤°à¤¾à¤šà¥€à¤¨ à¤®à¤‚à¤¦à¤¿à¤°à¥¤",
-            "History_MR": "à¤­à¤—à¤µà¤¾à¤¨ à¤°à¤¾à¤®à¤¾à¤šà¥à¤¯à¤¾ à¤œà¤¨à¥à¤®à¤¸à¥à¤¥à¤¾à¤¨à¥€ à¤¬à¤¾à¤‚à¤§à¤²à¥‡à¤²à¥‡ à¤ªà¥à¤°à¤¾à¤šà¥€à¤¨ à¤®à¤‚à¤¦à¤¿à¤°.",
+            "History_HI": "भगवान राम के जन्मस्थान पर बना प्राचीन मंदिर।",
+            "History_MR": "भगवान रामाच्या जन्मस्थानी बांधलेले प्राचीन मंदिर.",
             "Pickup_Location_EN": "Main Gate, Ram Temple",
-            "Pickup_Location_HI": "à¤®à¥à¤–à¥à¤¯ à¤¦à¥à¤µà¤¾à¤°, à¤°à¤¾à¤® à¤®à¤‚à¤¦à¤¿à¤°",
-            "Pickup_Location_MR": "à¤®à¥à¤–à¥à¤¯ à¤¦à¥à¤µà¤¾à¤°, à¤°à¤¾à¤® à¤®à¤‚à¤¦à¤¿à¤°",
+            "Pickup_Location_HI": "मुख्य द्वार, राम मंदिर",
+            "Pickup_Location_MR": "मुख्य द्वार, राम मंदिर",
             "Open_Time": "06:00 AM - 09:00 PM",
             "Temple_Phone": "9876543211",
             "Website": "https://ramtemple.com",
@@ -422,7 +422,7 @@ function TemplesContent() {
                         await createTempleAdmin(formData as any);
                         successCount++;
                     } catch (err: any) {
-                        const errorMsg = err.response?.data?.message || err.message || "Unknown error";
+                        const errorMsg = err.response?.data?.error || err.response?.data?.message || err.message || "Unknown error";
                         console.error(`Failed to import row ${i+2}:`, errorMsg, err);
                         failCount++;
                         toast({
@@ -881,17 +881,17 @@ function TemplesContent() {
                         <div className="flex flex-col sm:flex-row gap-2 w-full sm:w-auto mt-2 sm:mt-0">
                             <input type="file" accept=".xlsx" className="hidden" ref={globalImportRef} onChange={handleImportExcel} />
                             
-                             <Button variant="outline" onClick={downloadTemplate} className="border-secondary text-secondary hover:bg-secondary/10 px-3 w-full sm:w-auto" title="Download Template">
+                             {/* <Button variant="outline" onClick={downloadTemplate} className="border-secondary text-secondary hover:bg-secondary/10 px-3 w-full sm:w-auto" title="Download Template">
                                 <FileSpreadsheet className="w-4 h-4" />
-                            </Button> 
+                            </Button>  */}
                              
-                           <Button variant="outline" onClick={() => globalImportRef.current?.click()} className="border-amber-600 text-amber-600 hover:bg-amber-50 px-3 w-full sm:w-auto" title="Import All Temples">
+                           {/* <Button variant="outline" onClick={() => globalImportRef.current?.click()} className="border-amber-600 text-amber-600 hover:bg-amber-50 px-3 w-full sm:w-auto" title="Import All Temples">
                                 <Upload className="w-4 h-4" />
-                            </Button>  
-
+                            </Button>   */}
+{/* 
                             <Button variant="outline" onClick={() => handleExportExcel('all')} className="border-emerald-600 text-emerald-600 hover:bg-emerald-50 px-3 w-full sm:w-auto" title="Export All Temples">
                                 <Download className="w-4 h-4" />
-                            </Button> 
+                            </Button>  */}
 
                             <Button onClick={() => router.push('/admin/temples/create')} className="bg-primary w-full sm:w-auto justify-center">
                                 <Plus className="w-4 h-4 mr-2" />

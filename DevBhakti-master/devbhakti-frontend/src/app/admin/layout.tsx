@@ -64,12 +64,12 @@ const sidebarItems = [
     href: "/admin/users",
     permission: "users.menu",
   },
-  {
-    label: "Leads Management",
-    icon: Target,
-    href: "/admin/leads",
-    permission: "users.menu",
-  },
+  // {
+  //   label: "Leads Management",
+  //   icon: Target,
+  //   href: "/admin/leads",
+  //   permission: "users.menu",
+  // },
   {
     label: "Pooja Bookings",
     icon: Calendar,
