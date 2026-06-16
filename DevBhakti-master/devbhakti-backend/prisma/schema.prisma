@@ -700,3 +700,34 @@ enum WithdrawalStatus {
   REJECTED
   PAID
 }
+
+model Lead {
+  id          String      @id @default(cuid())
+  name        String?
+  phone       String      @unique
+  email       String?
+  source      LeadSource  @default(TEMPLE_ONBOARDING)
+  status      LeadStatus  @default(NEW)
+  metadata    Json?       // e.g. { "templeName": "..." }
+  assignedTo  String?     
+  notes       String?     
+  createdAt   DateTime    @default(now())
+  updatedAt   DateTime    @updatedAt
+}
+
+enum LeadSource {
+  TEMPLE_ONBOARDING
+  SELLER_ONBOARDING
+  POOJA_BOOKING
+  E_COMMERCE
+  GENERAL_INQUIRY
+  LIVE_DARSHAN_ALERT
+}
+
+enum LeadStatus {
+  NEW
+  CONTACTED
+  FOLLOW_UP_REQUIRED
+  CONVERTED
+  DEAD
+}

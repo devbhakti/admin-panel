@@ -386,6 +386,66 @@ export default function TempleCreatePoojaPage() {
                             </p>
                         )}
                     </div>
+
+                    {/* Pooja Lagna / Duration */}
+                    <div className="space-y-3 p-5 bg-orange-50/40 rounded-2xl border border-orange-100">
+                        <div className="flex items-center gap-2">
+                            <Label className="text-base font-semibold text-[#7b4623]">
+                                🕐 Pooja Lagna / Duration
+                            </Label>
+                            <span className="text-[10px] bg-[#7b4623]/10 text-[#7b4623] border border-[#7b4623]/20 px-2 py-0.5 rounded-full font-bold uppercase tracking-wide">
+                                Muhurat Timing
+                            </span>
+                        </div>
+                        <p className="text-[11px] text-slate-500">
+                            Pooja mein kitna samay lagega? Niche se select karo ya custom likho.
+                        </p>
+
+                        {/* Quick select chips */}
+                        <div className="flex flex-wrap gap-2">
+                            {["15 Minutes", "30 Minutes", "45 Minutes", "1 Hour", "1.5 Hours", "2 Hours", "3 Hours", "Half Day", "Full Day"].map((dur) => (
+                                <button
+                                    key={dur}
+                                    type="button"
+                                    onClick={() => setFormData({ ...formData, time: formData.time === dur ? "" : dur })}
+                                    className={cn(
+                                        "px-3 py-1.5 rounded-full text-xs font-semibold border transition-all",
+                                        formData.time === dur
+                                            ? "bg-[#7b4623] text-white border-[#7b4623] shadow-md scale-105"
+                                            : "bg-white text-slate-600 border-slate-200 hover:border-[#7b4623] hover:text-[#7b4623]"
+                                    )}
+                                >
+                                    {dur}
+                                </button>
+                            ))}
+                        </div>
+
+                        {/* Custom input */}
+                        <div className="flex gap-2 items-center pt-1">
+                            <Input
+                                placeholder="Ya custom duration likho... e.g. 2 Hours 30 Minutes"
+                                value={formData.time}
+                                onChange={(e) => setFormData({ ...formData, time: e.target.value })}
+                                className="rounded-xl h-11 border-slate-200 focus:border-[#7b4623] bg-white flex-1"
+                            />
+                            {formData.time && (
+                                <button
+                                    type="button"
+                                    onClick={() => setFormData({ ...formData, time: "" })}
+                                    className="text-slate-400 hover:text-red-500 transition-colors shrink-0"
+                                    title="Clear"
+                                >
+                                    <X className="w-4 h-4" />
+                                </button>
+                            )}
+                        </div>
+                        {formData.time && (
+                            <p className="text-[11px] text-[#7b4623] font-semibold flex items-center gap-1.5">
+                                <span>✓ Lagna set:</span>
+                                <span className="bg-white px-2.5 py-0.5 rounded-lg border border-orange-200 text-[#7b4623]">{formData.time}</span>
+                            </p>
+                        )}
+                    </div>
                 </div>
 
                 <div className="space-y-4">

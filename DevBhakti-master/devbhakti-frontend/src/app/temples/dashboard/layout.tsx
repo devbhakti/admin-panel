@@ -21,12 +21,12 @@ import {
     Heart,
     ChevronDown,
     ChevronUp,
-    ShieldCheck
+    ShieldCheck,
+    X
 } from "lucide-react";
 import { useSearchParams } from "next/navigation";
 import { Button } from "@/components/ui/button";
 import Image from "next/image";
-// import Logo from "@/components/icons/Logo";
 import logo from "@/assets/logo2.png";
 
 import { cn } from "@/lib/utils";
@@ -110,11 +110,6 @@ const sidebarItems = [
             { label: "Completed", href: "/temples/dashboard/bookings?status=COMPLETED" },
         ]
     },
-    // {
-    //     label: "Live Stream",
-    //     icon: Video,
-    //     href: "/temples/dashboard/live-stream",
-    // },
     {
         label: "Earnings & Settlement",
         icon: CreditCard,
@@ -134,21 +129,19 @@ const sidebarItems = [
         permission: "temple.profile.manage"
     },
 ];
-const SidebarNavItem = ({ item, pathname, sidebarOpen }: { item: any, pathname: string, sidebarOpen: boolean }) => {
+
+const SidebarNavItem = ({ item, pathname, sidebarOpen, onNavigate }: { item: any, pathname: string, sidebarOpen: boolean, onNavigate?: () => void }) => {
     const searchParams = useSearchParams();
     const subItems = item.subItems;
     const hasSubItems = subItems && subItems.length > 0;
     const [isOpen, setIsOpen] = useState(false);
 
-    // Helper to check if a link is active including query params
     const isLinkActive = (href: string) => {
         if (!href) return false;
         const [basePath, queryStr] = href.split('?');
         const isPathMatch = pathname === basePath;
 
         if (!queryStr) {
-            // For base paths, we only match if there are NO meaningful search params active for this section
-            // or if it's an exact match
             return isPathMatch && Array.from(searchParams.entries()).length === 0;
         }
 
@@ -159,7 +152,6 @@ const SidebarNavItem = ({ item, pathname, sidebarOpen }: { item: any, pathname: 
     const isSubActive = hasSubItems && subItems.some((sub: any) => isLinkActive(sub.href));
     const isActive = isLinkActive(item.href) || isSubActive;
 
-    // Auto-expand if sub-item is active
     useEffect(() => {
         if (isSubActive) setIsOpen(true);
     }, [isSubActive]);
@@ -191,6 +183,7 @@ const SidebarNavItem = ({ item, pathname, sidebarOpen }: { item: any, pathname: 
                                 <Link
                                     key={sub.href}
                                     href={sub.href}
+                                    onClick={onNavigate}
                                     className={cn(
                                         "flex items-center justify-between py-2 px-3 text-xs rounded-md transition-colors",
                                         isCurrent
@@ -219,6 +212,7 @@ const SidebarNavItem = ({ item, pathname, sidebarOpen }: { item: any, pathname: 
     return (
         <Link
             href={item.href}
+            onClick={onNavigate}
             className={cn(
                 "flex items-center gap-3 px-3 py-2.5 rounded-lg transition-all duration-200",
                 isActive
@@ -238,7 +232,9 @@ export default function TempleAdminLayout({ children }: { children: React.ReactN
     const router = useRouter();
     const pathname = usePathname();
     const { hasPermission } = useAdminAuth();
+    // Desktop: sidebar open/collapse; Mobile: drawer open/close
     const [sidebarOpen, setSidebarOpen] = useState(true);
+    const [mobileDrawerOpen, setMobileDrawerOpen] = useState(false);
     const [isAuthenticated, setIsAuthenticated] = useState<boolean | null>(null);
     const [user, setUser] = useState<any>(null);
     const [templeProfile, setTempleProfile] = useState<any>(null);
@@ -250,13 +246,10 @@ export default function TempleAdminLayout({ children }: { children: React.ReactN
 
     const loadCounts = async () => {
         try {
-            // Load Profile first to get the templeId for orders
             try {
                 const profileRes = await fetchMyTempleProfile();
                 if (profileRes.success) {
                     setTempleProfile(profileRes.data);
-                    
-                    // If we have a profile, try to load orders
                     if (profileRes.data.id) {
                         fetchTempleOrders(profileRes.data.id)
                             .then(ordersRes => {
@@ -282,7 +275,6 @@ export default function TempleAdminLayout({ children }: { children: React.ReactN
                 console.error("Failed to load profile", err);
             }
 
-            // Load Bookings separately
             try {
                 const bookingsRes = await fetchMyTempleBookings();
                 if (bookingsRes.success) {
@@ -319,6 +311,8 @@ export default function TempleAdminLayout({ children }: { children: React.ReactN
 
     useEffect(() => {
         setBreadcrumbOverride(null);
+        // Close mobile drawer on route change
+        setMobileDrawerOpen(false);
     }, [pathname]);
 
     useEffect(() => {
@@ -340,7 +334,7 @@ export default function TempleAdminLayout({ children }: { children: React.ReactN
                     console.error("Auth error", e);
                 }
             }
-            setIsAuthenticated(false); // Allow rendering for login pages
+            setIsAuthenticated(false);
             return;
         }
 
@@ -370,14 +364,10 @@ export default function TempleAdminLayout({ children }: { children: React.ReactN
         router.push("/temples/dashboard/login");
     };
 
-
-
-    // Skip sidebar/layout for login pages
     if (pathname === "/temples/dashboard/login" || pathname === "/temples/dashboard/staff-login") {
         return <>{children}</>;
     }
 
-    // Show nothing while checking auth to prevent flicker
     if (isAuthenticated === null) {
         return (
             <div className="min-h-screen bg-[#FDFCF6] flex items-center justify-center">
@@ -389,212 +379,256 @@ export default function TempleAdminLayout({ children }: { children: React.ReactN
         );
     }
 
-    // If not authenticated and not on login page, we'll be redirected by useEffect
     if (!isAuthenticated && pathname !== "/temples/dashboard/login") {
         return null;
     }
 
     const isPrintPage = pathname?.endsWith("/print");
-
     if (isPrintPage) {
         return <main className="min-h-screen bg-white print:p-0">{children}</main>;
     }
 
+    // Sidebar content reused for both desktop sidebar and mobile drawer
+    const SidebarContent = ({ isMobile = false }: { isMobile?: boolean }) => (
+        <>
+            {/* Logo */}
+            <div className={cn("flex items-center gap-3 h-16 md:h-20 px-4 border-b border-sidebar-border bg-sidebar/50 backdrop-blur-sm shrink-0", isMobile && "h-16")}>
+                {(sidebarOpen || isMobile) ? (
+                    <div className="flex items-center gap-3 w-full">
+                        <div className="bg-white h-10 w-10 md:h-12 md:w-12 rounded-xl shadow-md border border-sidebar-border/50 shrink-0 overflow-hidden flex items-center justify-center">
+                            <div className="relative h-10 w-10 md:h-12 md:w-12">
+                                <Image src={logo} alt="Temple Logo" fill className="object-contain" priority />
+                            </div>
+                        </div>
+                        <div className="flex flex-col min-w-0">
+                            <span className="text-[12px] font-black text-sidebar-primary uppercase tracking-wider leading-none">
+                                Temple Dashboard
+                            </span>
+                            <span className="text-[10px] font-bold text-sidebar-foreground/60 truncate mt-1">
+                                {parseLocalizedValue(templeProfile?.name) || parseLocalizedValue(user?.name) || "Sacred Portal"}
+                            </span>
+                        </div>
+                        {/* Close button for mobile */}
+                        {isMobile && (
+                            <button
+                                onClick={() => setMobileDrawerOpen(false)}
+                                className="ml-auto p-1.5 rounded-lg hover:bg-sidebar-accent text-sidebar-foreground/50 hover:text-sidebar-foreground transition-all"
+                            >
+                                <X className="w-5 h-5" />
+                            </button>
+                        )}
+                        {/* Collapse button for desktop */}
+                        {!isMobile && sidebarOpen && (
+                            <button
+                                onClick={() => setSidebarOpen(!sidebarOpen)}
+                                className="p-1.5 rounded-lg hover:bg-sidebar-accent text-sidebar-foreground/50 hover:text-sidebar-foreground transition-all ml-auto shrink-0"
+                            >
+                                <Menu className="w-5 h-5" />
+                            </button>
+                        )}
+                    </div>
+                ) : (
+                    <div className="bg-white h-12 w-12 rounded-xl shadow-md border border-sidebar-border/50 mx-auto overflow-hidden flex items-center justify-center mt-1">
+                        <div className="relative h-12 w-12">
+                            <Image src={logo} alt="Temple Logo" fill className="object-contain" priority />
+                        </div>
+                    </div>
+                )}
+            </div>
+
+            {/* Navigation */}
+            <nav className="flex-1 py-4 px-3 space-y-1 overflow-y-auto custom-scrollbar">
+                {sidebarItems
+                    .filter(item => !item.permission || hasPermission(item.permission))
+                    .map((item) => {
+                        let itemWithCounts = { ...item };
+                        if (item.label === "Pooja Bookings" && item.subItems) {
+                            itemWithCounts.subItems = item.subItems.map(sub => {
+                                if (sub.label === "All Bookings") return { ...sub, count: counts.bookings.total };
+                                if (sub.label === "Booked Poojas") return { ...sub, count: counts.bookings.booked };
+                                if (sub.label === "Completed") return { ...sub, count: counts.bookings.completed };
+                                if (sub.label === "Cancelled") return { ...sub, count: counts.bookings.cancelled };
+                                return sub;
+                            });
+                        } else if (item.label === "Order Management" && item.subItems) {
+                            itemWithCounts.subItems = item.subItems.map(sub => {
+                                if (sub.label === "All Orders") return { ...sub, count: counts.orders.total };
+                                if (sub.label === "Pending") return { ...sub, count: counts.orders.pending };
+                                if (sub.label === "Accepted") return { ...sub, count: counts.orders.accepted };
+                                if (sub.label === "Shipped") return { ...sub, count: counts.orders.shipped };
+                                if (sub.label === "Delivered") return { ...sub, count: counts.orders.delivered };
+                                if (sub.label === "Cancelled") return { ...sub, count: counts.orders.cancelled };
+                                return sub;
+                            });
+                        }
+
+                        return (
+                            <SidebarNavItem
+                                key={item.label}
+                                item={itemWithCounts}
+                                pathname={pathname}
+                                sidebarOpen={sidebarOpen || isMobile}
+                                onNavigate={isMobile ? () => setMobileDrawerOpen(false) : undefined}
+                            />
+                        );
+                    })}
+            </nav>
+
+            {/* User section */}
+            <div className="p-3 border-t border-sidebar-border shrink-0">
+                <Link
+                    href="/temples/dashboard/profile"
+                    onClick={isMobile ? () => setMobileDrawerOpen(false) : undefined}
+                    className={cn(
+                        "flex items-center gap-3 p-2 rounded-lg hover:bg-sidebar-accent transition-colors cursor-pointer",
+                        (sidebarOpen || isMobile) ? "" : "justify-center"
+                    )}
+                >
+                    <div className="w-9 h-9 rounded-full bg-sidebar-accent border border-sidebar-border flex items-center justify-center text-sidebar-foreground font-semibold text-sm shrink-0">
+                        {(parseLocalizedValue(templeProfile?.name) || parseLocalizedValue(user?.name) || "I").charAt(0)}
+                    </div>
+                    {(sidebarOpen || isMobile) && (
+                        <div className="flex-1 min-w-0">
+                            <p className="text-sm font-medium text-sidebar-foreground truncate">
+                                {user?.isStaff && <span className="text-[10px] bg-sidebar-primary/10 text-sidebar-primary px-1.5 py-0.5 rounded mr-1.5 font-bold">STAFF</span>}
+                                {parseLocalizedValue(templeProfile?.name) || parseLocalizedValue(user?.name) || (user?.isStaff ? "Sacred Staff" : "Temple Admin")}
+                            </p>
+                            <p className="text-xs text-sidebar-foreground/60 truncate">
+                                {user?.phone || user?.email || "admin@temple.com"}
+                            </p>
+                        </div>
+                    )}
+                </Link>
+                <Button
+                    variant="ghost"
+                    onClick={handleSignOut}
+                    className={cn(
+                        "w-full mt-2 text-sidebar-foreground hover:bg-sidebar-accent hover:text-sidebar-foreground",
+                        !(sidebarOpen || isMobile) && "p-2"
+                    )}
+                >
+                    <LogOut className="w-4 h-4" />
+                    {(sidebarOpen || isMobile) && <span className="ml-2">Sign Out</span>}
+                </Button>
+            </div>
+        </>
+    );
+
     return (
         <div className="min-h-screen bg-background flex">
-            {/* Sidebar */}
+
+            {/* ── DESKTOP Sidebar (hidden on mobile) ── */}
             <aside
                 className={cn(
-                    "fixed inset-y-0 left-0 z-50 flex flex-col bg-sidebar transition-all duration-300 print:hidden",
-                    sidebarOpen ? "w-64" : "w-20"
+                    "hidden md:fixed md:inset-y-0 md:left-0 md:z-50 md:flex flex-col bg-sidebar transition-all duration-300 print:hidden",
+                    sidebarOpen ? "md:w-64" : "md:w-20"
                 )}
                 onClick={!sidebarOpen ? () => setSidebarOpen(true) : undefined}
             >
-                {/* Logo */}
-                {/* Logo */}
-                <div className="flex items-center gap-3 h-20 px-4 border-b border-sidebar-border bg-sidebar/50 backdrop-blur-sm" onClick={(e) => e.stopPropagation()}>
-                    {sidebarOpen ? (
-                        <div className="flex items-center gap-3 w-full">
-                            <div className="bg-white h-16 w-16 rounded-xl shadow-md border border-sidebar-border/50 shrink-0 overflow-hidden flex items-center justify-center translate-y-[-2px]">
-                                <div className="relative h-16 w-16">
-                                    <Image
-                                        src={logo}
-                                        alt="Temple Logo"
-                                        fill
-                                        className="object-contain"
-                                        priority
-                                    />
-                                </div>
-                            </div>
-                            <div className="flex flex-col min-w-0">
-                                <span className="text-[13px] font-black text-sidebar-primary uppercase tracking-wider leading-none">
-                                    Temple Dashboard
-                                </span>
-                                <span className="text-[11px] font-bold text-sidebar-foreground/60 truncate mt-1">
-                                    {parseLocalizedValue(templeProfile?.name) || parseLocalizedValue(user?.name) || "Sacred Portal"}
-                                </span>
-                            </div>
-                        </div>
-                    ) : (
-                        <div className="bg-white h-12 w-12 rounded-xl shadow-md border border-sidebar-border/50 mx-auto overflow-hidden flex items-center justify-center mt-1">
-                            <div className="relative h-12 w-12">
-                                <Image
-                                    src={logo}
-                                    alt="Temple Logo"
-                                    fill
-                                    className="object-contain"
-                                    priority
-                                />
-                            </div>
-                        </div>
-                    )}
-                    {sidebarOpen && (
-                        <button
-                            onClick={() => setSidebarOpen(!sidebarOpen)}
-                            className="p-1.5 rounded-lg hover:bg-sidebar-accent text-sidebar-foreground/50 hover:text-sidebar-foreground transition-all ml-auto shrink-0"
-                        >
-                            <Menu className="w-5 h-5" />
-                        </button>
-                    )}
-                </div>
-
-                {/* Navigation */}
-                <nav className="flex-1 py-4 px-3 space-y-1 overflow-y-auto custom-scrollbar" onClick={(e) => e.stopPropagation()}>
-                    {sidebarItems
-                        .filter(item => !item.permission || hasPermission(item.permission))
-                        .map((item) => {
-                            // Dynamically inject counts into subItems
-                            let itemWithCounts = { ...item };
-                            if (item.label === "Pooja Bookings" && item.subItems) {
-                                itemWithCounts.subItems = item.subItems.map(sub => {
-                                    if (sub.label === "All Bookings") return { ...sub, count: counts.bookings.total };
-                                    if (sub.label === "Booked Poojas") return { ...sub, count: counts.bookings.booked };
-                                    if (sub.label === "Completed") return { ...sub, count: counts.bookings.completed };
-                                    if (sub.label === "Cancelled") return { ...sub, count: counts.bookings.cancelled };
-                                    return sub;
-                                });
-                            } else if (item.label === "Order Management" && item.subItems) {
-                                itemWithCounts.subItems = item.subItems.map(sub => {
-                                    if (sub.label === "All Orders") return { ...sub, count: counts.orders.total };
-                                    if (sub.label === "Pending") return { ...sub, count: counts.orders.pending };
-                                    if (sub.label === "Accepted") return { ...sub, count: counts.orders.accepted };
-                                    if (sub.label === "Shipped") return { ...sub, count: counts.orders.shipped };
-                                    if (sub.label === "Delivered") return { ...sub, count: counts.orders.delivered };
-                                    if (sub.label === "Cancelled") return { ...sub, count: counts.orders.cancelled };
-                                    return sub;
-                                });
-                            }
-
-                            return (
-                                <SidebarNavItem
-                                    key={item.label}
-                                    item={itemWithCounts}
-                                    pathname={pathname}
-                                    sidebarOpen={sidebarOpen}
-                                />
-                            );
-                        })}
-                </nav>
-
-                {/* User section */}
-                <div className="p-3 border-t border-sidebar-border" onClick={(e) => e.stopPropagation()}>
-                    <Link
-                        href="/temples/dashboard/profile"
-                        className={cn(
-                            "flex items-center gap-3 p-2 rounded-lg hover:bg-sidebar-accent transition-colors cursor-pointer",
-                            sidebarOpen ? "" : "justify-center"
-                        )}
-                    >
-                        <div className="w-10 h-10 rounded-full bg-sidebar-accent border border-sidebar-border flex items-center justify-center text-sidebar-foreground font-semibold">
-                            {(parseLocalizedValue(templeProfile?.name) || parseLocalizedValue(user?.name) || "I").charAt(0)}
-                        </div>
-                        {sidebarOpen && (
-                            <div className="flex-1 min-w-0">
-                                <p className="text-sm font-medium text-sidebar-foreground truncate">
-                                    {user?.isStaff && <span className="text-[10px] bg-sidebar-primary/10 text-sidebar-primary px-1.5 py-0.5 rounded mr-1.5 font-bold">STAFF</span>}
-                                    {parseLocalizedValue(templeProfile?.name) || parseLocalizedValue(user?.name) || (user?.isStaff ? "Sacred Staff" : "Temple Admin")}
-                                </p>
-                                <p className="text-xs text-sidebar-foreground/60 truncate">
-                                    {user?.phone || user?.email || "admin@temple.com"}
-                                </p>
-                            </div>
-                        )}
-                    </Link>
-                    <Button
-                        variant="ghost"
-                        onClick={handleSignOut}
-                        className={cn(
-                            "w-full mt-2 text-sidebar-foreground hover:bg-sidebar-accent hover:text-sidebar-foreground",
-                            !sidebarOpen && "p-2"
-                        )}
-                    >
-                        <LogOut className="w-4 h-4" />
-                        {sidebarOpen && <span className="ml-2">Sign Out</span>}
-                    </Button>
-                </div>
+                <SidebarContent isMobile={false} />
             </aside>
 
-            {/* Main content */}
+            {/* ── MOBILE Drawer Overlay ── */}
+            {mobileDrawerOpen && (
+                <div
+                    className="fixed inset-0 z-50 md:hidden"
+                    onClick={() => setMobileDrawerOpen(false)}
+                >
+                    {/* Backdrop */}
+                    <div className="absolute inset-0 bg-black/50 backdrop-blur-sm" />
+                    {/* Drawer panel */}
+                    <aside
+                        className="absolute inset-y-0 left-0 w-72 max-w-[85vw] flex flex-col bg-sidebar shadow-2xl"
+                        onClick={(e) => e.stopPropagation()}
+                    >
+                        <SidebarContent isMobile={true} />
+                    </aside>
+                </div>
+            )}
+
+            {/* ── Main content ── */}
             <div
                 className={cn(
-                    "flex-1 transition-all duration-300 print:ml-0 print:w-full",
-                    sidebarOpen ? "ml-64" : "ml-20"
+                    "flex-1 transition-all duration-300 print:ml-0 print:w-full min-w-0",
+                    // Desktop margin — only one md:ml-* class at a time
+                    sidebarOpen ? "md:ml-64" : "md:ml-20"
                 )}
             >
                 {/* Header */}
-                <header className="sticky top-0 z-40 h-16 bg-background/95 backdrop-blur-md border-b border-border flex items-center justify-between px-6 w-full overflow-hidden print:hidden">
-                    <div className="flex items-center gap-2 text-sm text-muted-foreground capitalize overflow-x-auto whitespace-nowrap custom-scrollbar pb-1">
+                <header className="sticky top-0 z-40 h-14 md:h-16 bg-background/95 backdrop-blur-md border-b border-border flex items-center justify-between px-3 md:px-6 w-full overflow-hidden print:hidden">
+                    <div className="flex items-center gap-1 md:gap-2 text-sm text-muted-foreground capitalize overflow-x-auto whitespace-nowrap custom-scrollbar pb-0.5 min-w-0 flex-1">
+                        {/* Mobile hamburger */}
+                        <button
+                            onClick={() => setMobileDrawerOpen(true)}
+                            className="p-2 rounded-md hover:bg-muted text-foreground transition-colors md:hidden shrink-0"
+                            title="Open Menu"
+                        >
+                            <Menu className="w-5 h-5" />
+                        </button>
+                        {/* Desktop sidebar toggle */}
                         <button
                             onClick={() => setSidebarOpen(!sidebarOpen)}
-                            className="p-2 rounded-md hover:bg-muted text-foreground transition-colors"
+                            className="p-2 rounded-md hover:bg-muted text-foreground transition-colors hidden md:block shrink-0"
                             title="Toggle Sidebar"
                         >
                             <Menu className="w-5 h-5" />
                         </button>
-                        <Link href="/temples/dashboard" className="hover:text-foreground transition-colors">
-                            Temple Admin
-                        </Link>
-                        {pathname === '/temples/dashboard' ? (
-                            <>
-                                <ChevronRight className="w-4 h-4 flex-shrink-0" />
-                                <span className="text-foreground font-medium">Dashboard</span>
-                            </>
 
-                        ) : (
-                            pathname?.split('/').filter(Boolean).slice(2).map((path, index, array) => {
-                                const isLast = index === array.length - 1;
-                                const pathUrl = `/temples/dashboard/${array.slice(0, index + 1).join('/')}`;
-                                let title = path.replace(/-/g, ' ');
-                                if (/^[0-9a-fA-F]{24}$/.test(path) || /^c[a-z0-9]{24}$/.test(path) || path.length === 36) {
-                                    title = "Details";
+                        {/* Breadcrumbs - hidden on very small screens, show on sm+ */}
+                        <div className="hidden sm:flex items-center gap-1 text-sm min-w-0">
+                            <Link href="/temples/dashboard" className="hover:text-foreground transition-colors shrink-0">
+                                Temple Admin
+                            </Link>
+                            {pathname === '/temples/dashboard' ? (
+                                <>
+                                    <ChevronRight className="w-4 h-4 flex-shrink-0" />
+                                    <span className="text-foreground font-medium">Dashboard</span>
+                                </>
+                            ) : (
+                                pathname?.split('/').filter(Boolean).slice(2).map((path, index, array) => {
+                                    const isLast = index === array.length - 1;
+                                    const pathUrl = `/temples/dashboard/${array.slice(0, index + 1).join('/')}`;
+                                    let title = path.replace(/-/g, ' ');
+                                    if (/^[0-9a-fA-F]{24}$/.test(path) || /^c[a-z0-9]{24}$/.test(path) || path.length === 36) {
+                                        title = "Details";
+                                    }
+                                    return (
+                                        <React.Fragment key={pathUrl}>
+                                            <ChevronRight className="w-4 h-4 flex-shrink-0" />
+                                            {isLast ? (
+                                                <span className="text-foreground font-medium truncate max-w-[120px] md:max-w-none">{breadcrumbOverride || title}</span>
+                                            ) : (
+                                                <Link href={pathUrl} className="hover:text-foreground transition-colors truncate max-w-[80px] md:max-w-none">
+                                                    {title}
+                                                </Link>
+                                            )}
+                                        </React.Fragment>
+                                    );
+                                })
+                            )}
+                        </div>
+
+                        {/* Mobile: show current page title */}
+                        <div className="sm:hidden flex items-center gap-1 min-w-0">
+                            <span className="text-foreground font-semibold text-sm truncate">
+                                {pathname === '/temples/dashboard'
+                                    ? 'Dashboard'
+                                    : breadcrumbOverride || pathname?.split('/').filter(Boolean).pop()?.replace(/-/g, ' ') || 'Dashboard'
                                 }
-
-                                return (
-                                    <React.Fragment key={pathUrl}>
-                                        <ChevronRight className="w-4 h-4 flex-shrink-0" />
-                                        {isLast ? (
-                                            <span className="text-foreground font-medium">{breadcrumbOverride || title}</span>
-                                        ) : (
-                                            <Link href={pathUrl} className="hover:text-foreground transition-colors">
-                                                {title}
-                                            </Link>
-                                        )}
-                                    </React.Fragment>
-                                );
-                            })
-                        )}
+                            </span>
+                        </div>
                     </div>
 
-                    <div className="flex items-center gap-3">
+                    <div className="flex items-center gap-2 md:gap-3 shrink-0">
                         <NotificationBell userId={user?.id || user?.email || ''} userType="temple_admin" />
-                        <Button variant="outline" size="sm" asChild>
+                        <Button variant="outline" size="sm" asChild className="hidden sm:flex text-xs px-2 md:px-3 h-8 md:h-9">
                             <Link href="/">View Site</Link>
                         </Button>
                     </div>
                 </header>
 
                 {/* Page content */}
-                <main className="p-6 print:p-0">
+                <main className="p-3 md:p-6 pb-20 md:pb-6 print:p-0">
                     {children}
                 </main>
             </div>

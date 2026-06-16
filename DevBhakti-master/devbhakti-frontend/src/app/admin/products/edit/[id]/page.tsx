@@ -461,7 +461,7 @@ export default function EditProductPage() {
                       />
                     </div>
 
-                    {/* <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                   <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                       <div className="space-y-2">
                         <Label>{t("admin.products.origin")}</Label>
                         <Input
@@ -478,7 +478,7 @@ export default function EditProductPage() {
                           placeholder={lang === "en" ? "Ships in 24-48 Hours" : `${t("admin.products.shipping_label")}...`}
                         />
                       </div>
-                    </div> */}
+                    </div> 
                   </CardContent>
                 </Card>
 
