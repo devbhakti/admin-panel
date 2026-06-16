@@ -327,21 +327,21 @@ export default function TempleDashboardPage() {
     }
 
     return (
-        <div className="space-y-8 bg-orange-50/20 p-4 md:p-8 rounded-[2rem] min-h-screen">
+        <div className="space-y-4 md:space-y-8 bg-orange-50/20 p-2 md:p-8 rounded-[1.5rem] md:rounded-[2rem] min-h-screen">
             {/* Page header - Premium Style */}
-            <div className="flex flex-col md:flex-row md:items-end justify-between gap-4 bg-white p-10 rounded-[2.5rem] shadow-sm border border-orange-100/20 relative overflow-hidden group">
+            <div className="flex flex-col md:flex-row md:items-end justify-between gap-3 bg-white p-5 md:p-10 rounded-[1.5rem] md:rounded-[2.5rem] shadow-sm border border-orange-100/20 relative overflow-hidden group">
                 <div className="absolute top-0 right-0 w-64 h-64 bg-amber-50 rounded-full -mr-32 -mt-32 blur-3xl opacity-50" />
-                <div className="relative z-10 space-y-2">
-                    <h1 className="text-4xl md:text-5xl font-serif font-black text-amber-600 tracking-tight uppercase">
+                <div className="relative z-10 space-y-1 md:space-y-2">
+                    <h1 className="text-2xl md:text-5xl font-serif font-black text-amber-600 tracking-tight uppercase">
                         Temple Dashboard
                     </h1>
-                    <div className="flex items-center gap-3">
-                        <div className="h-8 w-2 bg-amber-600 rounded-full" />
-                        <p className="text-2xl md:text-3xl font-black text-slate-800 font-serif">
+                    <div className="flex items-center gap-2 md:gap-3">
+                        <div className="h-6 md:h-8 w-1.5 md:w-2 bg-amber-600 rounded-full" />
+                        <p className="text-lg md:text-3xl font-black text-slate-800 font-serif truncate max-w-[220px] md:max-w-none">
                             {parseLocalizedValue(templeProfile?.name) || "Sacred Temple"}
                         </p>
                     </div>
-                    <p className="text-slate-400 text-sm font-black uppercase tracking-[0.2em] flex items-center gap-2 pl-1">
+                    <p className="text-slate-400 text-xs md:text-sm font-black uppercase tracking-[0.15em] md:tracking-[0.2em] flex items-center gap-2 pl-1">
                         <span className="w-2 h-2 rounded-full bg-emerald-500" />
                         Administrator Control Center
                     </p>
@@ -349,21 +349,21 @@ export default function TempleDashboardPage() {
             </div>
 
             {/* Performance Overview Filter */}
-            <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 bg-white p-6 rounded-[2rem] shadow-sm border border-orange-100/20">
-                <div className="flex items-center gap-3">
-                    <h2 className="text-2xl font-serif font-black text-slate-800">Performance Overview</h2>
-                    <Badge className="bg-amber-100 text-amber-700 hover:bg-amber-100 border-none font-black uppercase text-[10px] tracking-widest px-3 py-1">
+            <div className="flex flex-col gap-3 bg-white p-4 md:p-6 rounded-[1.5rem] md:rounded-[2rem] shadow-sm border border-orange-100/20">
+                <div className="flex items-center gap-2 md:gap-3">
+                    <h2 className="text-lg md:text-2xl font-serif font-black text-slate-800">Performance Overview</h2>
+                    <Badge className="bg-amber-100 text-amber-700 hover:bg-amber-100 border-none font-black uppercase text-[9px] md:text-[10px] tracking-widest px-2 md:px-3 py-1">
                         {selectedPeriod === 'today' ? 'Daily' : selectedPeriod === 'week' ? 'Weekly' : selectedPeriod === 'month' ? 'Monthly' : selectedPeriod === 'year' ? 'Yearly' : 'Lifetime'}
                     </Badge>
                 </div>
                 
-                <div className="flex bg-slate-100/80 p-1.5 rounded-2xl gap-1">
+                <div className="flex bg-slate-100/80 p-1 md:p-1.5 rounded-xl md:rounded-2xl gap-0.5 md:gap-1 overflow-x-auto">
                     {['today', 'week', 'month', 'year', 'lifetime'].map((period) => (
                         <button
                             key={period}
                             onClick={() => setSelectedPeriod(period as any)}
                             className={cn(
-                                "px-6 py-2.5 rounded-xl text-xs font-black uppercase tracking-widest transition-all",
+                                "px-3 md:px-6 py-2 md:py-2.5 rounded-lg md:rounded-xl text-[10px] md:text-xs font-black uppercase tracking-wider md:tracking-widest transition-all whitespace-nowrap flex-shrink-0",
                                 selectedPeriod === period 
                                     ? "bg-white text-amber-600 shadow-sm" 
                                     : "text-slate-400 hover:text-slate-600"
@@ -376,7 +376,7 @@ export default function TempleDashboardPage() {
             </div>
 
             {/* Performance Stats Cards */}
-            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-5 gap-6">
+            <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-5 gap-3 md:gap-6">
                 {stats.map((stat, index) => (
                     <motion.div
                         key={stat.title}
@@ -385,13 +385,13 @@ export default function TempleDashboardPage() {
                         transition={{ duration: 0.4, delay: index * 0.1 }}
                     >
                         <Card className={cn(
-                            "hover:shadow-xl transition-all border-none rounded-[2rem] overflow-hidden group h-full",
+                            "hover:shadow-xl transition-all border-none rounded-[1.5rem] md:rounded-[2rem] overflow-hidden group h-full",
                             stat.title === "Total Revenue" ? "bg-[#794A05] text-white" : "bg-white"
                         )}>
-                            <CardContent className="p-8">
-                                <div className="flex justify-between items-start mb-4">
-                                    <div className={cn("w-12 h-12 rounded-2xl flex items-center justify-center transition-transform group-hover:scale-110", stat.bg)}>
-                                        <stat.icon className={cn("w-6 h-6", stat.color)} />
+                            <CardContent className="p-4 md:p-8">
+                                <div className="flex justify-between items-start mb-3 md:mb-4">
+                                    <div className={cn("w-9 h-9 md:w-12 md:h-12 rounded-xl md:rounded-2xl flex items-center justify-center transition-transform group-hover:scale-110", stat.bg)}>
+                                        <stat.icon className={cn("w-4 h-4 md:w-6 md:h-6", stat.color)} />
                                     </div>
                                     <Popover>
                                         <PopoverTrigger asChild>
@@ -418,13 +418,13 @@ export default function TempleDashboardPage() {
                                         </PopoverContent>
                                     </Popover>
                                 </div>
-                                <div className="space-y-1">
+                                <div className="space-y-0.5">
                                     <p className={cn(
-                                        "text-2xl font-black tracking-tight",
+                                        "text-lg md:text-2xl font-black tracking-tight",
                                         stat.title === "Total Revenue" ? "text-white" : "text-slate-900"
                                     )}>{stat.value}</p>
                                     <p className={cn(
-                                        "text-xs font-black uppercase tracking-widest",
+                                        "text-[9px] md:text-xs font-black uppercase tracking-wider md:tracking-widest leading-tight",
                                         stat.title === "Total Revenue" ? "text-white/60" : "text-slate-400"
                                     )}>{stat.title}</p>
                                 </div>
@@ -435,7 +435,7 @@ export default function TempleDashboardPage() {
             </div>
 
             {/* Main content grid - 3 columns */}
-            <div className="grid lg:grid-cols-3 gap-8">
+            <div className="grid grid-cols-1 lg:grid-cols-3 gap-4 md:gap-8">
                 {/* Todays Product Orders */}
                 <motion.div
                     initial={{ opacity: 0, y: 20 }}
@@ -594,11 +594,11 @@ export default function TempleDashboardPage() {
                 animate={{ opacity: 1, y: 0 }}
                 transition={{ duration: 0.4, delay: 0.6 }}
             >
-                <Card className="border-none shadow-sm rounded-[2.5rem] bg-white overflow-hidden">
-                    <CardHeader className="p-8 pb-4">
-                        <CardTitle className="text-xl font-black text-slate-800 font-serif">Quick Actions</CardTitle>
+                <Card className="border-none shadow-sm rounded-[1.5rem] md:rounded-[2.5rem] bg-white overflow-hidden">
+                    <CardHeader className="p-4 md:p-8 pb-3 md:pb-4">
+                        <CardTitle className="text-lg md:text-xl font-black text-slate-800 font-serif">Quick Actions</CardTitle>
                     </CardHeader>
-                    <CardContent className="p-8 pt-0">
+                    <CardContent className="p-4 md:p-8 pt-0">
                         <div className="grid grid-cols-2 md:grid-cols-4 gap-6">
                             {[
                                 { label: "Add Product", icon: Package, color: "bg-emerald-500", href: "/temples/dashboard/products" },
@@ -622,19 +622,19 @@ export default function TempleDashboardPage() {
                                             router.push(action.href);
                                         }
                                     }}
-                                    className="relative flex flex-col items-center gap-4 p-6 rounded-[2rem] border border-slate-100 hover:border-amber-200 hover:bg-orange-50/30 transition-all group overflow-hidden"
+                                    className="relative flex flex-col items-center gap-2 md:gap-4 p-3 md:p-6 rounded-[1.5rem] md:rounded-[2rem] border border-slate-100 hover:border-amber-200 hover:bg-orange-50/30 transition-all group overflow-hidden"
                                 >
                                     <div
                                         className={cn(
-                                            "w-16 h-16 rounded-2xl flex items-center justify-center group-hover:scale-110 transition-transform shadow-lg",
+                                            "w-12 h-12 md:w-16 md:h-16 rounded-xl md:rounded-2xl flex items-center justify-center group-hover:scale-110 transition-transform shadow-lg",
                                             action.color
                                         )}
                                     >
-                                        <action.icon className="w-8 h-8 text-white" />
+                                        <action.icon className="w-6 h-6 md:w-8 md:h-8 text-white" />
                                     </div>
                                     <div className="text-center">
-                                        <span className="text-sm font-black text-slate-800 block leading-tight">{action.label}</span>
-                                        {action.subtext && <span className="text-[10px] font-bold text-slate-400 uppercase tracking-widest">{action.subtext}</span>}
+                                        <span className="text-[11px] md:text-sm font-black text-slate-800 block leading-tight">{action.label}</span>
+                                        {action.subtext && <span className="text-[9px] md:text-[10px] font-bold text-slate-400 uppercase tracking-widest">{action.subtext}</span>}
                                     </div>
                                     {action.isExcel && (
                                         <div className="absolute top-2 right-2 flex gap-1">

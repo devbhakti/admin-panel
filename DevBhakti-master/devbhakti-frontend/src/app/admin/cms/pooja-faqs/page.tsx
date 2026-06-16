@@ -318,7 +318,7 @@ export default function PoojaFAQsPage() {
                     </p>
                 </div>
                 <div className="flex flex-wrap items-center gap-2">
-                    {/* <Button variant="outline" onClick={downloadTemplate} className="text-xs h-9">
+                    <Button variant="outline" onClick={downloadTemplate} className="text-xs h-9">
                         <Download className="w-4 h-4 mr-1.5" />
                         Template
                     </Button>
@@ -339,7 +339,7 @@ export default function PoojaFAQsPage() {
                     <Button variant="outline" onClick={handleExportExcel} className="text-xs h-9">
                         <Download className="w-4 h-4 mr-1.5" />
                         Export All
-                    </Button> */}
+                    </Button>
 
                     <Button onClick={() => handleOpenDialog()} className="bg-[#7b4623] hover:bg-[#5d351a] h-9">
                         <Plus className="w-4 h-4 mr-2" />

@@ -251,18 +251,12 @@ export const sendOTP = async (req: Request, res: Response) => {
 
         const checkRole = role || 'DEVOTEE';
 
-        // Infer mode if missing - Smart detection
-        let effectiveMode = mode;
-        if (!effectiveMode) {
-            if (name) {
-                effectiveMode = 'register';
-            } else {
-                // Check only for same role
-                const tempUser = await prisma.user.findFirst({
-                    where: { phone: normalizedPhone, role: checkRole as any }
-                });
-                effectiveMode = tempUser ? 'login' : 'register';
-            }
+        // Strict Mode Handling: Default to 'login' if mode is not provided
+        let effectiveMode = mode || 'login'; 
+
+        // Security check: Never allow registration via simple OTP for complex roles
+        if (checkRole === 'INSTITUTION' || checkRole === 'SELLER') {
+            effectiveMode = 'login';
         }
 
         const isRegisterFlow = effectiveMode === 'register';
@@ -294,7 +288,7 @@ export const sendOTP = async (req: Request, res: Response) => {
             if (!isRegisterFlow) {
                 return res.status(404).json({
                     success: false,
-                    message: `No account found with number ${normalizedPhone}. Please register to continue.`
+                    message: 'This number is not registered with us. Please register to continue.'
                 });
             }
 

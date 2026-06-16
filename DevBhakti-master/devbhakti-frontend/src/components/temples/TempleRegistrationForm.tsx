@@ -35,6 +35,7 @@ import { Textarea } from "@/components/ui/textarea";
 import { RichTextEditor } from "@/components/ui/rich-text-editor";
 import { useToast } from "@/hooks/use-toast";
 import { registerTemple, fetchAllPoojasPublic } from "@/api/templeAdminController";
+import { captureLead } from "@/api/leadApi";
 import { checkInstitutionPhone } from "@/api/authController";
 import { Badge } from "@/components/ui/badge";
 import { Card, CardContent } from "@/components/ui/card";
@@ -94,11 +95,33 @@ export default function TempleRegistrationForm({ onClose }: { onClose?: () => vo
                 setPhoneError(t('registration_form.validation.phone_registered'));
             } else {
                 setPhoneError(null);
+                try {
+                    await captureLead(phone, "TEMPLE_ONBOARDING", { templeName: formData.templeName }, formData.name, formData.email);
+                } catch (leadError) {
+                    console.error("Failed to capture lead silently:", leadError);
+                }
             }
         } catch (error) {
             console.error("Error validating phone:", error);
         }
     };
+
+    // Sync lead data periodically when user types more details
+    useEffect(() => {
+        const timeout = setTimeout(() => {
+            const phoneDigits = formData.phone.replace(/\\D/g, '');
+            if (phoneDigits.length === 10 && !phoneError) {
+                captureLead(
+                    phoneDigits, 
+                    "TEMPLE_ONBOARDING", 
+                    { templeName: formData.templeName },
+                    formData.name,
+                    formData.email
+                ).catch(e => console.error("Failed silent lead update", e));
+            }
+        }, 1000);
+        return () => clearTimeout(timeout);
+    }, [formData.name, formData.email, formData.templeName]);
 
     // Crop State
     const [showCropper, setShowCropper] = useState(false);

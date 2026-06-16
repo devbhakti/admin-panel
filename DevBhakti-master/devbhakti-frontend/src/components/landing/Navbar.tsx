@@ -230,7 +230,7 @@ const Navbar: React.FC<NavbarProps> = ({ variant = "default", isSolid = false })
                 <Button
                   variant="outline"
                   onClick={() => setShowTempleLoginModal(true)}
-                  className="hidden md:flex bg-[#88542B] border-[#c2a087] text-white hover:bg-[#CA9E52] hover:text-white rounded-full px-6 h-9 mr-2 text-sm font-medium transition-all hover:border-[#864c20]"
+                  className="flex bg-[#88542B] border-[#c2a087] text-white hover:bg-[#CA9E52] hover:text-white rounded-full px-4 md:px-6 h-9 mr-1 md:mr-2 text-xs md:text-sm font-medium transition-all hover:border-[#864c20]"
                 >
                   {mounted ? t('navbar.temple_login') : "Temple Login"}
                 </Button>
@@ -549,6 +549,22 @@ const Navbar: React.FC<NavbarProps> = ({ variant = "default", isSolid = false })
                           <Church className="w-5 h-5 text-orange-600" />
                           <span>{t('navbar.temple_register')}</span>
                         </Link>
+                      </Button>
+                    )}
+
+                    {/* Temple Login - Mobile Menu (only for temple variant) */}
+                    {variant === "temple" && (
+                      <Button
+                        size="lg"
+                        onClick={() => {
+                          setIsMobileMenuOpen(false);
+                          setShowTempleLoginModal(true);
+                        }}
+                        className="justify-start gap-4 h-14 rounded-2xl bg-[#88542B] hover:bg-[#CA9E52] text-white border-0"
+                      >
+                        <LogIn className="w-5 h-5" />
+                        <span className="font-bold">{mounted ? t('navbar.temple_login') : "Temple Login"}</span>
+                        <ChevronRight className="w-4 h-4 ml-auto opacity-70" />
                       </Button>
                     )}
 

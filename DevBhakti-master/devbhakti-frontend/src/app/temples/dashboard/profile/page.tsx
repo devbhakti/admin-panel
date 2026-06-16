@@ -386,13 +386,14 @@ export default function TempleProfilePage() {
             </div>
 
             {/* Header / Actions */}
-            <div className="flex flex-col md:flex-row md:items-center justify-between gap-6 bg-white/40 backdrop-blur-md border border-white/20 p-6 rounded-[2.5rem] shadow-xl">
-                <div className="flex items-center gap-6">
-                    <div className="relative w-20 h-20 flex items-center justify-center shrink-0">
+            <div className="flex flex-col gap-4 bg-white/40 backdrop-blur-md border border-white/20 p-4 md:p-6 rounded-[1.5rem] md:rounded-[2.5rem] shadow-xl">
+                <div className="flex items-center gap-3 md:gap-6">
+                    {/* Completion ring */}
+                    <div className="relative w-14 h-14 md:w-20 md:h-20 flex items-center justify-center shrink-0">
                         <svg className="w-full h-full transform -rotate-90">
-                            <circle cx="40" cy="40" r="36" stroke="currentColor" strokeWidth="6" fill="transparent" className="text-slate-100" />
+                            <circle cx="50%" cy="50%" r="45%" stroke="currentColor" strokeWidth="8%" fill="transparent" className="text-slate-100" />
                             <motion.circle
-                                cx="40" cy="40" r="36" stroke="currentColor" strokeWidth="6" fill="transparent"
+                                cx="50%" cy="50%" r="45%" stroke="currentColor" strokeWidth="8%" fill="transparent"
                                 strokeDasharray={226}
                                 initial={{ strokeDashoffset: 226 }}
                                 animate={{ strokeDashoffset: 226 * (1 - completeness / 100) }}
@@ -400,24 +401,25 @@ export default function TempleProfilePage() {
                                 className="text-[#7b4623]"
                             />
                         </svg>
-                        <span className="absolute text-sm font-black text-[#7b4623]">{completeness}%</span>
+                        <span className="absolute text-[11px] md:text-sm font-black text-[#7b4623]">{completeness}%</span>
                     </div>
-                    <div>
-                        <div className="flex items-center gap-2 text-[#7b4623] mb-1">
-                            <ShieldCheck className="w-4 h-4" />
-                            <span className="text-[10px] font-black uppercase tracking-[0.2em]">Verified Temple Profile</span>
+                    <div className="min-w-0 flex-1">
+                        <div className="flex flex-wrap items-center gap-1 md:gap-2 text-[#7b4623] mb-1">
+                            <ShieldCheck className="w-3 h-3 md:w-4 md:h-4 shrink-0" />
+                            <span className="text-[9px] md:text-[10px] font-black uppercase tracking-[0.15em] md:tracking-[0.2em]">Verified Temple Profile</span>
                             {JSON.parse(localStorage.getItem('user') || '{}').isStaff && (
-                                <Badge variant="outline" className="ml-2 border-[#7b4623]/20 bg-[#7b4623]/5 text-[#7b4623] text-[9px] font-black tracking-widest px-2 py-0">STAFF VIEW</Badge>
+                                <Badge variant="outline" className="border-[#7b4623]/20 bg-[#7b4623]/5 text-[#7b4623] text-[8px] font-black tracking-widest px-1.5 py-0">STAFF</Badge>
                             )}
                         </div>
-                        <h1 className="text-3xl font-bold font-serif text-slate-900 tracking-tight">{formData.name_en || "Your Temple"}</h1>
-                        <p className="text-xs text-slate-500 font-medium">{t('admin.temples.list.desc') || "Manage your temple's public identity and information"}</p>
+                        <h1 className="text-lg md:text-3xl font-bold font-serif text-slate-900 tracking-tight truncate">{formData.name_en || "Your Temple"}</h1>
+                        <p className="text-[10px] md:text-xs text-slate-500 font-medium hidden sm:block">{t('admin.temples.list.desc') || "Manage your temple's public identity and information"}</p>
                     </div>
                 </div>
 
-                <div className="flex items-center gap-3">
+                {/* Action buttons - wrap on mobile */}
+                <div className="flex flex-wrap items-center gap-2">
                     {!canManage && (
-                        <Badge className="bg-slate-100 text-slate-500 border-slate-200 uppercase font-black tracking-widest px-4 py-2 rounded-xl">View Only Mode</Badge>
+                        <Badge className="bg-slate-100 text-slate-500 border-slate-200 uppercase font-black tracking-widest px-3 py-1.5 rounded-xl text-[9px]">View Only</Badge>
                     )}
                     {!isEditing ? (
                         <>
@@ -434,16 +436,16 @@ export default function TempleProfilePage() {
                             <Button
                                 variant="outline"
                                 onClick={() => window.open(`${window.location.origin}/temples/${formData.slug || profile?.id}`, '_blank')}
-                                className="rounded-2xl border-[#7b4623]/20 text-[#7b4623] hover:bg-[#7b4623]/5 shadow-sm px-6"
+                                className="rounded-xl md:rounded-2xl border-[#7b4623]/20 text-[#7b4623] hover:bg-[#7b4623]/5 shadow-sm px-3 md:px-6 h-9 md:h-10 text-xs md:text-sm"
                             >
-                                <Eye className="w-4 h-4 mr-2" /> View Public Profile
+                                <Eye className="w-3.5 h-3.5 mr-1 md:mr-2" /> <span className="hidden sm:inline">View Public </span>Profile
                             </Button>
                             {canManage && (
                                 <Button
                                     onClick={() => setIsEditing(true)}
-                                    className="bg-[#7b4623] hover:bg-[#5d351a] text-white px-8 rounded-2xl shadow-lg shadow-[#7b4623]/20 transition-all font-bold"
+                                    className="bg-[#7b4623] hover:bg-[#5d351a] text-white px-4 md:px-8 rounded-xl md:rounded-2xl shadow-lg shadow-[#7b4623]/20 transition-all font-bold h-9 md:h-10 text-xs md:text-sm"
                                 >
-                                    <Settings2 className="w-4 h-4 mr-2" /> Edit Profile
+                                    <Settings2 className="w-3.5 h-3.5 mr-1 md:mr-2" /> Edit Profile
                                 </Button>
                             )}
                         </>
@@ -452,16 +454,16 @@ export default function TempleProfilePage() {
                             <Button
                                 variant="outline"
                                 onClick={() => { setIsEditing(false); loadProfile(); }}
-                                className="rounded-2xl border-slate-200 text-slate-500 hover:bg-slate-50 px-8 font-bold"
+                                className="rounded-xl md:rounded-2xl border-slate-200 text-slate-500 hover:bg-slate-50 px-4 md:px-8 font-bold h-9 md:h-10 text-xs md:text-sm"
                             >
                                 Reset
                             </Button>
                             <Button
                                 onClick={handleSubmit}
                                 disabled={isSaving}
-                                className="bg-[#7b4623] hover:bg-[#5d351a] text-white px-10 rounded-2xl shadow-lg shadow-[#7b4623]/20 font-bold"
+                                className="bg-[#7b4623] hover:bg-[#5d351a] text-white px-5 md:px-10 rounded-xl md:rounded-2xl shadow-lg shadow-[#7b4623]/20 font-bold h-9 md:h-10 text-xs md:text-sm"
                             >
-                                {isSaving ? <Loader2 className="w-4 h-4 mr-2 animate-spin" /> : <Save className="w-4 h-4 mr-2" />}
+                                {isSaving ? <Loader2 className="w-3.5 h-3.5 mr-1 md:mr-2 animate-spin" /> : <Save className="w-3.5 h-3.5 mr-1 md:mr-2" />}
                                 Save Profile
                             </Button>
                         </>
@@ -962,12 +964,17 @@ export default function TempleProfilePage() {
                                         </CardTitle>
                                     </CardHeader>
                                     <CardContent className="p-8 space-y-10">
-                                        <div className="space-y-4">
-                                            <h3 className="text-sm font-black uppercase tracking-widest text-[#7b4623]/40">About the Temple</h3>
-                                            <p className="text-slate-700 leading-relaxed text-lg font-serif italic border-l-4 border-[#7b4623]/20 pl-6">
-                                                {formData.description_en || "No description provided yet."}
-                                            </p>
-                                        </div>
+                                      <div className="space-y-4">
+    <h3 className="text-sm font-black uppercase tracking-widest text-[#7b4623]/40">
+        About the Temple
+    </h3>
+    <div 
+        className="text-slate-700 leading-relaxed text-lg font-serif border-l-4 border-[#7b4623]/20 pl-6 prose prose-slate max-w-none"
+        dangerouslySetInnerHTML={{ 
+            __html: formData.description_en || "No description provided yet." 
+        }} 
+    />
+</div>
 
                                         {formData.history_en && (
                                             <div className="space-y-4 pt-8 border-t border-slate-100">

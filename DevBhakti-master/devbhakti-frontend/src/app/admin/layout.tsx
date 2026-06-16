@@ -28,6 +28,7 @@ import {
   ShieldCheck,
   ShieldAlert,
   Megaphone,
+  Target,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 // import Logo from "@/components/icons/Logo";
@@ -61,6 +62,12 @@ const sidebarItems = [
     label: "Users Management",
     icon: Users,
     href: "/admin/users",
+    permission: "users.menu",
+  },
+  {
+    label: "Leads Management",
+    icon: Target,
+    href: "/admin/leads",
     permission: "users.menu",
   },
   {

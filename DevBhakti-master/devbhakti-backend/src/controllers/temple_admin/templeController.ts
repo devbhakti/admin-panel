@@ -142,6 +142,18 @@ export const registerTemple = async (req: Request, res: Response) => {
       return { user, temple };
     });
 
+    // Delete the Lead if it exists, since they have successfully registered
+    if (data.phone) {
+      try {
+        await prisma.lead.delete({
+          where: { phone: data.phone }
+        });
+        console.log(`Deleted lead for phone ${data.phone} after successful temple registration.`);
+      } catch (leadDeleteErr) {
+        // Ignore error if lead doesn't exist
+      }
+    }
+
     // 3. Register Pickup Location with Shiprocket
     try {
       const locEn = getEnglish((result.temple as any).location) || data.location || '';
@@ -260,15 +272,6 @@ export const updateMyTempleProfile = async (req: Request, res: Response) => {
       }
     }
 
-    if (trusteeInfoChanged && Object.keys(userUpdatePayload).length > 0) {
-      await prisma.user.update({ where: { id: temple.userId }, data: userUpdatePayload });
-      notifyAdmins({
-        title: '\uD83D\uDD14 Temple Trustee Info Updated',
-        body: `${getEnglish(temple.name) || 'A Temple'} has updated their trustee (account) information.`,
-        data: { link: '/admin/temples', type: 'TRUSTEE_UPDATE' }
-      }).catch((err: any) => console.error('Trustee notification error:', err));
-    }
-
     // Validate Phone if provided
     if (data.phone) {
       const cleaned = data.phone.replace(/\D/g, '');
@@ -294,13 +297,7 @@ export const updateMyTempleProfile = async (req: Request, res: Response) => {
         });
       }
 
-      // If phone is different from current, we'll need to update the User record as well
-      if (data.phone !== temple.user?.phone && data.phone !== temple.phone) {
-        await prisma.user.update({
-          where: { id: temple.userId },
-          data: { phone: data.phone }
-        });
-      }
+      // If phone is different from current, it will be added to sensitive changes below
     }
     
     // Note: temple.user might not be included in the initial fetch, let's check.
@@ -332,7 +329,8 @@ export const updateMyTempleProfile = async (req: Request, res: Response) => {
       'location_en', 'location_hi', 'location_mr',
       'category_en', 'category_hi', 'category_mr',
       'fullAddress_en', 'fullAddress_hi', 'fullAddress_mr',
-      'image', 'heroImages', 'gallery',
+      'phone', 'slug', 'subdomain', 'urlType',
+      'pickupLocation_en', 'pickupLocation_hi', 'pickupLocation_mr',
       'accountHolderName', 'accountNumber', 'bankName', 'ifscCode', 'upiId'
     ];
 
@@ -370,26 +368,49 @@ export const updateMyTempleProfile = async (req: Request, res: Response) => {
       viewers: data.viewers,
       isLive: data.isLive !== undefined ? (String(data.isLive) === 'true') : undefined,
       liveUrl: data.liveUrl,
+      youtubeLinks: data.youtubeLinks ? JSON.parse(data.youtubeLinks) : undefined,
       // Technical Identity
       slug: data.slug,
       subdomain: data.subdomain,
       urlType: data.urlType,
+      pickupLocation_en: data.pickupLocation_en || data.pickupLocation,
+      pickupLocation_hi: data.pickupLocation_hi,
+      pickupLocation_mr: data.pickupLocation_mr,
       // If user pastes a raw YouTube Channel ID in liveUrl, persist it into channelId as well
       channelId: data.channelId || (typeof data.liveUrl === 'string' && data.liveUrl.trim().startsWith('UC') ? data.liveUrl.trim() : undefined),
     };
 
-    // Handle files
+    // Handle files (Now Non-Sensitive)
     const newImage = getFilePath(files, 'image');
     if (newImage) {
-      sensitiveChanges['image'] = newImage;
-      oldSensitiveData['image'] = temple.image;
-      hasSensitiveChanges = true;
+      updateData['image'] = newImage;
     }
 
-    const newHeroImages = files && files['heroImages'] ? getFilePaths(files, 'heroImages') : null;
-    if (newHeroImages && newHeroImages.length > 0) {
-      sensitiveChanges['heroImages'] = newHeroImages;
-      oldSensitiveData['heroImages'] = temple.heroImages;
+    const existingHeroImages = data.existingHeroImages ? JSON.parse(data.existingHeroImages) : (temple.heroImages as string[] || []);
+    const newHeroImages = files && files['heroImages'] ? getFilePaths(files, 'heroImages') : [];
+    const currentHeroImages = temple.heroImages as string[] || [];
+
+    if (newHeroImages.length > 0 || (data.existingHeroImages && existingHeroImages.length !== currentHeroImages.length)) {
+      updateData['heroImages'] = [
+        ...existingHeroImages,
+        ...newHeroImages
+      ];
+    }
+
+    // Add trustee changes to sensitiveChanges if any
+    if (trusteeInfoChanged && Object.keys(userUpdatePayload).length > 0) {
+      if (userUpdatePayload.name) {
+        sensitiveChanges.adminName = userUpdatePayload.name;
+        oldSensitiveData.adminName = temple.user?.name;
+      }
+      if (userUpdatePayload.email) {
+        sensitiveChanges.adminEmail = userUpdatePayload.email;
+        oldSensitiveData.adminEmail = temple.user?.email;
+      }
+      if (userUpdatePayload.phone) {
+        sensitiveChanges.adminPhone = userUpdatePayload.phone;
+        oldSensitiveData.adminPhone = temple.user?.phone;
+      }
       hasSensitiveChanges = true;
     }
 
@@ -501,11 +522,7 @@ export const updateMyTempleProfile = async (req: Request, res: Response) => {
       return res.json({ success: true, data: updatedTemple, message: 'Profile updated successfully' });
     }
 
-    // If only trustee info was changed, still return success
-    if (trusteeInfoChanged) {
-      return res.json({ success: true, message: 'Trustee information updated successfully.' });
-    }
-
+    // If only trustee info was changed (now pending), handled above
     res.json({ success: true, message: 'No changes detected' });
   } catch (error: any) {
     console.error('Update Temple Profile Error:', error);

@@ -45,12 +45,14 @@ import sellerGeneralRoutes from './routes/seller/sellerRoutes';
 import sellerFinanceRoutes from './routes/seller/financeRoutes';
 import adminCommissionSlabRoutes from './routes/admin/commissionSlabRoutes';
 import adminUserRoutes from './routes/admin/userRoutes';
+import adminLeadRoutes from './routes/admin/leadRoutes';
 import publicSearchRoutes from './routes/publicSearchRoutes';
 import adminStaffManagementRoutes from './routes/admin/staffManagementRoutes';
 import templeAdminStaffManagementRoutes from './routes/temple_admin/staffManagementRoutes';
 import sellerStaffManagementRoutes from './routes/seller/staffManagementRoutes';
 import notificationRoutes from './routes/notificationRoutes';
 import contactRoutes from './routes/contactRoutes';
+import leadRoutes from './routes/leadRoutes';
 import './services/firebaseService'; // Initialize Firebase Admin on startup
 
 import adminSettingsRoutes from './routes/admin/globalSettingsRoutes';
@@ -86,6 +88,7 @@ app.use('/api/admin/finance', adminFinanceManagementRoutes);
 app.use('/api/admin/sellers', adminSellerRoutes);
 app.use('/api/admin/dashboard', adminDashboardRoutes);
 app.use('/api/admin/users', adminUserRoutes);
+app.use('/api/admin/leads', adminLeadRoutes);
 app.use('/api/admin/commission-slabs', adminCommissionSlabRoutes);
 app.use('/api/admin/team', adminStaffManagementRoutes);
 app.use("/api/admin/donations", adminDonationRoutes);
@@ -128,6 +131,7 @@ app.use('/api/donations', donationRoutes);
 // General Routes (Temporary)
 app.use('/api/temples', templeRoutes);
 app.use('/api/search', publicSearchRoutes);
+app.use('/api/leads', leadRoutes);
 
 // Notification Routes (FCM Token Register/Remove)
 app.use('/api/notifications', notificationRoutes);

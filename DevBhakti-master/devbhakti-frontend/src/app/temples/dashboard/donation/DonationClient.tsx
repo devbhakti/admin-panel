@@ -356,13 +356,13 @@ export default function DonationClient() {
                     </p>
                 </div>
                 <div className="flex flex-wrap items-center gap-3">
-                    <Button
+                    {/* <Button
                         variant="secondary"
                         className="rounded-xl border-primary/20 text-primary hover:bg-primary/5"
                         onClick={openAddDonationModal}
                     >
                         Add Donation
-                    </Button>
+                    </Button> */}
                     <Button variant="outline" className="rounded-xl border-primary/20 text-primary hover:bg-primary/5" onClick={handleDownloadReport}>
                         <Download className="w-4 h-4 mr-2" />
                         Download Excel

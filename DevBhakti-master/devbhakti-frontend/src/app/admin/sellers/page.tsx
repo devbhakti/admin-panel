@@ -293,12 +293,12 @@ export default function SellersManagementPage() {
                     <p className="text-muted-foreground">Manage your marketplace sellers and their applications.</p>
                 </div>
                 <div className="flex flex-wrap items-center gap-2">
-                    {/* <Button variant="outline" onClick={downloadTemplate} className="text-xs h-9">
+                    <Button variant="outline" onClick={downloadTemplate} className="text-xs h-9">
                         <Download className="w-4 h-4 mr-1.5" />
                         Template
-                    </Button> */}
+                    </Button>
 
-                    {/* <div className="relative">
+                    <div className="relative">
                         <input
                             type="file"
                             accept=".xlsx, .xls"
@@ -309,12 +309,12 @@ export default function SellersManagementPage() {
                             <Upload className="w-4 h-4 mr-1.5" />
                             Import
                         </Button>
-                    </div> */}
+                    </div>
 
-                    {/* <Button variant="outline" onClick={handleExportExcel} className="text-xs h-9">
+                    <Button variant="outline" onClick={handleExportExcel} className="text-xs h-9">
                         <Download className="w-4 h-4 mr-1.5" />
                         Export All
-                    </Button> */}
+                    </Button>
 
                     <Button onClick={() => router.push('/admin/sellers/create')} className="bg-[#7b4623] hover:bg-[#5d351a] h-9">
                         <Plus className="w-4 h-4 mr-2" />

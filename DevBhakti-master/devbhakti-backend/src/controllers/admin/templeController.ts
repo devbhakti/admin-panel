@@ -1086,14 +1086,60 @@ export const approveUpdateRequest = async (req: Request, res: Response) => {
 
     const requestedData = request.requestedData as any;
 
+    const dataToUpdate: any = { ...requestedData };
+    const langFields = ['name', 'location', 'fullAddress', 'description', 'history', 'category', 'pickupLocation'];
+
+    for (const field of langFields) {
+      if (requestedData[`${field}_en`] !== undefined || requestedData[`${field}_hi`] !== undefined || requestedData[`${field}_mr`] !== undefined || requestedData[field] !== undefined) {
+        dataToUpdate[field] = JSON.stringify(buildLangJson(
+          requestedData[`${field}_en`] || requestedData[field] || '',
+          requestedData[`${field}_hi`],
+          requestedData[`${field}_mr`]
+        ));
+        delete dataToUpdate[`${field}_en`];
+        delete dataToUpdate[`${field}_hi`];
+        delete dataToUpdate[`${field}_mr`];
+      }
+    }
+
+    const userUpdatePayload: any = {};
+    if (dataToUpdate.adminName) {
+      userUpdatePayload.name = dataToUpdate.adminName;
+      delete dataToUpdate.adminName;
+    }
+    if (dataToUpdate.adminEmail) {
+      userUpdatePayload.email = dataToUpdate.adminEmail;
+      delete dataToUpdate.adminEmail;
+    }
+    if (dataToUpdate.adminPhone) {
+      userUpdatePayload.phone = dataToUpdate.adminPhone;
+      delete dataToUpdate.adminPhone;
+    }
+
+    // Clean up other potential non-schema fields
+    delete dataToUpdate.poojaIds;
+    delete dataToUpdate.inlineEvents;
+    delete dataToUpdate.existingHeroImages;
+    delete dataToUpdate.commissionSlabs;
+
     await prisma.$transaction(async (tx) => {
       // 1. Update Temple with requested data
-      await tx.temple.update({
-        where: { id: request.templeId },
-        data: requestedData
-      });
+      if (Object.keys(dataToUpdate).length > 0) {
+        await tx.temple.update({
+          where: { id: request.templeId },
+          data: dataToUpdate
+        });
+      }
 
-      // 2. Mark request as APPROVED
+      // 2. Update User (Trustee) with requested data
+      if (Object.keys(userUpdatePayload).length > 0) {
+        await tx.user.update({
+          where: { id: request.temple.userId },
+          data: userUpdatePayload
+        });
+      }
+
+      // 3. Mark request as APPROVED
       await tx.templeUpdateRequest.update({
         where: { id },
         data: { status: 'APPROVED' }

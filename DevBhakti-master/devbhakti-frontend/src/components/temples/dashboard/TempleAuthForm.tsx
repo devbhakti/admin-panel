@@ -27,14 +27,11 @@ const TempleAuthForm: React.FC = () => {
         setLoading(true);
         const normalizedPhone = phone.replace(/\D/g, '');
         try {
-            const response = await sendOTP({ phone: normalizedPhone, role: "INSTITUTION" });
+            const response = await sendOTP({ phone: normalizedPhone, role: "INSTITUTION", mode: "login" });
             setShowOtpInput(true);
             if (response.data?.otp) {
                 setDevOtp(response.data.otp);
             }
-            // Original code:
-            // const response = await sendOTP({ phone: normalizedPhone, role: "INSTITUTION" });
-            // setShowOtpInput(true);
         } catch (error: any) {
             setError(error.response?.data?.message || "Failed to send OTP. Please try again.");
         } finally {
