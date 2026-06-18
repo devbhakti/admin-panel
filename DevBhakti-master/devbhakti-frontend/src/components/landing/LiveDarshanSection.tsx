@@ -14,20 +14,12 @@ import { getTempleUrl, getLiveDarshanUrl } from "@/lib/utils/templeUtils";
 import { useLanguage } from "@/context/LanguageContext";
 import { getLocalized } from "@/utils/localization";
 import { getVideoRenderInfo } from "@/lib/utils/videoUtils";
-import { HlsVideoPlayer } from "@/components/video/HlsVideoPlayer";
+import { UniversalVideoPlayer } from "@/components/video/UniversalVideoPlayer";
 
 const LiveDarshanSection: React.FC = () => {
   const [liveTemples, setLiveTemples] = React.useState<any[]>([]);
   const [loading, setLoading] = React.useState(true);
   const { t, language } = useLanguage();
-
-  const getPlayerSrc = (src: string, platform: string | null) => {
-    if (!src) return "";
-    if (platform === "youtube") {
-      return src.includes("?") ? `${src}&autoplay=1&mute=1&rel=0` : `${src}?autoplay=1&mute=1&rel=0`;
-    }
-    return src;
-  };
 
   React.useEffect(() => {
     const loadLiveTemples = async () => {
@@ -76,18 +68,9 @@ const LiveDarshanSection: React.FC = () => {
             <Link href={getLiveDarshanUrl(primaryTemple)}>
               <div className="relative rounded-2xl overflow-hidden bg-sidebar-accent aspect-video shadow-elevated group cursor-pointer">
                 {/* Primary live video or fallback image */}
-                {primaryInfo.kind === "iframe" ? (
-                  <iframe
-                    src={getPlayerSrc(primaryInfo.src, primaryInfo.platform)}
-                    title="Live darshan preview"
-                    className="w-full h-full"
-                    allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share"
-                    allowFullScreen
-                    frameBorder={0}
-                  />
-                ) : primaryInfo.kind === "video" ? (
-                  <HlsVideoPlayer
-                    src={primaryInfo.src}
+                {primaryInfo.kind !== "unknown" ? (
+                  <UniversalVideoPlayer
+                    url={primarySource}
                     className="w-full h-full object-cover"
                     autoPlay
                     muted

@@ -53,9 +53,11 @@ import sellerStaffManagementRoutes from './routes/seller/staffManagementRoutes';
 import notificationRoutes from './routes/notificationRoutes';
 import contactRoutes from './routes/contactRoutes';
 import leadRoutes from './routes/leadRoutes';
+import mandalRoutes from './routes/mandalRoutes';
 import './services/firebaseService'; // Initialize Firebase Admin on startup
 
 import adminSettingsRoutes from './routes/admin/globalSettingsRoutes';
+import adminMandalRoutes from './routes/admin/mandalRoutes';
 
 
 dotenv.config();
@@ -94,6 +96,7 @@ app.use('/api/admin/team', adminStaffManagementRoutes);
 app.use("/api/admin/donations", adminDonationRoutes);
 app.use('/api/admin/marketing', adminMarketingRoutes);
 app.use('/api/admin/settings', adminSettingsRoutes);
+app.use('/api/admin/mandals', adminMandalRoutes);
 
 
 
@@ -138,6 +141,9 @@ app.use('/api/notifications', notificationRoutes);
 
 // Contact Inquiry Route
 app.use('/api/contact', contactRoutes);
+
+// Mandal Registration Route
+app.use('/api/mandals', mandalRoutes);
 
 
 // Basic Error Handler

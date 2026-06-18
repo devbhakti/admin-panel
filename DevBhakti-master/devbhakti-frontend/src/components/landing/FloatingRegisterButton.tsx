@@ -6,9 +6,10 @@ import { useLanguage } from "@/context/LanguageContext";
 
 interface FloatingRegisterButtonProps {
     onClick: () => void;
+    label?: string;
 }
 
-const FloatingRegisterButton: React.FC<FloatingRegisterButtonProps> = ({ onClick }) => {
+const FloatingRegisterButton: React.FC<FloatingRegisterButtonProps> = ({ onClick, label }) => {
     const { t } = useLanguage();
     return (
         <motion.div
@@ -22,7 +23,7 @@ const FloatingRegisterButton: React.FC<FloatingRegisterButtonProps> = ({ onClick
                 className="bg-[#88542B] hover:bg-[#704221] text-white py-8 px-3 rounded-l-md shadow-lg transition-all duration-300 group cursor-pointer border-l border-y border-white/20 flex flex-col items-center justify-center outline-none"
             >
                 <div className="writing-mode-vertical rotate-180 text-sm font-medium tracking-wide whitespace-nowrap px-1">
-                    {t('landing.floating_register')}
+                    {label || t('landing.floating_register')}
                 </div>
             </button>
         </motion.div>

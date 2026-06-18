@@ -379,8 +379,13 @@ model CTACard {
 
 model PoojaBooking {
   id                 String        @id @default(cuid())
-  displayId          String?       @unique
-  userId             String
+  displayId          String
+  
+  
+  
+  
+  
+ userId             String
   poojaId            String
   templeId           String?
   packageName        String
@@ -699,6 +704,42 @@ enum WithdrawalStatus {
   APPROVED
   REJECTED
   PAID
+}
+
+model Mandal{
+  id                 String   @id @default(cuid())
+
+  name               Json     // { "en": "...", "hi": "...", "mr": "..." }
+  mandalType         String?  // e.g. "Ganesh", "Durga", "Ram", "Other"
+  description        Json?    // { "en": "...", "hi": "...", "mr": "..." }
+  about              Json?    // { "en": "...", "hi": "...", "mr": "..." }
+  // Step 2: Deity Details
+  presiding_deity    String?
+  festivals          String?  // comma separated festivals
+  // Step 3: Location
+  address            String?
+  city               String?
+  state              String?
+  pinCode            String?
+  // Step 4: Contact & Documents
+  contactNumber      String
+  email              String?
+  presidentName      String?
+  registrationNumber String?  // NGO/Trust registration number
+  verificationDocUrl String?  // Uploaded doc URL
+  presidentIdDocUrl  String?  // ID proof URL
+  // Media
+  image              String?  // Main image URL
+  bannerImages       String[] @default([]) // Gallery/banner images
+  documentUrl        String?  // Verification document URL
+  // Routing
+  slug               String?  @unique
+  // Status
+  isActive           Boolean  @default(true)
+  status             String   @default("PENDING") // PENDING | APPROVED | REJECTED
+  adminNotes         String?
+  createdAt          DateTime @default(now())
+  updatedAt          DateTime @updatedAt
 }
 
 model Lead {

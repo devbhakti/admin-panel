@@ -3,6 +3,7 @@ import { prisma } from '../../lib/prisma';
 
 const RATINGS_SETTINGS_KEY = 'ratings_management';
 const SEO_SETTINGS_KEY = 'seo_meta_tags';
+const MANDAL_REGISTRATION_KEY = 'mandal_registration_enabled';
 
 
 export const getRatingsSettings = async (req: Request, res: Response) => {
@@ -104,5 +105,40 @@ export const updateSeoSettings = async (req: Request, res: Response) => {
     } catch (error) {
         console.error('Error updating SEO settings:', error);
         res.status(500).json({ success: false, message: 'Error updating SEO settings' });
+    }
+};
+
+// ─── Mandal Registration Toggle ───────────────────────────────────────────────
+
+// PUBLIC: Frontend uses this to decide whether to show the footer link / page
+export const getMandalRegistrationStatus = async (req: Request, res: Response) => {
+    try {
+        const setting = await prisma.globalSetting.findUnique({
+            where: { key: MANDAL_REGISTRATION_KEY }
+        });
+        const enabled = setting ? (setting.value as any)?.enabled === true : false;
+        res.json({ success: true, enabled });
+    } catch (error) {
+        console.error('Error fetching mandal registration status:', error);
+        res.status(500).json({ success: false, message: 'Error fetching mandal registration status' });
+    }
+};
+
+// ADMIN: Toggle mandal registration ON or OFF
+export const updateMandalRegistrationStatus = async (req: Request, res: Response) => {
+    try {
+        const { enabled } = req.body;
+        if (typeof enabled !== 'boolean') {
+            return res.status(400).json({ success: false, message: '`enabled` (boolean) is required' });
+        }
+        const updated = await prisma.globalSetting.upsert({
+            where: { key: MANDAL_REGISTRATION_KEY },
+            update: { value: { enabled } },
+            create: { key: MANDAL_REGISTRATION_KEY, value: { enabled } }
+        });
+        res.json({ success: true, message: `Mandal registration ${enabled ? 'enabled' : 'disabled'}`, enabled: (updated.value as any)?.enabled });
+    } catch (error) {
+        console.error('Error updating mandal registration status:', error);
+        res.status(500).json({ success: false, message: 'Error updating mandal registration status' });
     }
 };

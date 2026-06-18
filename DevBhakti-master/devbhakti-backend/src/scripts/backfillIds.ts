@@ -30,7 +30,7 @@ async function backfill() {
   }
 
   // 4. Bookings
-  const bookings = await prisma.poojaBooking.findMany({ where: { displayId: null } });
+  const bookings = await prisma.poojaBooking.findMany({ where: { displayId: null } as any });
   console.log(`Backfilling ${bookings.length} bookings...`);
   for (const booking of bookings) {
     const displayId = await generateCustomId('BKID');

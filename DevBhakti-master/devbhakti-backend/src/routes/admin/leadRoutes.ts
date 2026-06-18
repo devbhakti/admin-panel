@@ -1,5 +1,5 @@
 import { Router } from 'express';
-import { getAllLeads, updateLeadStatus, deleteLead } from '../../controllers/admin/leadManagementController';
+import { getAllLeads, updateLeadStatus, deleteLead, exportLeads } from '../../controllers/admin/leadManagementController';
 import { authenticate, authorize } from '../../middleware/authMiddleware';
 
 const router = Router();
@@ -8,5 +8,6 @@ const router = Router();
 router.get('/', authenticate, authorize('ADMIN'), getAllLeads);
 router.patch('/:id/status', authenticate, authorize('ADMIN'), updateLeadStatus);
 router.delete('/:id', authenticate, authorize('ADMIN'), deleteLead);
+router.get('/export', authenticate, authorize('ADMIN'), exportLeads); 
 
 export default router;

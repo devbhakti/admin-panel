@@ -6,7 +6,8 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { toast } from "sonner";
 import { Eye, EyeOff, Shield, CheckCircle, Lock, Key, Send } from "lucide-react";
-import { sendAdminPasswordChangeOTP, changeAdminPassword } from "@/api/adminController";
+import { sendAdminPasswordChangeOTP, changeAdminPassword, updateMandalRegistrationStatusAdmin } from "@/api/adminController";
+import { fetchMandalRegistrationStatus } from "@/api/publicController";
 import { motion, AnimatePresence } from "framer-motion";
 
 export default function AdminSettingsPage() {
@@ -19,6 +20,8 @@ export default function AdminSettingsPage() {
     const [otpRequested, setOtpRequested] = useState(false);
     const [otpVerified, setOtpVerified] = useState(false); // New state for OTP verification
     const [resendCountdown, setResendCountdown] = useState(0);
+    const [isMandalRegistrationEnabled, setIsMandalRegistrationEnabled] = useState(false);
+    const [isTogglingMandal, setIsTogglingMandal] = useState(false);
     
     // Password visibility states
     const [showOldPassword, setShowOldPassword] = useState(false);
@@ -36,6 +39,29 @@ export default function AdminSettingsPage() {
         }
         return () => clearTimeout(timer);
     }, [resendCountdown]);
+
+    useEffect(() => {
+        const fetchMandalStatus = async () => {
+            const res = await fetchMandalRegistrationStatus();
+            if (res.success) {
+                setIsMandalRegistrationEnabled(res.enabled);
+            }
+        };
+        fetchMandalStatus();
+    }, []);
+
+    const handleToggleMandalRegistration = async () => {
+        setIsTogglingMandal(true);
+        const token = localStorage.getItem("adminToken") || "";
+        const res = await updateMandalRegistrationStatusAdmin(!isMandalRegistrationEnabled);
+        if (res.success) {
+            setIsMandalRegistrationEnabled(!isMandalRegistrationEnabled);
+            toast.success(res.message || "Mandal registration status updated.");
+        } else {
+            toast.error(res.message || "Failed to update status.");
+        }
+        setIsTogglingMandal(false);
+    };
 
     // Password strength checker
     const checkPasswordStrength = (password: string) => {
@@ -382,6 +408,46 @@ export default function AdminSettingsPage() {
                     )}
                 </div>
             </div>
+
+            {/* Global Features Section */}
+            {/* <div className="rounded-3xl border border-border bg-card p-6 shadow-sm mt-8">
+                <div className="mb-6">
+                    <div className="flex items-center gap-3 mb-2">
+                        <div className="p-2 bg-[#794A05]/10 rounded-xl">
+                            <Shield className="w-6 h-6 text-[#794A05]" />
+                        </div>
+                        <p className="text-2xl font-semibold text-foreground">Global Features</p>
+                    </div>
+                    <p className="mt-2 text-sm text-muted-foreground">
+                        Enable or disable specific features across the platform.
+                    </p>
+                </div>
+                
+                <div className="flex items-center justify-between border-t border-border pt-6">
+                    <div>
+                        <h4 className="font-medium text-foreground">Mandal Registration</h4>
+                        <p className="text-sm text-muted-foreground">Allow public users to register their Mandals from the website footer.</p>
+                    </div>
+                    <div className="flex items-center gap-3">
+                        <span className={`text-sm font-medium ${isMandalRegistrationEnabled ? 'text-green-600' : 'text-muted-foreground'}`}>
+                            {isMandalRegistrationEnabled ? 'Enabled' : 'Disabled'}
+                        </span>
+                        <button
+                            onClick={handleToggleMandalRegistration}
+                            disabled={isTogglingMandal}
+                            className={`relative inline-flex h-7 w-12 items-center rounded-full transition-colors ${
+                                isMandalRegistrationEnabled ? 'bg-green-500' : 'bg-gray-300'
+                            } ${isTogglingMandal ? 'opacity-50 cursor-not-allowed' : 'cursor-pointer'}`}
+                        >
+                            <span
+                                className={`inline-block h-5 w-5 transform rounded-full bg-white transition-transform ${
+                                    isMandalRegistrationEnabled ? 'translate-x-6' : 'translate-x-1'
+                                }`}
+                            />
+                        </button>
+                    </div>
+                </div>
+            </div> */}
         </div>
     );
 }
