@@ -1,13 +1,37 @@
 "use client";
 
-import React from "react";
+import React, { useState, useEffect } from "react";
 import Link from "next/link";
 import { Mail } from "lucide-react";
 import Logo from "@/components/icons/Logo";
+import { fetchMandalRegistrationStatus } from "@/api/publicController";
 import { useLanguage } from "@/context/LanguageContext";
 
 const Footer: React.FC = () => {
   const { t } = useLanguage();
+
+  const [isMandalRegistrationEnabled, setIsMandalRegistrationEnabled] = useState(false);
+
+  useEffect(() => {
+    const checkMandalStatus = async () => {
+      const res = await fetchMandalRegistrationStatus();
+      if (res.success && res.enabled) {
+        setIsMandalRegistrationEnabled(true);
+      }
+    };
+    checkMandalStatus();
+  }, []);
+
+  const platformLinks = [
+    { label: t('landing.landing_footer.links.about'), href: "/about" },
+    { label: t('landing.landing_footer.links.contact'), href: "/contact" },
+    { label: t('landing.landing_footer.links.temple_register'), href: "/temples/register" },
+    { label: t('landing.landing_footer.links.seller_login'), href: "/seller" },
+  ];
+
+  if (isMandalRegistrationEnabled) {
+    platformLinks.push({ label: t('landing.landing_footer.links.mandal_register'), href: "/register-mandal" });
+  }
 
   const footerLinks = {
     offerings: [
@@ -16,12 +40,7 @@ const Footer: React.FC = () => {
       { label: t('landing.landing_footer.links.temples'), href: "/temples" },
       { label: t('landing.landing_footer.links.trust'), href: "/#trust" },
     ],
-    platform: [
-      { label: t('landing.landing_footer.links.about'), href: "/about" },
-      { label: t('landing.landing_footer.links.contact'), href: "/contact" },
-      { label: t('landing.landing_footer.links.temple_register'), href: "/temples/register" },
-      { label: t('landing.landing_footer.links.seller_login'), href: "/seller" },
-    ],
+    platform: platformLinks,
     legal: [
       { label: t('landing.landing_footer.links.terms'), href: "/terms-of-service" },
       { label: t('landing.landing_footer.links.privacy'), href: "/privacy-policy" },

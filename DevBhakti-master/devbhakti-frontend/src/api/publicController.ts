@@ -166,3 +166,26 @@
             return { success: false, platformFee: 0, totalPayable: amount };
         }
     };
+
+    export const fetchMandalRegistrationStatus = async () => {
+        try {
+            const response = await axios.get(`${API_URL}/admin/settings/mandal-registration`);
+            return response.data;
+        } catch (error) {
+            console.error("Error fetching mandal registration status:", error);
+            return { success: false, enabled: false };
+        }
+    };
+
+    export const submitMandalRegistration = async (data: any) => {
+        try {
+            const response = await axios.post(`${API_URL}/mandals/register`, data);
+            return response.data;
+        } catch (error: any) {
+            console.error("Error submitting mandal registration:", error);
+            return {
+                success: false,
+                message: error.response?.data?.message || "Failed to submit mandal registration"
+            };
+        }
+    };

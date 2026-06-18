@@ -13,7 +13,8 @@ import {
     Trash2,
     Sparkles,
     ShieldCheck,
-    Target
+    Target,
+    Download, // ✅ NEW: Export icon
 } from "lucide-react";
 import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -34,7 +35,12 @@ import {
     DropdownMenuSeparator,
     DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
-import { fetchAllLeadsAdmin, updateLeadStatusAdmin, deleteLeadAdmin } from "@/api/adminLeadController";
+import { 
+    fetchAllLeadsAdmin, 
+    updateLeadStatusAdmin, 
+    deleteLeadAdmin,
+    exportLeadsAdmin // ✅ NEW: Export function
+} from "@/api/adminLeadController";
 import { toast } from "sonner";
 import {
     Pagination,
@@ -53,6 +59,7 @@ export default function AdminLeadsPage() {
     const [statusFilter, setStatusFilter] = useState<string>("all");
     const [page, setPage] = useState(1);
     const [totalPages, setTotalPages] = useState(1);
+    const [exporting, setExporting] = useState(false); // ✅ NEW: Export loading state
     const [stats, setStats] = useState({
         totalCount: 0,
         newLeads: 0,
@@ -125,6 +132,23 @@ export default function AdminLeadsPage() {
         }
     };
 
+    // ✅ NEW: Export handler function
+    const handleExportLeads = async () => {
+        setExporting(true);
+        try {
+            await exportLeadsAdmin({
+                search: debouncedSearch,
+                status: statusFilter,
+            });
+            toast.success("Leads exported successfully!");
+        } catch (error: any) {
+            console.error("Export failed:", error);
+            toast.error(error.message || "Failed to export leads");
+        } finally {
+            setExporting(false);
+        }
+    };
+
     const getStatusBadgeClass = (status: string) => {
         if (status === 'NEW') return 'bg-blue-50 text-blue-600 border-blue-200';
         if (status === 'CONTACTED') return 'bg-amber-50 text-amber-600 border-amber-200';
@@ -135,7 +159,7 @@ export default function AdminLeadsPage() {
 
     return (
         <div className="space-y-6 relative">
-            {/* Page header */}
+            {/* Page header - ✅ Export button added here */}
             <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
                 <div className="min-w-0 flex-1">
                     <h1 className="text-xl sm:text-2xl lg:text-3xl font-serif font-bold text-foreground break-words">
@@ -144,6 +168,28 @@ export default function AdminLeadsPage() {
                     <p className="text-sm sm:text-base text-muted-foreground mt-1 break-words">
                         Track and convert temple onboarding drops
                     </p>
+                </div>
+                
+                {/* ✅ EXPORT BUTTON */}
+                <div className="flex items-center gap-2">
+                    <Button
+                        onClick={handleExportLeads}
+                        disabled={exporting}
+                        variant="outline"
+                        className="border-emerald-200 text-emerald-700 hover:bg-emerald-50 hover:text-emerald-800 rounded-xl px-4 py-2 h-10 gap-2 shadow-sm hover:shadow-md transition-all"
+                    >
+                        {exporting ? (
+                            <>
+                                <Loader2 className="w-4 h-4 animate-spin" />
+                                Exporting...
+                            </>
+                        ) : (
+                            <>
+                                <Download className="w-4 h-4" />
+                                Export Leads
+                            </>
+                        )}
+                    </Button>
                 </div>
             </div>
 

@@ -88,19 +88,30 @@ export const extractYouTubeId = (value?: string | null): string | null => {
 
 const getYouTubeEmbedUrl = (value: string) => {
   const videoId = extractYouTubeId(value);
+
   if (videoId) {
-    return `https://www.youtube.com/embed/${videoId}`;
+    // youtube-nocookie.com works without origin param — avoids IP address rejection
+    return `https://www.youtube-nocookie.com/embed/${videoId}`;
   }
 
   const trimmed = value.trim();
   if (/^UC[\w-]{20,}$/i.test(trimmed)) {
-    return `https://www.youtube.com/embed/live_stream?channel=${trimmed}`;
+    return `https://www.youtube-nocookie.com/embed/live_stream?channel=${trimmed}`;
   }
 
-  if (trimmed.includes("youtube.com/embed/")) return trimmed;
-  if (trimmed.includes("youtu.be/")) return trimmed.replace("youtu.be/", "www.youtube.com/embed/");
-  if (trimmed.includes("watch?v=")) return trimmed.replace("watch?v=", "embed/");
-  return trimmed;
+  let url = trimmed;
+  if (url.includes("youtube.com/embed/")) url = url.replace("youtube.com/embed/", "youtube-nocookie.com/embed/");
+  else if (url.includes("youtu.be/")) url = url.replace("youtu.be/", "www.youtube-nocookie.com/embed/");
+  else if (url.includes("watch?v=")) url = url.replace("watch?v=", "embed/").replace("youtube.com", "youtube-nocookie.com");
+
+  try {
+    // Strip any stale origin= params that may break IP-based access
+    const urlObj = new URL(url.startsWith("http") ? url : `https://${url}`);
+    urlObj.searchParams.delete("origin");
+    return urlObj.toString();
+  } catch (e) {
+    return url;
+  }
 };
 
 const getVimeoEmbedUrl = (value: string) => {
@@ -178,6 +189,27 @@ export const getVideoRenderInfo = (value?: string | null): VideoRenderInfo => {
   if (!trimmed) return { kind: "unknown", src: "", platform: null };
 
   if (isRawEmbedHtml(trimmed)) {
+    // If it's a YouTube iframe embed code, extract the video ID and use
+    // youtube-nocookie.com instead — this avoids YouTube blocking embeds
+    // from raw IP addresses (Error 153 / "Video unavailable").
+    const iframeSrcMatch = trimmed.match(/src=["']([^"']+)["']/i);
+    if (iframeSrcMatch?.[1]) {
+      const iframeSrc = iframeSrcMatch[1];
+      const isYouTubeIframe =
+        iframeSrc.includes("youtube.com/embed") ||
+        iframeSrc.includes("youtu.be") ||
+        iframeSrc.includes("youtube-nocookie.com/embed");
+      if (isYouTubeIframe) {
+        const ytId = extractYouTubeId(iframeSrc);
+        if (ytId) {
+          return {
+            kind: "iframe",
+            src: `https://www.youtube-nocookie.com/embed/${ytId}`,
+            platform: "youtube",
+          };
+        }
+      }
+    }
     return { kind: "html", src: trimmed, platform: "embed_html" };
   }
 

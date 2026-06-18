@@ -15,7 +15,7 @@ import { API_URL, BASE_URL } from "@/config/apiConfig";
 import { useLanguage } from "@/context/LanguageContext";
 import { getLocalized } from "@/utils/localization";
 import { getVideoRenderInfo, extractYouTubeId } from "@/lib/utils/videoUtils";
-import { HlsVideoPlayer } from "@/components/video/HlsVideoPlayer";
+import { UniversalVideoPlayer } from "@/components/video/UniversalVideoPlayer";
 
 const getYouTubeVideoId = (url: string): string | null => {
   return extractYouTubeId(url);
@@ -339,33 +339,14 @@ export default function LiveDarshanClient() {
         <section className="relative w-full h-[60vh] md:h-[85vh] bg-black overflow-hidden group">
           <div className="absolute inset-0 z-0">
             {isPlaying && selectedVideoInfo.kind !== "unknown" ? (
-              <>
-                {selectedVideoInfo.kind === "iframe" ? (
-                  <iframe
-                    id="live-player"
-                    src={selectedVideoInfo.src}
-                    title="Live Darshan"
-                    className="w-full h-full object-cover"
-                    frameBorder="0"
-                    allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share"
-                    allowFullScreen
-                  ></iframe>
-                ) : selectedVideoInfo.kind === "video" ? (
-                  <HlsVideoPlayer
-                    src={selectedVideoInfo.src}
-                    className="w-full h-full object-cover"
-                    controls
-                    autoPlay
-                    playsInline
-                    muted
-                  />
-                ) : selectedVideoInfo.kind === "html" ? (
-                  <div
-                    className="w-full h-full"
-                    dangerouslySetInnerHTML={{ __html: selectedVideoInfo.src }}
-                  />
-                ) : null}
-              </>
+              <UniversalVideoPlayer
+                url={selectedTemple.liveUrl || selectedTemple.channelId}
+                className="w-full h-full object-cover"
+                autoPlay
+                muted
+                controls
+                playsInline
+              />
             ) : (
               <>
                 {(() => {

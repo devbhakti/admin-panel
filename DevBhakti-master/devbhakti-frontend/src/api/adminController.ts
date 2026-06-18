@@ -1278,3 +1278,88 @@ export const createDonationAdmin = async (data: any) => {
     });
     return response.data;
 };
+
+// ==========================================
+// MANDAL REGISTRATION ADMIN ENDPOINTS
+// ==========================================
+export const updateMandalRegistrationStatusAdmin = async (enabled: boolean) => {
+    const token = getAdminToken();
+    try {
+        const response = await axios.patch(
+            `${API_URL}/admin/settings/mandal-registration`,
+            { enabled },
+            { headers: { Authorization: `Bearer ${token}` } }
+        );
+        return response.data;
+    } catch (error: any) {
+        console.error("Error updating mandal registration status:", error);
+        return { success: false, message: error.response?.data?.message || "Failed to update status" };
+    }
+};
+
+// ==========================================
+// MANDAL MANAGEMENT ADMIN ENDPOINTS
+// ==========================================
+
+export const fetchAllMandalsAdmin = async (params?: {
+    page?: number;
+    limit?: number;
+    search?: string;
+    status?: string;
+    isActive?: boolean;
+}) => {
+    const token = getAdminToken();
+    const query = new URLSearchParams();
+    if (params?.page !== undefined) query.append('page', params.page.toString());
+    if (params?.limit !== undefined) query.append('limit', params.limit.toString());
+    if (params?.search) query.append('search', params.search);
+    if (params?.status) query.append('status', params.status);
+    if (params?.isActive !== undefined) query.append('isActive', params.isActive.toString());
+    const url = `${API_URL}/admin/mandals?lang=raw${query.toString() ? '&' + query.toString() : ''}`;
+    const response = await axios.get(url, { headers: { Authorization: `Bearer ${token}` } });
+    return response.data;
+};
+
+export const fetchMandalByIdAdmin = async (id: string) => {
+    const token = getAdminToken();
+    const response = await axios.get(`${API_URL}/admin/mandals/${id}?lang=raw`, {
+        headers: { Authorization: `Bearer ${token}` },
+    });
+    return response.data;
+};
+
+export const createMandalAdmin = async (formData: FormData) => {
+    const token = getAdminToken();
+    const response = await axios.post(`${API_URL}/admin/mandals`, formData, {
+        headers: { Authorization: `Bearer ${token}` },
+    });
+    return response.data;
+};
+
+export const updateMandalAdmin = async (id: string, formData: FormData) => {
+    const token = getAdminToken();
+    const response = await axios.put(`${API_URL}/admin/mandals/${id}`, formData, {
+        headers: { Authorization: `Bearer ${token}` },
+    });
+    return response.data;
+};
+
+export const deleteMandalAdmin = async (id: string) => {
+    const token = getAdminToken();
+    const response = await axios.delete(`${API_URL}/admin/mandals/${id}`, {
+        headers: { Authorization: `Bearer ${token}` },
+    });
+    return response.data;
+};
+
+export const toggleMandalStatusAdmin = async (
+    id: string,
+    data: { isActive?: boolean; status?: string; adminNotes?: string }
+) => {
+    const token = getAdminToken();
+    const response = await axios.patch(`${API_URL}/admin/mandals/${id}/status`, data, {
+        headers: { Authorization: `Bearer ${token}` },
+    });
+    return response.data;
+};
+

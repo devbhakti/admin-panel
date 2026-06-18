@@ -41,19 +41,19 @@ export const captureLead = async (req: Request, res: Response) => {
       });
 
       // Notify Admins about the new lead
-    //   try {
-    //     await notifyAdmins({
-    //       title: '🚨 New Lead Captured!',
-    //       body: `A new lead (${phone}) has been captured from ${source || 'TEMPLE_ONBOARDING'}.`,
-    //       data: {
-    //         link: '/admin/leads',
-    //         type: 'NEW_LEAD'
-    //       }
-    //     });
-    //   } catch (notifyErr) {
-    //     console.error("Failed to notify admins for new lead:", notifyErr);
-    //   }
-    // }
+      try {
+        await notifyAdmins({
+          title: '🚨 New Lead Captured!',
+          body: `A new lead (${phone}) has been captured from ${source || 'TEMPLE_ONBOARDING'}.`,
+          data: {
+            link: '/admin/leads',
+            type: 'NEW_LEAD'
+          }
+        });
+      } catch (notifyErr) {
+        console.error("Failed to notify admins for new lead:", notifyErr);
+      }
+    }
 
     return res.status(200).json({ success: true, lead });
   } catch (error: any) {
