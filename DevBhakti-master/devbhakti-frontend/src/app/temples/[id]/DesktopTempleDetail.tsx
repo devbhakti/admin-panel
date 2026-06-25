@@ -25,7 +25,11 @@ import {
     Play,
     Phone,
     Info,
+
+    ExternalLink,
+    FileText,
 } from "lucide-react";
+import { FaFacebook, FaInstagram, FaYoutube } from "react-icons/fa";
 import {
     Dialog,
     DialogContent,
@@ -142,7 +146,7 @@ export default function DesktopTempleDetail({
                                         <MapPin className="h-4 w-4 text-primary" />
                                         <span>{getLocalized(temple, "fullAddress", language)}</span>
                                     </div>
-                                    {temple.phone && (
+                                    {(temple.phone && temple.showPhone !== false) && (
                                         <div className="flex items-center gap-2">
                                             <Phone className="h-4 w-4 text-primary" />
                                             <span>{temple.phone}</span>
@@ -496,6 +500,7 @@ export default function DesktopTempleDetail({
                                     Donation
                                 </Button>
 
+                                
                                 {/* Compact Upcoming Events */}
                                 {temple.events && temple.events.length > 0 && (
                                     <div className="pt-2 space-y-4">
@@ -589,6 +594,87 @@ export default function DesktopTempleDetail({
                                         </div>
                                     </div>
                                 )}
+                                {/* In the News — News Cuttings */}
+                                {temple.newsCuttings && Array.isArray(temple.newsCuttings) && temple.newsCuttings.length > 0 && (
+                                    <div className="pt-4 space-y-3">
+                                        <div className="flex items-center gap-2 px-1">
+                                            <div className="h-1 w-8 bg-primary/20 rounded-full" />
+                                            <h3 className="text-[11px] font-black uppercase tracking-[0.2em] text-muted-foreground flex items-center gap-1.5">
+                                                <FileText className="w-3 h-3" /> In the News
+                                            </h3>
+                                        </div>
+                                        <div className="grid grid-cols-2 gap-2">
+                                            {(temple.newsCuttings as any[]).map((item: any, idx: number) => (
+                                                <a
+                                                    key={idx}
+                                                    href={item.link || undefined}
+                                                    target="_blank"
+                                                    rel="noopener noreferrer"
+                                                    className="relative group rounded-xl overflow-hidden border border-slate-200 shadow-sm block aspect-[4/3]"
+                                                    style={{ cursor: item.link ? 'pointer' : 'default' }}
+                                                >
+                                                    <img
+                                                        src={getFullImageUrl(item.image)}
+                                                        alt={`News cutting ${idx + 1}`}
+                                                        className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500"
+                                                    />
+                                                    {item.link && (
+                                                        <div className="absolute inset-0 bg-black/40 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center">
+                                                            <div className="bg-white/20 backdrop-blur-md p-1.5 rounded-full">
+                                                                <ExternalLink className="h-4 w-4 text-white" />
+                                                            </div>
+                                                        </div>
+                                                    )}
+                                                </a>
+                                            ))}
+                                        </div>
+                                    </div>
+                                )}
+                                {/* Social Media Links */}
+                                {(temple.instagramUrl || temple.facebookUrl || temple.youtubeUrl) && (
+                                    <div className="pt-2 space-y-3">
+                                        <div className="flex items-center gap-2 px-1">
+                                            <div className="h-1 w-8 bg-primary/20 rounded-full" />
+                                            <h3 className="text-[11px] font-black uppercase tracking-[0.2em] text-muted-foreground">Follow Us</h3>
+                                        </div>
+                                        <div className="flex items-center gap-2">
+                                            {temple.instagramUrl && (
+                                                <a
+                                                    href={temple.instagramUrl}
+                                                    target="_blank"
+                                                    rel="noopener noreferrer"
+                                                    className="flex-1 flex items-center justify-center gap-2 p-3 rounded-xl bg-gradient-to-br from-pink-50 to-orange-50 border border-pink-100 hover:border-pink-300 transition-all group"
+                                                >
+                                                    <FaInstagram className="h-5 w-5 text-pink-500 group-hover:scale-110 transition-transform" />
+                                                    <span className="text-xs font-bold text-pink-600">Instagram</span>
+                                                </a>
+                                            )}
+                                            {temple.facebookUrl && (
+                                                <a
+                                                    href={temple.facebookUrl}
+                                                    target="_blank"
+                                                    rel="noopener noreferrer"
+                                                    className="flex-1 flex items-center justify-center gap-2 p-3 rounded-xl bg-blue-50 border border-blue-100 hover:border-blue-300 transition-all group"
+                                                >
+                                                    <FaFacebook className="h-5 w-5 text-blue-600 group-hover:scale-110 transition-transform" />
+                                                    <span className="text-xs font-bold text-blue-700">Facebook</span>
+                                                </a>
+                                            )}
+                                            {temple.youtubeUrl && (
+                                                <a
+                                                    href={temple.youtubeUrl}
+                                                    target="_blank"
+                                                    rel="noopener noreferrer"
+                                                    className="flex-1 flex items-center justify-center gap-2 p-3 rounded-xl bg-red-50 border border-red-100 hover:border-red-300 transition-all group"
+                                                >
+                                                    <FaYoutube className="h-5 w-5 text-red-500 group-hover:scale-110 transition-transform" />
+                                                    <span className="text-xs font-bold text-red-600">YouTube</span>
+                                                </a>
+                                            )}
+                                        </div>
+                                    </div>
+                                )}
+
                             </CardContent>
                         </Card>
                     </div>

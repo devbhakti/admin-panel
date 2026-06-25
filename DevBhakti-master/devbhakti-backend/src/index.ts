@@ -59,6 +59,11 @@ import './services/firebaseService'; // Initialize Firebase Admin on startup
 import adminSettingsRoutes from './routes/admin/globalSettingsRoutes';
 import adminMandalRoutes from './routes/admin/mandalRoutes';
 
+import mandalAdminProfileRoutes from './routes/mandal_admin/mandalRoutes';
+import mandalAdminEventRoutes from './routes/mandal_admin/eventRoutes';
+import mandalAdminDonationRoutes from './routes/mandal_admin/donationRoutes';
+import mandalAdminFinanceRoutes from './routes/mandal_admin/financeRoutes';
+
 
 dotenv.config();
 
@@ -119,6 +124,12 @@ app.use('/api/seller/orders', sellerOrderRoutes);
 app.use('/api/seller/finance', sellerFinanceRoutes);
 app.use('/api/seller/team', sellerStaffManagementRoutes);
 app.use('/api/seller', sellerGeneralRoutes);
+
+// Mandal Admin Routes
+app.use('/api/mandal-admin/profile', mandalAdminProfileRoutes);
+app.use('/api/mandal-admin/events', mandalAdminEventRoutes);
+app.use('/api/mandal-admin/donations', mandalAdminDonationRoutes);
+app.use('/api/mandal-admin/finance', mandalAdminFinanceRoutes);
 
 // Devotee Auth Routes
 app.use('/api/auth', authRoutes);

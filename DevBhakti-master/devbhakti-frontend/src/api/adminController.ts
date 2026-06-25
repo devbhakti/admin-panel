@@ -345,6 +345,14 @@ export const deleteTempleAdmin = async (id: string) => {
     return response.data;
 };
 
+export const toggleShowPhoneAdmin = async (id: string, showPhone: boolean) => {
+    const token = getAdminToken();
+    const response = await axios.patch(`${API_URL}/admin/temples/${id}/show-phone`, { showPhone }, {
+        headers: { Authorization: `Bearer ${token}` }
+    });
+    return response.data;
+};
+
 export const toggleTempleStatusAdmin = async (id: string, isVerified: boolean, isActive: boolean, data?: { slug?: string, subdomain?: string, urlType?: string, productCommissionRate?: number, poojaCommissionRate?: number, liveStatus?: boolean, commissionSlabs?: any[] }) => {
     const token = getAdminToken();
     const payload = {

@@ -88,15 +88,22 @@ export const extractYouTubeId = (value?: string | null): string | null => {
 
 const getYouTubeEmbedUrl = (value: string) => {
   const videoId = extractYouTubeId(value);
+  const hostname = typeof window !== "undefined" ? window.location.hostname : "localhost";
+  const isIpHost = /^\d{1,3}\.\d{1,3}\.\d{1,3}\.\d{1,3}$/.test(hostname);
+  const origin = typeof window !== "undefined" ? window.location.origin : "http://localhost:3000";
 
   if (videoId) {
-    // youtube-nocookie.com works without origin param — avoids IP address rejection
-    return `https://www.youtube-nocookie.com/embed/${videoId}`;
+    // Include origin param on localhost/domain (YouTube needs it), skip on IP (YouTube rejects IPs)
+    return isIpHost
+      ? `https://www.youtube-nocookie.com/embed/${videoId}`
+      : `https://www.youtube-nocookie.com/embed/${videoId}?origin=${encodeURIComponent(origin)}`;
   }
 
   const trimmed = value.trim();
   if (/^UC[\w-]{20,}$/i.test(trimmed)) {
-    return `https://www.youtube-nocookie.com/embed/live_stream?channel=${trimmed}`;
+    return isIpHost
+      ? `https://www.youtube-nocookie.com/embed/live_stream?channel=${trimmed}`
+      : `https://www.youtube-nocookie.com/embed/live_stream?channel=${trimmed}&origin=${encodeURIComponent(origin)}`;
   }
 
   let url = trimmed;
@@ -105,9 +112,12 @@ const getYouTubeEmbedUrl = (value: string) => {
   else if (url.includes("watch?v=")) url = url.replace("watch?v=", "embed/").replace("youtube.com", "youtube-nocookie.com");
 
   try {
-    // Strip any stale origin= params that may break IP-based access
     const urlObj = new URL(url.startsWith("http") ? url : `https://${url}`);
-    urlObj.searchParams.delete("origin");
+    if (isIpHost) {
+      urlObj.searchParams.delete("origin");
+    } else if (!urlObj.searchParams.has("origin")) {
+      urlObj.searchParams.set("origin", origin);
+    }
     return urlObj.toString();
   } catch (e) {
     return url;

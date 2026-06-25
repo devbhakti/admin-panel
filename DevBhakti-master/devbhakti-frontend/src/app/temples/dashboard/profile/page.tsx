@@ -59,6 +59,21 @@ import { RichTextEditor } from "@/components/ui/rich-text-editor";
 import { useLanguage } from "@/context/LanguageContext";
 import { useAdminAuth } from "@/hooks/use-admin-auth";
 import TempleQrDialog from "@/components/admin/TempleQrDialog";
+import { FaFacebook ,FaYoutube , FaInstagram} from "react-icons/fa";
+
+// Types for news cuttings
+interface NewsCutting {
+    image: string;
+    link: string;
+    preview?: string;
+    file?: File;
+}
+
+interface NewNewsCutting {
+    file: File;
+    link: string;
+    preview: string;
+}
 
 export default function TempleProfilePage() {
     const [isLoading, setIsLoading] = useState(true);
@@ -80,6 +95,10 @@ export default function TempleProfilePage() {
     // File refs
     const mainImageRef = useRef<HTMLInputElement>(null);
     const heroImagesRef = useRef<HTMLInputElement>(null);
+
+    // News Cuttings state
+    const [existingNewsCuttings, setExistingNewsCuttings] = useState<NewsCutting[]>([]);
+    const [newNewsCuttings, setNewNewsCuttings] = useState<NewNewsCutting[]>([]);
 
     // Form states
     const [formData, setFormData] = useState<any>({
@@ -107,18 +126,18 @@ export default function TempleProfilePage() {
         viewers: "",
         isLive: false,
         liveUrl: "",
-        pickupLocation: "",
         youtubeLinks: [],
+        pickupLocation: "",
         adminName: "",
         adminEmail: "",
         adminPhone: "",
         slug: "",
         subdomain: "",
         urlType: "slug",
-        operatingHours: [
-            { label: "Morning", start: "07:00 AM", end: "01:00 PM", active: true },
-            { label: "Evening", start: "05:00 PM", end: "10:00 PM", active: true }
-        ],
+        operatingHours: [],
+        instagramUrl: "",
+        facebookUrl: "",
+        youtubeUrl: "",
     });
 
     const [mainImagePreview, setMainImagePreview] = useState<string | null>(null);
@@ -171,6 +190,9 @@ export default function TempleProfilePage() {
                     isLive: data.isLive || false,
                     liveUrl: data.liveUrl || "",
                     youtubeLinks: data.youtubeLinks || [],
+                    instagramUrl: data.instagramUrl || "",
+                    facebookUrl: data.facebookUrl || "",
+                    youtubeUrl: data.youtubeUrl || "",
                     pickupLocation: parseLocalizedValue(data.pickupLocation, 'en'),
                     adminName: parseLocalizedValue(data.user?.name, 'en'),
                     adminEmail: data.user?.email || "",
@@ -186,6 +208,13 @@ export default function TempleProfilePage() {
                 if (data.image) setMainImagePreview(getImageUrl(data.image));
                 if (data.heroImages && Array.isArray(data.heroImages)) {
                     setHeroPreviews(data.heroImages.map(img => getImageUrl(img)));
+                }
+                // Load existing news cuttings
+                if (data.newsCuttings && Array.isArray(data.newsCuttings)) {
+                    setExistingNewsCuttings(data.newsCuttings.map((item: any) => ({
+                        image: item.image,
+                        link: item.link || ""
+                    })));
                 }
             }
         } catch (error) {
@@ -281,8 +310,6 @@ export default function TempleProfilePage() {
         }
     };
 
-
-
     const removeHeroImage = (index: number) => {
         setHeroPreviews(prev => prev.filter((_, i) => i !== index));
     };
@@ -330,21 +357,59 @@ export default function TempleProfilePage() {
         }));
     };
 
+    // News Cutting functions
+    const addNewsCutting = (e: React.ChangeEvent<HTMLInputElement>) => {
+        const file = e.target.files?.[0];
+        if (file) {
+            const preview = URL.createObjectURL(file);
+            setNewNewsCuttings(prev => [...prev, { file, link: "", preview }]);
+            e.target.value = '';
+        }
+    };
+
+    const removeNewNewsCutting = (index: number) => {
+        setNewNewsCuttings(prev => prev.filter((_, i) => i !== index));
+    };
+
+    const removeExistingNewsCutting = (index: number) => {
+        setExistingNewsCuttings(prev => prev.filter((_, i) => i !== index));
+    };
+
+    const updateNewNewsCuttingLink = (index: number, link: string) => {
+        setNewNewsCuttings(prev => prev.map((item, i) => i === index ? { ...item, link } : item));
+    };
+
+    const updateExistingNewsCuttingLink = (index: number, link: string) => {
+        setExistingNewsCuttings(prev => prev.map((item, i) => i === index ? { ...item, link } : item));
+    };
+
     const handleSubmit = async (e: React.FormEvent) => {
         e.preventDefault();
         setIsSaving(true);
         try {
             const fd = new FormData();
+            
             Object.keys(formData).forEach(key => {
                 if (['operatingHours', 'youtubeLinks'].includes(key)) {
                     fd.append(key, JSON.stringify(formData[key]));
-                } else {
+                } else if (!['instagramUrl', 'facebookUrl', 'youtubeUrl'].includes(key)) {
                     fd.append(key, formData[key]);
                 }
             });
 
+            // Append social media URLs explicitly
+            fd.append('instagramUrl', formData.instagramUrl || '');
+            fd.append('facebookUrl', formData.facebookUrl || '');
+            fd.append('youtubeUrl', formData.youtubeUrl || '');
+
             if (selectedMainFile) fd.append('image', selectedMainFile);
             selectedHeroFiles.forEach(file => fd.append('heroImages', file));
+
+            // Handle news cuttings
+            fd.append('existingNewsCuttings', JSON.stringify(existingNewsCuttings));
+            const newsCuttingLinks = newNewsCuttings.map(n => n.link);
+            fd.append('newsCuttingLinks', JSON.stringify(newsCuttingLinks));
+            newNewsCuttings.forEach(n => fd.append('newsCuttingImages', n.file));
 
             const response = await updateMyTempleProfile(fd);
             if (response.success) {
@@ -357,6 +422,7 @@ export default function TempleProfilePage() {
                 setIsEditing(false);
                 setSelectedMainFile(null);
                 setSelectedHeroFiles([]);
+                setNewNewsCuttings([]); // Clear new cuttings after successful save
             }
         } catch (error) {
             toast({ title: "Error", description: "Failed to update profile", variant: "destructive" });
@@ -456,7 +522,7 @@ export default function TempleProfilePage() {
                                 onClick={() => { setIsEditing(false); loadProfile(); }}
                                 className="rounded-xl md:rounded-2xl border-slate-200 text-slate-500 hover:bg-slate-50 px-4 md:px-8 font-bold h-9 md:h-10 text-xs md:text-sm"
                             >
-                                Reset
+                                Cancel
                             </Button>
                             <Button
                                 onClick={handleSubmit}
@@ -555,7 +621,27 @@ export default function TempleProfilePage() {
                                         <Input value={formData.liveUrl} onChange={e => setFormData({...formData, liveUrl: e.target.value})} placeholder="Streaming URL" className="h-12 rounded-xl" />
                                     )}
                                     <div className="space-y-4 pt-4 border-t">
-                                        <Label className="text-[10px] font-black uppercase tracking-widest text-slate-400 ml-1">YouTube Gallery</Label>
+                                        <Label className="text-[10px] font-black uppercase tracking-widest text-slate-400 ml-1">Social Media & YouTube Gallery</Label>
+                                        <div className="space-y-3 pb-3">
+                                            <Input 
+                                                value={formData.instagramUrl} 
+                                                onChange={e => setFormData({...formData, instagramUrl: e.target.value})} 
+                                                placeholder="Instagram URL" 
+                                                className="h-10 rounded-xl" 
+                                            />
+                                            <Input 
+                                                value={formData.facebookUrl} 
+                                                onChange={e => setFormData({...formData, facebookUrl: e.target.value})} 
+                                                placeholder="Facebook URL" 
+                                                className="h-10 rounded-xl" 
+                                            />
+                                            <Input 
+                                                value={formData.youtubeUrl} 
+                                                onChange={e => setFormData({...formData, youtubeUrl: e.target.value})} 
+                                                placeholder="YouTube Channel URL" 
+                                                className="h-10 rounded-xl" 
+                                            />
+                                        </div>
                                         <div className="flex gap-2">
                                             <Input value={newYoutubeUrl} onChange={e => setNewYoutubeUrl(e.target.value)} placeholder="YouTube Link" className="h-10 rounded-xl" />
                                             <Button type="button" onClick={addYoutubeLink} size="icon" className="bg-red-500 hover:bg-red-600"><Plus className="w-4 h-4"/></Button>
@@ -567,6 +653,52 @@ export default function TempleProfilePage() {
                                                     <button type="button" onClick={() => removeYoutubeLink(i)} className="text-red-400"><Trash2 className="w-3 h-3"/></button>
                                                 </div>
                                             ))}
+                                        </div>
+                                    </div>
+                                </CardContent>
+                            </Card>
+
+                            {/* News Cuttings */}
+                            <Card className="border-white/20 bg-white/60 backdrop-blur-sm shadow-xl rounded-[2.5rem] overflow-hidden">
+                                <CardHeader className="bg-gradient-to-br from-blue-50 to-transparent p-6 border-b border-white/20">
+                                    <CardTitle className="text-lg font-serif text-blue-600 flex items-center gap-2">
+                                        <FileText className="w-5 h-5" /> News & Press
+                                    </CardTitle>
+                                </CardHeader>
+                                <CardContent className="p-6 space-y-4">
+                                    <Label className="text-[10px] font-black uppercase tracking-widest text-slate-400 ml-1">News Cuttings</Label>
+                                    <div className="space-y-3">
+                                        {existingNewsCuttings.map((item, i) => (
+                                            <div key={i} className="flex gap-2 items-start bg-white/50 p-2 rounded-xl border border-white/40">
+                                                <img src={getImageUrl(item.image)} className="w-16 h-16 object-cover rounded-lg" />
+                                                <div className="flex-1 space-y-2">
+                                                    <Input 
+                                                        value={item.link} 
+                                                        onChange={e => updateExistingNewsCuttingLink(i, e.target.value)} 
+                                                        placeholder="External Link" 
+                                                        className="h-8 text-xs" 
+                                                    />
+                                                    <Button type="button" variant="destructive" size="sm" className="h-6 text-[10px] px-2" onClick={() => removeExistingNewsCutting(i)}>Remove</Button>
+                                                </div>
+                                            </div>
+                                        ))}
+                                        {newNewsCuttings.map((item, i) => (
+                                            <div key={`new-${i}`} className="flex gap-2 items-start bg-white/50 p-2 rounded-xl border border-white/40">
+                                                <img src={item.preview} className="w-16 h-16 object-cover rounded-lg" />
+                                                <div className="flex-1 space-y-2">
+                                                    <Input 
+                                                        value={item.link} 
+                                                        onChange={e => updateNewNewsCuttingLink(i, e.target.value)} 
+                                                        placeholder="External Link" 
+                                                        className="h-8 text-xs" 
+                                                    />
+                                                    <Button type="button" variant="destructive" size="sm" className="h-6 text-[10px] px-2" onClick={() => removeNewNewsCutting(i)}>Remove</Button>
+                                                </div>
+                                            </div>
+                                        ))}
+                                        <div className="relative">
+                                            <Input type="file" accept="image/*" onChange={addNewsCutting} className="absolute inset-0 w-full h-full opacity-0 cursor-pointer" />
+                                            <Button type="button" variant="outline" className="w-full gap-2 border-dashed border-2 bg-transparent hover:bg-slate-50"><Plus className="w-4 h-4" /> Add News Cutting</Button>
                                         </div>
                                     </div>
                                 </CardContent>
@@ -706,7 +838,7 @@ export default function TempleProfilePage() {
                                         </Tabs>
                                     </div>
 
-                                    {/* History
+                                    {/* History */}
                                     <div className="space-y-4">
                                         <Label className="text-xs font-bold uppercase tracking-widest text-slate-400 ml-1">Spiritual History</Label>
                                         <Tabs defaultValue="en">
@@ -719,7 +851,7 @@ export default function TempleProfilePage() {
                                             <TabsContent value="hi"><Textarea value={formData.history_hi} onChange={e => setFormData({...formData, history_hi: e.target.value})} className="min-h-[180px] rounded-2xl" /></TabsContent>
                                             <TabsContent value="mr"><Textarea value={formData.history_mr} onChange={e => setFormData({...formData, history_mr: e.target.value})} className="min-h-[180px] rounded-2xl" /></TabsContent>
                                         </Tabs>
-                                    </div> */}
+                                    </div>
 
                                     {/* Location & Contact */}
                                     <div className="grid grid-cols-1 md:grid-cols-2 gap-8 border-t pt-8">
@@ -761,101 +893,101 @@ export default function TempleProfilePage() {
                                         </Button>
                                     </div>
                                     <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                                            {formData.operatingHours.map((hour: any, idx: number) => (
-                                                <div key={idx} className="p-6 bg-white border border-slate-100 rounded-3xl space-y-4 shadow-sm relative group">
-                                                    {formData.operatingHours.length > 1 && (
-                                                        <button
-                                                            type="button"
-                                                            onClick={() => removeOperatingHour(idx)}
-                                                            className="absolute -top-2 -right-2 bg-white border border-slate-200 shadow-sm rounded-full p-1.5 text-red-500 opacity-0 group-hover:opacity-100 transition-all z-10 hover:bg-red-50 hover:scale-110"
-                                                        >
-                                                            <Trash2 className="w-3.5 h-3.5" />
-                                                        </button>
-                                                    )}
-                                                    <div className="flex items-center justify-between">
-                                                        <div className="flex-1 mr-4">
-                                                            <Input 
-                                                                value={hour.label} 
-                                                                onChange={e => {
-                                                                    const newHours = [...formData.operatingHours];
-                                                                    newHours[idx].label = e.target.value;
-                                                                    setFormData({...formData, operatingHours: newHours});
-                                                                }}
-                                                                className="h-8 border-none bg-transparent font-bold text-slate-700 p-0 focus-visible:ring-0" 
-                                                                placeholder={t("temple_dashboard.profile.slot_label") || "Slot Label"}
-                                                            />
-                                                        </div>
-                                                        <Switch 
-                                                            checked={hour.active} 
-                                                            onCheckedChange={(checked) => {
+                                        {formData.operatingHours.map((hour: any, idx: number) => (
+                                            <div key={idx} className="p-6 bg-white border border-slate-100 rounded-3xl space-y-4 shadow-sm relative group">
+                                                {formData.operatingHours.length > 1 && (
+                                                    <button
+                                                        type="button"
+                                                        onClick={() => removeOperatingHour(idx)}
+                                                        className="absolute -top-2 -right-2 bg-white border border-slate-200 shadow-sm rounded-full p-1.5 text-red-500 opacity-0 group-hover:opacity-100 transition-all z-10 hover:bg-red-50 hover:scale-110"
+                                                    >
+                                                        <Trash2 className="w-3.5 h-3.5" />
+                                                    </button>
+                                                )}
+                                                <div className="flex items-center justify-between">
+                                                    <div className="flex-1 mr-4">
+                                                        <Input 
+                                                            value={hour.label} 
+                                                            onChange={e => {
                                                                 const newHours = [...formData.operatingHours];
-                                                                newHours[idx].active = checked;
+                                                                newHours[idx].label = e.target.value;
                                                                 setFormData({...formData, operatingHours: newHours});
-                                                            }} 
+                                                            }}
+                                                            className="h-8 border-none bg-transparent font-bold text-slate-700 p-0 focus-visible:ring-0" 
+                                                            placeholder={t("temple_dashboard.profile.slot_label") || "Slot Label"}
                                                         />
                                                     </div>
-                                                        <div className="grid grid-cols-2 gap-4">
-                                                            <div className="space-y-2">
-                                                                <span className="text-[9px] font-black text-slate-400 uppercase">{t("registration_form.labels.opening") || "Opening"}</span>
-                                                                <Input 
-                                                                    type="time"
-                                                                    value={(() => {
-                                                                        if (!hour.start) return "";
-                                                                        const [time, modifier] = hour.start.split(' ');
-                                                                        if (!time || !modifier) return "";
-                                                                        let [hours, minutes] = time.split(':');
-                                                                        let h = parseInt(hours, 10);
-                                                                        if (modifier === 'PM' && h < 12) h += 12;
-                                                                        if (modifier === 'AM' && h === 12) h = 0;
-                                                                        return `${String(h).padStart(2, '0')}:${minutes}`;
-                                                                    })()}
-                                                                    onChange={e => {
-                                                                        const time24 = e.target.value;
-                                                                        if (!time24) return;
-                                                                        let [hours, minutes] = time24.split(':');
-                                                                        let h = parseInt(hours, 10);
-                                                                        const modifier = h >= 12 ? 'PM' : 'AM';
-                                                                        if (h > 12) h -= 12;
-                                                                        if (h === 0) h = 12;
-                                                                        const time12 = `${String(h).padStart(2, '0')}:${minutes} ${modifier}`;
-                                                                        
-                                                                        const newHours = [...formData.operatingHours];
-                                                                        newHours[idx].start = time12;
-                                                                        setFormData({...formData, operatingHours: newHours});
-                                                                    }}
-                                                                    className="h-10 rounded-lg text-xs" 
-                                                                />
-                                                            </div>
-                                                            <div className="space-y-2">
-                                                                <span className="text-[9px] font-black text-slate-400 uppercase">{t("registration_form.labels.closing") || "Closing"}</span>
-                                                                <Input 
-                                                                    type="time"
-                                                                    value={(() => {
-                                                                        if (!hour.end) return "";
-                                                                        const [time, modifier] = hour.end.split(' ');
-                                                                        if (!time || !modifier) return "";
-                                                                        let [hours, minutes] = time.split(':');
-                                                                        let h = parseInt(hours, 10);
-                                                                        if (modifier === 'PM' && h < 12) h += 12;
-                                                                        if (modifier === 'AM' && h === 12) h = 0;
-                                                                        return `${String(h).padStart(2, '0')}:${minutes}`;
-                                                                    })()}
-                                                                    onChange={e => {
-                                                                        const time24 = e.target.value;
-                                                                        if (!time24) return;
-                                                                        let [hours, minutes] = time24.split(':');
-                                                                        let h = parseInt(hours, 10);
-                                                                        const modifier = h >= 12 ? 'PM' : 'AM';
-                                                                        if (h > 12) h -= 12;
-                                                                        if (h === 0) h = 12;
-                                                                        const time12 = `${String(h).padStart(2, '0')}:${minutes} ${modifier}`;
-                                                                        
-                                                                        const newHours = [...formData.operatingHours];
-                                                                        newHours[idx].end = time12;
-                                                                        setFormData({...formData, operatingHours: newHours});
-                                                                    }}
-                                                                    className="h-10 rounded-lg text-xs" 
-                                                                />
+                                                    <Switch 
+                                                        checked={hour.active} 
+                                                        onCheckedChange={(checked) => {
+                                                            const newHours = [...formData.operatingHours];
+                                                            newHours[idx].active = checked;
+                                                            setFormData({...formData, operatingHours: newHours});
+                                                        }} 
+                                                    />
+                                                </div>
+                                                <div className="grid grid-cols-2 gap-4">
+                                                    <div className="space-y-2">
+                                                        <span className="text-[9px] font-black text-slate-400 uppercase">{t("registration_form.labels.opening") || "Opening"}</span>
+                                                        <Input 
+                                                            type="time"
+                                                            value={(() => {
+                                                                if (!hour.start) return "";
+                                                                const [time, modifier] = hour.start.split(' ');
+                                                                if (!time || !modifier) return "";
+                                                                let [hours, minutes] = time.split(':');
+                                                                let h = parseInt(hours, 10);
+                                                                if (modifier === 'PM' && h < 12) h += 12;
+                                                                if (modifier === 'AM' && h === 12) h = 0;
+                                                                return `${String(h).padStart(2, '0')}:${minutes}`;
+                                                            })()}
+                                                            onChange={e => {
+                                                                const time24 = e.target.value;
+                                                                if (!time24) return;
+                                                                let [hours, minutes] = time24.split(':');
+                                                                let h = parseInt(hours, 10);
+                                                                const modifier = h >= 12 ? 'PM' : 'AM';
+                                                                if (h > 12) h -= 12;
+                                                                if (h === 0) h = 12;
+                                                                const time12 = `${String(h).padStart(2, '0')}:${minutes} ${modifier}`;
+                                                                
+                                                                const newHours = [...formData.operatingHours];
+                                                                newHours[idx].start = time12;
+                                                                setFormData({...formData, operatingHours: newHours});
+                                                            }}
+                                                            className="h-10 rounded-lg text-xs" 
+                                                        />
+                                                    </div>
+                                                    <div className="space-y-2">
+                                                        <span className="text-[9px] font-black text-slate-400 uppercase">{t("registration_form.labels.closing") || "Closing"}</span>
+                                                        <Input 
+                                                            type="time"
+                                                            value={(() => {
+                                                                if (!hour.end) return "";
+                                                                const [time, modifier] = hour.end.split(' ');
+                                                                if (!time || !modifier) return "";
+                                                                let [hours, minutes] = time.split(':');
+                                                                let h = parseInt(hours, 10);
+                                                                if (modifier === 'PM' && h < 12) h += 12;
+                                                                if (modifier === 'AM' && h === 12) h = 0;
+                                                                return `${String(h).padStart(2, '0')}:${minutes}`;
+                                                            })()}
+                                                            onChange={e => {
+                                                                const time24 = e.target.value;
+                                                                if (!time24) return;
+                                                                let [hours, minutes] = time24.split(':');
+                                                                let h = parseInt(hours, 10);
+                                                                const modifier = h >= 12 ? 'PM' : 'AM';
+                                                                if (h > 12) h -= 12;
+                                                                if (h === 0) h = 12;
+                                                                const time12 = `${String(h).padStart(2, '0')}:${minutes} ${modifier}`;
+                                                                
+                                                                const newHours = [...formData.operatingHours];
+                                                                newHours[idx].end = time12;
+                                                                setFormData({...formData, operatingHours: newHours});
+                                                            }}
+                                                            className="h-10 rounded-lg text-xs" 
+                                                        />
                                                     </div>
                                                 </div>
                                             </div>
@@ -952,6 +1084,32 @@ export default function TempleProfilePage() {
                                         </div>
                                     </Card>
                                 )}
+
+                                {/* Social Links in View Mode */}
+                                {(formData.instagramUrl || formData.facebookUrl || formData.youtubeUrl) && (
+                                    <Card className="border-white/20 bg-white/60 backdrop-blur-sm shadow-xl rounded-[2.5rem] overflow-hidden p-6">
+                                        <h3 className="text-[10px] font-black uppercase tracking-widest text-[#7b4623] mb-4 flex items-center gap-2">
+                                            <Link2 className="w-3 h-3" /> Connect With Us
+                                        </h3>
+                                        <div className="space-y-2">
+                                            {formData.instagramUrl && (
+                                                <a href={formData.instagramUrl} target="_blank" rel="noopener noreferrer" className="flex items-center gap-3 text-sm text-slate-600 hover:text-[#7b4623] transition-colors p-2 rounded-xl hover:bg-white/40">
+                                                    <FaInstagram className="w-4 h-4" /> Instagram
+                                                </a>
+                                            )}
+                                            {formData.facebookUrl && (
+                                                <a href={formData.facebookUrl} target="_blank" rel="noopener noreferrer" className="flex items-center gap-3 text-sm text-slate-600 hover:text-[#7b4623] transition-colors p-2 rounded-xl hover:bg-white/40">
+                                                    <FaFacebook className="w-4 h-4" /> Facebook
+                                                </a>
+                                            )}
+                                            {formData.youtubeUrl && (
+                                                <a href={formData.youtubeUrl} target="_blank" rel="noopener noreferrer" className="flex items-center gap-3 text-sm text-slate-600 hover:text-[#7b4623] transition-colors p-2 rounded-xl hover:bg-white/40">
+                                                    <FaYoutube className="w-4 h-4" /> YouTube Channel
+                                                </a>
+                                            )}
+                                        </div>
+                                    </Card>
+                                )}
                             </div>
 
                             {/* Right Side: Detailed Sections */}
@@ -964,17 +1122,17 @@ export default function TempleProfilePage() {
                                         </CardTitle>
                                     </CardHeader>
                                     <CardContent className="p-8 space-y-10">
-                                      <div className="space-y-4">
-    <h3 className="text-sm font-black uppercase tracking-widest text-[#7b4623]/40">
-        About the Temple
-    </h3>
-    <div 
-        className="text-slate-700 leading-relaxed text-lg font-serif border-l-4 border-[#7b4623]/20 pl-6 prose prose-slate max-w-none"
-        dangerouslySetInnerHTML={{ 
-            __html: formData.description_en || "No description provided yet." 
-        }} 
-    />
-</div>
+                                        <div className="space-y-4">
+                                            <h3 className="text-sm font-black uppercase tracking-widest text-[#7b4623]/40">
+                                                About the Temple
+                                            </h3>
+                                            <div 
+                                                className="text-slate-700 leading-relaxed text-lg font-serif border-l-4 border-[#7b4623]/20 pl-6 prose prose-slate max-w-none"
+                                                dangerouslySetInnerHTML={{ 
+                                                    __html: formData.description_en || "No description provided yet." 
+                                                }} 
+                                            />
+                                        </div>
 
                                         {formData.history_en && (
                                             <div className="space-y-4 pt-8 border-t border-slate-100">
@@ -988,7 +1146,26 @@ export default function TempleProfilePage() {
                                             </div>
                                         )}
 
-
+                                        {/* News Cuttings View */}
+                                        {existingNewsCuttings.length > 0 && (
+                                            <div className="space-y-4 pt-8 border-t border-slate-100">
+                                                <h3 className="text-lg font-bold text-[#7b4623] flex items-center gap-2">
+                                                    <FileText className="w-5 h-5" /> News & Press Coverage
+                                                </h3>
+                                                <div className="grid grid-cols-2 md:grid-cols-3 gap-4">
+                                                    {existingNewsCuttings.map((item, i) => (
+                                                        <div key={i} className="group relative">
+                                                            <img src={getImageUrl(item.image)} className="w-full aspect-video object-cover rounded-2xl" />
+                                                            {item.link && (
+                                                                <a href={item.link} target="_blank" rel="noopener noreferrer" className="absolute inset-0 bg-black/40 opacity-0 group-hover:opacity-100 transition-opacity rounded-2xl flex items-center justify-center text-white">
+                                                                    <ExternalLink className="w-6 h-6" />
+                                                                </a>
+                                                            )}
+                                                        </div>
+                                                    ))}
+                                                </div>
+                                            </div>
+                                        )}
                                     </CardContent>
                                 </Card>
 

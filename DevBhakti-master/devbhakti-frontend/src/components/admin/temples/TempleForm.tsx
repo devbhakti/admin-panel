@@ -18,8 +18,11 @@ import {
     CheckCircle2,
     Video,
     Play,
+    FileText ,
     Link as LinkIcon
 } from "lucide-react";
+import { FaFacebook, FaInstagram, FaYoutube } from "react-icons/fa";
+
 import axios from "axios";
 import { checkPhoneGlobal, checkEmailExists, checkInstitutionPhone } from "@/api/authController";
 import { Button } from "@/components/ui/button";
@@ -104,6 +107,9 @@ export function TempleForm({
         liveStatus: "false",
         poojaCommissionRate: "5.0",
         productCommissionRate: "10.0",
+        instagramUrl: "",
+        facebookUrl: "",
+        youtubeUrl: "",
         operatingHours: [
             { label: "Morning", start: "07:00 AM", end: "01:00 PM", active: true },
             { label: "Evening", start: "05:00 PM", end: "10:00 PM", active: true }
@@ -133,6 +139,10 @@ export function TempleForm({
     const [youtubeLinks, setYoutubeLinks] = useState<string[]>([]);
     const [existingYoutubeLinks, setExistingYoutubeLinks] = useState<string[]>([]);
     const [newYoutubeUrl, setNewYoutubeUrl] = useState("");
+
+    // News Cuttings State
+    const [existingNewsCuttings, setExistingNewsCuttings] = useState<{ image: string; link: string }[]>([]);
+    const [newNewsCuttings, setNewNewsCuttings] = useState<{ file: File; preview: string; link: string }[]>([]);
 
     // Cropping State
     const [showCropper, setShowCropper] = useState(false);
@@ -213,6 +223,9 @@ export function TempleForm({
                 liveStatus: String(tData.liveStatus || false),
                 poojaCommissionRate: String(tData.poojaCommissionRate || "5.0"),
                 productCommissionRate: String(tData.productCommissionRate || "10.0"),
+                instagramUrl: tData.instagramUrl || "",
+                facebookUrl: tData.facebookUrl || "",
+                youtubeUrl: tData.youtubeUrl || "",
                 openTime: tData.openTime || "",
                 operatingHours: tData.operatingHours || [
                     { label: "Morning", start: "07:00 AM", end: "01:00 PM", active: true },
@@ -223,6 +236,11 @@ export function TempleForm({
             setExistingMainImage(tData.image || "");
             setExistingHeroImages(tData.heroImages || []);
             setExistingYoutubeLinks(tData.youtubeLinks || []);
+
+            // Load existing news cuttings
+            if (tData.newsCuttings && Array.isArray(tData.newsCuttings)) {
+                setExistingNewsCuttings(tData.newsCuttings);
+            }
 
             if (tData.poojas) {
                 setSelectedPoojaIds(tData.poojas.map((p: any) => p.masterPoojaId || p.id));
@@ -493,6 +511,13 @@ export function TempleForm({
         const allYoutubeLinks = [...existingYoutubeLinks, ...youtubeLinks];
         fd.append("youtubeLinks", JSON.stringify(allYoutubeLinks));
 
+        // News Cuttings — pass existing as JSON, new images as files
+        fd.append("existingNewsCuttings", JSON.stringify(existingNewsCuttings));
+        newNewsCuttings.forEach(nc => {
+            fd.append("newsCuttingImages", nc.file);
+            fd.append("newsCuttingLinks", nc.link || "");
+        });
+
         if (mode === "edit") {
             fd.append("existingHeroImages", JSON.stringify(existingHeroImages));
         }
@@ -701,6 +726,46 @@ export function TempleForm({
                                             placeholder="0"
                                         />
                                     </div>
+
+                                    {/* Social Media Links — only shown on English tab */}
+                                    {lang === 'en' && (
+                                        <>
+                                            <div className="md:col-span-2">
+                                                <Separator className="my-2" />
+                                                <p className="text-xs font-black uppercase tracking-wider text-slate-500 mt-4 mb-3">Social Media Profiles</p>
+                                            </div>
+                                            <div className="space-y-2">
+                                                <label className="text-sm font-semibold text-slate-700 flex items-center gap-2">
+                                                    <span className="text-pink-500">📸</span> Instagram URL
+                                                </label>
+                                                <Input
+                                                    value={formData.instagramUrl}
+                                                    onChange={e => setFormData({ ...formData, instagramUrl: e.target.value })}
+                                                    placeholder="https://www.instagram.com/..."
+                                                />
+                                            </div>
+                                            <div className="space-y-2">
+                                                <label className="text-sm font-semibold text-slate-700 flex items-center gap-2">
+                                                    <span className="text-blue-600">📘</span> Facebook URL
+                                                </label>
+                                                <Input
+                                                    value={formData.facebookUrl}
+                                                    onChange={e => setFormData({ ...formData, facebookUrl: e.target.value })}
+                                                    placeholder="https://www.facebook.com/..."
+                                                />
+                                            </div>
+                                            <div className="space-y-2 md:col-span-2">
+                                                <label className="text-sm font-semibold text-slate-700 flex items-center gap-2">
+                                                    <span className="text-red-500">▶️</span> YouTube Channel URL
+                                                </label>
+                                                <Input
+                                                    value={formData.youtubeUrl}
+                                                    onChange={e => setFormData({ ...formData, youtubeUrl: e.target.value })}
+                                                    placeholder="https://www.youtube.com/@channel"
+                                                />
+                                            </div>
+                                        </>
+                                    )}
                                 </div>
                             </div>
 
@@ -956,6 +1021,109 @@ export function TempleForm({
                                     <p className="text-xs mt-0.5 opacity-60">Paste a YouTube URL above and click Add</p>
                                 </div>
                             )}
+                        </div>
+
+                        {/* News Cuttings */}
+                        <div className="space-y-4 pt-2 border-t">
+                            <div className="flex items-center gap-2">
+                                <FileText className="w-4 h-4 text-[#7c4624]" />
+                                <label className="text-sm font-semibold text-slate-700">News Cuttings (Press Coverage)</label>
+                            </div>
+                            <p className="text-xs text-slate-500">Upload newspaper or magazine photos of press coverage. Optionally add an external link for each item.</p>
+
+                            {/* Existing news cuttings */}
+                            {existingNewsCuttings.length > 0 && (
+                                <div className="grid grid-cols-2 sm:grid-cols-3 gap-3">
+                                    {existingNewsCuttings.map((nc, i) => (
+                                        <div key={i} className="relative group rounded-xl border border-slate-200 overflow-hidden bg-white shadow-sm">
+                                            <div className="aspect-[4/3] overflow-hidden">
+                                                <img
+                                                    src={getFullImageUrl(nc.image)}
+                                                    alt={`News cutting ${i + 1}`}
+                                                    className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300"
+                                                />
+                                            </div>
+                                            {nc.link && (
+                                                <div className="px-2 py-1 bg-slate-50 border-t border-slate-100">
+                                                    <p className="text-[10px] text-slate-500 font-mono truncate">{nc.link}</p>
+                                                </div>
+                                            )}
+                                            <button
+                                                type="button"
+                                                onClick={() => setExistingNewsCuttings(prev => prev.filter((_, j) => j !== i))}
+                                                className="absolute top-1.5 right-1.5 bg-black/70 rounded-full p-1 opacity-0 group-hover:opacity-100 transition-opacity"
+                                            >
+                                                <X className="w-3 h-3 text-white" />
+                                            </button>
+                                            <div className="absolute bottom-0 left-0 right-0 bg-gradient-to-t from-black/40 px-2 py-1">
+                                                <p className="text-[10px] text-white/80 truncate font-mono">Saved</p>
+                                            </div>
+                                        </div>
+                                    ))}
+                                </div>
+                            )}
+
+                            {/* New news cuttings */}
+                            {newNewsCuttings.length > 0 && (
+                                <div className="grid grid-cols-2 sm:grid-cols-3 gap-3">
+                                    {newNewsCuttings.map((nc, i) => (
+                                        <div key={i} className="relative group rounded-xl border border-orange-200 overflow-hidden bg-white shadow-sm">
+                                            <div className="aspect-[4/3] overflow-hidden">
+                                                <img src={nc.preview} alt={`New cutting ${i + 1}`} className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300" />
+                                            </div>
+                                            <div className="px-2 py-1.5 space-y-1">
+                                                <input
+                                                    type="url"
+                                                    placeholder="https://article-link..."
+                                                    value={nc.link}
+                                                    onChange={e => {
+                                                        const updated = [...newNewsCuttings];
+                                                        updated[i] = { ...updated[i], link: e.target.value };
+                                                        setNewNewsCuttings(updated);
+                                                    }}
+                                                    className="w-full text-[10px] border border-slate-200 rounded px-1.5 py-1 font-mono focus:outline-none focus:border-[#7c4624]"
+                                                />
+                                            </div>
+                                            <button
+                                                type="button"
+                                                onClick={() => {
+                                                    URL.revokeObjectURL(nc.preview);
+                                                    setNewNewsCuttings(prev => prev.filter((_, j) => j !== i));
+                                                }}
+                                                className="absolute top-1.5 right-1.5 bg-black/70 rounded-full p-1 opacity-0 group-hover:opacity-100 transition-opacity"
+                                            >
+                                                <X className="w-3 h-3 text-white" />
+                                            </button>
+                                            <div className="absolute bottom-0 left-0 right-0 bg-gradient-to-t from-black/40 px-2 py-1">
+                                                <span className="text-[10px] bg-orange-500 text-white px-1.5 py-0.5 rounded-full font-bold">New</span>
+                                            </div>
+                                        </div>
+                                    ))}
+                                </div>
+                            )}
+
+                            {/* Upload button */}
+                            <label className="border-2 border-dashed rounded-xl p-6 text-center text-muted-foreground hover:bg-slate-50 cursor-pointer transition-colors flex flex-col items-center gap-2 block">
+                                <input
+                                    type="file"
+                                    multiple
+                                    accept="image/*"
+                                    className="hidden"
+                                    onChange={e => {
+                                        const files = Array.from(e.target.files || []);
+                                        const newItems = files.map(file => ({
+                                            file,
+                                            preview: URL.createObjectURL(file),
+                                            link: "",
+                                        }));
+                                        setNewNewsCuttings(prev => [...prev, ...newItems]);
+                                        e.target.value = '';
+                                    }}
+                                />
+                                <Upload className="w-8 h-8 opacity-30" />
+                                <p className="text-sm">Click to upload news cutting images</p>
+                                <p className="text-xs opacity-60">You can add external article links after upload</p>
+                            </label>
                         </div>
                     </div>
 

@@ -94,33 +94,16 @@ export const updateWithdrawalStatus = async (req: Request, res: Response) => {
 
 export const getPlatformFinanceSummary = async (req: Request, res: Response) => {
   try {
-    const DONATION_COMMISSION_RATE = 0.02; // 2%
-
-    // Ledger se Pooja aur Product earnings
+    // Ledger se Pooja, Product, aur Donation earnings (only COMPLETED)
     const ledger = await prisma.templeLedger.findMany({
       where: { 
-        status: { not: "CANCELLED" },
-        type: { in: ["POOJA_EARNING", "MARKETPLACE_EARNING"] }
+        status: "COMPLETED",
+        type: { in: ["POOJA_EARNING", "MARKETPLACE_EARNING", "DONATION_EARNING"] }
       }
     });
 
-    const totalRevenueFromLedger = ledger.reduce((sum, e) => sum + (Number(e.grossAmount) || 0), 0);
-    const totalCommissionFromLedger = ledger.reduce((sum, e) => sum + (Number(e.commission) || 0), 0);
-
-    // Donations - temple amount se gross calculate karo
-    const donationsData = await prisma.donation.aggregate({
-      where: { status: { in: ['COMPLETED', 'SUCCESS'] } },
-      _sum: { amount: true }
-    });
-    const templeDonationAmount = Number(donationsData._sum.amount) || 0;
-    
-    // Gross amount including commission (devotee pays)
-    const donationGrossAmount = templeDonationAmount * (1 + DONATION_COMMISSION_RATE);
-    const donationCommission = templeDonationAmount * DONATION_COMMISSION_RATE;
-
-    // Totals
-    const totalPlatformGross = totalRevenueFromLedger + donationGrossAmount;
-    const totalPlatformCommission = totalCommissionFromLedger + donationCommission;
+    const totalPlatformGross = ledger.reduce((sum, e) => sum + (Number(e.grossAmount) || 0), 0);
+    const totalPlatformCommission = ledger.reduce((sum, e) => sum + (Number(e.commission) || 0), 0);
 
     // Breakdown
     const totalPoojaBookings = ledger
@@ -130,6 +113,10 @@ export const getPlatformFinanceSummary = async (req: Request, res: Response) => 
     const totalProductSales = ledger
       .filter(e => e.type === "MARKETPLACE_EARNING")
       .reduce((sum, e) => sum + (Number(e.grossAmount) || 0), 0);
+
+    const totalDonations = ledger
+      .filter(e => e.type === "DONATION_EARNING")
+      .reduce((sum, e) => sum + (Number(e.grossAmount) || 0), 0); // Gross devotee paid
 
     const pendingRequests = await prisma.withdrawalRequest.count({
       where: { status: "PENDING" }
@@ -149,11 +136,11 @@ export const getPlatformFinanceSummary = async (req: Request, res: Response) => 
         totalPaidOut: totalPayouts._sum.amount || 0,
         totalPoojaBookings,
         totalProductSales,
-        totalDonations: templeDonationAmount  // Temple gets
+        totalDonations                   // Temple gets
       }
     });
   } catch (error: any) {
-    console.error("Error:", error);
+    console.error("Error in getPlatformFinanceSummary:", error);
     return res.status(500).json({ success: false, message: error.message });
   }
 };
@@ -163,7 +150,7 @@ export const getAllPlatformTransactions = async (req: Request, res: Response) =>
     const { page = 1, limit = 10, templeId, sellerId } = req.query;
     const skip = (Number(page) - 1) * Number(limit);
 
-    const where: any = {};
+    const where: any = { status: "COMPLETED" };
     if (templeId) where.templeId = String(templeId);
     if (sellerId) where.sellerId = String(sellerId);
 
@@ -209,7 +196,7 @@ export const getAllPlatformTransactions = async (req: Request, res: Response) =>
 export const downloadTransactionsExcel = async (req: Request, res: Response) => {
   try {
     const { templeId, sellerId } = req.query;
-    const where: any = {};
+    const where: any = { status: "COMPLETED" };
     if (templeId) where.templeId = String(templeId);
     if (sellerId) where.sellerId = String(sellerId);
 

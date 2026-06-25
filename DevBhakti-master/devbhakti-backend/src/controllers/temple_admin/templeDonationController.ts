@@ -191,6 +191,25 @@ export const createTempleDonation = async (req: Request, res: Response) => {
             }
         });
 
+        // 2️⃣ Create ledger entry for transaction list (if status is SUCCESS)
+        if (status === "SUCCESS") {
+            const grossAmount = Number(amount) + commissionAmount;
+            await prisma.templeLedger.create({
+                data: {
+                    templeId: templeId,
+                    amount: Number(amount),           // Net (temple gets)
+                    grossAmount: grossAmount,        // Gross (devotee paid)
+                    commission: commissionAmount,    // Platform commission
+                    type: "DONATION_EARNING",
+                    sourceId: donation.id,
+                    description: `Donation from ${donorName || donorPhone} of ₹${amount}`,
+                    status: "COMPLETED",
+                    createdAt: createdAt ? new Date(createdAt) : undefined,
+                }
+            });
+            console.log(`✅ Ledger entry created for temple donation ${donation.id}`);
+        }
+
         res.status(200).json({ success: true, data: donation, message: "Donation created successfully" });
     } catch (error: any) {
         console.error("Create Temple Donation Error:", error);

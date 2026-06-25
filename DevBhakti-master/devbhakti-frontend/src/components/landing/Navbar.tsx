@@ -15,6 +15,7 @@ import { useCart } from "@/context/CartContext";
 import { clearAllTokens } from "@/lib/auth-utils";
 import CartDrawer from "@/components/marketplace/CartDrawer";
 import { NotificationBell } from "@/components/notifications/NotificationBell";
+import { fetchMandalRegistrationStatus } from "@/api/publicController";
 import { useLanguage, type Language } from "@/context/LanguageContext";
 import { parseLocalizedValue } from "@/utils/textUtils";
 import {
@@ -39,6 +40,7 @@ const Navbar: React.FC<NavbarProps> = ({ variant = "default", isSolid = false })
   const [isCartOpen, setIsCartOpen] = useState(false);
   const [user, setUser] = useState<any>(null);
   const [mounted, setMounted] = useState(false);
+  const [isMandalEnabled, setIsMandalEnabled] = useState(false);
   const router = useRouter();
   const pathname = usePathname();
 
@@ -62,6 +64,15 @@ const Navbar: React.FC<NavbarProps> = ({ variant = "default", isSolid = false })
       setIsScrolled(window.scrollY > 20);
     };
     window.addEventListener("scroll", handleScroll);
+    
+    const checkMandalStatus = async () => {
+      const res = await fetchMandalRegistrationStatus();
+      if (res.success && res.enabled) {
+        setIsMandalEnabled(true);
+      }
+    };
+    checkMandalStatus();
+    
     return () => window.removeEventListener("scroll", handleScroll);
   }, []);
 
@@ -81,13 +92,22 @@ const Navbar: React.FC<NavbarProps> = ({ variant = "default", isSolid = false })
   };
 
 
-  const navLinks = [
+  const baseNavLinks = [
     { label: t('navbar.poojas'), href: "/poojas" },
     { label: t('navbar.temples'), href: "/temples" },
+  ];
+  
+  if (isMandalEnabled) {
+    baseNavLinks.push({ label: t('navbar.mandals'), href: "/mandals" });
+  }
+  
+  baseNavLinks.push(
     { label: t('navbar.marketplace'), href: "/marketplace?category=All" },
     { label: t('navbar.live_darshan'), href: "/live-darshan" },
-    { label: t('navbar.Donation'), href: "/donation" },
-  ];
+    { label: t('navbar.Donation'), href: "/donation" }
+  );
+  
+  const navLinks = baseNavLinks;
 
   return (
     <>
@@ -151,6 +171,7 @@ const Navbar: React.FC<NavbarProps> = ({ variant = "default", isSolid = false })
                       {mounted ? link.label : (
                         link.href === "/poojas" ? "Poojas" :
                         link.href === "/temples" ? "Temples" :
+                        link.href === "/mandals" ? "Mandals" :
                         link.href.includes("/marketplace") ? "Marketplace" :
                         link.href === "/live-darshan" ? "Live Darshan" :
                         link.href === "/donation" ? "Donation" : link.label
@@ -342,6 +363,15 @@ const Navbar: React.FC<NavbarProps> = ({ variant = "default", isSolid = false })
                                   <ChevronRight className="w-3 h-3 opacity-0 group-focus:opacity-100 -translate-x-2 group-focus:translate-x-0 transition-all" />
                                 </Link>
                               </DropdownMenuItem>
+                              <DropdownMenuItem asChild className="focus:bg-primary focus:text-white rounded-[1.2rem] cursor-pointer transition-all duration-300 group">
+                                <Link href="/register-mandal" className="flex items-center justify-between w-full px-4 py-3">
+                                  <div className="flex items-center gap-3">
+                                    <Church className="w-4 h-4 text-primary group-focus:text-white transition-colors" />
+                                    <span className="font-medium">{t('navbar.mandal_register')}</span>
+                                  </div>
+                                  <ChevronRight className="w-3 h-3 opacity-0 group-focus:opacity-100 -translate-x-2 group-focus:translate-x-0 transition-all" />
+                                </Link>
+                              </DropdownMenuItem>
                             </>
                           )}
 
@@ -466,6 +496,7 @@ const Navbar: React.FC<NavbarProps> = ({ variant = "default", isSolid = false })
                         {mounted ? link.label : (
                           link.href === "/poojas" ? "Poojas" :
                           link.href === "/temples" ? "Temples" :
+                          link.href === "/mandals" ? "Mandals" :
                           link.href.includes("/marketplace") ? "Marketplace" :
                           link.href === "/live-darshan" ? "Live Darshan" :
                           link.href === "/donation" ? "Donation" : link.label
@@ -544,12 +575,20 @@ const Navbar: React.FC<NavbarProps> = ({ variant = "default", isSolid = false })
                     )}
 
                     {(!user || user.role === "DEVOTEE") && (
-                      <Button variant="ghost" size="lg" asChild className="justify-start gap-4 h-14 rounded-2xl border border-border/50">
-                        <Link href="/temples/register" onClick={() => setIsMobileMenuOpen(false)}>
-                          <Church className="w-5 h-5 text-orange-600" />
-                          <span>{t('navbar.temple_register')}</span>
-                        </Link>
-                      </Button>
+                      <>
+                        <Button variant="ghost" size="lg" asChild className="justify-start gap-4 h-14 rounded-2xl border border-border/50">
+                          <Link href="/temples/register" onClick={() => setIsMobileMenuOpen(false)}>
+                            <Church className="w-5 h-5 text-orange-600" />
+                            <span>{t('navbar.temple_register')}</span>
+                          </Link>
+                        </Button>
+                        <Button variant="ghost" size="lg" asChild className="justify-start gap-4 h-14 rounded-2xl border border-border/50 mt-2">
+                          <Link href="/mandals/register" onClick={() => setIsMobileMenuOpen(false)}>
+                            <Church className="w-5 h-5 text-orange-600" />
+                            <span>{t('navbar.mandal_register')}</span>
+                          </Link>
+                        </Button>
+                      </>
                     )}
 
                     {/* Temple Login - Mobile Menu (only for temple variant) */}

@@ -26,6 +26,31 @@ const normalizePhone = (phone: string): string => {
   return '+' + cleaned;
 };
 
+const getSingleString = (val: any): string | null => {
+  if (!val) return null;
+  if (Array.isArray(val)) {
+    const nonVal = val.find(v => typeof v === 'string' && v.trim() !== '');
+    return nonVal !== undefined ? nonVal.trim() : (val[0] ? String(val[0]).trim() : null);
+  }
+  if (typeof val === 'string') return val.trim();
+  return String(val).trim();
+};
+
+const getLangObject = (val: any): any => {
+  if (!val) return { en: null, hi: null, mr: null };
+  if (typeof val === 'object' && !Array.isArray(val)) return val;
+  if (typeof val === 'string') {
+    try {
+      const parsed = JSON.parse(val);
+      if (typeof parsed === 'object' && parsed !== null) return parsed;
+    } catch (e) {
+      return { en: val, hi: null, mr: null };
+    }
+  }
+  return { en: String(val), hi: null, mr: null };
+};
+
+
 // Get Temple by User ID (Raw data for admin)
 export const getTempleById = async (req: Request, res: Response) => {
   try {
@@ -340,6 +365,31 @@ export const createTemple = async (req: Request, res: Response) => {
       }
     }
 
+    // News Cuttings
+    const newNewsCuttingImages = files && files['newsCuttingImages'] ? (getFilePath(files, 'newsCuttingImages') || []) : [];
+    let newNewsCuttingLinks: string[] = [];
+    if (data.newsCuttingLinks) {
+      try {
+        const parsed = typeof data.newsCuttingLinks === 'string' 
+          ? JSON.parse(data.newsCuttingLinks) 
+          : data.newsCuttingLinks;
+        newNewsCuttingLinks = Array.isArray(parsed) ? parsed : [parsed];
+      } catch (e) {
+        if (typeof data.newsCuttingLinks === 'string') {
+          newNewsCuttingLinks = [data.newsCuttingLinks];
+        } else if (Array.isArray(data.newsCuttingLinks)) {
+          newNewsCuttingLinks = data.newsCuttingLinks;
+        } else {
+          newNewsCuttingLinks = [];
+        }
+      }
+    }
+
+    const newsCuttings = newNewsCuttingImages.map((imgPath: string, index: number) => ({
+      image: imgPath,
+      link: newNewsCuttingLinks[index] || ""
+    }));
+
     const result = await prisma.$transaction(async (tx) => {
       // 1. Create User & Temple
       const userDisplayId = await generateCustomId('TAID');
@@ -383,6 +433,10 @@ export const createTemple = async (req: Request, res: Response) => {
               image: getFilePath(files, 'image'),
               heroImages: getFilePath(files, 'heroImages') || [],
               ...(data.youtubeLinks && { youtubeLinks: JSON.parse(data.youtubeLinks) } as any),
+              instagramUrl: getSingleString(data.instagramUrl),
+              facebookUrl: getSingleString(data.facebookUrl),
+              youtubeUrl: getSingleString(data.youtubeUrl),
+              newsCuttings: newsCuttings,
             }
           }
         },
@@ -557,6 +611,38 @@ export const updateTemple = async (req: Request, res: Response) => {
 
     console.log('Validations passed, starting transaction...');
 
+    // News Cuttings Logic
+    const existingNewsCuttings = safeParse(data.existingNewsCuttings, []);
+    const newNewsCuttingImages = files && files['newsCuttingImages'] ? (getFilePath(files, 'newsCuttingImages') || []) : [];
+    
+    let newNewsCuttingLinks: string[] = [];
+    if (data.newsCuttingLinks) {
+      try {
+        const parsed = typeof data.newsCuttingLinks === 'string' 
+          ? JSON.parse(data.newsCuttingLinks) 
+          : data.newsCuttingLinks;
+        newNewsCuttingLinks = Array.isArray(parsed) ? parsed : [parsed];
+      } catch (e) {
+        if (typeof data.newsCuttingLinks === 'string') {
+          newNewsCuttingLinks = [data.newsCuttingLinks];
+        } else if (Array.isArray(data.newsCuttingLinks)) {
+          newNewsCuttingLinks = data.newsCuttingLinks;
+        } else {
+          newNewsCuttingLinks = [];
+        }
+      }
+    }
+
+    const newNewsCuttings = newNewsCuttingImages.map((imgPath: string, index: number) => ({
+      image: imgPath,
+      link: newNewsCuttingLinks[index] || ""
+    }));
+
+    const newsCuttings = [
+        ...existingNewsCuttings,
+        ...newNewsCuttings
+    ];
+
     const result = await prisma.$transaction(async (tx) => {
       // Find the user first to ensure they exist and have a temple
       const existingUser = await tx.user.findUnique({
@@ -602,6 +688,10 @@ export const updateTemple = async (req: Request, res: Response) => {
               subdomain: data.subdomain || undefined,
               urlType: data.urlType || 'slug',
               liveStatus: data.liveStatus === 'true',
+              instagramUrl: data.instagramUrl !== undefined ? getSingleString(data.instagramUrl) : undefined,
+              facebookUrl: data.facebookUrl !== undefined ? getSingleString(data.facebookUrl) : undefined,
+              youtubeUrl: data.youtubeUrl !== undefined ? getSingleString(data.youtubeUrl) : undefined,
+              newsCuttings: newsCuttings,
               productCommissionRate: (data.productCommissionRate && !isNaN(parseFloat(data.productCommissionRate))) ? parseFloat(data.productCommissionRate) : undefined,
               poojaCommissionRate: (data.poojaCommissionRate && !isNaN(parseFloat(data.poojaCommissionRate))) ? parseFloat(data.poojaCommissionRate) : undefined,
               ...(files?.image && { image: getFilePath(files, 'image') }),
@@ -1211,3 +1301,30 @@ export const getTempleLocations = async (req: Request, res: Response) => {
     }
   };
 
+export const toggleShowPhone = async (req: Request, res: Response) => {
+  try {
+    const { id } = req.params;
+    const { showPhone } = req.body;
+
+    const user = await prisma.user.update({
+      where: { id: String(id) },
+      data: {
+        temple: {
+          update: {
+            showPhone: Boolean(showPhone)
+          }
+        }
+      },
+      include: { temple: true }
+    });
+
+    if (!user.temple) {
+      return res.status(404).json({ success: false, message: "Temple profile not found for this user" });
+    }
+
+    res.json({ success: true, message: "Phone visibility updated successfully", data: user.temple });
+  } catch (error: any) {
+    console.error('Toggle showPhone error:', error);
+    res.status(500).json({ success: false, message: error.message || 'Failed to update phone visibility' });
+  }
+};

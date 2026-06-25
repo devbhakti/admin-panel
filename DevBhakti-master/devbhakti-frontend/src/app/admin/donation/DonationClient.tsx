@@ -562,27 +562,17 @@ export default function DonationClient() {
                                         </div>
                                     </div>
 
-                                    {/* Donation Status */}
-                                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-5">
-                                        <div>
-                                            <label className="text-xs text-slate-500 uppercase tracking-[0.2em] mb-2 block font-semibold">
-                                                Donation Status <span className="text-rose-500">*</span>
-                                            </label>
-                                            <select
-                                                value={addStatus}
-                                                onChange={(e) => setAddStatus(e.target.value)}
-                                                className="w-full rounded-xl border border-slate-200 bg-slate-50 px-4 py-3 text-sm focus:border-[#7c4624] focus:ring-[#7c4624]/20"
-                                            >
-                                                {["SUCCESS", "PENDING", "FAILED"].map((status) => (
-                                                    <option key={status} value={status}>
-                                                        {statusConfig[status as keyof typeof statusConfig]?.label || status}
-                                                    </option>
-                                                ))}
-                                            </select>
-                                        </div>
-                                        <div className="bg-amber-50 rounded-xl p-3 flex items-start gap-2">
-                                            <AlertCircle className="w-4 h-4 text-amber-600 mt-0.5 flex-shrink-0" />
-                                            <p className="text-xs text-amber-700">Manual donation recorded with selected payment method. Receipt will be generated automatically.</p>
+
+                                    {/* Donation Status - Always SUCCESS for manual entries */}
+                                    <div className="bg-emerald-50 rounded-xl p-4 flex items-center justify-between border border-emerald-200">
+                                        <div className="flex items-center gap-3">
+                                            <div className="w-10 h-10 bg-emerald-100 rounded-xl flex items-center justify-center">
+                                                <CheckCircle2 className="w-5 h-5 text-emerald-600" />
+                                            </div>
+                                            <div>
+                                                <p className="text-sm font-bold text-emerald-800">Donation Status: Success</p>
+                                                <p className="text-xs text-emerald-600 mt-0.5">Manual donations are recorded as successful. Receipt & ledger entry will be created automatically.</p>
+                                            </div>
                                         </div>
                                     </div>
 

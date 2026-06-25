@@ -56,7 +56,7 @@
     "view_sacred_profile": "View Sacred Profile",
     "my_cart": "My Cart",
     "language": "Language",
-    "Donation": "Donation"
+    "Donation": "Contribution"
   },
   "marketplace": {
     "title": "Sacred Marketplace",
@@ -456,7 +456,7 @@
           "description": "Every temple on our platform undergoes a rigorous 5-step verification process to ensure authenticity."
         },
         {
-          "title": "Secure Donations with Receipts",
+          "title": "Secure Contributions with Receipts",
           "description": "All contributions are processed via secure gateways. Receive official 80G tax-exempt receipts instantly."
         },
         {
@@ -491,7 +491,7 @@
           "description": "Order authentic Puja kits, Rudraksha, and Brass idols. Vastu compliant items delivered to you."
         },
         "easy_donation": {
-          "title": "Easy Donation",
+          "title": "Easy Contribution",
           "description": "Offer Dakshina directly to the temple fund. Get 80G tax exemption certificates instantly via email."
         },
         "temple_discovery": {
@@ -560,7 +560,7 @@
           "location": "Pune"
         },
         {
-          "content": "The platform is incredibly user-friendly. From temple information to donation services, everything is streamlined. It's a must-have for every devotee.",
+          "content": "The platform is incredibly user-friendly. From temple information to contribution services, everything is streamlined. It's a must-have for every devotee.",
           "name": "Amit Deshmukh",
           "location": "Nagpur"
         },
@@ -720,7 +720,7 @@
           "Online pooja and seva bookings",
           "Live darshan access",
           "Sale of devotional products (where applicable)",
-          "(Donation-related services - currently not activated on the platform)"
+          "(Contribution-related services - currently not activated on the platform)"
         ],
         "extra": "DevBhakti does not own, manage, operate, or control temples listed on the Platform. Temples and vendors are independent entities responsible for performing services and fulfilling obligations. DevBhakti does not guarantee religious, spiritual, or ritual outcomes."
       },
@@ -869,7 +869,7 @@
         "points": [
           "Online pooja bookings",
           "Coordination of devotional services",
-          "(Donation-related services - currently not activated on the platform)",
+          "(Contribution-related services - currently not activated on the platform)",
           "Sale of devotional and related products (where applicable)"
         ],
         "extra": "DevBhakti does not directly perform temple services but enables bookings and transactions between users and temples/vendors."
@@ -908,8 +908,8 @@
         "extra": "Such refund consideration is discretionary, subject to verification, and may involve coordination with the relevant temple/vendor. Platform service fees and payment gateway charges may not be refundable."
       },
       {
-        "title": "5. Donation Transactions",
-        "content": "Donation-related services are currently not activated on the platform. When activated in the future, donations will generally be considered voluntary contributions directly to temples, and refunds will not be permitted except in cases of documented technical payment failures."
+        "title": "5. Contribution Transactions",
+        "content": "Contribution-related services are currently not activated on the platform. When activated in the future, contributions will generally be considered voluntary contributions directly to temples, and refunds will not be permitted except in cases of documented technical payment failures."
       },
       {
         "title": "6. Shipping & Physical Goods (if applicable)",
@@ -1063,7 +1063,7 @@
     "hero": {
       "title_part1": "Helping Temples Stay Connected",
       "title_part2": "with Devotees Worldwide",
-      "description": "A temple-first digital platform for online poojas, donations, live darshan, and devotee communication.",
+      "description": "A temple-first digital platform for online poojas, contributions, live darshan, and devotee communication.",
       "register_button": "Register Your Temple"
     },
     "intro": {
@@ -1087,8 +1087,8 @@
           "desc": "Allow devotees to book special poojas, abhisheks, and homams online with just a few clicks."
         },
         "b3": {
-          "title": "Divine Prasad & Donation",
-          "desc": "Accept donations and prasad offerings digitally, enabling devotees to contribute to your temple's growth."
+          "title": "Divine Prasad & Contribution",
+          "desc": "Accept contributions and prasad offerings digitally, enabling devotees to contribute to your temple's growth."
         },
         "b4": {
           "title": "Live Divine Darshan",
@@ -1119,7 +1119,7 @@
       "t3": {
         "name": "Siddhivinayak Temple",
         "role": "Administration",
-        "content": "Managing donations and bookings has never been easier. The dashboard is intuitive and saves us hours of work daily."
+        "content": "Managing contributions and bookings has never been easier. The dashboard is intuitive and saves us hours of work daily."
       }
     },
     "features_section": {
@@ -1130,8 +1130,8 @@
           "desc": "Beautiful, mobile-friendly website for your temple"
         },
         "f2": {
-          "title": "Donation Portal",
-          "desc": "Secure platform for receiving donations online"
+          "title": "Contribution Portal",
+          "desc": "Secure platform for receiving contributions online"
         },
         "f3": {
           "title": "Pooja Booking",
@@ -1305,7 +1305,7 @@
     "status_live": "LIVE",
     "status_viewers": "Viewers",
     "status_now_playing": "Now Playing",
-    "actions_donate": "Donate Now",
+    "actions_donate": "Contribute Now",
     "actions_book_pooja": "Book Pooja",
     "sections_other_temples": "Other Live Temples",
     "search_placeholder": "Search for live temple...",
@@ -1327,8 +1327,8 @@
     },
     "step1": {
       "title": "Select a Sacred Temple",
-      "subtitle": "Choose the temple where you wish to offer your donation",
-      "search_placeholder": "Search a Temple To Donate To"
+      "subtitle": "Choose the temple where you wish to offer your contribution",
+      "search_placeholder": "Search a Temple To Contribute To"
     },
     "step2": {
       "title": "Enter Amount",
@@ -1357,13 +1357,13 @@
       }
     },
     "step4": {
-      "title": "Review & Donate",
+      "title": "Review & Contribute",
       "subtitle": "Review your contribution details",
-      "donating_to": "Donating To",
+      "donating_to": "Contributing To",
       "amount": "Amount",
       "donor": "Donor",
       "email": "Email",
-      "razorpay_description": "Donation to {{temple}}",
+      "razorpay_description": "Contribution to {{temple}}",
       "receipt_80g": "80G Receipt",
       "requested_pan": "Requested (PAN: {{pan}})",
       "complete_title": "Complete Your Divine Offering",
@@ -1392,17 +1392,17 @@
       "login_title": "Har Har Mahadev!",
       "login_desc": "Please login to proceed with your divine offering. Taking you to the login page...",
       "select_temple": "Please select a temple",
-      "enter_amount": "Please enter donation amount",
+      "enter_amount": "Please enter contribution amount",
       "fill_required": "Please fill all required fields",
       "pan_required": "PAN is required for 80G receipt",
       "session_expired": "Session Expired",
       "login_again": "Please login again.",
-      "initiate_failed": "Failed to initiate donation",
-      "success_title": "🙏 Donation Successful!",
+      "initiate_failed": "Failed to initiate contribution",
+      "success_title": "🙏 Contribution Successful!",
       "success_desc": "May you be blessed. Receipt sent to your email.",
       "verification_failed": "Payment verification failed",
       "verification_error": "Verification error",
-      "donation_failed": "Donation failed",
+      "donation_failed": "Contribution failed",
       "download_failed": "Download Failed",
       "download_error": "Could not download receipt. Please try again."
     }

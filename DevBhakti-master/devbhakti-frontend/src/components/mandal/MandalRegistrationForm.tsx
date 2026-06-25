@@ -13,7 +13,10 @@ import {
     Check,
     ArrowRight,
     Sparkles,
-    FileText
+    FileText,
+    Image as ImageIcon,
+    Upload,
+    Trash2
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -30,13 +33,9 @@ export default function MandalRegistrationForm({ onClose }: { onClose?: () => vo
         presidentName: "",
         contactNumber: "",
         email: "",
-        name_en: "",
-        name_hi: "",
-        name_mr: "",
+        name: "",
         mandalType: "",
-        description_en: "",
-        description_hi: "",
-        description_mr: "",
+        description: "",
         presiding_deity: "",
         festivals: "",
         address: "",
@@ -45,12 +44,44 @@ export default function MandalRegistrationForm({ onClose }: { onClose?: () => vo
         pinCode: "",
         registrationNumber: "",
         verificationDocUrl: "",
-        presidentIdDocUrl: ""
+        presidentIdDocUrl: "",
+        mapUrl: ""
     });
+
+    const [mainImage, setMainImage] = useState<File | null>(null);
+    const [mainImagePreview, setMainImagePreview] = useState<string>("");
+    const [heroImages, setHeroImages] = useState<File[]>([]);
+    const [heroPreviews, setHeroPreviews] = useState<string[]>([]);
 
     const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement | HTMLSelectElement>) => {
         const { name, value } = e.target;
         setFormData(prev => ({ ...prev, [name]: value }));
+    };
+
+    const handleMainImageChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+        const file = e.target.files?.[0];
+        if (file) {
+            setMainImage(file);
+            setMainImagePreview(URL.createObjectURL(file));
+        }
+    };
+
+    const handleHeroImagesChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+        const files = Array.from(e.target.files || []);
+        if (files.length > 0) {
+            const currentCount = heroImages.length;
+            const remaining = 5 - currentCount;
+            const validFiles = files.slice(0, remaining);
+            if (validFiles.length > 0) {
+                setHeroImages(prev => [...prev, ...validFiles]);
+                setHeroPreviews(prev => [...prev, ...validFiles.map(file => URL.createObjectURL(file))]);
+            }
+        }
+    };
+
+    const removeHeroImage = (index: number) => {
+        setHeroImages(prev => prev.filter((_, i) => i !== index));
+        setHeroPreviews(prev => prev.filter((_, i) => i !== index));
     };
 
     const handleSubmit = async (e: React.FormEvent) => {
@@ -59,12 +90,20 @@ export default function MandalRegistrationForm({ onClose }: { onClose?: () => vo
         setError("");
 
         try {
-            const payload = {
-                ...formData,
-                name: formData.name_en, // fallback
-                description: formData.description_en, // fallback
-            };
-            const res = await submitMandalRegistration(payload);
+            const fd = new FormData();
+
+            Object.entries(formData).forEach(([key, value]) => {
+                if (value !== undefined && value !== null) {
+                    fd.append(key, value as string);
+                }
+            });
+
+            if (mainImage) fd.append("image", mainImage);
+            heroImages.forEach(file => {
+                fd.append("heroImages", file);
+            });
+
+            const res = await submitMandalRegistration(fd);
             if (res.success) {
                 setShowSuccess(true);
             } else {
@@ -183,38 +222,16 @@ export default function MandalRegistrationForm({ onClose }: { onClose?: () => vo
                         <h3 className="text-xl font-bold text-slate-800">{t("registerMandal.section_basic")}</h3>
                     </div>
                     <div className="space-y-6">
-                        <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-                            <div className="space-y-2">
-                                <label className="text-sm font-bold text-slate-600 ml-1">{t("registerMandal.name_en")}</label>
-                                <Input
-                                    name="name_en"
-                                    value={formData.name_en}
-                                    onChange={handleChange}
-                                    placeholder={t("registerMandal.name_en_placeholder")}
-                                    className="h-12 border-slate-200 focus:border-orange-500 rounded-xl"
-                                    required
-                                />
-                            </div>
-                            <div className="space-y-2">
-                                <label className="text-sm font-bold text-slate-600 ml-1">{t("registerMandal.name_hi")}</label>
-                                <Input
-                                    name="name_hi"
-                                    value={formData.name_hi}
-                                    onChange={handleChange}
-                                    placeholder={t("registerMandal.name_hi_placeholder")}
-                                    className="h-12 border-slate-200 focus:border-orange-500 rounded-xl"
-                                />
-                            </div>
-                            <div className="space-y-2">
-                                <label className="text-sm font-bold text-slate-600 ml-1">{t("registerMandal.name_mr")}</label>
-                                <Input
-                                    name="name_mr"
-                                    value={formData.name_mr}
-                                    onChange={handleChange}
-                                    placeholder={t("registerMandal.name_mr_placeholder")}
-                                    className="h-12 border-slate-200 focus:border-orange-500 rounded-xl"
-                                />
-                            </div>
+                        <div className="space-y-2">
+                            <label className="text-sm font-bold text-slate-600 ml-1">{t("registerMandal.name_label")} *</label>
+                            <Input
+                                name="name"
+                                value={formData.name}
+                                onChange={handleChange}
+                                placeholder={t("registerMandal.name_label")}
+                                className="h-12 border-slate-200 focus:border-orange-500 rounded-xl"
+                                required
+                            />
                         </div>
 
                         <div className="space-y-2">
@@ -233,37 +250,15 @@ export default function MandalRegistrationForm({ onClose }: { onClose?: () => vo
                             </select>
                         </div>
 
-                        <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-                            <div className="space-y-2">
-                                <label className="text-sm font-bold text-slate-600 ml-1">{t("registerMandal.desc_en")}</label>
-                                <Textarea
-                                    name="description_en"
-                                    value={formData.description_en}
-                                    onChange={handleChange}
-                                    placeholder={t("registerMandal.desc_placeholder")}
-                                    className="min-h-[100px] border-slate-200 focus:border-orange-500 rounded-xl resize-none"
-                                />
-                            </div>
-                            <div className="space-y-2">
-                                <label className="text-sm font-bold text-slate-600 ml-1">{t("registerMandal.desc_hi")}</label>
-                                <Textarea
-                                    name="description_hi"
-                                    value={formData.description_hi}
-                                    onChange={handleChange}
-                                    placeholder={t("registerMandal.desc_placeholder")}
-                                    className="min-h-[100px] border-slate-200 focus:border-orange-500 rounded-xl resize-none"
-                                />
-                            </div>
-                            <div className="space-y-2">
-                                <label className="text-sm font-bold text-slate-600 ml-1">{t("registerMandal.desc_mr")}</label>
-                                <Textarea
-                                    name="description_mr"
-                                    value={formData.description_mr}
-                                    onChange={handleChange}
-                                    placeholder={t("registerMandal.desc_placeholder")}
-                                    className="min-h-[100px] border-slate-200 focus:border-orange-500 rounded-xl resize-none"
-                                />
-                            </div>
+                        <div className="space-y-2">
+                            <label className="text-sm font-bold text-slate-600 ml-1">{t("registerMandal.about_label")}</label>
+                            <Textarea
+                                name="description"
+                                value={formData.description}
+                                onChange={handleChange}
+                                placeholder={t("registerMandal.desc_placeholder")}
+                                className="min-h-[120px] border-slate-200 focus:border-orange-500 rounded-xl resize-none"
+                            />
                         </div>
                     </div>
                 </section>
@@ -319,6 +314,16 @@ export default function MandalRegistrationForm({ onClose }: { onClose?: () => vo
                                 className="h-12 border-slate-200 focus:border-orange-500 rounded-xl"
                             />
                         </div>
+                        <div className="space-y-2">
+                            <label className="text-sm font-bold text-slate-600 ml-1">{t('registerMandal.map_url') || 'Google Maps URL'}</label>
+                            <Input
+                                name="mapUrl"
+                                value={formData.mapUrl}
+                                onChange={handleChange}
+                                placeholder="https://maps.google.com/..."
+                                className="h-12 border-slate-200 focus:border-orange-500 rounded-xl"
+                            />
+                        </div>
                         <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
                             <div className="space-y-2">
                                 <label className="text-sm font-bold text-slate-600 ml-1">{t("registerMandal.city")}</label>
@@ -349,6 +354,82 @@ export default function MandalRegistrationForm({ onClose }: { onClose?: () => vo
                                     placeholder={t("registerMandal.pincode")}
                                     className="h-12 border-slate-200 focus:border-orange-500 rounded-xl"
                                 />
+                            </div>
+                        </div>
+                    </div>
+                </section>
+
+                {/* Media Assets */}
+                <section className="space-y-6">
+                    <div className="flex items-center gap-3 pb-3 border-b border-slate-100">
+                        <div className="p-2 bg-orange-50 text-orange-600 rounded-lg">
+                            <ImageIcon className="w-5 h-5" />
+                        </div>
+                        <h3 className="text-xl font-bold text-slate-800">{t('registerMandal.section_media') || 'Media Assets'}</h3>
+                    </div>
+                    <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
+                        <div className="space-y-3">
+                            <label className="text-sm font-bold text-slate-600 ml-1">{t('registerMandal.main_image') || 'Main Image'}</label>
+                            <div className="border-2 border-dashed border-slate-200 rounded-3xl p-1 hover:border-[#88542b]/50 hover:bg-orange-50/30 transition-all group relative cursor-pointer overflow-hidden aspect-[16/9] flex items-center justify-center bg-slate-50/50">
+                                <input
+                                    type="file"
+                                    accept="image/*"
+                                    className="absolute inset-0 opacity-0 cursor-pointer z-20"
+                                    onChange={handleMainImageChange}
+                                />
+                                {mainImagePreview ? (
+                                    <div className="w-full h-full relative group">
+                                        <img src={mainImagePreview} className="w-full h-full object-cover rounded-[1.25rem]" />
+                                        <div className="absolute inset-0 bg-black/40 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-all duration-300 rounded-[1.25rem] backdrop-blur-[2px]">
+                                            <div className="bg-white/20 p-4 rounded-full border border-white/30">
+                                                <Upload className="text-white w-6 h-6" />
+                                            </div>
+                                        </div>
+                                    </div>
+                                ) : (
+                                    <div className="text-center space-y-3 p-6 flex flex-col items-center justify-center w-full h-full">
+                                        <div className="p-4 bg-white rounded-2xl shadow-sm border border-slate-100 group-hover:scale-110 transition-transform duration-300">
+                                            <Upload className="w-8 h-8 text-[#88542b]/60 group-hover:text-[#88542b]" />
+                                        </div>
+                                        <div className="space-y-1">
+                                            <p className="text-[10px] text-[#88542b] font-bold uppercase tracking-[0.2em]">{t('registerMandal.select_photo') || 'SELECT PHOTO'}</p>
+                                        </div>
+                                    </div>
+                                )}
+                            </div>
+                        </div>
+                        <div className="space-y-3">
+                            <label className="text-sm font-bold text-slate-600 ml-1">{t('registerMandal.banners') || 'Banner Images'}</label>
+                            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                                {heroPreviews.map((url, i) => (
+                                    <div key={url} className="aspect-[2.4/1] rounded-2xl overflow-hidden relative border border-slate-100 group shadow-sm bg-slate-50">
+                                        <img src={url} className="w-full h-full object-cover" />
+                                        <div className="absolute inset-0 bg-black/40 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center">
+                                            <button
+                                                type="button"
+                                                onClick={() => removeHeroImage(i)}
+                                                className="bg-red-500 text-white p-2.5 rounded-full hover:scale-110 transition-transform shadow-lg"
+                                            >
+                                                <Trash2 className="w-4 h-4" />
+                                            </button>
+                                        </div>
+                                    </div>
+                                ))}
+                                {heroPreviews.length < 5 && (
+                                    <div className="aspect-[2.4/1] rounded-2xl border-2 border-dashed border-slate-200 hover:border-[#88542b]/50 hover:bg-orange-50/30 transition-all flex flex-col items-center justify-center cursor-pointer relative bg-slate-50/50 group">
+                                        <input
+                                            type="file"
+                                            multiple
+                                            accept="image/*"
+                                            className="absolute inset-0 opacity-0 cursor-pointer z-20"
+                                            onChange={handleHeroImagesChange}
+                                        />
+                                        <div className="p-3 bg-white rounded-full shadow-sm border border-slate-100 mb-2 group-hover:scale-110 transition-transform duration-300">
+                                            <Upload className="w-5 h-5 text-[#88542b]/60 group-hover:text-[#88542b]" />
+                                        </div>
+                                        <p className="text-[10px] font-bold text-[#88542b] uppercase tracking-wider">{t('registerMandal.add_banner') || 'Add Banner'}</p>
+                                    </div>
+                                )}
                             </div>
                         </div>
                     </div>

@@ -58,28 +58,28 @@ const sidebarItems = [
       // { label: "Verification Requests", href: "/admin/temples/update-requests", permission: "temples.requests_view" },
     ]
   },
-  // {
-  //   label: "Mandals",
-  //   icon: Building2,
-  //   href: "#",
-  //   permission: "temples.menu",
-  //   subItems: [
-  //     { label: "All Mandals", href: "/admin/mandals", permission: "temples.view" },
-  //     { label: "Add Mandal", href: "/admin/mandals/create", permission: "temples.create" },
-  //   ]
-  // },
+  {
+    label: "Mandals",
+    icon: Building2,
+    href: "#",
+    permission: "temples.menu",
+    subItems: [
+      { label: "All Mandals", href: "/admin/mandals", permission: "temples.view" },
+      { label: "Add Mandal", href: "/admin/mandals/create", permission: "temples.create" },
+    ]
+  },
   {
     label: "Users Management",
     icon: Users,
     href: "/admin/users",
     permission: "users.menu",
   },
-  // {
-  //   label: "Leads Management",
-  //   icon: Target,
-  //   href: "/admin/leads",
-  //   permission: "users.menu",
-  // },
+  {
+    label: "Leads Management",
+    icon: Target,
+    href: "/admin/leads",
+    permission: "users.menu",
+  },
   {
     label: "Pooja Bookings",
     icon: Calendar,

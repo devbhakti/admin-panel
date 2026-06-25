@@ -52,8 +52,8 @@ export const checkPermission = (...permissionKeys: string[]) => {
       return res.status(401).json({ error: 'Authentication required' });
     }
 
-    // Platform Admins, Temple Owners, and Seller Owners bypass all checks
-    if (req.user.role === 'ADMIN' || req.user.role === 'INSTITUTION' || req.user.role === 'SELLER') {
+    // Platform Admins, Temple Owners, Seller Owners, and Mandal Owners bypass all checks
+    if (req.user.role === 'ADMIN' || req.user.role === 'INSTITUTION' || req.user.role === 'SELLER' || req.user.role === 'MANDAL') {
       return next();
     }
 
@@ -142,6 +142,42 @@ export const injectSellerContext = async (req: AuthRequest, res: Response, next:
     return res.status(403).json({ error: 'Unauthorized: Seller access required' });
   } catch (error) {
     console.error('Inject Seller Context Error:', error);
+    return res.status(500).json({ error: 'Internal server error while resolving context' });
+  }
+};
+
+/**
+ * Middleware to inject Mandal context (mandalId) for Owners/Staff
+ */
+export const injectMandalContext = async (req: AuthRequest, res: Response, next: NextFunction) => {
+  try {
+    const user = req.user;
+    if (!user) return res.status(401).json({ error: 'Authentication required' });
+
+    // Handle Staff
+    if (user.isStaff && user.ownerType === 'MANDAL') {
+      req.owner = { ownerType: 'MANDAL', ownerId: user.ownerId! };
+      return next();
+    }
+
+    // Handle Mandal Owner (MANDAL)
+    if (user.role === 'MANDAL') {
+      const mandal = await prisma.mandal.findUnique({ 
+        where: { userId: user.userId },
+        select: { id: true }
+      });
+      
+      if (!mandal) {
+        return res.status(404).json({ error: 'Mandal profile not found' });
+      }
+      
+      req.owner = { ownerType: 'MANDAL', ownerId: mandal.id };
+      return next();
+    }
+
+    return res.status(403).json({ error: 'Unauthorized: Mandal access required' });
+  } catch (error) {
+    console.error('Inject Mandal Context Error:', error);
     return res.status(500).json({ error: 'Internal server error while resolving context' });
   }
 };

@@ -121,12 +121,13 @@ export default function AdminDashboardPage() {
       path: "/admin/users"
     },
     {
-      title: "Total Bookings",
-      value: data?.stats?.totalBookings || 0,
+      title: "Pooja Booking Revenue",
+      value: data?.stats?.revenueBreakdown?.bookings || 0,
       icon: Calendar,
+      isCurrency: true,
       color: "text-amber-600",
       bg: "bg-amber-50",
-      description: "Poojas & Product orders",
+      description: "Total amount from successful pooja bookings",
       path: "/admin/pooja-bookings"
     },
     {

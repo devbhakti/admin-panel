@@ -226,7 +226,7 @@ export const createVerifiedOrder = async (orderData: any, userId: string) => {
             templeId,
             sellerId,
             amount: subOrderTotal,
-            grossAmount: subOrderTotal,
+            grossAmount: subOrderTotal + commissionAmount,
             commission: commissionAmount,
             type: "MARKETPLACE_EARNING",
             sourceId: order.id,

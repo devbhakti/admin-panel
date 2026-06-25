@@ -1,0 +1,106 @@
+import axios from "axios";
+import { API_URL } from "@/config/apiConfig";
+
+// Mandal Profile Management
+export const fetchMandalProfile = async () => {
+    const token = localStorage.getItem("token");
+    const response = await axios.get(`${API_URL}/mandal-admin/profile?lang=raw`, {
+        headers: { Authorization: `Bearer ${token}` }
+    });
+    return response.data;
+};
+
+export const updateMandalProfile = async (formData: FormData) => {
+    const token = localStorage.getItem("token");
+    const response = await axios.put(`${API_URL}/mandal-admin/profile`, formData, {
+        headers: {
+            Authorization: `Bearer ${token}`,
+            'Content-Type': 'multipart/form-data'
+        }
+    });
+    return response.data;
+};
+
+// Mandal Event Management
+export const fetchMandalEvents = async () => {
+    const token = localStorage.getItem("token");
+    const response = await axios.get(`${API_URL}/mandal-admin/events?lang=raw`, {
+        headers: { Authorization: `Bearer ${token}` }
+    });
+    return response.data;
+};
+
+export const createMandalEvent = async (data: any) => {
+    const token = localStorage.getItem("token");
+    const response = await axios.post(`${API_URL}/mandal-admin/events`, data, {
+        headers: { Authorization: `Bearer ${token}` }
+    });
+    return response.data;
+};
+
+export const updateMandalEvent = async (id: string, data: any) => {
+    const token = localStorage.getItem("token");
+    const response = await axios.put(`${API_URL}/mandal-admin/events/${id}`, data, {
+        headers: { Authorization: `Bearer ${token}` }
+    });
+    return response.data;
+};
+
+export const deleteMandalEvent = async (id: string) => {
+    const token = localStorage.getItem("token");
+    const response = await axios.delete(`${API_URL}/mandal-admin/events/${id}`, {
+        headers: { Authorization: `Bearer ${token}` }
+    });
+    return response.data;
+};
+
+export const toggleMandalEventStatus = async (id: string) => {
+    const token = localStorage.getItem("token");
+    const response = await axios.patch(`${API_URL}/mandal-admin/events/${id}/toggle-status`, {}, {
+        headers: { Authorization: `Bearer ${token}` }
+    });
+    return response.data;
+};
+
+// Mandal Donations Management
+export const fetchMandalDonations = async (params?: any) => {
+    const token = localStorage.getItem("token");
+    const response = await axios.get(`${API_URL}/mandal-admin/donations`, {
+        headers: { Authorization: `Bearer ${token}` },
+        params
+    });
+    return response.data;
+};
+
+export const fetchMandalDonationStats = async () => {
+    const token = localStorage.getItem("token");
+    const response = await axios.get(`${API_URL}/mandal-admin/donations/stats`, {
+        headers: { Authorization: `Bearer ${token}` }
+    });
+    return response.data;
+};
+
+// Mandal Finance (Ledger & Payouts)
+export const fetchMandalFinanceSummary = async () => {
+    const token = localStorage.getItem("token");
+    const response = await axios.get(`${API_URL}/mandal-admin/finance/summary`, {
+        headers: { Authorization: `Bearer ${token}` }
+    });
+    return response.data;
+};
+
+export const fetchMandalLedger = async () => {
+    const token = localStorage.getItem("token");
+    const response = await axios.get(`${API_URL}/mandal-admin/finance/ledger`, {
+        headers: { Authorization: `Bearer ${token}` }
+    });
+    return response.data;
+};
+
+export const requestMandalWithdrawal = async (data: { amount: number; bankDetails: any }) => {
+    const token = localStorage.getItem("token");
+    const response = await axios.post(`${API_URL}/mandal-admin/finance/withdraw`, data, {
+        headers: { Authorization: `Bearer ${token}` }
+    });
+    return response.data;
+};
