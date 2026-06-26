@@ -73,12 +73,23 @@ const sidebarItems = [
             { label: "Roles & Permissions", href: "/temples/dashboard/team/roles" },
         ]
     },
+    // {
+    //     label: "Donations",
+    //     icon: Heart,
+    //     href: "/temples/dashboard/donation",
+    //     permission: "donations.menu"
+    // },
+
     {
-        label: "Donations",
+        label: "Donation",
         icon: Heart,
-        href: "/temples/dashboard/donation",
-        permission: "donations.menu"
-    },
+        href: "#"   ,
+        permission: "donations.menu",
+        subItems: [
+          { label: "💳 Online Donations", href: "/temples/dashboard?type=online", permission: "donations.menu" },
+          { label: "📝 Offline Donations", href: "/temples/dashboard?type=offline", permission: "donations.menu" },
+        ]
+      },
     {
         label: "Product Management",
         icon: Package,

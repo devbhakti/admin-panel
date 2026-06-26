@@ -99,8 +99,12 @@ const sidebarItems = [
   {
     label: "Donation",
     icon: Heart,
-    href: "/admin/donation",
+    href: "#",
     permission: "donations.menu",
+    subItems: [
+      { label: "💳 Online Donations", href: "/admin/donation?type=online", permission: "donations.menu" },
+      { label: "📝 Offline Donations", href: "/admin/donation?type=offline", permission: "donations.menu" },
+    ]
   },
   {
     label: "Poojas",

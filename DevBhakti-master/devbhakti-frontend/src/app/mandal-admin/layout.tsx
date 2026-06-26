@@ -35,7 +35,11 @@ const sidebarItems = [
     {
         label: "Donations",
         icon: Heart,
-        href: "/mandal-admin/donations",
+        href: "#",
+        subItems: [
+            { label: "💳 Online Donations", href: "/mandal-admin/donations?type=online" },
+            { label: "📝 Offline Donations", href: "/mandal-admin/donations?type=offline" },
+        ]
     },
     {
         label: "Earnings & Settlement",
@@ -169,6 +173,55 @@ export default function MandalAdminLayout({ children }: { children: React.ReactN
             <nav className="flex-1 py-4 px-3 space-y-1 overflow-y-auto">
                 {sidebarItems.map((item) => {
                     const isActive = pathname === item.href || pathname?.startsWith(item.href + "/");
+                    const hasSubItems = item.subItems && item.subItems.length > 0;
+                    const subItemActive = hasSubItems && item.subItems.some(sub => pathname === sub.href || pathname?.startsWith(sub.href + "/"));
+                    const [openMenu, setOpenMenu] = React.useState(false);
+                    
+                    if (hasSubItems) {
+                        return (
+                            <div key={item.label}>
+                                <button
+                                    onClick={() => setOpenMenu(!openMenu)}
+                                    className={cn(
+                                        "w-full flex items-center gap-3 px-3 py-2.5 rounded-lg transition-all duration-200",
+                                        subItemActive
+                                            ? "bg-amber-500 text-white font-bold shadow-md shadow-amber-500/20"
+                                            : "text-slate-300 hover:bg-slate-800 hover:text-white"
+                                    )}
+                                >
+                                    <item.icon className={cn("w-5 h-5 flex-shrink-0", subItemActive ? "text-white" : "text-slate-400")} />
+                                    {(sidebarOpen || isMobile) && (
+                                        <>
+                                            <span className="font-medium text-sm flex-1 text-left">{item.label}</span>
+                                            <ChevronRight className={cn("w-4 h-4 transition-transform", openMenu && "rotate-90")} />
+                                        </>
+                                    )}
+                                </button>
+                                {(openMenu || subItemActive) && (sidebarOpen || isMobile) && (
+                                    <div className="mt-1 ml-8 space-y-1">
+                                        {item.subItems?.map((subItem) => {
+                                            const subIsActive = pathname === subItem.href || pathname?.startsWith(subItem.href + "/");
+                                            return (
+                                                <Link
+                                                    key={subItem.label}
+                                                    href={subItem.href}
+                                                    className={cn(
+                                                        "flex items-center gap-2 px-3 py-2 rounded-lg text-sm transition-all duration-200 text-left",
+                                                        subIsActive
+                                                            ? "bg-amber-400/20 text-amber-300 font-semibold"
+                                                            : "text-slate-400 hover:text-slate-200 hover:bg-slate-800/50"
+                                                    )}
+                                                >
+                                                    {subItem.label}
+                                                </Link>
+                                            );
+                                        })}
+                                    </div>
+                                )}
+                            </div>
+                        );
+                    }
+
                     return (
                         <Link
                             key={item.label}
