@@ -730,70 +730,15 @@ export default function AdminLiveDarshanPage() {
               <div className="space-y-3 max-w-2xl mx-auto">
                 <Label className="text-slate-700 text-xs">Preview</Label>
                 {previewInfo.kind !== "unknown" ? (
-                  previewInfo.platform === "youtube" ? (
-                    // YouTube thumbnail preview — works on localhost, IP, and .com (no embed needed)
-                    (() => {
-                      const ytId = extractYouTubeId(editLiveUrl);
-                      const thumbUrl = ytId
-                        ? `https://img.youtube.com/vi/${ytId}/maxresdefault.jpg`
-                        : null;
-                      const watchUrl = ytId
-                        ? `https://www.youtube.com/watch?v=${ytId}`
-                        : editLiveUrl;
-                      return (
-                        <div className="aspect-video w-full rounded-lg overflow-hidden bg-black relative group">
-                          {thumbUrl ? (
-                            <img
-                              src={thumbUrl}
-                              alt="YouTube video thumbnail"
-                              className="w-full h-full object-cover"
-                              onError={(e) => {
-                                // Fallback to hqdefault if maxresdefault missing
-                                (e.target as HTMLImageElement).src = `https://img.youtube.com/vi/${ytId}/hqdefault.jpg`;
-                              }}
-                            />
-                          ) : (
-                            <div className="w-full h-full bg-slate-800 flex items-center justify-center">
-                              <span className="text-slate-400 text-xs">No thumbnail available</span>
-                            </div>
-                          )}
-                          {/* Play button overlay */}
-                          <a
-                            href={watchUrl}
-                            target="_blank"
-                            rel="noreferrer noopener"
-                            className="absolute inset-0 flex flex-col items-center justify-center gap-2 bg-black/40 opacity-0 group-hover:opacity-100 transition-opacity duration-200"
-                          >
-                            <div className="w-14 h-14 bg-red-600 rounded-full flex items-center justify-center shadow-lg">
-                              <svg viewBox="0 0 24 24" fill="white" className="w-7 h-7 ml-1">
-                                <path d="M8 5v14l11-7z" />
-                              </svg>
-                            </div>
-                            <span className="text-white text-xs font-medium bg-black/50 px-3 py-1 rounded-full">Watch on YouTube</span>
-                          </a>
-                          {/* Always-visible small watch link */}
-                          <a
-                            href={watchUrl}
-                            target="_blank"
-                            rel="noreferrer noopener"
-                            className="absolute bottom-2 right-2 text-[10px] text-white bg-black/60 px-2 py-0.5 rounded hover:bg-black/80 transition"
-                          >
-                            ▶ Watch on YouTube
-                          </a>
-                        </div>
-                      );
-                    })()
-                  ) : (
-                    <div className="aspect-video w-full rounded-lg overflow-hidden bg-black">
-                      <UniversalVideoPlayer
-                        url={editLiveUrl}
-                        className="w-full h-full object-cover"
-                        controls
-                        muted
-                        playsInline
-                      />
-                    </div>
-                  )
+                  <div className="aspect-video w-full rounded-lg overflow-hidden bg-black">
+                    <UniversalVideoPlayer
+                      url={editLiveUrl}
+                      className="w-full h-full object-cover"
+                      controls
+                      muted
+                      playsInline
+                    />
+                  </div>
                 ) : (
                   <div className="aspect-video w-full rounded-lg border border-dashed border-slate-200 bg-slate-50 flex items-center justify-center text-xs text-slate-400 text-center px-4">
                     Enter a supported video URL or iframe embed code for preview.

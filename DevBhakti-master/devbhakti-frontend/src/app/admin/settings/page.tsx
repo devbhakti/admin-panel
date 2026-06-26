@@ -410,7 +410,7 @@ export default function AdminSettingsPage() {
             </div>
 
             {/* Global Features Section */}
-            {/* <div className="rounded-3xl border border-border bg-card p-6 shadow-sm mt-8">
+            <div className="rounded-3xl border border-border bg-card p-6 shadow-sm mt-8">
                 <div className="mb-6">
                     <div className="flex items-center gap-3 mb-2">
                         <div className="p-2 bg-[#794A05]/10 rounded-xl">
@@ -447,7 +447,7 @@ export default function AdminSettingsPage() {
                         </button>
                     </div>
                 </div>
-            </div> */}
+            </div>
         </div>
     );
 }

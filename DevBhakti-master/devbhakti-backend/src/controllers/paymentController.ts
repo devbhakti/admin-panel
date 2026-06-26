@@ -208,7 +208,7 @@ export const verifyPayment = async (req: Request, res: Response) => {
                     data: {
                         templeId: donation.templeId,
                         amount: donation.netEarning || donation.amount,
-                        grossAmount: donation.amount,
+                        grossAmount: donation.amount + (donation.commissionAmount || 0),
                         commission: donation.commissionAmount || 0,
                         type: "DONATION_EARNING",
                         sourceId: donation.id,

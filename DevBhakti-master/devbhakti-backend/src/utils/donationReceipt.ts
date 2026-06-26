@@ -137,11 +137,7 @@ export const generateReceiptHTML = (donation: DonationReceiptData) => {
                     </div>
                 </div>
 
-                ${donation.message ? `
-                <div class="section">
-                    <div class="section-title">Message / Sankalp</div>
-                    <div class="value" style="font-style: italic;">"${donation.message}"</div>
-                </div>` : ''}
+              
 
                 <div class="footer">
                     <p>This is a computer-generated receipt and does not require a physical signature.</p>

@@ -27,8 +27,9 @@ import {
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { Switch } from "@/components/ui/switch";
 import { useLanguage, Language } from "@/context/LanguageContext";
-import { fetchAllTemplesAdmin, fetchCommissionSlabsAdmin, fetchProductsByTempleAdmin } from "@/api/adminController";
+import { fetchAllTemplesAdmin, fetchCommissionSlabsAdmin, fetchProductsByTempleAdmin, toggleShowPhoneAdmin } from "@/api/adminController";
 import { API_URL } from "@/config/apiConfig";
 import { Card, CardContent } from "@/components/ui/card";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
@@ -48,6 +49,22 @@ export default function ViewTemplePage() {
     const [products, setProducts] = useState<any[]>([]);
     const { language } = useLanguage();
     const [activeTab, setActiveTab] = useState<Language>("en");
+
+    const handleTogglePhone = async (checked: boolean) => {
+        try {
+            await toggleShowPhoneAdmin(instId, checked);
+            setInst({
+                ...inst,
+                temple: {
+                    ...inst.temple,
+                    showPhone: checked
+                }
+            });
+        } catch (error) {
+            console.error("Failed to toggle phone visibility", error);
+            alert("Failed to update phone visibility.");
+        }
+    };
 
     useEffect(() => {
         loadData();
@@ -624,8 +641,19 @@ export default function ViewTemplePage() {
                                         <MapPin className="w-4 h-4" /> Open in Google Maps <ExternalLink className="w-3 h-3" />
                                     </a>
                                 )}
-                                <div className="flex items-center gap-2 text-sm text-slate-600">
-                                    <Phone className="w-4 h-4" /> {temple?.phone || "No Contact"}
+                                <div className="flex items-center justify-between text-sm text-slate-600">
+                                    <div className="flex items-center gap-2">
+                                        <Phone className="w-4 h-4" /> {temple?.phone || "No Contact"}
+                                    </div>
+                                    {temple?.phone && (
+                                        <div className="flex items-center gap-2">
+                                            <span className="text-xs font-bold text-slate-400 uppercase">Visible</span>
+                                            <Switch 
+                                                checked={temple.showPhone ?? true} 
+                                                onCheckedChange={handleTogglePhone} 
+                                            />
+                                        </div>
+                                    )}
                                 </div>
                             </div>
                         </CardContent>

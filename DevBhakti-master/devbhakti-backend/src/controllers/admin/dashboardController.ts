@@ -247,11 +247,11 @@ export const getAdminDashboardStats = async (req: Request, res: Response) => {
             prisma.order.count(),
             prisma.donation.count({ where: { status: { in: ['COMPLETED', 'SUCCESS'] } } }),
             prisma.poojaBooking.aggregate({
-                where: { status: 'COMPLETED' },
-                _sum: { packagePrice: true }
+                where: { status: { in: ['BOOKED', 'COMPLETED'] } },
+                _sum: { packagePrice: true, platformFee: true }
             }),
             prisma.order.aggregate({
-                where: { status: 'COMPLETED' },
+                where: { paymentStatus: 'PAID' },
                 _sum: { totalAmount: true }
             })
         ]);
@@ -281,14 +281,15 @@ export const getAdminDashboardStats = async (req: Request, res: Response) => {
         }
 
         // ✅ TOTAL REVENUE (All 3 sources) - Use GROSS amount (devotee paid)
+        const bookingsTotal = Number(completedBookingsRevenue._sum.packagePrice || 0) + Number(completedBookingsRevenue._sum.platformFee || 0);
         const totalRevenue = 
-            Number(completedBookingsRevenue._sum.packagePrice || 0) + 
+            bookingsTotal + 
             Number(completedOrdersRevenue._sum.totalAmount || 0) + 
             donationGrossAmount;  // ← Gross amount, not temple amount
 
         // Revenue Breakdown
         const revenueBreakdown = {
-            bookings: Number(completedBookingsRevenue._sum.packagePrice || 0),
+            bookings: bookingsTotal,
             orders: Number(completedOrdersRevenue._sum.totalAmount || 0),
             donations: templeDonationAmount,  // Temple gets this
             donationGross: donationGrossAmount,  // Devotee paid this

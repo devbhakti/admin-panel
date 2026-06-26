@@ -16,6 +16,7 @@ export const registerMandal = async (req: Request, res: Response): Promise<void>
             city,
             state,
             pinCode,
+            mapUrl,
             contactNumber,
             email,
             presidentName,
@@ -23,6 +24,19 @@ export const registerMandal = async (req: Request, res: Response): Promise<void>
             verificationDocUrl,
             presidentIdDocUrl
         } = req.body;
+
+        const files = req.files as { [fieldname: string]: Express.Multer.File[] } | undefined;
+        let imageUrl = undefined;
+        let bannerImageUrls: string[] = [];
+
+        if (files) {
+            if (files['image'] && files['image'][0]) {
+                imageUrl = `/uploads/mandals/${files['image'][0].filename}`;
+            }
+            if (files['heroImages']) {
+                bannerImageUrls = files['heroImages'].map(f => `/uploads/mandals/${f.filename}`);
+            }
+        }
 
         const nameEn = name_en || name;
 
@@ -57,12 +71,15 @@ export const registerMandal = async (req: Request, res: Response): Promise<void>
                 city,
                 state,
                 pinCode,
+                mapUrl,
                 contactNumber,
                 email,
                 presidentName,
                 registrationNumber,
                 verificationDocUrl,
                 presidentIdDocUrl,
+                image: imageUrl,
+                bannerImages: bannerImageUrls,
                 status: 'PENDING',
                 isActive: false,
             }

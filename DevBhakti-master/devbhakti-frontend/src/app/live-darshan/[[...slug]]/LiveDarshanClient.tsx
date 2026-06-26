@@ -176,6 +176,14 @@ export default function LiveDarshanClient() {
   const { language, t: baseT } = useLanguage();
   const t = (key: string) => baseT(`live_darshan_page.${key}`);
   const selectedVideoInfo = getVideoRenderInfo(selectedTemple?.liveUrl || selectedTemple?.channelId || "");
+  const [isIpHost, setIsIpHost] = useState(false);
+  
+  // Detect raw IP address host — YouTube embeds are blocked on IPs (Error 153)
+  useEffect(() => {
+    const hostname = window.location.hostname;
+    setIsIpHost(/^\d{1,3}\.\d{1,3}\.\d{1,3}\.\d{1,3}$/.test(hostname));
+  }, []);
+
   const getYouTubeThumbnail = (url: string) => {
     const videoId = getYouTubeVideoId(url);
     return videoId ? `https://img.youtube.com/vi/${videoId}/maxresdefault.jpg` : null;

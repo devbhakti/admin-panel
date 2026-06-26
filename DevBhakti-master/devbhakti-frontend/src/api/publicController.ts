@@ -177,9 +177,13 @@
         }
     };
 
-    export const submitMandalRegistration = async (data: any) => {
+    export const submitMandalRegistration = async (data: FormData | any) => {
         try {
-            const response = await axios.post(`${API_URL}/mandals/register`, data);
+            const response = await axios.post(`${API_URL}/mandals/register`, data, {
+                headers: {
+                    'Content-Type': 'multipart/form-data'
+                }
+            });
             return response.data;
         } catch (error: any) {
             console.error("Error submitting mandal registration:", error);

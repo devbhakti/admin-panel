@@ -255,7 +255,7 @@ export const sendOTP = async (req: Request, res: Response) => {
         let effectiveMode = mode || 'login'; 
 
         // Security check: Never allow registration via simple OTP for complex roles
-        if (checkRole === 'INSTITUTION' || checkRole === 'SELLER') {
+        if (checkRole === 'INSTITUTION' || checkRole === 'SELLER' || checkRole === 'MANDAL') {
             effectiveMode = 'login';
         }
 
@@ -462,8 +462,8 @@ export const verifyOTP = async (req: Request, res: Response) => {
             return res.status(400).json({ success: false, message: 'OTP has expired' });
         }
 
-        // Check for Admin Approval if role is INSTITUTION or SELLER
-        if ((user.role === 'INSTITUTION' || user.role === 'SELLER') && !user.isVerified) {
+        // Check for Admin Approval if role is INSTITUTION, SELLER, or MANDAL
+        if ((user.role === 'INSTITUTION' || user.role === 'SELLER' || user.role === 'MANDAL') && !user.isVerified) {
             // Bypass verification for test number
             if (normalizedPhone !== '+919399805327') {
                 return res.status(403).json({

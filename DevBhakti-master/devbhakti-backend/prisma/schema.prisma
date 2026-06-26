@@ -97,6 +97,11 @@ model Temple {
   subdomain             String?               @unique
   urlType               String                @default("slug")
   isPrimaryLive         Boolean               @default(false)
+  showPhone             Boolean               @default(true)
+  instagramUrl          String?
+  facebookUrl           String?
+  youtubeUrl            String?
+  newsCuttings          Json?
   operatingHours        Json?
   category              Json? // {"en":"...","hi":"...","mr":"..."}
   description           Json?
@@ -239,17 +244,20 @@ model PoojaCategory {
 }
 
 model Event {
-  id          String   @id @default(cuid())
-  name        Json // {"en":"...","hi":"...","mr":"..."}
-  date        String
-  description Json? // {"en":"...","hi":"...","mr":"..."}
-  templeId    String?
-  createdAt   DateTime @default(now())
-  updatedAt   DateTime @updatedAt
-  status      Boolean  @default(true)
-  time        String?
-  temple      Temple?  @relation(fields: [templeId], references: [id], onDelete: Cascade)
-  Pooja       Pooja[]  @relation("EventToPooja")
+  id                 String   @id @default(cuid())
+  name               Json // {"en":"...","hi":"...","mr":"..."}
+  date               String
+  description        Json? // {"en":"...","hi":"...","mr":"..."}
+  templeId           String?
+  mandalId           String?
+  mandalSpecificData Json?
+  createdAt          DateTime @default(now())
+  updatedAt          DateTime @updatedAt
+  status             Boolean  @default(true)
+  time               String?
+  temple             Temple?  @relation(fields: [templeId], references: [id], onDelete: Cascade)
+  mandal             Mandal?  @relation(fields: [mandalId], references: [id], onDelete: Cascade)
+  Pooja              Pooja[]  @relation("EventToPooja")
 }
 
 model Banner {
@@ -350,15 +358,18 @@ model Favorite {
   id        String   @id @default(cuid())
   userId    String
   templeId  String?
+  mandalId  String?
   poojaId   String?
   createdAt DateTime @default(now())
   productId String?
   pooja     Pooja?   @relation(fields: [poojaId], references: [id], onDelete: Cascade)
   product   Product? @relation(fields: [productId], references: [id], onDelete: Cascade)
   temple    Temple?  @relation(fields: [templeId], references: [id], onDelete: Cascade)
+  mandal    Mandal?  @relation(fields: [mandalId], references: [id], onDelete: Cascade)
   user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
 
   @@unique([userId, templeId])
+  @@unique([userId, mandalId])
   @@unique([userId, poojaId])
   @@unique([userId, productId])
 }
@@ -604,7 +615,8 @@ model Notification {
 model Donation {
   id               String   @id @default(cuid())
   userId           String?
-  templeId         String
+  templeId         String?
+  mandalId         String?
   donorName        String
   donorPhone       String
   donorEmail       String
@@ -622,7 +634,8 @@ model Donation {
   createdAt        DateTime @default(now())
   updatedAt        DateTime @updatedAt
   displayId        String?  @unique
-  temple           Temple   @relation(fields: [templeId], references: [id])
+  temple           Temple?  @relation(fields: [templeId], references: [id])
+  mandal           Mandal?  @relation(fields: [mandalId], references: [id])
   user             User?    @relation(fields: [userId], references: [id])
 }
 
@@ -657,6 +670,7 @@ enum SlabType {
   GLOBAL
   TEMPLE
   SELLER
+  MANDAL
 }
 
 enum CommissionCategory {
@@ -670,12 +684,14 @@ enum UserRole {
   DEVOTEE
   INSTITUTION
   SELLER
+  MANDAL
 }
 
 enum OwnerType {
   ADMIN
   TEMPLE
   SELLER
+  MANDAL
 }
 
 enum BookingStatus {
@@ -721,6 +737,7 @@ model Mandal{
   city               String?
   state              String?
   pinCode            String?
+  mapUrl             String?
   // Step 4: Contact & Documents
   contactNumber      String
   email              String?
@@ -738,6 +755,20 @@ model Mandal{
   isActive           Boolean  @default(true)
   status             String   @default("PENDING") // PENDING | APPROVED | REJECTED
   adminNotes         String?
+  
+  userId             String?  @unique
+  liveUrl            String?
+  channelId          String?
+  liveStatus         Boolean  @default(false)
+  isLive             Boolean  @default(false)
+  isPrimaryLive      Boolean  @default(false)
+  
+  events             Event[]
+  donations          Donation[]
+  favorites          Favorite[]
+  ledgerEntries      MandalLedger[]
+  withdrawals        MandalWithdrawalRequest[]
+  
   createdAt          DateTime @default(now())
   updatedAt          DateTime @updatedAt
 }
@@ -771,4 +802,33 @@ enum LeadStatus {
   FOLLOW_UP_REQUIRED
   CONVERTED
   DEAD
+}
+
+model MandalLedger {
+  id          String         @id @default(cuid())
+  mandalId    String?
+  amount      Float
+  grossAmount Float          @default(0)
+  commission  Float          @default(0)
+  type        LedgerType
+  sourceId    String?
+  description String?
+  status      LedgerStatus   @default(PENDING)
+  createdAt   DateTime       @default(now())
+  updatedAt   DateTime       @updatedAt
+  mandal      Mandal?        @relation(fields: [mandalId], references: [id])
+}
+
+model MandalWithdrawalRequest {
+  id            String           @id @default(cuid())
+  mandalId      String?
+  amount        Float
+  status        WithdrawalStatus @default(PENDING)
+  bankDetails   Json?
+  transactionId String?
+  receiptImage  String?
+  adminNotes    String?
+  createdAt     DateTime         @default(now())
+  updatedAt     DateTime         @updatedAt
+  mandal        Mandal?          @relation(fields: [mandalId], references: [id])
 }

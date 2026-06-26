@@ -1,7 +1,7 @@
 "use client";
 
 import React, { useState, useEffect } from "react";
-import { useSearchParams } from "next/navigation";
+import { useRouter, useSearchParams } from "next/navigation";
 import { motion, AnimatePresence } from "framer-motion";
 import {
     Heart,
@@ -27,11 +27,6 @@ import {
     MapPin,
     Calendar as CalendarIcon,
     ShieldCheck,
-    CreditCard,
-    Banknote,
-    QrCode,
-    Wallet,
-    Landmark,
     AlertCircle
 } from "lucide-react";
 import { Card, CardContent } from "@/components/ui/card";
@@ -81,6 +76,7 @@ const statusConfig = {
 };
 
 export default function DonationClient() {
+    const [donationType, setDonationType] = useState<"ONLINE" | "OFFLINE">("ONLINE");
     const [searchQuery, setSearchQuery] = useState("");
     const debouncedSearch = useDebounce(searchQuery, 500);
     const [statusFilter, setStatusFilter] = useState("SUCCESS");
@@ -92,20 +88,6 @@ export default function DonationClient() {
     const [loading, setLoading] = useState(true);
     const [selectedDonation, setSelectedDonation] = useState<any | null>(null);
     const [sendingEmail, setSendingEmail] = useState(false);
-    const [addModalOpen, setAddModalOpen] = useState(false);
-    const [isCreateSubmitting, setIsCreateSubmitting] = useState(false);
-    const [addTempleSearch, setAddTempleSearch] = useState("");
-    const [addTempleId, setAddTempleId] = useState("");
-    const [addAmount, setAddAmount] = useState("");
-    const [addPaymentMethod, setAddPaymentMethod] = useState("CASH");
-    const [addDonorName, setAddDonorName] = useState("");
-    const [addDonorPhone, setAddDonorPhone] = useState("");
-    const [addDonorEmail, setAddDonorEmail] = useState("");
-    const [addAddress, setAddAddress] = useState("");
-    const [addMessage, setAddMessage] = useState("");
-    const [addPanNumber, setAddPanNumber] = useState("");
-    const [addStatus, setAddStatus] = useState("SUCCESS");
-    const amountPresets = [101, 501, 1001, 2101, 5001];
     
     const [temples, setTemples] = useState<any[]>([]);
     const [selectedTempleId, setSelectedTempleId] = useState("all");
@@ -113,6 +95,7 @@ export default function DonationClient() {
     const [isImporting, setIsImporting] = useState(false);
     const [importProgress, setImportProgress] = useState({ total: 0, current: 0, success: 0, failed: 0 });
     const { toast } = useToast();
+    const router = useRouter();
 
     const [stats, setStats] = useState({
         totalAmount: 0,
@@ -126,14 +109,6 @@ export default function DonationClient() {
     const [totalItems, setTotalItems] = useState(0);
     const itemsPerPage = 10;
 
-    const paymentMethods = [
-        { value: "CASH", label: "Cash", icon: Banknote, color: "bg-emerald-50 text-emerald-700 border-emerald-200" },
-        { value: "UPI", label: "UPI", icon: QrCode, color: "bg-blue-50 text-blue-700 border-blue-200" },
-        { value: "CARD", label: "Card", icon: CreditCard, color: "bg-purple-50 text-purple-700 border-purple-200" },
-        { value: "CHEQUE", label: "Cheque", icon: Wallet, color: "bg-amber-50 text-amber-700 border-amber-200" },
-        { value: "BANK", label: "Bank Transfer", icon: Landmark, color: "bg-indigo-50 text-indigo-700 border-indigo-200" },
-    ];
-
     const fetchDonations = async () => {
         try {
             setLoading(true);
@@ -146,7 +121,8 @@ export default function DonationClient() {
                 endDate: endDate,
                 templeId: selectedTempleId,
                 sortBy: sortBy,
-                sortOrder: sortOrder
+                sortOrder: sortOrder,
+                donationType: donationType
             });
 
             if (data.success) {
@@ -167,103 +143,8 @@ export default function DonationClient() {
             const res = await fetchAllTemplesAdmin({ page: 1, limit: 1000 });
             const data = Array.isArray(res) ? res : (res.data || []);
             setTemples(data);
-            if (selectedTempleId !== "all" && !addTempleId) {
-                setAddTempleId(selectedTempleId);
-            }
         } catch (error) {
             console.error("Load Temples Error:", error);
-        }
-    };
-
-    const resetAddDonationForm = () => {
-        setAddTempleSearch("");
-        setAddTempleId(selectedTempleId !== "all" ? selectedTempleId : "");
-        setAddAmount("");
-        setAddPaymentMethod("CASH");
-        setAddDonorName("");
-        setAddDonorPhone("");
-        setAddDonorEmail("");
-        setAddAddress("");
-        setAddMessage("");
-        setAddPanNumber("");
-        setAddStatus("SUCCESS");
-    };
-
-    const openAddDonationModal = () => {
-        resetAddDonationForm();
-        setAddModalOpen(true);
-    };
-
-    const filteredTemples = temples.filter((t: any) => {
-        const name = parseLocalizedValue(t.temple?.name || t.name || "");
-        return name.toLowerCase().includes(addTempleSearch.toLowerCase());
-    });
-
-    const selectedAddTemple = temples.find((t: any) => (t.temple?.id || t.id) === addTempleId);
-    const hideTempleSelector = selectedTempleId !== "all" && !!addTempleId;
-    const sanitizePhone = (phone: string) => phone.replace(/\D/g, "").slice(0, 11);
-    const isValidPhone = (phone: string) => /^\d{10,11}$/.test(phone);
-
-    const handleCreateDonation = async () => {
-        const templeOption = temples.find((t: any) => (t.temple?.id || t.id) === addTempleId);
-
-        if (!addTempleId) {
-            toast({ title: "Validation Error", description: "Please select a temple.", variant: "destructive" });
-            return;
-        }
-
-        if (!addAmount || Number(addAmount) <= 0) {
-            toast({ title: "Validation Error", description: "Please enter a valid donation amount.", variant: "destructive" });
-            return;
-        }
-
-        if (!addDonorName.trim() || !addDonorPhone.trim() || !addDonorEmail.trim()) {
-            toast({ title: "Validation Error", description: "Please fill donor name, phone and email.", variant: "destructive" });
-            return;
-        }
-
-        if (!isValidPhone(addDonorPhone.trim())) {
-            toast({ title: "Validation Error", description: "Please enter a valid 10 or 11 digit phone number.", variant: "destructive" });
-            return;
-        }
-
-        try {
-            setIsCreateSubmitting(true);
-            const payload = {
-                templeId: addTempleId,
-                amount: Number(addAmount),
-                donorName: addDonorName.trim(),
-                donorPhone: addDonorPhone.trim(),
-                donorEmail: addDonorEmail.trim(),
-                panNumber: addPanNumber.trim(),
-                address: addAddress.trim(),
-                message: addMessage.trim(),
-                paymentMethod: addPaymentMethod,
-                status: addStatus,
-            };
-            const data = await createDonationAdmin(payload);
-
-            if (data.success) {
-                toast({ title: "Donation recorded", description: "Donation has been created successfully.", variant: "success" });
-                setAddModalOpen(false);
-                fetchDonations();
-                fetchStats();
-
-                if (payload.status === "SUCCESS") {
-                    const donationObject = {
-                        ...data.data,
-                        templeName: parseLocalizedValue(templeOption?.temple?.name || templeOption?.name || "DevBhakti"),
-                    };
-                    handlePrintReceipt(donationObject);
-                }
-            } else {
-                toast({ title: "Failed", description: data.message || "Could not create donation.", variant: "destructive" });
-            }
-        } catch (error: any) {
-            console.error("Create Donation Error:", error);
-            toast({ title: "Error", description: error?.message || "Failed to create donation.", variant: "destructive" });
-        } finally {
-            setIsCreateSubmitting(false);
         }
     };
 
@@ -281,7 +162,7 @@ export default function DonationClient() {
 
     useEffect(() => {
         fetchDonations();
-    }, [debouncedSearch, statusFilter, selectedTempleId, currentPage, startDate, endDate, sortBy, sortOrder]);
+    }, [debouncedSearch, statusFilter, selectedTempleId, currentPage, startDate, endDate, sortBy, sortOrder, donationType]);
 
     useEffect(() => {
         if (dateRange?.from) {
@@ -349,7 +230,8 @@ export default function DonationClient() {
                 status: statusFilter,
                 templeId: selectedTempleId,
                 startDate, endDate,
-                sortBy, sortOrder
+                sortBy, sortOrder,
+                donationType: donationType
             });
 
             const rawData = res.data || [];
@@ -405,8 +287,6 @@ export default function DonationClient() {
         }
     };
 
-    const selectedPaymentMethod = paymentMethods.find(m => m.value === addPaymentMethod) || paymentMethods[0];
-
     return (
         <div className="space-y-6">
             {/* Page header */}
@@ -420,15 +300,17 @@ export default function DonationClient() {
                     </p>
                 </div>
                 <div className="flex flex-wrap items-center gap-2 sm:gap-3">
-                    <Button
-                        onClick={openAddDonationModal}
-                        variant="outline"
-                        className="w-full sm:w-auto flex-shrink-0 border-primary/20 hover:bg-primary/5 hover:text-primary"
-                    >
-                        <Gift className="w-4 h-4 mr-2" />
-                        <span className="hidden sm:inline">Add Donation</span>
-                        <span className="sm:hidden">Add</span>
-                    </Button>
+                    {donationType === "OFFLINE" && (
+                        <Button
+                            onClick={() => router.push("/admin/donation/add-offline")}
+                            variant="outline"
+                            className="w-full sm:w-auto flex-shrink-0 border-primary/20 hover:bg-primary/5 hover:text-primary"
+                        >
+                            <Gift className="w-4 h-4 mr-2" />
+                            <span className="hidden sm:inline">Add Offline Donation</span>
+                            <span className="sm:hidden">Add</span>
+                        </Button>
+                    )}
                     <Button
                         onClick={handleDownloadExcel}
                         variant="sacred"
@@ -441,259 +323,39 @@ export default function DonationClient() {
                 </div>
             </div>
 
-            {/* Enhanced Add Donation Modal */}
-            <AnimatePresence>
-                {addModalOpen && (
-                    <div className="fixed inset-0 z-[60] flex items-center justify-center p-2 sm:p-4">
-                        <motion.div
-                            initial={{ opacity: 0 }}
-                            animate={{ opacity: 1 }}
-                            exit={{ opacity: 0 }}
-                            onClick={() => setAddModalOpen(false)}
-                            className="absolute inset-0 bg-slate-900/70 backdrop-blur-sm"
-                        />
-                        <motion.div
-                            initial={{ scale: 0.95, opacity: 0, y: 20 }}
-                            animate={{ scale: 1, opacity: 1, y: 0 }}
-                            exit={{ scale: 0.95, opacity: 0, y: 20 }}
-                            className="bg-white rounded-[24px] w-full max-w-[95vw] sm:max-w-3xl max-h-[95vh] overflow-hidden shadow-2xl relative z-10 flex flex-col"
-                        >
-                            {/* Modal Header - Premium Design */}
-                            <div className="relative overflow-hidden bg-gradient-to-r from-[#7c4624] to-[#a0522d] p-5 sm:p-6 text-white">
-                                <div className="absolute right-0 top-0 w-32 h-32 opacity-10">
-                                    <Gift className="w-32 h-32" />
-                                </div>
-                                <button
-                                    onClick={() => setAddModalOpen(false)}
-                                    className="absolute right-3 top-3 w-9 h-9 rounded-full bg-white/10 hover:bg-white/20 flex items-center justify-center transition-colors z-10"
-                                >
-                                    <X className="w-4 h-4" />
-                                </button>
-                                <div className="flex items-center gap-3 sm:gap-4 relative z-0">
-                                    <div className="w-12 h-12 rounded-2xl bg-white/20 backdrop-blur-sm flex items-center justify-center shadow-lg">
-                                        <Gift className="w-6 h-6" />
-                                    </div>
-                                    <div>
-                                        <h2 className="text-xl sm:text-2xl font-serif font-bold">Sacred Donation Entry</h2>
-                                        <p className="text-sm text-white/80 mt-0.5">Record a manual donation with instant receipt</p>
-                                    </div>
-                                </div>
-                            </div>
+            {/* Donation Type Tabs */}
+            <div className="flex gap-2 bg-white p-1.5 rounded-2xl border border-border shadow-sm w-fit">
+                <button
+                    onClick={() => {
+                        setDonationType("ONLINE");
+                        setCurrentPage(1);
+                    }}
+                    className={cn(
+                        "px-4 py-2.5 rounded-xl font-semibold text-sm transition-all",
+                        donationType === "ONLINE"
+                            ? "bg-primary text-white shadow-md"
+                            : "text-muted-foreground hover:text-foreground hover:bg-muted/50"
+                    )}
+                >
+                    💳 Online Donations
+                </button>
+                <button
+                    onClick={() => {
+                        setDonationType("OFFLINE");
+                        setCurrentPage(1);
+                    }}
+                    className={cn(
+                        "px-4 py-2.5 rounded-xl font-semibold text-sm transition-all",
+                        donationType === "OFFLINE"
+                            ? "bg-primary text-white shadow-md"
+                            : "text-muted-foreground hover:text-foreground hover:bg-muted/50"
+                    )}
+                >
+                    📝 Offline Donations
+                </button>
+            </div>
 
-                            <div className="p-5 sm:p-7 overflow-y-auto flex-1 custom-scrollbar">
-                                <div className="grid grid-cols-1 gap-6">
-                                    <div>
-                                        <label className="text-xs text-slate-500 uppercase tracking-[0.2em] mb-2 block font-semibold">
-                                            Select Temple <span className="text-rose-500">*</span>
-                                        </label>
-                                        <select
-                                            value={addTempleId}
-                                            onChange={(e) => setAddTempleId(e.target.value)}
-                                            className="w-full rounded-xl border border-slate-200 bg-slate-50 px-4 py-3 text-sm focus:border-[#7c4624] focus:ring-[#7c4624]/20"
-                                            disabled={selectedTempleId !== "all"}
-                                        >
-                                            <option value="">Select temple...</option>
-                                            {temples.map((temple: any) => {
-                                                const id = temple.temple?.id || temple.id;
-                                                const name = parseLocalizedValue(temple.temple?.name || temple.name);
-                                                return (
-                                                    <option key={id} value={id}>
-                                                        {name}
-                                                    </option>
-                                                );
-                                            })}
-                                        </select>
-                                        {selectedTempleId !== "all" && (
-                                            <p className="mt-2 text-[11px] text-slate-500">Temple fixed by filter.</p>
-                                        )}
-                                    </div>
-
-                                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-5">
-                                        {/* Donation Amount */}
-                                        <div>
-                                            <label className="text-xs text-slate-500 uppercase tracking-[0.2em] mb-2 block font-semibold">
-                                                Donation Amount <span className="text-rose-500">*</span>
-                                            </label>
-                                            <div className="relative">
-                                                <span className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-400 font-bold">₹</span>
-                                                <Input
-                                                    type="number"
-                                                    placeholder="Enter amount"
-                                                    value={addAmount}
-                                                    onChange={(e) => setAddAmount(e.target.value)}
-                                                    className="pl-7 bg-slate-50 border-slate-200 rounded-xl text-lg font-semibold focus:border-[#7c4624] focus:ring-[#7c4624]/20"
-                                                />
-                                            </div>
-                                            <div className="mt-3 flex flex-wrap gap-2">
-                                                {amountPresets.map((value) => (
-                                                    <button
-                                                        type="button"
-                                                        key={value}
-                                                        onClick={() => setAddAmount(value.toString())}
-                                                        className={cn(
-                                                            "px-3 py-1.5 rounded-full text-xs font-medium transition-all",
-                                                            addAmount === value.toString()
-                                                                ? "bg-[#7c4624] text-white shadow-md"
-                                                                : "bg-slate-100 text-slate-600 hover:bg-slate-200"
-                                                        )}
-                                                    >
-                                                        ₹{value}
-                                                    </button>
-                                                ))}
-                                            </div>
-                                        </div>
-
-                                        {/* Payment Method */}
-                                        <div>
-                                            <label className="text-xs text-slate-500 uppercase tracking-[0.2em] mb-2 block font-semibold">
-                                                Payment Method <span className="text-rose-500">*</span>
-                                            </label>
-                                            <select
-                                                value={addPaymentMethod}
-                                                onChange={(e) => setAddPaymentMethod(e.target.value)}
-                                                className="w-full rounded-xl border border-slate-200 bg-slate-50 px-4 py-3 text-sm focus:border-[#7c4624] focus:ring-[#7c4624]/20"
-                                            >
-                                                {paymentMethods.map((method) => (
-                                                    <option key={method.value} value={method.value}>
-                                                        {method.label}
-                                                    </option>
-                                                ))}
-                                            </select>
-                                        </div>
-                                    </div>
-
-                                    {/* Donation Status */}
-                                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-5">
-                                        <div>
-                                            <label className="text-xs text-slate-500 uppercase tracking-[0.2em] mb-2 block font-semibold">
-                                                Donation Status <span className="text-rose-500">*</span>
-                                            </label>
-                                            <select
-                                                value={addStatus}
-                                                onChange={(e) => setAddStatus(e.target.value)}
-                                                className="w-full rounded-xl border border-slate-200 bg-slate-50 px-4 py-3 text-sm focus:border-[#7c4624] focus:ring-[#7c4624]/20"
-                                            >
-                                                {["SUCCESS", "PENDING", "FAILED"].map((status) => (
-                                                    <option key={status} value={status}>
-                                                        {statusConfig[status as keyof typeof statusConfig]?.label || status}
-                                                    </option>
-                                                ))}
-                                            </select>
-                                        </div>
-                                        <div className="bg-amber-50 rounded-xl p-3 flex items-start gap-2">
-                                            <AlertCircle className="w-4 h-4 text-amber-600 mt-0.5 flex-shrink-0" />
-                                            <p className="text-xs text-amber-700">Manual donation recorded with selected payment method. Receipt will be generated automatically.</p>
-                                        </div>
-                                    </div>
-
-                                    {/* Donor Information */}
-                                    <div className="border-t pt-4">
-                                        <label className="text-xs text-slate-500 uppercase tracking-[0.2em] mb-3 block font-semibold">
-                                            Donor Information
-                                        </label>
-                                        <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-                                            <div>
-                                                <label className="text-sm font-medium text-slate-700 mb-1 block">Full Name <span className="text-rose-500">*</span></label>
-                                                <Input
-                                                    placeholder="Enter donor's full name"
-                                                    value={addDonorName}
-                                                    onChange={(e) => setAddDonorName(e.target.value)}
-                                                    className="bg-slate-50 border-slate-200 rounded-xl"
-                                                />
-                                            </div>
-                                            <div>
-                                                <label className="text-sm font-medium text-slate-700 mb-1 block">Phone Number <span className="text-rose-500">*</span></label>
-                                                <Input
-                                                    placeholder="10 or 11 digit mobile number"
-                                                    value={addDonorPhone}
-                                                    onChange={(e) => setAddDonorPhone(sanitizePhone(e.target.value))}
-                                                    className="bg-slate-50 border-slate-200 rounded-xl"
-                                                />
-                                            </div>
-                                            <div>
-                                                <label className="text-sm font-medium text-slate-700 mb-1 block">Email Address <span className="text-rose-500">*</span></label>
-                                                <Input
-                                                    type="email"
-                                                    placeholder="donor@example.com"
-                                                    value={addDonorEmail}
-                                                    onChange={(e) => setAddDonorEmail(e.target.value)}
-                                                    className="bg-slate-50 border-slate-200 rounded-xl"
-                                                />
-                                            </div>
-                                            <div>
-                                                <label className="text-sm font-medium text-slate-700 mb-1 block">PAN Number (Optional)</label>
-                                                <Input
-                                                    placeholder="ABCDE1234F"
-                                                    value={addPanNumber}
-                                                    onChange={(e) => setAddPanNumber(e.target.value.toUpperCase())}
-                                                    className="bg-slate-50 border-slate-200 rounded-xl uppercase"
-                                                />
-                                            </div>
-                                        </div>
-                                    </div>
-
-                                    {/* Address */}
-                                    <div>
-                                        <label className="text-xs text-slate-500 uppercase tracking-[0.2em] mb-2 block font-semibold">
-                                            Address (Optional)
-                                        </label>
-                                        <Input
-                                            placeholder="Full address for receipt"
-                                            value={addAddress}
-                                            onChange={(e) => setAddAddress(e.target.value)}
-                                            className="bg-slate-50 border-slate-200 rounded-xl"
-                                        />
-                                    </div>
-
-                                    {/* Prayer Message */}
-                                    <div>
-                                        <label className="text-xs text-slate-500 uppercase tracking-[0.2em] mb-2 block font-semibold">
-                                            Prayer / Sankalp Message
-                                        </label>
-                                        <textarea
-                                            value={addMessage}
-                                            onChange={(e) => setAddMessage(e.target.value)}
-                                            rows={3}
-                                            className="w-full rounded-xl border border-slate-200 bg-slate-50 p-3 text-sm focus:outline-none focus:border-[#7c4624] focus:ring-2 focus:ring-[#7c4624]/20"
-                                            placeholder="Enter prayer, sankalp or special message..."
-                                        />
-                                    </div>
-                                </div>
-                            </div>
-
-                            {/* Modal Footer */}
-                            <div className="p-5 sm:p-6 bg-slate-50 flex flex-col sm:flex-row items-stretch sm:items-center justify-between gap-3 border-t border-slate-200">
-                                <Button
-                                    variant="outline"
-                                    onClick={resetAddDonationForm}
-                                    className="w-full sm:w-auto order-2 sm:order-1"
-                                >
-                                    Clear Form
-                                </Button>
-                                <Button
-                                    onClick={handleCreateDonation}
-                                    disabled={isCreateSubmitting}
-                                    className="w-full sm:w-auto bg-gradient-to-r from-[#7c4624] to-[#a0522d] hover:from-[#63361c] hover:to-[#7c4624] text-white shadow-lg order-1 sm:order-2"
-                                >
-                                    {isCreateSubmitting ? (
-                                        <>
-                                            <Sparkles className="w-4 h-4 mr-2 animate-spin" />
-                                            Saving...
-                                        </>
-                                    ) : (
-                                        <>
-                                            <Gift className="w-4 h-4 mr-2" />
-                                            Record Donation & Print Receipt
-                                        </>
-                                    )}
-                                </Button>
-                            </div>
-                        </motion.div>
-                    </div>
-                )}
-            </AnimatePresence>
-
-            {/* Stats Section - Rest remains same as your original code */}
+            {/* Stats Section */}
             <div className="grid grid-cols-1 xs:grid-cols-2 sm:grid-cols-2 lg:grid-cols-4 gap-3 sm:gap-4 mb-6">
                 <Card className="bg-white border-primary/10 shadow-sm hover:shadow-md transition-shadow">
                     <CardContent className="p-4 sm:p-6">

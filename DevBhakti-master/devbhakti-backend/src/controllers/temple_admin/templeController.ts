@@ -31,6 +31,31 @@ const getFilePaths = (files: any, fieldName: string) => {
   return [];
 };
 
+const getSingleString = (val: any): string | null => {
+  if (!val) return null;
+  if (Array.isArray(val)) {
+    const nonVal = val.find(v => typeof v === 'string' && v.trim() !== '');
+    return nonVal !== undefined ? nonVal.trim() : (val[0] ? String(val[0]).trim() : null);
+  }
+  if (typeof val === 'string') return val.trim();
+  return String(val).trim();
+};
+
+const getLangObject = (val: any): any => {
+  if (!val) return { en: null, hi: null, mr: null };
+  if (typeof val === 'object' && !Array.isArray(val)) return val;
+  if (typeof val === 'string') {
+    try {
+      const parsed = JSON.parse(val);
+      if (typeof parsed === 'object' && parsed !== null) return parsed;
+    } catch (e) {
+      return { en: val, hi: null, mr: null };
+    }
+  }
+  return { en: String(val), hi: null, mr: null };
+};
+
+
 export const registerTemple = async (req: Request, res: Response) => {
   try {
     const files = req.files as any;
@@ -233,11 +258,335 @@ export const getMyTempleProfile = async (req: Request, res: Response) => {
   }
 };
 
+// export const updateMyTempleProfile = async (req: Request, res: Response) => {
+//   try {
+//     const templeId = (req as any).owner.ownerId;
+//     const files = req.files as any;
+//     const data = req.body;
+
+//     const temple = await prisma.temple.findUnique({
+//       where: { id: templeId },
+//       include: { user: true }
+//     });
+
+//     if (!temple) {
+//       return res.status(404).json({ success: false, message: 'Temple not found' });
+//     }
+
+//     // ─── Trustee (Admin User) Info Update ───────────────────────────────────
+//     const adminName  = data.adminName  ? String(data.adminName).trim()  : null;
+//     const adminEmail = data.adminEmail ? String(data.adminEmail).trim() : null;
+//     const adminPhone = data.adminPhone ? String(data.adminPhone).trim() : null;
+
+//     const userUpdatePayload: any = {};
+//     let trusteeInfoChanged = false;
+
+//     if (adminName  && adminName  !== temple.user?.name)  { userUpdatePayload.name  = adminName;  trusteeInfoChanged = true; }
+//     if (adminEmail && adminEmail !== temple.user?.email) { userUpdatePayload.email = adminEmail; trusteeInfoChanged = true; }
+//     if (adminPhone) {
+//       const normalizedAdminPhone = normalizePhone(adminPhone);
+//       if (normalizedAdminPhone !== temple.user?.phone) {
+//         const conflict = await prisma.user.findFirst({
+//           where: { phone: normalizedAdminPhone, role: 'INSTITUTION', id: { not: temple.userId } }
+//         });
+//         if (conflict) {
+//           return res.status(400).json({ success: false, message: `Phone ${normalizedAdminPhone} is already registered. Use a different number.` });
+//         }
+//         userUpdatePayload.phone = normalizedAdminPhone;
+//         trusteeInfoChanged = true;
+//       }
+//     }
+
+//     // Validate Phone if provided
+//     if (data.phone) {
+//       const cleaned = data.phone.replace(/\D/g, '');
+//       // Allow 10 digits OR 12 digits if starting with 91
+//       if (!(cleaned.length === 10 || (cleaned.length === 12 && cleaned.startsWith('91')))) {
+//         return res.status(400).json({ success: false, message: 'Invalid phone number. Use 10 digits or include 91 prefix.' });
+//       }
+//       data.phone = normalizePhone(data.phone);
+
+//       // Check if phone number is already taken by another user
+//       const conflictingUser = await prisma.user.findFirst({
+//         where: {
+//           phone: data.phone,
+//           role: 'INSTITUTION',
+//           id: { not: temple.userId }
+//         }
+//       });
+
+//       if (conflictingUser) {
+//         return res.status(400).json({ 
+//           success: false, 
+//           message: `The user with number ${data.phone} is already with us (Registered as ${conflictingUser.role}). Please use a different number.` 
+//         });
+//       }
+
+//       // If phone is different from current, it will be added to sensitive changes below
+//     }
+    
+//     // Note: temple.user might not be included in the initial fetch, let's check.
+//     // Line 225: const temple = await prisma.temple.findUnique({ where: { id: templeId } }); -> No include.
+//     // I should probably fetch with user include to be safe, or just use temple.userId.
+
+//     // Image size validations (2MB for NEW files)
+//     const MAX_SIZE = 2 * 1024 * 1024;
+//     if (files) {
+//       const newHeroImagesCount = files.heroImages ? files.heroImages.length : 0;
+//       const currentHeroImagesCount = temple.heroImages ? (temple.heroImages as string[]).length : 0;
+//       const totalHeroImages = currentHeroImagesCount + newHeroImagesCount;
+
+//       if (totalHeroImages > 10) {
+//         return res.status(400).json({ success: false, message: `Maximum 10 gallery images allowed. You already have ${currentHeroImagesCount} and tried to add ${newHeroImagesCount}.` });
+//       }
+
+//       const allFiles = [...(files.image || []), ...(files.heroImages || [])];
+//       for (const file of allFiles) {
+//         if (file.size > MAX_SIZE) {
+//           return res.status(400).json({ success: false, message: `Image ${file.originalname} is too large. Max 2MB allowed.` });
+//         }
+//       }
+//     }
+
+//     // Define sensitive fields
+//     const sensitiveFields = [
+//       'name_en', 'name_hi', 'name_mr',
+//       'location_en', 'location_hi', 'location_mr',
+//       'category_en', 'category_hi', 'category_mr',
+//       'fullAddress_en', 'fullAddress_hi', 'fullAddress_mr',
+//       'phone', 'slug', 'subdomain', 'urlType',
+//       'pickupLocation_en', 'pickupLocation_hi', 'pickupLocation_mr',
+//       'accountHolderName', 'accountNumber', 'bankName', 'ifscCode', 'upiId'
+//     ];
+
+//     // Check if any sensitive field is being updated
+//     const updateData: any = {};
+//     const sensitiveChanges: any = {};
+//     const oldSensitiveData: any = {};
+//     let hasSensitiveChanges = false;
+
+//     // Map of fields to their values in req.body
+//     const fieldMapping: any = {
+//       name_en: data.name_en || data.name,
+//       name_hi: data.name_hi,
+//       name_mr: data.name_mr,
+//       category_en: data.category_en || data.category,
+//       category_hi: data.category_hi,
+//       category_mr: data.category_mr,
+//       location_en: data.location_en || data.location,
+//       location_hi: data.location_hi,
+//       location_mr: data.location_mr,
+//       fullAddress_en: data.fullAddress_en || data.fullAddress,
+//       fullAddress_hi: data.fullAddress_hi,
+//       fullAddress_mr: data.fullAddress_mr,
+//       openTime: data.openTime,
+//       operatingHours: data.operatingHours ? (typeof data.operatingHours === 'string' ? JSON.parse(data.operatingHours) : data.operatingHours) : undefined,
+//       description_en: data.description_en || data.description,
+//       description_hi: data.description_hi,
+//       description_mr: data.description_mr,
+//       history_en: data.history_en || data.history,
+//       history_hi: data.history_hi,
+//       history_mr: data.history_mr,
+//       phone: data.phone,
+//       website: data.website,
+//       mapUrl: data.mapUrl,
+//       viewers: data.viewers,
+//       isLive: data.isLive !== undefined ? (String(data.isLive) === 'true') : undefined,
+//       liveUrl: data.liveUrl,
+//       youtubeLinks: data.youtubeLinks ? JSON.parse(data.youtubeLinks) : undefined,
+//       // Technical Identity
+//       slug: data.slug,
+//       subdomain: data.subdomain,
+//       urlType: data.urlType,
+//       pickupLocation_en: data.pickupLocation_en || data.pickupLocation,
+//       pickupLocation_hi: data.pickupLocation_hi,
+//       pickupLocation_mr: data.pickupLocation_mr,
+//       // Social Media
+//       instagramUrl: data.instagramUrl,
+//       facebookUrl: data.facebookUrl,
+//       youtubeUrl: data.youtubeUrl,
+//       // If user pastes a raw YouTube Channel ID in liveUrl, persist it into channelId as well
+//       channelId: data.channelId || (typeof data.liveUrl === 'string' && data.liveUrl.trim().startsWith('UC') ? data.liveUrl.trim() : undefined),
+//     };
+
+//     // Handle files (Now Non-Sensitive)
+//     const newImage = getFilePath(files, 'image');
+//     if (newImage) {
+//       updateData['image'] = newImage;
+//     }
+
+//     const existingHeroImages = data.existingHeroImages ? JSON.parse(data.existingHeroImages) : (temple.heroImages as string[] || []);
+//     const newHeroImages = files && files['heroImages'] ? getFilePaths(files, 'heroImages') : [];
+//     const currentHeroImages = temple.heroImages as string[] || [];
+
+//     if (newHeroImages.length > 0 || (data.existingHeroImages && existingHeroImages.length !== currentHeroImages.length)) {
+//       updateData['heroImages'] = [
+//         ...existingHeroImages,
+//         ...newHeroImages
+//       ];
+//     }
+
+//     // News Cuttings Logic
+//     const existingNewsCuttings = data.existingNewsCuttings ? JSON.parse(data.existingNewsCuttings) : (temple.newsCuttings as any[] || []);
+//     const newNewsCuttingImages = files && files['newsCuttingImages'] ? getFilePaths(files, 'newsCuttingImages') : [];
+//     let newNewsCuttingLinks = [];
+//     try {
+//       newNewsCuttingLinks = data.newsCuttingLinks ? JSON.parse(data.newsCuttingLinks) : [];
+//     } catch (e) {
+//       newNewsCuttingLinks = [];
+//     }
+
+//     const newNewsCuttings = newNewsCuttingImages.map((imgPath: string, index: number) => ({
+//       image: imgPath,
+//       link: newNewsCuttingLinks[index] || ""
+//     }));
+
+//     if (newNewsCuttings.length > 0 || (data.existingNewsCuttings && existingNewsCuttings.length !== (temple.newsCuttings as any[] || []).length)) {
+//       updateData['newsCuttings'] = [
+//         ...existingNewsCuttings,
+//         ...newNewsCuttings
+//       ];
+//     }
+
+//     // Add trustee changes to sensitiveChanges if any
+//     if (trusteeInfoChanged && Object.keys(userUpdatePayload).length > 0) {
+//       if (userUpdatePayload.name) {
+//         sensitiveChanges.adminName = userUpdatePayload.name;
+//         oldSensitiveData.adminName = temple.user?.name;
+//       }
+//       if (userUpdatePayload.email) {
+//         sensitiveChanges.adminEmail = userUpdatePayload.email;
+//         oldSensitiveData.adminEmail = temple.user?.email;
+//       }
+//       if (userUpdatePayload.phone) {
+//         sensitiveChanges.adminPhone = userUpdatePayload.phone;
+//         oldSensitiveData.adminPhone = temple.user?.phone;
+//       }
+//       hasSensitiveChanges = true;
+//     }
+
+//     // Note: gallery field removed — heroImages now serves as the gallery
+
+//     // Check textual fields
+//     for (const key in fieldMapping) {
+//       const newValue = fieldMapping[key];
+//       if (newValue === undefined) continue;
+
+//       let oldValue: any;
+      
+//       // Handle localized fields comparison
+//       if (key.endsWith('_en') || key.endsWith('_hi') || key.endsWith('_mr')) {
+//         const baseKey = key.slice(0, -3); // e.g., 'name'
+//         const langCode = key.slice(-2);   // e.g., 'en'
+//         oldValue = (temple as any)[baseKey]?.[langCode];
+//       } else {
+//         oldValue = (temple as any)[key];
+//       }
+
+//       if (newValue !== oldValue) {
+//         if (sensitiveFields.includes(key)) {
+//           sensitiveChanges[key] = newValue;
+//           oldSensitiveData[key] = oldValue;
+//           hasSensitiveChanges = true;
+//         } else {
+//           // If it's a localized field not in sensitive list (unlikely based on the list above)
+//           if (key.endsWith('_en') || key.endsWith('_hi') || key.endsWith('_mr')) {
+//              const baseKey = key.slice(0, -3);
+//              const langCode = key.slice(-2);
+//              if (!updateData[baseKey]) updateData[baseKey] = { ...(temple as any)[baseKey] };
+//              updateData[baseKey][langCode] = newValue;
+//           } else {
+//             updateData[key] = newValue;
+//           }
+//         }
+//       }
+//     }
+
+//     if (hasSensitiveChanges) {
+//       // Create a pending update request
+//       await prisma.templeUpdateRequest.create({
+//         data: {
+//           templeId: temple.id,
+//           requestedData: sensitiveChanges,
+//           oldData: oldSensitiveData,
+//           status: 'PENDING'
+//         }
+//       });
+
+//       // Notify Admins
+//       await notifyAdmins({
+//         title: "Temple Profile Update",
+//         body: `${getEnglish(temple.name) || 'A Temple'} has updated sensitive profile details requiring verification.`,
+//         data: {
+//           link: '/admin/temples/update-requests',
+//           type: 'TEMPLE_UPDATE'
+//         }
+//       });
+
+//       // Update non-sensitive fields immediately if any
+//       if (Object.keys(updateData).length > 0) {
+//         await prisma.temple.update({
+//           where: { id: temple.id },
+//           data: updateData
+//         });
+//       }
+
+//       return res.json({
+//         success: true,
+//         message: 'Sensitive fields update request submitted for admin approval. Non-sensitive fields (if any) updated.',
+//         pendingApproval: true
+//       });
+//     }
+
+//     // If no sensitive changes, update everything directly
+//     if (Object.keys(updateData).length > 0) {
+//       const updatedTemple = await prisma.temple.update({
+//         where: { id: temple.id },
+//         data: updateData
+//       });
+
+//       // Sync with Shiprocket if address or location changed
+//       if (updateData.fullAddress || updateData.location || updateData.phone) {
+//         try {
+//           const locEn = getEnglish(updateData.location) || getEnglish(temple.location) || '';
+//           const addrEn = getEnglish(updateData.fullAddress) || getEnglish(temple.fullAddress) || '';
+//           const { city, state } = parseLocation(locEn);
+//           const pincode = extractPincode(addrEn);
+
+//           const pickupData = {
+//             pickup_location: getEnglish(temple.pickupLocation),
+//             name: getEnglish(temple.name),
+//             email: (temple as any).user?.email || '',
+//             phone: updateData.phone || temple.phone,
+//             address: addrEn,
+//             city: city || 'Delhi',
+//             state: state || 'Delhi',
+//             country: 'India',
+//             pin_code: pincode || '110001'
+//           };
+//           await createShiprocketPickupLocation(pickupData);
+//         } catch (srError) {
+//           console.error('Shiprocket update sync error:', srError);
+//         }
+//       }
+
+//       return res.json({ success: true, data: updatedTemple, message: 'Profile updated successfully' });
+//     }
+
+//     // If only trustee info was changed (now pending), handled above
+//     res.json({ success: true, message: 'No changes detected' });
+//   } catch (error: any) {
+//     console.error('Update Temple Profile Error:', error);
+//     res.status(500).json({ success: false, message: error.message });
+//   }
+// };
 export const updateMyTempleProfile = async (req: Request, res: Response) => {
   try {
     const templeId = (req as any).owner.ownerId;
     const files = req.files as any;
     const data = req.body;
+
+    console.log('📝 Update request received for temple:', templeId);
 
     const temple = await prisma.temple.findUnique({
       where: { id: templeId },
@@ -249,15 +598,21 @@ export const updateMyTempleProfile = async (req: Request, res: Response) => {
     }
 
     // ─── Trustee (Admin User) Info Update ───────────────────────────────────
-    const adminName  = data.adminName  ? String(data.adminName).trim()  : null;
+    const adminName = data.adminName ? String(data.adminName).trim() : null;
     const adminEmail = data.adminEmail ? String(data.adminEmail).trim() : null;
     const adminPhone = data.adminPhone ? String(data.adminPhone).trim() : null;
 
     const userUpdatePayload: any = {};
     let trusteeInfoChanged = false;
 
-    if (adminName  && adminName  !== temple.user?.name)  { userUpdatePayload.name  = adminName;  trusteeInfoChanged = true; }
-    if (adminEmail && adminEmail !== temple.user?.email) { userUpdatePayload.email = adminEmail; trusteeInfoChanged = true; }
+    if (adminName && adminName !== temple.user?.name) {
+      userUpdatePayload.name = adminName;
+      trusteeInfoChanged = true;
+    }
+    if (adminEmail && adminEmail !== temple.user?.email) {
+      userUpdatePayload.email = adminEmail;
+      trusteeInfoChanged = true;
+    }
     if (adminPhone) {
       const normalizedAdminPhone = normalizePhone(adminPhone);
       if (normalizedAdminPhone !== temple.user?.phone) {
@@ -265,7 +620,10 @@ export const updateMyTempleProfile = async (req: Request, res: Response) => {
           where: { phone: normalizedAdminPhone, role: 'INSTITUTION', id: { not: temple.userId } }
         });
         if (conflict) {
-          return res.status(400).json({ success: false, message: `Phone ${normalizedAdminPhone} is already registered. Use a different number.` });
+          return res.status(400).json({
+            success: false,
+            message: `Phone ${normalizedAdminPhone} is already registered. Use a different number.`
+          });
         }
         userUpdatePayload.phone = normalizedAdminPhone;
         trusteeInfoChanged = true;
@@ -275,36 +633,13 @@ export const updateMyTempleProfile = async (req: Request, res: Response) => {
     // Validate Phone if provided
     if (data.phone) {
       const cleaned = data.phone.replace(/\D/g, '');
-      // Allow 10 digits OR 12 digits if starting with 91
       if (!(cleaned.length === 10 || (cleaned.length === 12 && cleaned.startsWith('91')))) {
         return res.status(400).json({ success: false, message: 'Invalid phone number. Use 10 digits or include 91 prefix.' });
       }
       data.phone = normalizePhone(data.phone);
-
-      // Check if phone number is already taken by another user
-      const conflictingUser = await prisma.user.findFirst({
-        where: {
-          phone: data.phone,
-          role: 'INSTITUTION',
-          id: { not: temple.userId }
-        }
-      });
-
-      if (conflictingUser) {
-        return res.status(400).json({ 
-          success: false, 
-          message: `The user with number ${data.phone} is already with us (Registered as ${conflictingUser.role}). Please use a different number.` 
-        });
-      }
-
-      // If phone is different from current, it will be added to sensitive changes below
     }
-    
-    // Note: temple.user might not be included in the initial fetch, let's check.
-    // Line 225: const temple = await prisma.temple.findUnique({ where: { id: templeId } }); -> No include.
-    // I should probably fetch with user include to be safe, or just use temple.userId.
 
-    // Image size validations (2MB for NEW files)
+    // ─── Image validations ──────────────────────────────────────────────────
     const MAX_SIZE = 2 * 1024 * 1024;
     if (files) {
       const newHeroImagesCount = files.heroImages ? files.heroImages.length : 0;
@@ -312,18 +647,24 @@ export const updateMyTempleProfile = async (req: Request, res: Response) => {
       const totalHeroImages = currentHeroImagesCount + newHeroImagesCount;
 
       if (totalHeroImages > 10) {
-        return res.status(400).json({ success: false, message: `Maximum 10 gallery images allowed. You already have ${currentHeroImagesCount} and tried to add ${newHeroImagesCount}.` });
+        return res.status(400).json({
+          success: false,
+          message: `Maximum 10 gallery images allowed. You already have ${currentHeroImagesCount} and tried to add ${newHeroImagesCount}.`
+        });
       }
 
       const allFiles = [...(files.image || []), ...(files.heroImages || [])];
       for (const file of allFiles) {
         if (file.size > MAX_SIZE) {
-          return res.status(400).json({ success: false, message: `Image ${file.originalname} is too large. Max 2MB allowed.` });
+          return res.status(400).json({
+            success: false,
+            message: `Image ${file.originalname} is too large. Max 2MB allowed.`
+          });
         }
       }
     }
 
-    // Define sensitive fields
+    // ─── Define sensitive fields ────────────────────────────────────────────
     const sensitiveFields = [
       'name_en', 'name_hi', 'name_mr',
       'location_en', 'location_hi', 'location_mr',
@@ -334,13 +675,12 @@ export const updateMyTempleProfile = async (req: Request, res: Response) => {
       'accountHolderName', 'accountNumber', 'bankName', 'ifscCode', 'upiId'
     ];
 
-    // Check if any sensitive field is being updated
     const updateData: any = {};
     const sensitiveChanges: any = {};
     const oldSensitiveData: any = {};
     let hasSensitiveChanges = false;
 
-    // Map of fields to their values in req.body
+    // ─── Field mapping ──────────────────────────────────────────────────────
     const fieldMapping: any = {
       name_en: data.name_en || data.name,
       name_hi: data.name_hi,
@@ -368,19 +708,94 @@ export const updateMyTempleProfile = async (req: Request, res: Response) => {
       viewers: data.viewers,
       isLive: data.isLive !== undefined ? (String(data.isLive) === 'true') : undefined,
       liveUrl: data.liveUrl,
-      youtubeLinks: data.youtubeLinks ? JSON.parse(data.youtubeLinks) : undefined,
-      // Technical Identity
+      youtubeLinks: data.youtubeLinks ? (typeof data.youtubeLinks === 'string' ? JSON.parse(data.youtubeLinks) : data.youtubeLinks) : undefined,
       slug: data.slug,
       subdomain: data.subdomain,
       urlType: data.urlType,
       pickupLocation_en: data.pickupLocation_en || data.pickupLocation,
       pickupLocation_hi: data.pickupLocation_hi,
       pickupLocation_mr: data.pickupLocation_mr,
-      // If user pastes a raw YouTube Channel ID in liveUrl, persist it into channelId as well
       channelId: data.channelId || (typeof data.liveUrl === 'string' && data.liveUrl.trim().startsWith('UC') ? data.liveUrl.trim() : undefined),
     };
 
-    // Handle files (Now Non-Sensitive)
+    // ─── Social Media URLs ──────────────────────────────────────────────────
+    updateData['instagramUrl'] = getSingleString(data.instagramUrl);
+    updateData['facebookUrl'] = getSingleString(data.facebookUrl);
+    updateData['youtubeUrl'] = getSingleString(data.youtubeUrl);
+
+    // ─── NEWS CUTTINGS - FIXED ─────────────────────────────────────────────
+    try {
+      // Get existing news cuttings
+      let existingNewsCuttings: any[] = [];
+      
+      if (data.existingNewsCuttings) {
+        try {
+          const parsed = typeof data.existingNewsCuttings === 'string' 
+            ? JSON.parse(data.existingNewsCuttings) 
+            : data.existingNewsCuttings;
+          existingNewsCuttings = Array.isArray(parsed) ? parsed : [];
+        } catch (e) {
+          existingNewsCuttings = [];
+        }
+      }
+
+      // Get new news cutting images
+      const newNewsCuttingImages = files && files['newsCuttingImages'] 
+        ? files['newsCuttingImages'].map((f: any) => `/uploads/temples/${f.filename}`)
+        : [];
+
+      // Get links for new news cuttings
+      let newNewsCuttingLinks: string[] = [];
+      if (data.newsCuttingLinks) {
+        try {
+          const parsed = typeof data.newsCuttingLinks === 'string' 
+            ? JSON.parse(data.newsCuttingLinks) 
+            : data.newsCuttingLinks;
+          newNewsCuttingLinks = Array.isArray(parsed) ? parsed : [];
+        } catch (e) {
+          newNewsCuttingLinks = [];
+        }
+      }
+
+      // Create new news cuttings
+      const newNewsCuttings = newNewsCuttingImages.map((imgPath: string, index: number) => ({
+        image: imgPath,
+        link: newNewsCuttingLinks[index] || ""
+      }));
+
+      // Combine existing and new
+      let allNewsCuttings = [...existingNewsCuttings, ...newNewsCuttings];
+
+      // Clean up - ensure proper format
+      allNewsCuttings = allNewsCuttings
+        .filter(item => item && typeof item === 'object')
+        .map(item => ({
+          image: item.image || "",
+          link: item.link || ""
+        }));
+
+      // ONLY add to updateData if there are news cuttings
+      if (allNewsCuttings.length > 0) {
+        updateData['newsCuttings'] = allNewsCuttings;
+      } else {
+        // If no news cuttings, set to empty array
+        updateData['newsCuttings'] = [];
+      }
+
+      console.log('✅ News Cuttings processed:', {
+        existingCount: existingNewsCuttings.length,
+        newImages: newNewsCuttingImages.length,
+        newLinks: newNewsCuttingLinks.length,
+        total: allNewsCuttings.length
+      });
+
+    } catch (newsError) {
+      console.error('❌ Error processing news cuttings:', newsError);
+      // Set empty array as fallback
+      updateData['newsCuttings'] = [];
+    }
+
+    // ─── Handle Files ──────────────────────────────────────────────────────
     const newImage = getFilePath(files, 'image');
     if (newImage) {
       updateData['image'] = newImage;
@@ -397,7 +812,53 @@ export const updateMyTempleProfile = async (req: Request, res: Response) => {
       ];
     }
 
-    // Add trustee changes to sensitiveChanges if any
+    // ─── Check for changes ──────────────────────────────────────────────────
+    // Normalize: treat null, undefined, and "" as the same (no value)
+    const norm = (v: any): string => {
+      if (v === null || v === undefined) return '';
+      if (typeof v === 'string') return v.trim();
+      if (typeof v === 'boolean') return String(v);
+      if (typeof v === 'object') return JSON.stringify(v);
+      return String(v);
+    };
+
+    for (const key in fieldMapping) {
+      const newValue = fieldMapping[key];
+      if (newValue === undefined) continue;
+
+      let oldValue: any;
+
+      if (key.endsWith('_en') || key.endsWith('_hi') || key.endsWith('_mr')) {
+        const baseKey = key.slice(0, -3);
+        const langCode = key.slice(-2);
+        const langObj = getLangObject((temple as any)[baseKey]);
+        oldValue = langObj[langCode];
+      } else {
+        oldValue = (temple as any)[key];
+      }
+
+      // Only proceed if there is a real change (normalized comparison)
+      if (norm(newValue) !== norm(oldValue)) {
+        if (sensitiveFields.includes(key)) {
+          sensitiveChanges[key] = newValue;
+          oldSensitiveData[key] = oldValue;
+          hasSensitiveChanges = true;
+        } else {
+          if (key.endsWith('_en') || key.endsWith('_hi') || key.endsWith('_mr')) {
+            const baseKey = key.slice(0, -3);
+            const langCode = key.slice(-2);
+            if (!updateData[baseKey]) {
+              updateData[baseKey] = getLangObject((temple as any)[baseKey]);
+            }
+            updateData[baseKey][langCode] = newValue || null;
+          } else {
+            updateData[key] = newValue;
+          }
+        }
+      }
+    }
+
+    // Add trustee changes
     if (trusteeInfoChanged && Object.keys(userUpdatePayload).length > 0) {
       if (userUpdatePayload.name) {
         sensitiveChanges.adminName = userUpdatePayload.name;
@@ -414,45 +875,10 @@ export const updateMyTempleProfile = async (req: Request, res: Response) => {
       hasSensitiveChanges = true;
     }
 
-    // Note: gallery field removed — heroImages now serves as the gallery
+    console.log('📝 Final updateData keys:', Object.keys(updateData));
 
-    // Check textual fields
-    for (const key in fieldMapping) {
-      const newValue = fieldMapping[key];
-      if (newValue === undefined) continue;
-
-      let oldValue: any;
-      
-      // Handle localized fields comparison
-      if (key.endsWith('_en') || key.endsWith('_hi') || key.endsWith('_mr')) {
-        const baseKey = key.slice(0, -3); // e.g., 'name'
-        const langCode = key.slice(-2);   // e.g., 'en'
-        oldValue = (temple as any)[baseKey]?.[langCode];
-      } else {
-        oldValue = (temple as any)[key];
-      }
-
-      if (newValue !== oldValue) {
-        if (sensitiveFields.includes(key)) {
-          sensitiveChanges[key] = newValue;
-          oldSensitiveData[key] = oldValue;
-          hasSensitiveChanges = true;
-        } else {
-          // If it's a localized field not in sensitive list (unlikely based on the list above)
-          if (key.endsWith('_en') || key.endsWith('_hi') || key.endsWith('_mr')) {
-             const baseKey = key.slice(0, -3);
-             const langCode = key.slice(-2);
-             if (!updateData[baseKey]) updateData[baseKey] = { ...(temple as any)[baseKey] };
-             updateData[baseKey][langCode] = newValue;
-          } else {
-            updateData[key] = newValue;
-          }
-        }
-      }
-    }
-
+    // ─── Apply Updates ──────────────────────────────────────────────────────
     if (hasSensitiveChanges) {
-      // Create a pending update request
       await prisma.templeUpdateRequest.create({
         data: {
           templeId: temple.id,
@@ -462,7 +888,6 @@ export const updateMyTempleProfile = async (req: Request, res: Response) => {
         }
       });
 
-      // Notify Admins
       await notifyAdmins({
         title: "Temple Profile Update",
         body: `${getEnglish(temple.name) || 'A Temple'} has updated sensitive profile details requiring verification.`,
@@ -472,7 +897,6 @@ export const updateMyTempleProfile = async (req: Request, res: Response) => {
         }
       });
 
-      // Update non-sensitive fields immediately if any
       if (Object.keys(updateData).length > 0) {
         await prisma.temple.update({
           where: { id: temple.id },
@@ -482,19 +906,20 @@ export const updateMyTempleProfile = async (req: Request, res: Response) => {
 
       return res.json({
         success: true,
-        message: 'Sensitive fields update request submitted for admin approval. Non-sensitive fields (if any) updated.',
+        message: 'Sensitive fields update request submitted for admin approval.',
         pendingApproval: true
       });
     }
 
-    // If no sensitive changes, update everything directly
     if (Object.keys(updateData).length > 0) {
+      console.log('🔄 Updating temple with data keys:', Object.keys(updateData));
+      
       const updatedTemple = await prisma.temple.update({
         where: { id: temple.id },
         data: updateData
       });
 
-      // Sync with Shiprocket if address or location changed
+      // Sync with Shiprocket
       if (updateData.fullAddress || updateData.location || updateData.phone) {
         try {
           const locEn = getEnglish(updateData.location) || getEnglish(temple.location) || '';
@@ -522,14 +947,28 @@ export const updateMyTempleProfile = async (req: Request, res: Response) => {
       return res.json({ success: true, data: updatedTemple, message: 'Profile updated successfully' });
     }
 
-    // If only trustee info was changed (now pending), handled above
     res.json({ success: true, message: 'No changes detected' });
   } catch (error: any) {
-    console.error('Update Temple Profile Error:', error);
-    res.status(500).json({ success: false, message: error.message });
+    console.error('❌ Update Temple Profile Error:', error);
+    console.error('❌ Error stack:', error.stack);
+    
+    
+    
+    // Check if it's a Prisma validation error
+    if (error.name === 'PrismaClientValidationError') {
+      return res.status(400).json({
+        success: false,
+        message: 'Data validation error. Please check the data format.',
+        details: error.message
+      });
+    }
+    
+    res.status(500).json({
+      success: false,
+      message: error.message || 'Failed to update profile'
+    });
   }
 };
-
 export const getTempleDevotees = async (req: Request, res: Response) => {
   try {
     const templeId = (req as any).owner.ownerId;

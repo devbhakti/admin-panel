@@ -1,6 +1,22 @@
 import { Request, Response } from 'express';
 import { prisma } from '../../lib/prisma';
 import { buildLangJson, getLang, localize } from '../../utils/localization';
+import { generateCustomId } from '../../utils/idGenerator';
+
+const normalizePhone = (phone: string): string => {
+    let cleaned = phone.replace(/\D/g, '');
+    if (cleaned.startsWith('00')) cleaned = cleaned.substring(2);
+    if (cleaned.length === 11 && cleaned.startsWith('0')) cleaned = cleaned.substring(1);
+    if (cleaned.length === 12 && cleaned.startsWith('91')) {
+        // Keep as is
+    } else if (cleaned.length === 10) {
+        cleaned = '91' + cleaned;
+    }
+    if (cleaned.length === 14 && cleaned.startsWith('9191')) {
+        cleaned = cleaned.substring(2);
+    }
+    return '+' + cleaned;
+};
 
 // ─── Helper: build file path ─────────────────────────────────────────────────
 const getFilePath = (files: any, fieldName: string): any => {
@@ -243,6 +259,56 @@ export const toggleMandalStatus = async (req: Request, res: Response): Promise<v
         if (isActive !== undefined) updateData.isActive = isActive === true || isActive === 'true';
         if (status !== undefined) updateData.status = status;
         if (adminNotes !== undefined) updateData.adminNotes = adminNotes;
+
+        // If status is APPROVED, create or update Mandal user login account
+        if (status === 'APPROVED') {
+            const normalizedPhone = normalizePhone(existing.contactNumber);
+            let user = await prisma.user.findFirst({
+                where: { phone: normalizedPhone, role: 'MANDAL' }
+            });
+
+            if (!user) {
+                let nameStr = 'Mandal Admin';
+                try {
+                    const nameObj = typeof existing.name === 'string' ? JSON.parse(existing.name) : existing.name;
+                    nameStr = existing.presidentName || (nameObj as any).en || (nameObj as any).hi || (nameObj as any).mr || 'Mandal Admin';
+                } catch (e) {
+                    if (typeof existing.name === 'string') nameStr = existing.name;
+                }
+
+                const displayId = await generateCustomId('MNID');
+                user = await prisma.user.create({
+                    data: {
+                        displayId,
+                        phone: normalizedPhone,
+                        name: nameStr,
+                        email: existing.email ? existing.email.toLowerCase().trim() : null,
+                        role: 'MANDAL',
+                        isVerified: true,
+                        isActive: true
+                    }
+                });
+            } else {
+                // If user exists, ensure they are verified and active
+                await prisma.user.update({
+                    where: { id: user.id },
+                    data: { isVerified: true, isActive: true }
+                });
+            }
+
+            updateData.userId = user.id;
+        }
+
+        // Sync isActive to the linked User's status
+        if (isActive !== undefined && (existing.userId || updateData.userId)) {
+            const finalUserId = existing.userId || updateData.userId;
+            if (finalUserId) {
+                await prisma.user.update({
+                    where: { id: finalUserId },
+                    data: { isActive: isActive === true || isActive === 'true' }
+                });
+            }
+        }
 
         const mandal = await prisma.mandal.update({ where: { id }, data: updateData });
 

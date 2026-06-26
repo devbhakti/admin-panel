@@ -345,6 +345,14 @@ export const deleteTempleAdmin = async (id: string) => {
     return response.data;
 };
 
+export const toggleShowPhoneAdmin = async (id: string, showPhone: boolean) => {
+    const token = getAdminToken();
+    const response = await axios.patch(`${API_URL}/admin/temples/${id}/show-phone`, { showPhone }, {
+        headers: { Authorization: `Bearer ${token}` }
+    });
+    return response.data;
+};
+
 export const toggleTempleStatusAdmin = async (id: string, isVerified: boolean, isActive: boolean, data?: { slug?: string, subdomain?: string, urlType?: string, productCommissionRate?: number, poojaCommissionRate?: number, liveStatus?: boolean, commissionSlabs?: any[] }) => {
     const token = getAdminToken();
     const payload = {
@@ -1248,6 +1256,7 @@ export const fetchAllDonationsAdmin = async (params?: {
     templeId?: string;
     sortBy?: string;
     sortOrder?: string;
+    donationType?: "ONLINE" | "OFFLINE";
 }) => {
     const token = getAdminToken();
     let url = `${API_URL}/admin/donations`;
@@ -1262,6 +1271,7 @@ export const fetchAllDonationsAdmin = async (params?: {
         if (params.templeId && params.templeId !== 'all') query.append('templeId', params.templeId);
         if (params.sortBy) query.append('sortBy', params.sortBy);
         if (params.sortOrder) query.append('sortOrder', params.sortOrder);
+        if (params.donationType) query.append('donationType', params.donationType);
         const qs = query.toString();
         if (qs) url += `?${qs}`;
     }

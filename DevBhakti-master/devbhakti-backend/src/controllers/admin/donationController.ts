@@ -11,7 +11,7 @@ import { validateDonationAmount, validatePhoneNumber } from "../../utils/donatio
 
 export const getAllDonations = async (req: Request, res: Response) => {
     try {
-        const { search, status, startDate, endDate, sortBy = 'createdAt', sortOrder = 'desc', page = 1, limit = 10 } = req.query;
+        const { search, status, startDate, endDate, sortBy = 'createdAt', sortOrder = 'desc', page = 1, limit = 10, donationType, templeId } = req.query;
         const skip = (Number(page) - 1) * Number(limit);
         const lang = (req.headers['x-lang'] as string) || (req.query.lang as string) || 'en';
 
@@ -23,6 +23,22 @@ export const getAllDonations = async (req: Request, res: Response) => {
         } else if (!status) {
             // Default behavior if no status provided
             where.status = "SUCCESS";
+        }
+
+        // Donation Type Filtering
+        // ONLINE: donations with razorpayOrderId (from Razorpay payment gateway)
+        // OFFLINE: donations without razorpayOrderId (manual entries)
+        if (donationType) {
+            if (donationType === "ONLINE") {
+                where.razorpayOrderId = { not: null };
+            } else if (donationType === "OFFLINE") {
+                where.razorpayOrderId = null;
+            }
+        }
+
+        // Temple Filtering
+        if (templeId && templeId !== 'all') {
+            where.templeId = String(templeId);
         }
 
         // Search across multiple fields
@@ -78,7 +94,8 @@ export const getAllDonations = async (req: Request, res: Response) => {
                 address: d.address,
                 message: d.message,
                 displayId: d.displayId,
-                paymentMethod: d.paymentMethod
+                paymentMethod: d.paymentMethod,
+                donationType: d.razorpayOrderId ? "ONLINE" : "OFFLINE"
             };
         });
 
@@ -242,10 +259,22 @@ export const createDonation = async (req: Request, res: Response) => {
 export const downloadDonationsExcel = async (req: Request, res: Response) => {
     try {
         const lang = (req.headers['x-lang'] as string) || (req.query.lang as string) || 'en';
+        const { donationType } = req.query;
         console.log("Starting Excel Export...");
 
-        // 1. Database se data layein
+        // 1. Database se data layein with donationType filtering
+        const where: any = {};
+        
+        if (donationType) {
+            if (donationType === "ONLINE") {
+                where.razorpayOrderId = { not: null };
+            } else if (donationType === "OFFLINE") {
+                where.razorpayOrderId = null;
+            }
+        }
+        
         const donations = await prisma.donation.findMany({
+            where,
             orderBy: { createdAt: 'desc' },
             include: {
                 temple: {
