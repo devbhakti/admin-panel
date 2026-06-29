@@ -95,21 +95,21 @@ const getYouTubeEmbedUrl = (value: string) => {
   if (videoId) {
     // Include origin param on localhost/domain (YouTube needs it), skip on IP (YouTube rejects IPs)
     return isIpHost
-      ? `https://www.youtube-nocookie.com/embed/${videoId}`
-      : `https://www.youtube-nocookie.com/embed/${videoId}?origin=${encodeURIComponent(origin)}`;
+      ? `https://www.youtube.com/embed/${videoId}`
+      : `https://www.youtube.com/embed/${videoId}?origin=${encodeURIComponent(origin)}`;
   }
 
   const trimmed = value.trim();
   if (/^UC[\w-]{20,}$/i.test(trimmed)) {
     return isIpHost
-      ? `https://www.youtube-nocookie.com/embed/live_stream?channel=${trimmed}`
-      : `https://www.youtube-nocookie.com/embed/live_stream?channel=${trimmed}&origin=${encodeURIComponent(origin)}`;
+      ? `https://www.youtube.com/embed/live_stream?channel=${trimmed}`
+      : `https://www.youtube.com/embed/live_stream?channel=${trimmed}&origin=${encodeURIComponent(origin)}`;
   }
 
   let url = trimmed;
-  if (url.includes("youtube.com/embed/")) url = url.replace("youtube.com/embed/", "youtube-nocookie.com/embed/");
-  else if (url.includes("youtu.be/")) url = url.replace("youtu.be/", "www.youtube-nocookie.com/embed/");
-  else if (url.includes("watch?v=")) url = url.replace("watch?v=", "embed/").replace("youtube.com", "youtube-nocookie.com");
+  if (url.includes("youtube.com/embed/")) url = url;
+  else if (url.includes("youtu.be/")) url = url.replace("youtu.be/", "www.youtube.com/embed/");
+  else if (url.includes("watch?v=")) url = url.replace("watch?v=", "embed/");
 
   try {
     const urlObj = new URL(url.startsWith("http") ? url : `https://${url}`);
@@ -190,7 +190,19 @@ const getDailymotionEmbedUrl = (value: string) => {
 
 export const getVideoRenderInfo = (value?: string | null): VideoRenderInfo => {
   if (!value) return { kind: "unknown", src: "", platform: null };
-  const trimmed = normalizeBracketedLink(value);
+  let trimmed = normalizeBracketedLink(value);
+
+  // Extract URL from wrapper players (like hlsplayer.org?url=...)
+  try {
+    const urlObj = new URL(trimmed.startsWith("http") ? trimmed : `https://${trimmed}`);
+    const queryUrl = urlObj.searchParams.get("url") || urlObj.searchParams.get("src") || urlObj.searchParams.get("file");
+    if (queryUrl && (queryUrl.toLowerCase().includes(".m3u8") || queryUrl.toLowerCase().includes(".mp4"))) {
+      trimmed = queryUrl;
+    }
+  } catch (e) {
+    // ignore
+  }
+
   // Prefer known direct HLS for Livebox embeds
   const liveboxHls = convertLiveboxToHls(trimmed);
   if (liveboxHls) {
@@ -207,14 +219,13 @@ export const getVideoRenderInfo = (value?: string | null): VideoRenderInfo => {
       const iframeSrc = iframeSrcMatch[1];
       const isYouTubeIframe =
         iframeSrc.includes("youtube.com/embed") ||
-        iframeSrc.includes("youtu.be") ||
-        iframeSrc.includes("youtube-nocookie.com/embed");
+        iframeSrc.includes("youtu.be");
       if (isYouTubeIframe) {
         const ytId = extractYouTubeId(iframeSrc);
         if (ytId) {
           return {
             kind: "iframe",
-            src: `https://www.youtube-nocookie.com/embed/${ytId}`,
+            src: `https://www.youtube.com/embed/${ytId}`,
             platform: "youtube",
           };
         }

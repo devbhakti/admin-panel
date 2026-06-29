@@ -83,7 +83,7 @@ const sidebarItems = [
     {
         label: "Donation",
         icon: Heart,
-        href: "#"   ,
+        href: "/temples/dashboard/donation"   ,
         permission: "donations.menu",
         subItems: [
           { label: "💳 Online Donations", href: "/temples/dashboard?type=online", permission: "donations.menu" },

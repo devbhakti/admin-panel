@@ -44,7 +44,6 @@ export function UniversalVideoPlayer({
         allow={`accelerometer; ${autoPlay ? 'autoplay;' : ''} clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share`}
         allowFullScreen
         frameBorder={0}
-        referrerPolicy="no-referrer"
       />
     );
   }

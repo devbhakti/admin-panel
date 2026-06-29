@@ -735,6 +735,7 @@ export default function AdminLiveDarshanPage() {
                       url={editLiveUrl}
                       className="w-full h-full object-cover"
                       controls
+                      autoPlay
                       muted
                       playsInline
                     />

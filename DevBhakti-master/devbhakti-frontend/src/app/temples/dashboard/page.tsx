@@ -12,6 +12,7 @@ import {
     ArrowUpRight,
     Video,
     Heart,
+
     IndianRupee,
     Info,
     Shield
