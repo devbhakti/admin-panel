@@ -109,9 +109,8 @@ export default function QrRedirectPage() {
 
     const slug = temple.slug || temple.id;
     
-    // App deep link: devbhakti://temples/[slug]
     const appDeepLink = `${APP_CONFIG.scheme}${APP_CONFIG.deepLinkPath}/${slug}`;
-    const androidIntent = `intent://${APP_CONFIG.deepLinkPath}/${slug}#Intent;package=${APP_CONFIG.androidPackage};scheme=devbhakti;end`;
+    const androidIntent = `intent://${APP_CONFIG.deepLinkPath}/${slug}#Intent;package=${APP_CONFIG.androidPackage};scheme=devbhakti;S.browser_fallback_url=${encodeURIComponent(webUrl)};end`;
 
     // Detect platform
     const userAgent = navigator.userAgent.toLowerCase();
@@ -135,10 +134,8 @@ export default function QrRedirectPage() {
         window.location.replace(webUrl);
       }, 500);
     } else if (isAndroid) {
-      window.location.href = androidIntent;
-      setTimeout(() => {
-        window.location.replace(webUrl);
-      }, 500);
+      // Android intent with browser_fallback_url handles the fallback natively without needing a timeout
+      window.location.replace(androidIntent);
     } else {
       window.location.replace(webUrl);
     }
