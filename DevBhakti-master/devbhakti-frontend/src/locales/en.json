@@ -56,7 +56,27 @@
     "view_sacred_profile": "View Sacred Profile",
     "my_cart": "My Cart",
     "language": "Language",
-    "Donation": "Contribution"
+    "Donation": "Contribution",
+    "mandals": "Mandals",
+    "mandal_login": "Mandal Login"
+  },
+  "mandal_list": {
+    "title": "Browse Sacred Mandals",
+    "subtitle": "Explore and support devotional mandals across India",
+    "search_placeholder": "Search mandals by name, city, or type...",
+    "explore": "Explore",
+    "filter_experience": "Filter Experience",
+    "refine_discovery": "Refine Discovery",
+    "reset_all": "Reset All",
+    "mandal_type": "Mandal Type",
+    "all_types": "All Types",
+    "location": "Location",
+    "all_locations": "All Locations",
+    "showing": "Showing",
+    "mandals": "mandals",
+    "loading": "Loading sacred mandals...",
+    "no_mandals": "No mandals found",
+    "try_adjusting": "Try adjusting your search or filters to find what you're looking for."
   },
   "marketplace": {
     "title": "Sacred Marketplace",

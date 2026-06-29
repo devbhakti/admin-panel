@@ -14,9 +14,10 @@ import TempleRegistrationForm from "./TempleRegistrationForm";
 
 interface TempleLoginModalProps {
     onClose: () => void;
+    loginType?: "temple" | "mandal";
 }
 
-export default function TempleLoginModal({ onClose }: TempleLoginModalProps) {
+export default function TempleLoginModal({ onClose, loginType = "temple" }: TempleLoginModalProps) {
     const router = useRouter();
     const { toast } = useToast();
     const { t: baseT } = useLanguage();
@@ -44,13 +45,15 @@ export default function TempleLoginModal({ onClose }: TempleLoginModalProps) {
         setPhone(value.slice(0, 10));
     };
 
+    const loginRole = loginType === "mandal" ? "MANDAL" : "INSTITUTION";
+
     const handleSendOTP = async (e: React.FormEvent) => {
         e.preventDefault();
         setError("");
         setLoading(true);
         const normalizedPhone = phone.replace(/\D/g, '');
         try {
-            const response = await sendOTP({ phone: normalizedPhone, role: "INSTITUTION" });
+            const response = await sendOTP({ phone: normalizedPhone, role: loginRole });
             setShowOtpInput(true);
             if (response.data?.otp) {
                 setDevOtp(response.data.otp);
@@ -68,7 +71,7 @@ export default function TempleLoginModal({ onClose }: TempleLoginModalProps) {
         setLoading(true);
         const normalizedPhone = phone.replace(/\D/g, '');
         try {
-            const response = await verifyOTP(normalizedPhone, otp, "INSTITUTION");
+            const response = await verifyOTP(normalizedPhone, otp, loginRole);
             const { token, user } = response.data;
 
             localStorage.setItem("token", token);
@@ -80,7 +83,11 @@ export default function TempleLoginModal({ onClose }: TempleLoginModalProps) {
                 variant: 'success',
             });
             onClose();
-            router.push("/temples/dashboard");
+            if (loginType === "mandal") {
+                router.push("/mandals/dashboard");
+            } else {
+                router.push("/temples/dashboard");
+            }
         } catch (error: any) {
             setError(error.response?.data?.message || t('messages.invalid_otp'));
         } finally {
@@ -106,8 +113,12 @@ export default function TempleLoginModal({ onClose }: TempleLoginModalProps) {
                     <div className="mb-4 p-3 bg-[#7b4623]/5 rounded-2xl border border-[#7b4623]/10">
                         <Building2 className="w-10 h-10 text-[#7b4623]" />
                     </div>
-                    <h2 className="text-2xl font-serif font-bold text-slate-900">{t('header.title')}</h2>
-                    <p className="text-sm text-slate-500 mt-1">{t('header.subtitle')}</p>
+                    <h2 className="text-2xl font-serif font-bold text-slate-900">
+                        {loginType === "mandal" ? (t('header.title_mandal') || "Mandal Login") : t('header.title')}
+                    </h2>
+                    <p className="text-sm text-slate-500 mt-1">
+                        {loginType === "mandal" ? (t('header.subtitle_mandal') || "Manage your mandal and events") : t('header.subtitle')}
+                    </p>
                 </div>
 
                 {/* Error Box */}
@@ -203,45 +214,59 @@ export default function TempleLoginModal({ onClose }: TempleLoginModalProps) {
                 )}
 
                 <div className="mt-8 text-center space-y-3">
-                    <button
-                        onClick={() => {
-                            onClose();
-                            router.push("/temples/dashboard/staff-login");
-                        }}
-                        className="text-sm font-bold text-[#7b4623] hover:underline"
-                    >
-                        {t('footer.staff_login')}
-                    </button>
-                    <p className="text-sm text-slate-400">
-                        {t('footer.new_admin')}{" "}
+                    {loginType !== "mandal" && (
+                        <button
+                            onClick={() => {
+                                onClose();
+                                router.push("/temples/dashboard/staff-login");
+                            }}
+                            className="text-sm font-bold text-[#7b4623] hover:underline"
+                        >
+                            {t('footer.staff_login')}
+                        </button>
+                    )}
+                    <div className="flex flex-col items-center gap-2">
+                        <p className="text-slate-500 text-sm font-medium">
+                            {loginType === "mandal" ? (t('no_account_mandal') || "Don't have a registered mandal?") : t('footer.new_admin')}
+                        </p>
                         <button 
                             onClick={() => setShowRegistrationModal(true)}
-                            className="text-[#7b4623] font-bold underline hover:text-[#5d351a] transition-colors"
+                            className="text-[#88542b] font-bold underline hover:text-[#794a05] transition-colors text-sm"
                         >
-                            {t('footer.register')}
+                            {loginType === "mandal" ? (t('register_now_mandal') || "Register Mandal") : t('footer.register')}
                         </button>
-                    </p>
+                    </div>
                 </div>
             </div>
             
-            {/* Registration Modal */}
+            {/* Registration Modal overlay */}
             <AnimatePresence>
                 {showRegistrationModal && (
                     <motion.div
                         initial={{ opacity: 0 }}
                         animate={{ opacity: 1 }}
                         exit={{ opacity: 0 }}
-                        className="fixed inset-0 bg-black/50 backdrop-blur-sm z-50 flex items-center justify-center p-4"
-                        onClick={() => setShowRegistrationModal(false)}
+                        className="fixed inset-0 z-50 flex items-center justify-center p-4 sm:p-6"
                     >
+                        <div className="absolute inset-0 bg-black/60 backdrop-blur-sm" onClick={() => setShowRegistrationModal(false)} />
                         <motion.div
-                            initial={{ opacity: 0, scale: 0.95 }}
-                            animate={{ opacity: 1, scale: 1 }}
-                            exit={{ opacity: 0, scale: 0.95 }}
-                            className="bg-white rounded-[2.5rem] shadow-2xl max-w-4xl w-full max-h-[90vh] overflow-y-auto"
-                            onClick={(e) => e.stopPropagation()}
+                            initial={{ opacity: 0, scale: 0.95, y: 20 }}
+                            animate={{ opacity: 1, scale: 1, y: 0 }}
+                            exit={{ opacity: 0, scale: 0.95, y: 20 }}
+                            transition={{ type: "spring", damping: 25, stiffness: 300 }}
+                            className="relative w-full max-w-4xl z-10"
                         >
-                            <TempleRegistrationForm onClose={() => setShowRegistrationModal(false)} />
+                            {loginType === "mandal" ? (
+                                <div className="bg-white rounded-[2rem] p-8 text-center shadow-xl">
+                                    <h2 className="text-2xl font-bold text-slate-800 mb-4">Mandal Registration</h2>
+                                    <p className="text-slate-600 mb-6">Please use the 'Register Your Mandal' button on the main page to register.</p>
+                                    <Button onClick={() => setShowRegistrationModal(false)}>Close</Button>
+                                </div>
+                            ) : (
+                                <div className="bg-white rounded-[2.5rem] shadow-2xl max-w-4xl w-full max-h-[90vh] overflow-y-auto">
+                                    <TempleRegistrationForm onClose={() => setShowRegistrationModal(false)} />
+                                </div>
+                            )}
                         </motion.div>
                     </motion.div>
                 )}

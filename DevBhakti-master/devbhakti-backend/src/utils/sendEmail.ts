@@ -12,6 +12,10 @@ const transporter = nodemailer.createTransport({
 
 export const sendEmail = async (to: string, subject: string, text: string, html?: string, attachments: any[] = []) => {
     try {
+        if (!process.env.MAIL_USERNAME || !process.env.MAIL_PASSWORD) {
+            throw new Error('SMTP credentials not configured. Check MAIL_USERNAME and MAIL_PASSWORD in .env');
+        }
+
         const info = await transporter.sendMail({
             from: `"${process.env.MAIL_FROM_NAME || 'DevBhakti'}" <${process.env.MAIL_FROM_ADDRESS || process.env.MAIL_USERNAME}>`,
             to,
@@ -22,8 +26,8 @@ export const sendEmail = async (to: string, subject: string, text: string, html?
         });
         console.log('Message sent: %s', info.messageId);
         return { success: true, messageId: info.messageId };
-    } catch (error) {
+    } catch (error: any) {
         console.error('Error sending email:', error);
-        return { success: false, error };
+        return { success: false, error: error.message || 'Unknown email error' };
     }
 };

@@ -245,15 +245,23 @@ export const sendTempleDonationEmail = async (req: Request, res: Response) => {
         const emailResult = await sendEmail(
             donation.donorEmail,
             `Dev Bhakti - Donation Receipt (${donation.displayId || donation.id})`,
-            `Thank you for your donation of ₹${donation.amount}. Your receipt is attached.`,
-            html
+            `Thank you for your donation of ₹${donation.amount}.`,
+            html,
+            [
+                {
+                    filename: `Donation_Receipt_${donation.displayId || donation.id}.html`,
+                    content: Buffer.from(html, 'utf-8'),
+                    contentType: 'text/html'
+                }
+            ]
         );
 
         if (emailResult.success) {
             return res.status(200).json({ success: true, message: "Receipt sent successfully" });
         }
 
-        return res.status(500).json({ success: false, message: "Failed to send email" });
+        console.error("Email send failed:", emailResult.error);
+        return res.status(500).json({ success: false, message: "Failed to send email", error: emailResult.error });
     } catch (error: any) {
         console.error("Send Temple Donation Email Error:", error);
         res.status(500).json({ success: false, message: error.message });

@@ -7,10 +7,10 @@ export const addFavorite = async (req: Request, res: Response) => {
     try {
         const user = (req as any).user;
 
-        if (!user || user.role !== 'DEVOTEE') {
+        if (!user) {
             return res.status(403).json({
                 success: false,
-                message: 'Please login as devotee to favorite this'
+                message: 'Please login to favorite this'
             });
         }
 
@@ -59,10 +59,10 @@ export const removeFavorite = async (req: Request, res: Response) => {
     try {
         const user = (req as any).user;
 
-        if (!user || user.role !== 'DEVOTEE') {
+        if (!user) {
             return res.status(403).json({
                 success: false,
-                message: 'Please login as devotee to remove this'
+                message: 'Please login to remove this'
             });
         }
 
@@ -112,10 +112,10 @@ export const getFavorites = async (req: Request, res: Response) => {
     try {
         const user = (req as any).user;
 
-        if (!user || user.role !== 'DEVOTEE') {
+        if (!user) {
             return res.status(403).json({
                 success: false,
-                message: 'Please login as devotee to view favorites'
+                message: 'Please login to view favorites'
             });
         }
 

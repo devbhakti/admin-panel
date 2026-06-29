@@ -58,6 +58,11 @@ export function MandalsList() {
   const { language, t } = useLanguage();
   const [isSearchFocused, setIsSearchFocused] = useState(false);
   const [suggestions, setSuggestions] = useState<any[]>([]);
+  const [mounted, setMounted] = useState(false);
+
+  useEffect(() => {
+    setMounted(true);
+  }, []);
 
   // Load user and favorites
   useEffect(() => {
@@ -203,7 +208,7 @@ export function MandalsList() {
     if (query.length < 2) return [];
     const matches: any[] = [];
     allMandals.forEach((mandal) => {
-      const name = getLocalized(mandal, "name") || "";
+      const name = getLocalized(mandal, "name", language) || "";
       if (name.toLowerCase().includes(query.toLowerCase())) {
         matches.push({
           title: name,
@@ -262,7 +267,7 @@ export function MandalsList() {
                 transition={{ duration: 0.5, delay: 0.1 }}
                 className="text-4xl md:text-5xl lg:text-7xl font-serif font-bold text-foreground mb-6 leading-tight"
               >
-                Browse Sacred Mandals
+                {mounted ? t('mandal_list.title') : "Browse Sacred Mandals"}
               </motion.h1>
               <motion.p
                 initial={{ opacity: 0, y: 20 }}
@@ -270,7 +275,7 @@ export function MandalsList() {
                 transition={{ delay: 0.1 }}
                 className="text-lg text-slate-800 mb-10"
               >
-                Explore and support devotional mandals across India
+                {mounted ? t('mandal_list.subtitle') : "Explore and support devotional mandals across India"}
               </motion.p>
 
               {/* Premium Search Bar */}
@@ -286,7 +291,7 @@ export function MandalsList() {
                     <Search className="absolute left-5 h-5 w-5 text-primary/50" />
                     <input
                       type="text"
-                      placeholder="Search mandals by name, city, or type..."
+                      placeholder={mounted ? t('mandal_list.search_placeholder') : "Search mandals by name, city, or type..."}
                       value={searchInput}
                       onChange={(e) => setSearchInput(e.target.value)}
                       onFocus={() => setIsSearchFocused(true)}
@@ -305,7 +310,7 @@ export function MandalsList() {
                       }}
                       className="absolute right-2 h-12 px-8 rounded-xl bg-primary hover:bg-primary/90 text-white hidden sm:flex font-bold"
                     >
-                      Explore
+                      {mounted ? t('mandal_list.explore') : "Explore"}
                     </Button>
                   </div>
 
@@ -351,10 +356,10 @@ export function MandalsList() {
                   </div>
                   <div className="flex flex-col">
                     <span className="text-[9px] uppercase tracking-[0.1em] font-medium text-amber-200/80 leading-snug">
-                      Filter Experience
+                      {mounted ? t('mandal_list.filter_experience') : "Filter Experience"}
                     </span>
                     <span className="text-lg font-serif font-bold text-white leading-none mt-2">
-                      Refine Discovery
+                      {mounted ? t('mandal_list.refine_discovery') : "Refine Discovery"}
                     </span>
                   </div>
                 </div>
@@ -370,7 +375,7 @@ export function MandalsList() {
                     }}
                     className="flex items-center gap-1.5 text-[10px] font-bold text-amber-200 hover:text-white transition-all bg-black/20 px-3 py-1.5 rounded-full border border-amber-500/30"
                   >
-                    Reset All
+                    {mounted ? t('mandal_list.reset_all') : "Reset All"}
                   </motion.button>
                 )}
               </div>
@@ -392,10 +397,10 @@ export function MandalsList() {
                           </div>
                           <div className="flex flex-col items-start leading-tight min-w-0">
                             <span className="text-[9px] uppercase font-semibold text-white/50 tracking-wider">
-                              Mandal Type
+                              {mounted ? t('mandal_list.mandal_type') : "Mandal Type"}
                             </span>
                             <span className="truncate text-white text-xs font-semibold mt-0.5">
-                              {selectedCategory === "All" ? "All Types" : selectedCategory}
+                              {selectedCategory === "All" ? (mounted ? t('mandal_list.all_types') : "All Types") : selectedCategory}
                             </span>
                           </div>
                         </div>
@@ -448,10 +453,10 @@ export function MandalsList() {
                           </div>
                           <div className="flex flex-col items-start leading-tight min-w-0">
                             <span className="text-[9px] uppercase font-semibold text-white/50 tracking-wider">
-                              Location
+                              {mounted ? t('mandal_list.location') : "Location"}
                             </span>
                             <span className="truncate text-white text-xs font-semibold mt-0.5">
-                              {selectedLocation === "All" ? "All Locations" : selectedLocation}
+                              {selectedLocation === "All" ? (mounted ? t('mandal_list.all_locations') : "All Locations") : selectedLocation}
                             </span>
                           </div>
                         </div>
@@ -538,7 +543,7 @@ export function MandalsList() {
           <div className="container mx-auto px-4">
             <div className="flex justify-between items-center mb-4">
               <p className="text-foreground">
-                Showing <span className="font-semibold">{filteredMandals.length}</span> mandals
+                {mounted ? t('mandal_list.showing') : "Showing"} <span className="font-semibold">{filteredMandals.length}</span> {mounted ? t('mandal_list.mandals') : "mandals"}
               </p>
             </div>
 
@@ -555,7 +560,7 @@ export function MandalsList() {
                         <div className="relative aspect-[4/3] overflow-hidden">
                           <img
                             src={getFullImageUrl(mandal.image)}
-                            alt={getLocalized(mandal, "name")}
+                            alt={getLocalized(mandal, "name", language)}
                             className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-500"
                             onError={(e) => {
                               (e.target as any).src = "https://via.placeholder.com/400x300?text=Mandal";
@@ -578,10 +583,10 @@ export function MandalsList() {
                         </div>
                         <CardContent className="p-5">
                           <h3 className="text-xl font-semibold text-foreground mb-2 group-hover:text-primary transition-colors">
-                            {getLocalized(mandal, "name")}
+                            {getLocalized(mandal, "name", language)}
                           </h3>
                           <p className="text-sm text-muted-foreground mb-3 line-clamp-2">
-                            {stripHtml(getLocalized(mandal, "description"))}
+                            {stripHtml(getLocalized(mandal, "description", language))}
                           </p>
 
                           <div className="flex items-center gap-2 text-foreground mb-3">
@@ -629,9 +634,9 @@ export function MandalsList() {
                   <div className="w-20 h-20 bg-muted/30 rounded-full flex items-center justify-center mx-auto mb-6">
                     <Search className="w-10 h-10 text-muted-foreground/30" />
                   </div>
-                  <h3 className="text-xl font-serif text-foreground mb-2">No mandals found</h3>
+                  <h3 className="text-xl font-serif text-foreground mb-2">{mounted ? t('mandal_list.no_mandals') : "No mandals found"}</h3>
                   <p className="text-muted-foreground mb-8">
-                    Try adjusting your search criteria
+                    {mounted ? t('mandal_list.try_adjusting') : "Try adjusting your search criteria"}
                   </p>
 
                   {/* Suggestions */}

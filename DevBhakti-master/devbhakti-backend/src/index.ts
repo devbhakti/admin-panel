@@ -1,6 +1,8 @@
+import dotenv from 'dotenv';
+dotenv.config();
+
 import express, { Request, Response } from 'express';
 import cors from 'cors';
-import dotenv from 'dotenv';
 import path from 'path';
 import adminAuthRoutes from './routes/admin/authRoutes';
 import adminTempleRoutes from './routes/admin/templeRoutes';
@@ -64,8 +66,6 @@ import mandalAdminEventRoutes from './routes/mandal_admin/eventRoutes';
 import mandalAdminDonationRoutes from './routes/mandal_admin/donationRoutes';
 import mandalAdminFinanceRoutes from './routes/mandal_admin/financeRoutes';
 
-
-dotenv.config();
 
 const app = express();
 const PORT = process.env.PORT || 5000;

@@ -37,6 +37,7 @@ const Navbar: React.FC<NavbarProps> = ({ variant = "default", isSolid = false })
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
   const [isSearchOpen, setIsSearchOpen] = useState(false);
   const [showTempleLoginModal, setShowTempleLoginModal] = useState(false);
+  const [loginType, setLoginType] = useState<"temple" | "mandal">("temple");
   const [isCartOpen, setIsCartOpen] = useState(false);
   const [user, setUser] = useState<any>(null);
   const [mounted, setMounted] = useState(false);
@@ -44,8 +45,9 @@ const Navbar: React.FC<NavbarProps> = ({ variant = "default", isSolid = false })
   const router = useRouter();
   const pathname = usePathname();
 
-  // Check if we're on the temple registration page
+  // Check if we're on the temple or mandal registration page
   const isTempleRegistrationPage = pathname === '/temples/register';
+  const isMandalRegistrationPage = pathname === '/register-mandal';
   const { cartItems, itemCount, updateQuantity, removeFromCart } = useCart();
   const { language, setLanguage, t } = useLanguage();
 
@@ -246,14 +248,24 @@ const Navbar: React.FC<NavbarProps> = ({ variant = "default", isSolid = false })
                   <Search className="w-5 h-5 text-primary" />
                 </Button>
               )}
-
-              {variant === "default" ? null : (
+                {/* Login Button for Institution (Temple/Mandal) */}
+              {!isTempleRegistrationPage && !isMandalRegistrationPage && (
                 <Button
                   variant="outline"
-                  onClick={() => setShowTempleLoginModal(true)}
+                  onClick={() => { setLoginType("temple"); setShowTempleLoginModal(true); }}
                   className="flex bg-[#88542B] border-[#c2a087] text-white hover:bg-[#CA9E52] hover:text-white rounded-full px-4 md:px-6 h-9 mr-1 md:mr-2 text-xs md:text-sm font-medium transition-all hover:border-[#864c20]"
                 >
                   {mounted ? t('navbar.temple_login') : "Temple Login"}
+                </Button>
+              )}
+
+              {isMandalRegistrationPage && (
+                <Button
+                  variant="outline"
+                  onClick={() => { setLoginType("mandal"); setShowTempleLoginModal(true); }}
+                  className="flex bg-[#88542B] border-[#c2a087] text-white hover:bg-[#CA9E52] hover:text-white rounded-full px-4 md:px-6 h-9 mr-1 md:mr-2 text-xs md:text-sm font-medium transition-all hover:border-[#864c20]"
+                >
+                  {mounted ? t('navbar.mandal_login') || "Mandal Login" : "Mandal Login"}
                 </Button>
               )}
 
@@ -463,7 +475,10 @@ const Navbar: React.FC<NavbarProps> = ({ variant = "default", isSolid = false })
               exit={{ opacity: 0, scale: 0.9, y: 20 }}
               className="relative z-10 w-full max-w-md"
             >
-              <TempleLoginModal onClose={() => setShowTempleLoginModal(false)} />
+              <TempleLoginModal 
+          onClose={() => setShowTempleLoginModal(false)} 
+          loginType={loginType}
+        />
             </motion.div>
           </div>
         )}
