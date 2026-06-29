@@ -233,7 +233,7 @@ function BookingForm() {
   // We've updated the backend to return temple-specific poojas if templeId is provided
   useEffect(() => {
     const loadTemplePoojas = async () => {
-      if (!selectedTemple) return;
+      if (!selectedTemple || loading) return;
 
       try {
         const response = await fetch(`${API_URL}/temples/poojas?templeId=${selectedTemple}`);
@@ -250,7 +250,7 @@ function BookingForm() {
     };
 
     loadTemplePoojas();
-  }, [selectedTemple]);
+  }, [selectedTemple, loading]);
 
   // ID Resolution: When temple changes or poojas are loaded, sync the selected pooja with its temple-specific version
   useEffect(() => {
