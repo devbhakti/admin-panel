@@ -21,6 +21,7 @@ import {
   Languages,
 } from "lucide-react";
 import { createMandalAdmin, updateMandalAdmin, fetchMandalByIdAdmin } from "@/api/adminController";
+import { RichTextEditor } from "@/components/ui/rich-text-editor";
 
 function getJsonVal(val: any, lang: string) {
   if (!val) return "";
@@ -41,6 +42,20 @@ const LANGUAGES = [
   { code: "mr", label: "मराठी", flag: "🇮🇳" },
 ];
 
+// ✅ Defined OUTSIDE the main component so React never remounts these on re-render
+const SectionTitle = ({ children, icon }: { children: React.ReactNode; icon: React.ReactNode }) => (
+  <h3 className="text-lg font-semibold text-foreground mb-4 pb-2 border-b border-border flex items-center gap-2">
+    <span className="text-primary">{icon}</span>
+    {children}
+  </h3>
+);
+
+const SectionWrapper = ({ children, className = "" }: { children: React.ReactNode; className?: string }) => (
+  <div className={`bg-card border border-border rounded-xl p-6 ${className}`}>
+    {children}
+  </div>
+);
+
 export default function MandalFormPage({ mandalId }: MandalFormProps) {
   const router = useRouter();
   const params = useParams();
@@ -52,6 +67,8 @@ export default function MandalFormPage({ mandalId }: MandalFormProps) {
   const [saving, setSaving] = useState(false);
   const [error, setError] = useState("");
   const [success, setSuccess] = useState(false);
+  const [imageError, setImageError] = useState("");
+  const [contactError, setContactError] = useState("");
 
   // Image state
   const [imageFile, setImageFile] = useState<File | null>(null);
@@ -120,7 +137,23 @@ export default function MandalFormPage({ mandalId }: MandalFormProps) {
   const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement | HTMLSelectElement>) => {
     const { name, value, type } = e.target;
     const checked = (e.target as HTMLInputElement).checked;
+
+    // Contact number: only digits, max 10
+    if (name === "contactNumber") {
+      const digitsOnly = value.replace(/\D/g, "").slice(0, 10);
+      setContactError(digitsOnly.length > 0 && digitsOnly.length < 10 ? "Contact number must be exactly 10 digits" : "");
+      setForm(prev => ({ ...prev, contactNumber: digitsOnly }));
+      return;
+    }
+
     setForm(prev => ({ ...prev, [name]: type === "checkbox" ? checked : value }));
+  };
+
+  // Block non-digit keys in contact number field
+  const handleContactKeyDown = (e: React.KeyboardEvent<HTMLInputElement>) => {
+    const allowed = ["Backspace", "Delete", "Tab", "ArrowLeft", "ArrowRight", "Home", "End"];
+    if (allowed.includes(e.key)) return;
+    if (!/^\d$/.test(e.key)) e.preventDefault();
   };
 
   const handleImageChange = (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -145,8 +178,28 @@ export default function MandalFormPage({ mandalId }: MandalFormProps) {
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    setSaving(true);
     setError("");
+    setImageError("");
+    setContactError("");
+
+    // ── Validation ──
+    let hasError = false;
+
+    // Image required for new mandal
+    if (!isEdit && !imageFile) {
+      setImageError("Main image is required");
+      hasError = true;
+    }
+
+    // Contact number: must be exactly 10 digits
+    if (form.contactNumber && form.contactNumber.length !== 10) {
+      setContactError("Contact number must be exactly 10 digits");
+      hasError = true;
+    }
+
+    if (hasError) return;
+
+    setSaving(true);
 
     const fd = new FormData();
     Object.entries(form).forEach(([k, v]) => fd.append(k, String(v)));
@@ -177,17 +230,6 @@ export default function MandalFormPage({ mandalId }: MandalFormProps) {
   const InputClass = "w-full px-4 py-2.5 text-sm rounded-lg border border-input bg-background focus:outline-none focus:ring-2 focus:ring-primary/30 transition-all";
   const TextAreaClass = `${InputClass} resize-none`;
   const LabelClass = "block text-sm font-medium text-foreground mb-1.5";
-  const SectionTitle = ({ children, icon }: any) => (
-    <h3 className="text-lg font-semibold text-foreground mb-4 pb-2 border-b border-border flex items-center gap-2">
-      <span className="text-primary">{icon}</span>
-      {children}
-    </h3>
-  );
-  const SectionWrapper = ({ children, className = "" }: any) => (
-    <div className={`bg-card border border-border rounded-xl p-6 ${className}`}>
-      {children}
-    </div>
-  );
 
   // Get current language field prefix
   const getLangField = (field: string) => {
@@ -281,13 +323,14 @@ export default function MandalFormPage({ mandalId }: MandalFormProps) {
               <label className={LabelClass}>
                 Description ({activeLang === "en" ? "English" : activeLang === "hi" ? "Hindi" : "Marathi"})
               </label>
-              <textarea
-                name={getLangField("description")}
+              <RichTextEditor
                 value={(form as any)[getLangField("description")]}
-                onChange={handleChange}
-                rows={4}
-                className={TextAreaClass}
-                placeholder={`Description in ${activeLang}…`}
+                onChange={(html) =>
+                  setForm(prev => ({ ...prev, [getLangField("description")]: html }))
+                }
+                placeholder={`Description in ${activeLang === "en" ? "English" : activeLang === "hi" ? "Hindi" : "Marathi"}…`}
+                minHeight="150px"
+                maxLength={5000}
               />
             </div>
           </div>
@@ -396,16 +439,34 @@ export default function MandalFormPage({ mandalId }: MandalFormProps) {
 
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
             <div>
-              <label className={LabelClass}>Contact Number *</label>
+              <label className={LabelClass}>
+                Contact Number *
+                <span className="ml-2 text-xs font-normal text-muted-foreground">(10 digits only)</span>
+              </label>
               <input
                 required
                 type="text"
                 name="contactNumber"
                 value={form.contactNumber}
                 onChange={handleChange}
-                className={InputClass}
-                placeholder="+91 XXXXX XXXXX"
+                onKeyDown={handleContactKeyDown}
+                maxLength={10}
+                inputMode="numeric"
+                className={`${InputClass} ${contactError ? "border-red-500 focus:ring-red-500/30" : ""}`}
+                placeholder="10-digit mobile number"
               />
+              <div className="flex items-center justify-between mt-1">
+                {contactError ? (
+                  <p className="text-xs text-red-600 flex items-center gap-1">
+                    <AlertCircle className="w-3 h-3" /> {contactError}
+                  </p>
+                ) : (
+                  <span />
+                )}
+                <span className={`text-xs ${form.contactNumber.length === 10 ? "text-green-600" : "text-muted-foreground"}`}>
+                  {form.contactNumber.length}/10
+                </span>
+              </div>
             </div>
             <div>
               <label className={LabelClass}>Email</label>
@@ -492,11 +553,18 @@ export default function MandalFormPage({ mandalId }: MandalFormProps) {
 
           {/* Main Image */}
           <div>
-            <label className={LabelClass}>Main Image</label>
-            <input ref={imageInputRef} type="file" accept="image/*" onChange={handleImageChange} className="hidden" />
+            <label className={LabelClass}>
+              Main Image
+              {!isEdit && (
+                <span className="ml-2 text-xs font-semibold text-red-600 uppercase tracking-wide">* Required</span>
+              )}
+            </label>
+            <input ref={imageInputRef} type="file" accept="image/*" onChange={(e) => { handleImageChange(e); setImageError(""); }} className="hidden" />
             <div
               onClick={() => imageInputRef.current?.click()}
-              className="relative cursor-pointer group w-48 h-48 rounded-xl border-2 border-dashed border-border hover:border-primary transition-colors flex items-center justify-center bg-muted/30 overflow-hidden"
+              className={`relative cursor-pointer group w-48 h-48 rounded-xl border-2 border-dashed transition-colors flex items-center justify-center bg-muted/30 overflow-hidden ${
+                imageError ? "border-red-500 bg-red-50" : "border-border hover:border-primary"
+              }`}
             >
               {(imagePreview || existingImage) ? (
                 <img
@@ -505,15 +573,22 @@ export default function MandalFormPage({ mandalId }: MandalFormProps) {
                   className="w-full h-full object-cover"
                 />
               ) : (
-                <div className="text-center">
-                  <Upload className="w-8 h-8 mx-auto text-muted-foreground mb-2" />
-                  <span className="text-xs text-muted-foreground">Click to upload</span>
+                <div className="text-center px-2">
+                  <Upload className={`w-8 h-8 mx-auto mb-2 ${imageError ? "text-red-400" : "text-muted-foreground"}`} />
+                  <span className={`text-xs ${imageError ? "text-red-500 font-medium" : "text-muted-foreground"}`}>
+                    {imageError ? "Image is required" : "Click to upload"}
+                  </span>
                 </div>
               )}
               <div className="absolute inset-0 bg-black/40 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center">
                 <Upload className="w-6 h-6 text-white" />
               </div>
             </div>
+            {imageError && (
+              <p className="mt-1.5 text-xs text-red-600 flex items-center gap-1">
+                <AlertCircle className="w-3 h-3" /> {imageError}
+              </p>
+            )}
           </div>
 
           {/* Banner Images */}

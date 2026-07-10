@@ -349,7 +349,7 @@ export default function LiveDarshanClient() {
             {isPlaying && selectedVideoInfo.kind !== "unknown" ? (
               <UniversalVideoPlayer
                 url={selectedTemple.liveUrl || selectedTemple.channelId}
-                className="w-full h-full object-cover"
+                className="w-full h-full object-contain bg-black"
                 autoPlay
                 muted
                 controls

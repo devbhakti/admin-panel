@@ -1328,3 +1328,31 @@ export const toggleShowPhone = async (req: Request, res: Response) => {
     res.status(500).json({ success: false, message: error.message || 'Failed to update phone visibility' });
   }
 };
+
+export const toggleShowWebsite = async (req: Request, res: Response) => {
+  try {
+    const { id } = req.params;
+    const { showWebsite } = req.body;
+
+    const user = await prisma.user.update({
+      where: { id: String(id) },
+      data: {
+        temple: {
+          update: {
+            showWebsite: Boolean(showWebsite)
+          }
+        }
+      },
+      include: { temple: true }
+    });
+
+    if (!user.temple) {
+      return res.status(404).json({ success: false, message: "Temple profile not found for this user" });
+    }
+
+    res.json({ success: true, message: "Website visibility updated successfully", data: user.temple });
+  } catch (error: any) {
+    console.error('Toggle showWebsite error:', error);
+    res.status(500).json({ success: false, message: error.message || 'Failed to update website visibility' });
+  }
+};

@@ -1067,11 +1067,24 @@ export function TempleForm({
                             {newNewsCuttings.length > 0 && (
                                 <div className="grid grid-cols-2 sm:grid-cols-3 gap-3">
                                     {newNewsCuttings.map((nc, i) => (
-                                        <div key={i} className="relative group rounded-xl border border-orange-200 overflow-hidden bg-white shadow-sm">
-                                            <div className="aspect-[4/3] overflow-hidden">
+                                        <div key={i} className="relative group rounded-xl border border-orange-200 overflow-hidden bg-white shadow-sm flex flex-col">
+                                            <div className="relative aspect-[4/3] overflow-hidden">
                                                 <img src={nc.preview} alt={`New cutting ${i + 1}`} className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300" />
+                                                <div className="absolute bottom-0 left-0 right-0 bg-gradient-to-t from-black/60 pt-6 pb-1 px-2">
+                                                    <span className="text-[10px] bg-orange-500 text-white px-1.5 py-0.5 rounded-full font-bold shadow-sm">New</span>
+                                                </div>
+                                                <button
+                                                    type="button"
+                                                    onClick={() => {
+                                                        URL.revokeObjectURL(nc.preview);
+                                                        setNewNewsCuttings(prev => prev.filter((_, j) => j !== i));
+                                                    }}
+                                                    className="absolute top-1.5 right-1.5 bg-black/70 rounded-full p-1 opacity-0 group-hover:opacity-100 transition-opacity"
+                                                >
+                                                    <X className="w-3 h-3 text-white" />
+                                                </button>
                                             </div>
-                                            <div className="px-2 py-1.5 space-y-1">
+                                            <div className="p-2 bg-slate-50 border-t border-orange-100 flex-1 flex items-end">
                                                 <input
                                                     type="url"
                                                     placeholder="https://article-link..."
@@ -1081,21 +1094,8 @@ export function TempleForm({
                                                         updated[i] = { ...updated[i], link: e.target.value };
                                                         setNewNewsCuttings(updated);
                                                     }}
-                                                    className="w-full text-[10px] border border-slate-200 rounded px-1.5 py-1 font-mono focus:outline-none focus:border-[#7c4624]"
+                                                    className="w-full text-xs border border-slate-200 rounded px-2 py-1.5 font-mono focus:outline-none focus:border-orange-400 focus:ring-1 focus:ring-orange-400 transition-shadow bg-white"
                                                 />
-                                            </div>
-                                            <button
-                                                type="button"
-                                                onClick={() => {
-                                                    URL.revokeObjectURL(nc.preview);
-                                                    setNewNewsCuttings(prev => prev.filter((_, j) => j !== i));
-                                                }}
-                                                className="absolute top-1.5 right-1.5 bg-black/70 rounded-full p-1 opacity-0 group-hover:opacity-100 transition-opacity"
-                                            >
-                                                <X className="w-3 h-3 text-white" />
-                                            </button>
-                                            <div className="absolute bottom-0 left-0 right-0 bg-gradient-to-t from-black/40 px-2 py-1">
-                                                <span className="text-[10px] bg-orange-500 text-white px-1.5 py-0.5 rounded-full font-bold">New</span>
                                             </div>
                                         </div>
                                     ))}

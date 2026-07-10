@@ -140,7 +140,7 @@ export default function EditProductPage() {
     setIsLoadingVendors(true);
     try {
       const [templesData, sellersData] = await Promise.all([
-        fetchAllTemplesAdmin(),
+        fetchAllTemplesAdmin({ isVerified: true, isActive: true }),
         fetchAllSellersAdmin(),
       ]);
       const formattedTemples = (templesData || [])

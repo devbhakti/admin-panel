@@ -50,6 +50,8 @@ const logToFile = (message: string) => {
     fs.appendFileSync(logPath, `[${timestamp}] ${message}\n`);
 };
 
+const prismaAny = prisma as any;
+
 
 
 
@@ -106,6 +108,77 @@ export const checkPhoneOnly = async (req: Request, res: Response) => {
         console.error('Error in checkPhoneOnly:', error);
         res.status(500).json({ success: false, message: 'Internal server error' });
     }
+};
+
+const getPhoneVariants = (normalizedPhone: string) => {
+    const digits = normalizedPhone.replace(/\D/g, '');
+    const normalized = normalizedPhone.startsWith('+') ? normalizedPhone : `+${digits}`;
+    const variants = new Set<string>([normalized, digits]);
+
+    if (digits.startsWith('91') && digits.length === 12) {
+        const withoutCountry = digits.substring(2);
+        variants.add(withoutCountry);
+        variants.add('0' + withoutCountry);
+        variants.add('91' + withoutCountry);
+        variants.add('+91' + withoutCountry);
+    } else if (digits.length === 10) {
+        variants.add('91' + digits);
+        variants.add('+91' + digits);
+        variants.add('0' + digits);
+    }
+
+    return Array.from(variants);
+};
+
+const createOtpVerification = async (data: {
+    phone: string;
+    role: string;
+    otp: string;
+    otpExpires: Date;
+    isRegisterFlow: boolean;
+    name?: string;
+    email?: string;
+}) => {
+    // @ts-ignore: otpVerification model may not be present in generated Prisma client yet
+    await prismaAny['otpVerification'].updateMany({
+        where: {
+            phone: data.phone,
+            role: data.role as any,
+            isUsed: false
+        },
+        data: { isUsed: true }
+    });
+
+    // @ts-ignore: otpVerification model may not be present in generated Prisma client yet
+    return prismaAny['otpVerification'].create({
+        data: {
+            phone: data.phone,
+            role: data.role as any,
+            otp: data.otp,
+            otpExpires: data.otpExpires,
+            isRegisterFlow: data.isRegisterFlow,
+            name: data.name,
+            email: data.email
+        }
+    });
+};
+
+const linkDonationsToUser = async (userId: string, phone: string, email?: string | null) => {
+    const variants = getPhoneVariants(phone);
+    const orConditions: any[] = [
+        { donorPhone: { in: variants } }
+    ];
+    if (email) {
+        orConditions.push({ donorEmail: email.toLowerCase().trim() });
+    }
+
+    await prisma.donation.updateMany({
+        where: {
+            userId: null,
+            OR: orConditions
+        },
+        data: { userId }
+    });
 };
 
 export const checkSellerPhone = async (req: Request, res: Response) => {
@@ -266,8 +339,6 @@ export const sendOTP = async (req: Request, res: Response) => {
             where: { phone: normalizedPhone, role: checkRole as any }
         });
 
-        let user;
-
         if (existingUser) {
             // Same role found — if registering and already verified → tell them to login
             if (isRegisterFlow && existingUser.isVerified) {
@@ -277,19 +348,33 @@ export const sendOTP = async (req: Request, res: Response) => {
                 });
             }
 
-            // Proceed — update OTP
-            user = existingUser;
+            // Proceed — update OTP on the existing user for backward compatibility
             await prisma.user.update({
-                where: { id: user.id },
+                where: { id: existingUser.id },
                 data: { otp, otpExpires }
             });
         } else {
             // No user with this phone + role found
             if (!isRegisterFlow) {
-                return res.status(404).json({
-                    success: false,
-                    message: 'This number is not registered with us. Please register to continue.'
+                // Check if this number exists in the Lead table
+                const phoneVariants = getPhoneVariants(normalizedPhone);
+                const existingLead = await prisma.lead.findFirst({
+                    where: { phone: { in: phoneVariants } }
                 });
+
+                if (existingLead) {
+                    return res.status(404).json({
+                        success: false,
+                        isLead: true,
+                        message: 'Registration incomplete. Please complete your temple registration.'
+                    });
+                } else {
+                    return res.status(404).json({
+                        success: false,
+                        isLead: false,
+                        message: 'This number is not registered with us. Please register to continue.'
+                    });
+                }
             }
 
             // Check if email is already taken for THIS ROLE specifically
@@ -308,39 +393,17 @@ export const sendOTP = async (req: Request, res: Response) => {
                     });
                 }
             }
-
-            // Create user
-            const prefix = checkRole === 'INSTITUTION' ? 'TAID' : 'UID';
-            const displayId = await generateCustomId(prefix);
-
-            user = await prisma.user.create({
-                data: {
-                    displayId,
-                    phone: normalizedPhone,
-                    name: name || 'Devotee',
-                    email: email ? email.toLowerCase().trim() : null,
-                    role: checkRole as any,
-                    otp,
-                    otpExpires,
-                    isVerified: false
-                }
-            });
-
-            // Notify Admins
-            try {
-                const { notifyAdmins } = require("../../services/firebaseService");
-                await notifyAdmins({
-                    title: 'New User Registration 👤',
-                    body: `A new ${checkRole} (${normalizedPhone}) has registered.`,
-                    data: {
-                        link: '/admin/users',
-                        type: 'NEW_USER_REGISTRATION'
-                    }
-                });
-            } catch (notifyErr) {
-                console.error("Failed to notify admins for new user:", notifyErr);
-            }
         }
+
+        await createOtpVerification({
+            phone: normalizedPhone,
+            role: checkRole,
+            otp,
+            otpExpires,
+            isRegisterFlow,
+            name: name ? name.trim() : undefined,
+            email: email ? email.toLowerCase().trim() : undefined
+        });
 
         // Skip actual SMS/WA sending for the static test number
         if (normalizedPhone !== '+919399805327') {
@@ -427,70 +490,99 @@ export const verifyOTP = async (req: Request, res: Response) => {
         console.log('Role from request:', checkRole);
         console.log('OTP from request:', otp, typeof otp);
 
-        const user = await prisma.user.findFirst({
+        // @ts-ignore: otpVerification model may not be present in generated Prisma client yet
+        let otpVerification: any = await prismaAny['otpVerification'].findFirst({
+            where: {
+                phone: normalizedPhone,
+                role: checkRole as any,
+                otp: String(otp),
+                isUsed: false,
+                otpExpires: { gt: new Date() }
+            },
+            orderBy: { createdAt: 'desc' }
+        });
+
+        let user = await prisma.user.findFirst({
             where: {
                 phone: normalizedPhone,
                 role: checkRole as any
             }
         });
 
-        if (!user) {
-            console.log('User not found in DB');
-            return res.status(404).json({ success: false, message: 'User not found' });
-        }
-
-        console.log('User from DB:', {
-            phone: user.phone,
-            otp: user.otp,
-            typeof_otp: typeof user.otp,
-            otpExpires: user.otpExpires,
-            now: new Date()
-        });
-
-        // Check if OTP matches and is not expired
-        const isOtpMatch = String(user.otp) === String(otp);
-        const hasExpiry = !!user.otpExpires;
-        const isNotExpired = user.otpExpires ? user.otpExpires > new Date() : false;
-
-        console.log('Comparison results:', { isOtpMatch, hasExpiry, isNotExpired });
-
-        if (!isOtpMatch) {
-            return res.status(400).json({ success: false, message: 'Invalid OTP' });
-        }
-
-        if (!hasExpiry || !isNotExpired) {
-            return res.status(400).json({ success: false, message: 'OTP has expired' });
-        }
-
-        // Check for Admin Approval if role is INSTITUTION, SELLER, or MANDAL
-        if ((user.role === 'INSTITUTION' || user.role === 'SELLER' || user.role === 'MANDAL') && !user.isVerified) {
-            // Bypass verification for test number
-            if (normalizedPhone !== '+919399805327') {
-                return res.status(403).json({
-                    success: false,
-                    message: 'Your account is inactive or pending approval. Please contact admin.'
-                });
+        // Legacy fallback for old otp storage on user record
+        if (!otpVerification && user) {
+            const isOtpMatch = String(user.otp) === String(otp);
+            const isNotExpired = user.otpExpires ? user.otpExpires > new Date() : false;
+            if (isOtpMatch && isNotExpired) {
+                otpVerification = undefined as any; // allow legacy path
             }
         }
 
-        // Mark DEVOTEE as verified (INSTITUTION is verified by Admin)
-        const updateData: any = {
-            otp: null,
-            otpExpires: null
-        };
-
-        if (user.role === 'DEVOTEE') {
-            updateData.isVerified = true;
+        if (!otpVerification && !user) {
+            return res.status(400).json({ success: false, message: 'Invalid OTP or registration session expired' });
         }
 
-        const updatedUser = await prisma.user.update({
-            where: { id: user.id },
-            data: updateData
-        });
+        const isRegisterFlow = otpVerification ? otpVerification.isRegisterFlow : false;
 
-        // Generate JWT
+        if (!user && !isRegisterFlow) {
+            return res.status(404).json({ success: false, message: 'User not found' });
+        }
+
+        if (!user && isRegisterFlow) {
+            user = await prisma.user.create({
+                data: {
+                    displayId: await generateCustomId(checkRole === 'INSTITUTION' ? 'TAID' : 'UID'),
+                    phone: normalizedPhone,
+                    name: otpVerification?.name || 'Devotee',
+                    email: otpVerification?.email ? otpVerification.email.toLowerCase().trim() : null,
+                    role: checkRole as any,
+                    isVerified: checkRole === 'DEVOTEE',
+                    otp: null,
+                    otpExpires: null
+                }
+            });
+        }
+
+        if (user) {
+            if ((user.role === 'INSTITUTION' || user.role === 'SELLER' || user.role === 'MANDAL') && !user.isVerified) {
+                if (normalizedPhone !== '+919399805327') {
+                    return res.status(403).json({
+                        success: false,
+                        message: 'Your account is inactive or pending approval. Please contact admin.'
+                    });
+                }
+            }
+
+            const updateData: any = {
+                otp: null,
+                otpExpires: null
+            };
+
+            if (user.role === 'DEVOTEE') {
+                updateData.isVerified = true;
+            }
+
+            const updatedUser = await prisma.user.update({
+                where: { id: user.id },
+                data: updateData
+            });
+            user = updatedUser;
+        }
+
+        if (otpVerification) {
+            // @ts-ignore: otpVerification model may not be present in generated Prisma client yet
+            await prismaAny['otpVerification'].update({
+                where: { id: otpVerification.id },
+                data: { isUsed: true }
+            });
+        }
+
+        if (user) {
+            await linkDonationsToUser(user.id, normalizedPhone, user.email);
+        }
+
         const token = jwt.sign(
-            { userId: updatedUser.id, phone: updatedUser.phone, role: updatedUser.role },
+            { userId: user!.id, phone: user!.phone, role: user!.role },
             JWT_SECRET,
             { expiresIn: '7d' }
         );
@@ -501,20 +593,20 @@ export const verifyOTP = async (req: Request, res: Response) => {
             data: {
                 token,
                 user: {
-                    id: updatedUser.id,
-                    name: updatedUser.name,
-                    phone: updatedUser.phone,
-                    email: updatedUser.email,
-                    role: updatedUser.role,
-                    profileImage: updatedUser.profileImage,
-                    gothra: updatedUser.gothra,
-                    kuldevi: updatedUser.kuldevi,
-                    kuldevta: updatedUser.kuldevta,
-                    dob: updatedUser.dob,
-                    anniversary: updatedUser.anniversary,
-                    address: updatedUser.address,
-                    nativePlace: updatedUser.nativePlace,
-                    isVerified: updatedUser.isVerified
+                    id: user!.id,
+                    name: user!.name,
+                    phone: user!.phone,
+                    email: user!.email,
+                    role: user!.role,
+                    profileImage: user!.profileImage,
+                    gothra: user!.gothra,
+                    kuldevi: user!.kuldevi,
+                    kuldevta: user!.kuldevta,
+                    dob: user!.dob,
+                    anniversary: user!.anniversary,
+                    address: user!.address,
+                    nativePlace: user!.nativePlace,
+                    isVerified: user!.isVerified
                 }
             }
         });

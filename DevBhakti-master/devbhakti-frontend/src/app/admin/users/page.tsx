@@ -155,7 +155,8 @@ export default function AdminUsersPage() {
                 anniversary: anniversaryFilter,
                 anniversaryStart,
                 anniversaryEnd,
-                filterType: currentFilterType
+                filterType: currentFilterType,
+                includeUnverified: false
             });
             if (response.success) {
                 setUsers(response.data.users);
@@ -219,7 +220,8 @@ export default function AdminUsersPage() {
                 anniversary: anniversaryFilter === 'upcoming' ? 'upcoming' : anniversaryFilter,
                 anniversaryStart,
                 anniversaryEnd,
-                filterType: filterType
+                filterType: filterType,
+                includeUnverified: false
             });
 
             const url = window.URL.createObjectURL(new Blob([response.data]));
@@ -246,7 +248,8 @@ export default function AdminUsersPage() {
                 anniversary: anniversaryFilter,
                 anniversaryStart,
                 anniversaryEnd,
-                filterType: filterType
+                filterType: filterType,
+                includeUnverified: false
             });
 
             const url = window.URL.createObjectURL(new Blob([response.data]));

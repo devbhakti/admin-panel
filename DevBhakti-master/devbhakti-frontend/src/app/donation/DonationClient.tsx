@@ -53,7 +53,7 @@ import { API_URL } from "@/config/apiConfig";
 import axios from "axios";
 import { downloadDonationReceipt } from "@/api/userController";
 import { notifyFailedPayment } from "@/api/adminController";
-import { parseLocalizedValue } from "@/utils/textUtils";
+import { parseLocalizedValue, isSequentialOrRepetitive } from "@/utils/textUtils";
 
 declare global {
     interface Window {
@@ -123,6 +123,8 @@ function DonationForm() {
 
     const finalAmount = customAmount || amount;
 
+    const selectedTempleData = temples.find(t => t.id === selectedTemple) || null;
+
     const nextStep = async () => {
         if (step === 1) {
             if (!selectedTemple) {
@@ -171,6 +173,9 @@ function DonationForm() {
             } else if (formData.phone.length !== 10) {
                 newErrors.phone = "Phone number must be exactly 10 digits";
                 missingFields.push(t("step3.labels.phone_number") + " (10 digits)");
+            } else if (isSequentialOrRepetitive(formData.phone)) {
+                newErrors.phone = "Phone number looks invalid (sequential or repetitive)";
+                missingFields.push(t("step3.labels.phone_number") + " (Invalid)");
             }
             if (!formData.email.trim()) {
                 newErrors.email = "Email address is required";
@@ -251,6 +256,7 @@ function DonationForm() {
                 } else {
                     toast({ title: t("toasts.initiate_failed"), description: initiateData.message, variant: "destructive" });
                 }
+                setIsPaymentLoading(false);
                 return;
             }
 
@@ -302,7 +308,19 @@ function DonationForm() {
                     email: formData.email,
                     contact: formData.phone
                 },
-                theme: { color: "#7c4624" }
+                theme: { color: "#7c4624" },
+                modal: {
+                    ondismiss: function () {
+                        console.log("Payment modal dismissed");
+                        setIsPaymentLoading(false);
+                        notifyFailedPayment({
+                            orderType: "DONATION",
+                            referenceId: initiateData.donationId,
+                            phone: formData.phone,
+                            userName: formData.name,
+                        }).catch(console.error);
+                    }
+                }
             };
 
             const rzp = new window.Razorpay(options);
@@ -316,17 +334,6 @@ function DonationForm() {
                     phone: formData.phone,
                     userName: formData.name,
                     error: response.error
-                }).catch(console.error);
-            });
-
-            rzp.on('modal.dismiss', function () {
-                console.log("Payment modal dismissed");
-                setIsPaymentLoading(false);
-                notifyFailedPayment({
-                    orderType: "DONATION",
-                    referenceId: initiateData.donationId,
-                    phone: formData.phone,
-                    userName: formData.name,
                 }).catch(console.error);
             });
 
@@ -561,6 +568,14 @@ function DonationForm() {
                                 <Card className="border-border/50 shadow-sm overflow-hidden">
                                     <div className="h-1 bg-gradient-to-r from-[#7c4624] to-[#63361c]" />
                                     <CardContent className="p-6 md:p-8">
+                                        {selectedTempleData && (
+                                            <div className="text-center mb-4">
+                                                <p className="text-sm text-muted-foreground">{t("step2.donation_for") || "Donation For"}</p>
+                                                <h3 className="text-xl font-semibold text-[#2a1b01]">{selectedTempleData.name}</h3>
+                                                {selectedTempleData.location && <p className="text-sm text-muted-foreground">{selectedTempleData.location}</p>}
+                                            </div>
+                                        )}
+
                                         <div className="text-center mb-6">
                                             <h3 className="text-xl font-bold flex items-center justify-center gap-2">
                                                 <IndianRupee className="w-5 h-5 text-[#7c4624]" />

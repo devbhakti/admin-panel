@@ -4,7 +4,7 @@ import ExcelJS from 'exceljs';
 import { localize } from "../../utils/localization";
 import { sendEmail } from "../../utils/sendEmail";
 import { generateReceiptHTML } from "../../utils/donationReceipt";
-import { generateDonationDisplayId } from "../../utils/idGenerator";
+import { generateDonationDisplayId, generateCustomId } from "../../utils/idGenerator";
 import { getCommissionForAmount } from "../admin/commissionSlabController";
 import { CommissionCategory, SlabType } from "@prisma/client";
 import { validateDonationAmount, validatePhoneNumber } from "../../utils/donationValidation";
@@ -211,10 +211,32 @@ export const createDonation = async (req: Request, res: Response) => {
 
         const displayId = await generateDonationDisplayId();
 
-        // 1️⃣ Create donation record
+        // 1️⃣ Find existing DEVOTEE user based on donorPhone, but do not create a new user for offline donation
+        let userId: string | null = null;
+        if (donorPhone) {
+            // Normalize phone to match login system (+91XXXXXXXXXX)
+            let cleanedPhone = String(donorPhone).replace(/\D/g, '');
+            if (cleanedPhone.startsWith('00')) cleanedPhone = cleanedPhone.substring(2);
+            if (cleanedPhone.length === 11 && cleanedPhone.startsWith('0')) cleanedPhone = cleanedPhone.substring(1);
+            if (cleanedPhone.length === 12 && cleanedPhone.startsWith('91')) { }
+            else if (cleanedPhone.length === 10) cleanedPhone = '91' + cleanedPhone;
+            if (cleanedPhone.length === 14 && cleanedPhone.startsWith('9191')) cleanedPhone = cleanedPhone.substring(2);
+            const normalizedPhone = '+' + cleanedPhone;
+
+            const existingUser = await prisma.user.findFirst({
+                where: { phone: normalizedPhone, role: "DEVOTEE" }
+            });
+
+            if (existingUser) {
+                userId = existingUser.id;
+            }
+        }
+
+        // 2️⃣ Create donation record
         const donation = await prisma.donation.create({
             data: {
                 displayId,
+                userId,
                 templeId,
                 amount: templeAmount,
                 commissionAmount,

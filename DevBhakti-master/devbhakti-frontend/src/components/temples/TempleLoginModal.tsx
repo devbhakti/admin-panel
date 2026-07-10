@@ -2,7 +2,7 @@
 
 import React, { useState } from "react";
 import { motion, AnimatePresence } from "framer-motion";
-import { Phone, ArrowRight, Building2, Key, CheckCircle2, ShieldCheck, X } from "lucide-react";
+import { Phone, ArrowRight, Building2, Key, CheckCircle2, ShieldCheck, X, Mail, PhoneCall, AlertTriangle } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -59,7 +59,8 @@ export default function TempleLoginModal({ onClose, loginType = "temple" }: Temp
                 setDevOtp(response.data.otp);
             }
         } catch (error: any) {
-            setError(error.response?.data?.message || t('messages.send_failed'));
+            const msg: string = error.response?.data?.message || '';
+            setError(msg || t('messages.send_failed'));
         } finally {
             setLoading(false);
         }
@@ -121,7 +122,7 @@ export default function TempleLoginModal({ onClose, loginType = "temple" }: Temp
                     </p>
                 </div>
 
-                {/* Error Box */}
+                {/* Generic Error Box */}
                 <AnimatePresence>
                     {error && (
                         <motion.div

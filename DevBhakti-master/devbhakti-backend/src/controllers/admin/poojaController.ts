@@ -149,11 +149,13 @@ export const createPooja = async (req: Request, res: Response) => {
             }
         }
 
-        // Handle image path
-        let imagePath = '';
-        if (req.file) {
-            imagePath = `/uploads/poojas/${req.file.filename}`;
+        // Handle image path — Image is REQUIRED
+        if (!req.file) {
+            return res.status(400).json({
+                error: 'Image is required. Please upload a pooja image before creating.'
+            });
         }
+        const imagePath = `/uploads/poojas/${req.file.filename}`;
 
         const baseSlug = req.body.slug || slugify(name_en || req.body.name, { lower: true, strict: true });
         const uniqueSlug = await generateUniqueSlug(baseSlug, prisma.pooja);
@@ -300,6 +302,18 @@ export const updatePooja = async (req: Request, res: Response) => {
 
         if (req.file) {
             updateData.image = `/uploads/poojas/${req.file.filename}`;
+        } else {
+            // No new file uploaded — check if existing image is present
+            const existingPooja = await prisma.pooja.findUnique({
+                where: { id: String(id) },
+                select: { image: true }
+            });
+            if (!existingPooja?.image || existingPooja.image.trim() === '') {
+                return res.status(400).json({
+                    error: 'Image is required. Please upload a pooja image before saving.'
+                });
+            }
+            // Keep existing image — do not overwrite with empty
         }
 
         const pooja = await prisma.pooja.update({
@@ -413,6 +427,14 @@ export const togglePoojaStatus = async (req: Request, res: Response) => {
 
         if (!pooja) {
             return res.status(404).json({ success: false, message: 'Pooja not found' });
+        }
+
+        // Block activation if image is missing
+        if (!pooja.status && (!pooja.image || pooja.image.trim() === '')) {
+            return res.status(400).json({
+                success: false,
+                message: 'Image is required. Please upload a pooja image before activating it.'
+            });
         }
 
         const updatedPooja = await prisma.pooja.update({

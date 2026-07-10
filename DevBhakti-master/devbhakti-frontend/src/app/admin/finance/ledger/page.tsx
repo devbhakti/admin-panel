@@ -67,6 +67,8 @@ function LedgerContent() {
     const [sortBy, setSortBy] = useState("date");
     const [sortOrder, setSortOrder] = useState<"asc" | "desc">("desc");
 
+    const handleDateRangeSelection = (value: any) => setDateRangeSelection(value || { from: undefined, to: undefined });
+
     // Pagination State
     const [page, setPage] = useState(1);
     const [hasMore, setHasMore] = useState(true);
@@ -196,10 +198,10 @@ function LedgerContent() {
         const matchesType = typeFilter === "ALL" || tx.type === typeFilter;
 
         let matchesDate = true;
-        if (dateRangeSelection.from || dateRangeSelection.to) {
+        if (dateRangeSelection?.from || dateRangeSelection?.to) {
             const txDate = new Date(tx.createdAt);
-            if (dateRangeSelection.from && txDate < startOfDay(dateRangeSelection.from)) matchesDate = false;
-            if (dateRangeSelection.to && txDate > endOfDay(dateRangeSelection.to)) matchesDate = false;
+            if (dateRangeSelection?.from && txDate < startOfDay(dateRangeSelection.from)) matchesDate = false;
+            if (dateRangeSelection?.to && txDate > endOfDay(dateRangeSelection.to)) matchesDate = false;
         }
 
         return matchesSearch && matchesStatus && matchesType && matchesDate;
@@ -371,13 +373,13 @@ function LedgerContent() {
                             <PopoverTrigger asChild>
                                 <Button variant="outline" className="h-11 justify-start text-left font-normal rounded-xl bg-slate-50 border-transparent min-w-[200px]">
                                     <CalendarIcon className="mr-2 h-4 w-4" />
-                                    {dateRangeSelection.from ? (
+                                    {dateRangeSelection?.from ? (
                                         dateRangeSelection.to ? `${format(dateRangeSelection.from, "LLL dd")} - ${format(dateRangeSelection.to, "LLL dd")}` : format(dateRangeSelection.from, "LLL dd, y")
                                     ) : <span>Pick a date range</span>}
                                 </Button>
                             </PopoverTrigger>
                             <PopoverContent className="w-auto p-0 rounded-2xl border-slate-100" align="end">
-                                <Calendar mode="range" selected={dateRangeSelection} onSelect={setDateRangeSelection} numberOfMonths={2} />
+                                <Calendar mode="range" selected={dateRangeSelection} onSelect={handleDateRangeSelection} numberOfMonths={2} />
                             </PopoverContent>
                         </Popover>
 

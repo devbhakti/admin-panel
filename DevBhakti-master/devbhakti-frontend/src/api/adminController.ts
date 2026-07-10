@@ -247,6 +247,7 @@ export const fetchAllTemplesAdmin = async (params?: {
     limit?: number; 
     search?: string; 
     isVerified?: boolean; 
+    isActive?: boolean;
     templeId?: string; 
     date?: string; 
     startDate?: string;
@@ -268,6 +269,7 @@ export const fetchAllTemplesAdmin = async (params?: {
         if (params.limit !== undefined) query.append('limit', params.limit.toString());
         if (params.search) query.append('search', params.search);
         if (params.isVerified !== undefined) query.append('isVerified', params.isVerified.toString());
+        if (params.isActive !== undefined) query.append('isActive', params.isActive.toString());
         if (params.templeId) query.append('templeId', params.templeId);
         if (params.date) query.append('date', params.date);
         if (params.startDate) query.append('startDate', params.startDate);
@@ -348,6 +350,14 @@ export const deleteTempleAdmin = async (id: string) => {
 export const toggleShowPhoneAdmin = async (id: string, showPhone: boolean) => {
     const token = getAdminToken();
     const response = await axios.patch(`${API_URL}/admin/temples/${id}/show-phone`, { showPhone }, {
+        headers: { Authorization: `Bearer ${token}` }
+    });
+    return response.data;
+};
+
+export const toggleShowWebsiteAdmin = async (id: string, showWebsite: boolean) => {
+    const token = getAdminToken();
+    const response = await axios.patch(`${API_URL}/admin/temples/${id}/show-website`, { showWebsite }, {
         headers: { Authorization: `Bearer ${token}` }
     });
     return response.data;
@@ -1086,7 +1096,8 @@ export const fetchAllUsersAdmin = async (params?: {
     dobEnd?: string;
     anniversaryStart?: string;
     anniversaryEnd?: string;
-    filterType?: string
+    filterType?: string;
+    includeUnverified?: boolean;
 }) => {
     const token = getAdminToken();
     let url = `${API_URL}/admin/users`;
@@ -1105,6 +1116,7 @@ export const fetchAllUsersAdmin = async (params?: {
         if (params.anniversaryStart) query.append('anniversaryStart', params.anniversaryStart);
         if (params.anniversaryEnd) query.append('anniversaryEnd', params.anniversaryEnd);
         if (params.filterType) query.append('filterType', params.filterType);
+        if (params.includeUnverified !== undefined) query.append('includeUnverified', params.includeUnverified.toString());
         url += `?${query.toString()}`;
     }
     const response = await axios.get(url, {
@@ -1117,7 +1129,7 @@ export const downloadUsersExcelAdmin = async (params: any) => {
     const token = getAdminToken();
     const query = new URLSearchParams();
     Object.keys(params).forEach(key => {
-        if (params[key]) query.append(key, params[key]);
+        if (params[key] !== undefined && params[key] !== null) query.append(key, params[key]);
     });
 
     const response = await axios.get(`${API_URL}/admin/users/export/excel?${query.toString()}`, {
@@ -1131,7 +1143,7 @@ export const downloadUsersAiSensyCSVAdmin = async (params: any) => {
     const token = getAdminToken();
     const query = new URLSearchParams();
     Object.keys(params).forEach(key => {
-        if (params[key]) query.append(key, params[key]);
+        if (params[key] !== undefined && params[key] !== null) query.append(key, params[key]);
     });
 
     const response = await axios.get(`${API_URL}/admin/users/export/aisensy?${query.toString()}`, {

@@ -251,6 +251,17 @@ export default function TempleEditPoojaPage() {
 
     const handleSubmit = async (e: React.FormEvent) => {
         e.preventDefault();
+
+        if (!imageFile && !imagePreview) {
+            toast({
+                title: "Error",
+                description: "Please upload a cover image for the pooja.",
+                variant: "destructive"
+            });
+            document.getElementById('pooja-image')?.scrollIntoView({ behavior: 'smooth', block: 'center' });
+            return;
+        }
+
         setIsSubmitting(true);
 
         const submissionData = new FormData();
@@ -408,13 +419,31 @@ export default function TempleEditPoojaPage() {
                         <Label className="text-base font-semibold text-[#7b4623]">Pooja Image</Label>
                         <div className="flex items-start gap-6">
                             <div className="shrink-0">
-                                <div className="w-32 h-24 bg-slate-100 rounded-xl border-2 border-dashed border-slate-300 overflow-hidden">
+                                <div className="w-32 h-24 bg-slate-100 rounded-xl border-2 border-dashed border-slate-300 overflow-hidden relative group">
                                     {imagePreview ? (
-                                        <img 
-                                            src={imagePreview} 
-                                            alt="Pooja preview" 
-                                            className="w-full h-full object-cover"
-                                        />
+                                        <>
+                                            <img 
+                                                src={imagePreview} 
+                                                alt="Pooja preview" 
+                                                className="w-full h-full object-cover"
+                                            />
+                                            <div className="absolute inset-0 bg-black/40 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center pointer-events-none">
+                                            </div>
+                                            <button
+                                                type="button"
+                                                onClick={(e) => {
+                                                    e.preventDefault();
+                                                    e.stopPropagation();
+                                                    setImageFile(null);
+                                                    setImagePreview("");
+                                                    const fileInput = document.getElementById('pooja-image') as HTMLInputElement;
+                                                    if (fileInput) fileInput.value = '';
+                                                }}
+                                                className="absolute top-1 right-1 bg-red-500 hover:bg-red-600 text-white p-1 rounded-full z-10 transition-colors opacity-0 group-hover:opacity-100"
+                                            >
+                                                <X className="w-3.5 h-3.5" />
+                                            </button>
+                                        </>
                                     ) : (
                                         <div className="w-full h-full flex items-center justify-center text-slate-400">
                                             <Upload className="w-8 h-8" />

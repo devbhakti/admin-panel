@@ -35,11 +35,15 @@ const getRecurringDateConditions = (start: string, end: string, field: string) =
 
 export const getAllUsers = async (req: Request, res: Response) => {
     try {
-        const { page = 1, limit = 10, search = '', role, startDate, endDate, dob, anniversary, dobStart, dobEnd, anniversaryStart, anniversaryEnd } = req.query;
+        const { page = 1, limit = 10, search = '', role, startDate, endDate, dob, anniversary, dobStart, dobEnd, anniversaryStart, anniversaryEnd, includeUnverified } = req.query;
         const skip = (Number(page) - 1) * Number(limit);
         const take = Number(limit);
+        const onlyVerified = String(includeUnverified || 'false').toLowerCase() !== 'true';
 
         const andConditions: any[] = [{ role: { not: 'ADMIN' } }];
+        if (onlyVerified) {
+            andConditions.push({ isVerified: true });
+        }
 
         if (role && role !== 'all') {
             if (role === 'institution' || role === 'temple_admin') {
@@ -180,16 +184,20 @@ export const getAllUsers = async (req: Request, res: Response) => {
         // Get stats
         const now = new Date();
         const startOfMonth = new Date(now.getFullYear(), now.getMonth(), 1);
+        const globalWhere: any = { role: { not: 'ADMIN' } };
+        if (onlyVerified) {
+            globalWhere.isVerified = true;
+        }
 
-        // Static stats (total counts)
+        const roleWhere = (roleValue: UserRole) => ({ role: roleValue, ...(onlyVerified ? { isVerified: true } : {}) });
         const [totalUsersCount, totalDevotees, totalInstitutions, totalSellers, newThisMonth] = await Promise.all([
-            prisma.user.count({ where: { role: { not: 'ADMIN' } } }),
-            prisma.user.count({ where: { role: 'DEVOTEE' } }),
-            prisma.user.count({ where: { role: 'INSTITUTION' } }),
-            prisma.user.count({ where: { role: 'SELLER' } }),
+            prisma.user.count({ where: globalWhere }),
+            prisma.user.count({ where: roleWhere(UserRole.DEVOTEE) }),
+            prisma.user.count({ where: roleWhere(UserRole.INSTITUTION) }),
+            prisma.user.count({ where: roleWhere(UserRole.SELLER) }),
             prisma.user.count({
                 where: {
-                    role: { not: 'ADMIN' },
+                    ...globalWhere,
                     createdAt: { gte: startOfMonth }
                 }
             })
@@ -331,9 +339,13 @@ export const getUserDetail = async (req: Request, res: Response) => {
 
 export const downloadUsersExcel = async (req: Request, res: Response) => {
     try {
-        const { search = '', role, startDate, endDate, dob, anniversary, dobStart, dobEnd, anniversaryStart, anniversaryEnd } = req.query;
+        const { search = '', role, startDate, endDate, dob, anniversary, dobStart, dobEnd, anniversaryStart, anniversaryEnd, includeUnverified } = req.query;
+        const onlyVerified = String(includeUnverified || 'false').toLowerCase() !== 'true';
 
         const where: any = { role: { not: 'ADMIN' } };
+        if (onlyVerified) {
+            where.isVerified = true;
+        }
         if (role && role !== 'all') {
             if (role === 'institution') where.role = UserRole.INSTITUTION;
             else if (role === 'devotee') where.role = UserRole.DEVOTEE;
@@ -466,8 +478,12 @@ export const bulkToggleUserStatus = async (req: Request, res: Response) => {
 
 export const downloadUsersAiSensyCSV = async (req: Request, res: Response) => {
     try {
-        const { ids, search, role, dob, anniversary, dobStart, dobEnd, anniversaryStart, anniversaryEnd, filterType } = req.query;
+        const { ids, search, role, dob, anniversary, dobStart, dobEnd, anniversaryStart, anniversaryEnd, filterType, includeUnverified } = req.query;
+        const onlyVerified = String(includeUnverified || 'false').toLowerCase() !== 'true';
         const andConditions: any[] = [{ role: { not: 'ADMIN' } }];
+        if (onlyVerified) {
+            andConditions.push({ isVerified: true });
+        }
 
         if (ids) {
             const idList = String(ids).split(',');

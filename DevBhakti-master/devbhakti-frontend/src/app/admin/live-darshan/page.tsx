@@ -103,7 +103,7 @@ export default function AdminLiveDarshanPage() {
     const load = async () => {
       setLoading(true);
       try {
-        const res = await fetchAllTemplesAdmin({ limit: 10 }); // Load initial 10 for quick selection
+        const res = await fetchAllTemplesAdmin({ limit: 10, isVerified: true, isActive: true }); // Load initial 10 for quick selection
         const data = Array.isArray(res) ? res : (res.data || []);
         
         const actualTemples = data
@@ -152,7 +152,7 @@ export default function AdminLiveDarshanPage() {
       
       setIsSearchingTemples(true);
       try {
-        const res = await fetchAllTemplesAdmin({ search: templeSearchQuery, limit: 10 });
+        const res = await fetchAllTemplesAdmin({ search: templeSearchQuery, limit: 10, isVerified: true, isActive: true });
         const data = Array.isArray(res) ? res : (res.data || []);
         
         const searchResults = data
@@ -187,7 +187,7 @@ export default function AdminLiveDarshanPage() {
         description: `Temple live visibility ${!entry.temple?.liveStatus ? "enabled" : "disabled"} on website.`,
       });
 
-      const data = await fetchAllTemplesAdmin();
+      const data = await fetchAllTemplesAdmin({ isVerified: true, isActive: true });
       const actualTemples = data
         .filter((user: any) => user.temple)
         .map((user: any) => ({
@@ -224,7 +224,7 @@ export default function AdminLiveDarshanPage() {
         description: `${entry.temple?.name} is now the primary live darshan on the homepage.`,
       });
 
-      const data = await fetchAllTemplesAdmin();
+      const data = await fetchAllTemplesAdmin({ isVerified: true, isActive: true });
       const actualTemples = data
         .filter((user: any) => user.temple)
         .map((user: any) => ({
@@ -316,7 +316,7 @@ export default function AdminLiveDarshanPage() {
         description: "Live configuration updated successfully.",
       });
 
-      const data = await fetchAllTemplesAdmin();
+      const data = await fetchAllTemplesAdmin({ isVerified: true, isActive: true });
       const actualTemples = data
         .filter((user: any) => user.temple)
         .map((user: any) => ({

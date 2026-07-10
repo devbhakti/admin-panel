@@ -98,6 +98,7 @@ model Temple {
   urlType               String                @default("slug")
   isPrimaryLive         Boolean               @default(false)
   showPhone             Boolean               @default(true)
+  showWebsite           Boolean               @default(true)
   instagramUrl          String?
   facebookUrl           String?
   youtubeUrl            String?
@@ -391,12 +392,7 @@ model CTACard {
 model PoojaBooking {
   id                 String        @id @default(cuid())
   displayId          String
-  
-  
-  
-  
-  
- userId             String
+  userId             String
   poojaId            String
   templeId           String?
   packageName        String
@@ -418,6 +414,7 @@ model PoojaBooking {
   updatedAt          DateTime      @updatedAt
   anniversary        String?
   dob                String?
+  gender             String?
   proofPhotos        String[]      @default([])
   additionalDevotees Json?
   nativePlace        String?
@@ -647,6 +644,19 @@ model StandardFAQ {
   isActive  Boolean  @default(true)
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
+}
+
+model OtpVerification {
+  id             String     @id @default(cuid())
+  phone          String
+  role           UserRole   @default(DEVOTEE)
+  name           String?
+  email          String?
+  otp            String
+  otpExpires     DateTime
+  isRegisterFlow Boolean    @default(false)
+  isUsed         Boolean    @default(false)
+  createdAt      DateTime   @default(now())
 }
 
 model GlobalSetting {

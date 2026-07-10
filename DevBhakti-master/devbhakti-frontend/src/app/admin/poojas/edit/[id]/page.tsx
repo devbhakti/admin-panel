@@ -53,7 +53,7 @@ export default function EditPoojaPage() {
             // Fetch auxiliary data (temples, categories, master templates)
             try {
                 const [templesRes, categoriesRes, masterRes] = await Promise.all([
-                    fetchAllTemplesAdmin().catch(e => { console.warn('Could not load temples:', e); return []; }),
+                    fetchAllTemplesAdmin({ isVerified: true, isActive: true }).catch(e => { console.warn('Could not load temples:', e); return []; }),
                     fetchPoojaCategoriesAdmin({ status: "APPROVED" }).catch(e => { console.warn('Could not load categories:', e); return { success: false, data: [] }; }),
                     fetchAllPoojasAdmin({ isMaster: true, lang: 'raw' }).catch(e => { console.warn('Could not load master templates:', e); return []; })
                 ]);

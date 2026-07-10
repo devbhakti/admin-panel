@@ -61,6 +61,7 @@ export default function CreateTempleProductPage() {
     const [isLoadingCategories, setIsLoadingCategories] = useState(true);
     const [productImage, setProductImage] = useState<File | null>(null);
     const [productImagePreview, setProductImagePreview] = useState<string>("");
+    const [hasMultipleVariants, setHasMultipleVariants] = useState(false);
 
     // Cropper state
     const [showCropper, setShowCropper] = useState(false);
@@ -172,12 +173,13 @@ export default function CreateTempleProductPage() {
         if (!formData.name_en.trim()) newErrors.name = "Product name (English) is required";
         if (!formData.description_en.trim()) newErrors.description = "Description (English) is required";
         if (!formData.category) newErrors.category = "Category is required";
+        if (!productImage && !productImagePreview) newErrors.image = "Product image is required";
 
-        const validVariants = variants.filter(v => v.name_en.trim() && v.price > 0);
+        const validVariants = variants.filter(v => (hasMultipleVariants ? v.name_en.trim() : true) && v.price > 0);
         if (validVariants.length === 0) newErrors.variants = "At least one valid variant is required";
 
         validVariants.forEach((variant, index) => {
-            if (!variant.name_en.trim()) newErrors[`variant_name_${index}`] = "Variant name is required";
+            if (hasMultipleVariants && !variant.name_en.trim()) newErrors[`variant_name_${index}`] = "Variant name is required";
             if (variant.price <= 0) newErrors[`variant_price_${index}`] = "Price must be greater than 0";
             if (variant.stock < 0) newErrors[`variant_stock_${index}`] = "Stock cannot be negative";
         });
@@ -196,7 +198,7 @@ export default function CreateTempleProductPage() {
         setIsSubmitting(true);
 
         try {
-            const validVariants = variants.filter(v => v.name_en.trim() && v.price > 0);
+            const validVariants = variants.filter(v => (hasMultipleVariants ? v.name_en.trim() : true) && v.price > 0);
             const formDataToSend = new FormData();
 
             formDataToSend.append('name_en', formData.name_en);
@@ -226,17 +228,17 @@ export default function CreateTempleProductPage() {
 
             // Include costPrice in variants data
             const variantsData = validVariants.map((v, index) => {
-                if (v.imageFile) {
+                if (hasMultipleVariants && v.imageFile) {
                     formDataToSend.append(`variant_image_${index}`, v.imageFile);
                 }
                 return {
-                    name_en: v.name_en,
-                    name_hi: v.name_hi,
-                    name_mr: v.name_mr,
+                    name_en: hasMultipleVariants ? v.name_en : "Default",
+                    name_hi: hasMultipleVariants ? v.name_hi : "",
+                    name_mr: hasMultipleVariants ? v.name_mr : "",
                     price: v.price,
                     costPrice: v.costPrice || null,
                     stock: v.stock,
-                    image: v.imageFile ? null : (v.imagePreview || null)
+                    image: hasMultipleVariants ? (v.imageFile ? null : (v.imagePreview || null)) : null
                 };
             });
             formDataToSend.append('variants', JSON.stringify(variantsData));
@@ -304,8 +306,8 @@ export default function CreateTempleProductPage() {
                 <Tabs defaultValue="en" className="w-full">
                     <TabsList className="grid w-full grid-cols-3 mb-6 bg-slate-100 p-1 rounded-xl">
                         <TabsTrigger value="en" className="rounded-lg data-[state=active]:bg-white data-[state=active]:shadow-sm">English</TabsTrigger>
-                        <TabsTrigger value="hi" className="rounded-lg data-[state=active]:bg-white data-[state=active]:shadow-sm">हिन्दी</TabsTrigger>
-                        <TabsTrigger value="mr" className="rounded-lg data-[state=active]:bg-white data-[state=active]:shadow-sm">मराठी</TabsTrigger>
+                        <TabsTrigger value="hi" className="rounded-lg data-[state=active]:bg-white data-[state=active]:shadow-sm">{"\u0939\u093f\u0928\u094d\u0926\u0940"}</TabsTrigger>
+                        <TabsTrigger value="mr" className="rounded-lg data-[state=active]:bg-white data-[state=active]:shadow-sm">{"\u092e\u0930\u093e\u0920\u0940"}</TabsTrigger>
                     </TabsList>
 
                     <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
@@ -332,23 +334,6 @@ export default function CreateTempleProductPage() {
                                                         required={lang === 'en'}
                                                     />
                                                 </div>
-
-                                                {lang === 'en' && (
-                                                    <div className="space-y-2">
-                                                        <Label htmlFor="category">Category *</Label>
-                                                        <Select value={formData.category} onValueChange={(value) => setFormData({ ...formData, category: value })}>
-                                                            <SelectTrigger className={errors.category ? "border-red-500" : ""}>
-                                                                <SelectValue placeholder="Select category" />
-                                                            </SelectTrigger>
-                                                            <SelectContent>
-                                                                {categories.map((category) => (
-                                                                    <SelectItem key={category.id} value={category.id}>{category.name}</SelectItem>
-                                                                ))}
-                                                            </SelectContent>
-                                                        </Select>
-                                                        {errors.category && <p className="text-sm text-red-500">{errors.category}</p>}
-                                                    </div>
-                                                )}
                                             </div>
 
                                             <div className="space-y-2">
@@ -381,25 +366,48 @@ export default function CreateTempleProductPage() {
                                 </CardHeader>
                                 <CardContent className="space-y-6">
                                     <div className="space-y-2">
-                                        <Label>Product Cover Image</Label>
-                                        <div className="flex items-center gap-4">
+                                        <Label htmlFor="category">Category *</Label>
+                                        <Select value={formData.category} onValueChange={(value) => setFormData({ ...formData, category: value })}>
+                                            <SelectTrigger className={errors.category ? "border-red-500" : ""}>
+                                                <SelectValue placeholder="Select category" />
+                                            </SelectTrigger>
+                                            <SelectContent>
+                                                {categories.map((category) => (
+                                                    <SelectItem key={category.id} value={category.id}>{category.name}</SelectItem>
+                                                ))}
+                                            </SelectContent>
+                                        </Select>
+                                        {errors.category && <p className="text-sm text-red-500">{errors.category}</p>}
+                                    </div>
+                                    <div className="space-y-2">
+                                        <Label className={cn("text-xs font-bold uppercase", errors.image ? "text-red-600" : "text-slate-400")}>Product Cover Image *</Label>
+                                        <div className="mt-2">
                                             {productImagePreview ? (
-                                                <div className="relative">
-                                                    <img src={productImagePreview} alt="Preview" className="w-24 h-24 object-cover rounded-lg border" />
-                                                    <Button type="button" variant="destructive" size="icon" className="absolute -top-2 -right-2 h-6 w-6" onClick={removeProductImage}>
+                                                <div className="relative inline-block">
+                                                    <img src={productImagePreview} alt="Preview" className="w-32 h-32 object-cover rounded-xl border border-slate-200 shadow-sm" />
+                                                    <Button type="button" variant="destructive" size="icon" className="absolute -top-2 -right-2 h-6 w-6 rounded-full" onClick={removeProductImage}>
                                                         <X className="w-3 h-3" />
                                                     </Button>
                                                 </div>
                                             ) : (
-                                                <div className="w-24 h-24 border-2 border-dashed border-input rounded-lg flex items-center justify-center">
-                                                    <ImageIcon className="w-8 h-8 text-muted-foreground" />
+                                                <div className="flex items-center gap-4">
+                                                    <div className={cn("w-24 h-24 shrink-0 rounded-xl flex items-center justify-center", errors.image ? "border-2 border-solid border-red-500 bg-red-50" : "border-2 border-dashed border-slate-200 bg-slate-50")}>
+                                                        <ImageIcon className={cn("w-8 h-8", errors.image ? "text-red-400" : "text-slate-400")} />
+                                                    </div>
+                                                    <div className="flex-1 space-y-2">
+                                                        <div className={cn("relative flex items-center justify-center w-full h-12 rounded-xl hover:bg-orange-50/50 transition-colors", errors.image ? "border-2 border-solid border-red-500" : "border border-dashed border-[#7b4623]")}>
+                                                            <input type="file" accept="image/*" onChange={handleProductImageChange} className="absolute inset-0 opacity-0 cursor-pointer" />
+                                                            <div className={cn("flex items-center gap-2 font-medium text-sm", errors.image ? "text-red-600" : "text-[#7b4623]")}>
+                                                                <ImageIcon className="w-4 h-4" />
+                                                                Upload Cover Image
+                                                            </div>
+                                                        </div>
+                                                        <p className="text-[10px] font-semibold text-[#7b4623]">Recommended: 800x800 px (Square)</p>
+                                                    </div>
                                                 </div>
                                             )}
-                                            <div className="flex-1">
-                                                <Input type="file" accept="image/*" onChange={handleProductImageChange} className="cursor-pointer" />
-                                                <p className="text-[10px] font-semibold text-primary mt-1">Recommended: 800x800 px (Square)</p>
-                                            </div>
                                         </div>
+                                        {errors.image && <p className="text-sm text-red-500 font-medium">{errors.image}</p>}
                                     </div>
 
                                     <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
@@ -452,54 +460,91 @@ export default function CreateTempleProductPage() {
 
                         <div className="space-y-6">
                             <Card>
-                                <CardHeader><CardTitle className="text-[#7b4623]">Product Variants</CardTitle></CardHeader>
-                                <CardContent className="space-y-6">
+                                <CardHeader className="flex flex-row items-center justify-between pb-2 border-b">
+                                    <CardTitle className="text-[#7b4623]">Product Variants</CardTitle>
+                                    <div className="flex items-center gap-6">
+                                        <Label className="flex items-center gap-2 cursor-pointer font-medium text-sm">
+                                            <input 
+                                                type="radio" 
+                                                checked={!hasMultipleVariants} 
+                                                onChange={() => {
+                                                    setHasMultipleVariants(false);
+                                                    setVariants([variants[0]]);
+                                                }} 
+                                                className="accent-[#7b4623] w-4 h-4" 
+                                            />
+                                            Single Product
+                                        </Label>
+                                        <Label className="flex items-center gap-2 cursor-pointer font-medium text-sm">
+                                            <input 
+                                                type="radio" 
+                                                checked={hasMultipleVariants} 
+                                                onChange={() => setHasMultipleVariants(true)} 
+                                                className="accent-[#7b4623] w-4 h-4" 
+                                            />
+                                            Multiple Variants
+                                        </Label>
+                                    </div>
+                                </CardHeader>
+                                <CardContent className="space-y-6 pt-6">
                                     {variants.map((variant, index) => (
                                         <div key={variant.id} className="p-5 border rounded-2xl bg-slate-50/50 space-y-4 relative group">
                                             <div className="flex justify-between items-center">
-                                                <Label className="font-bold text-[#7b4623]">Variant {index + 1}</Label>
-                                                {variants.length > 1 && (
+                                                <Label className="font-bold text-[#7b4623]">{hasMultipleVariants ? `Variant ${index + 1}` : 'Product Pricing & Stock'}</Label>
+                                                {hasMultipleVariants && variants.length > 1 && (
                                                     <Button type="button" variant="ghost" size="sm" onClick={() => removeVariant(variant.id)} className="h-8 w-8 text-red-500 rounded-full hover:bg-red-50">
                                                         <Trash2 className="w-4 h-4" />
                                                     </Button>
                                                 )}
                                             </div>
 
-                                            {['en', 'hi', 'mr'].map((lang) => (
-                                                <TabsContent key={lang} value={lang} className="mt-0">
-                                                    <div className="space-y-2">
-                                                        <Label className="text-[10px] font-bold uppercase text-slate-400">Variant Name ({lang.toUpperCase()}) *</Label>
-                                                        <Input
-                                                            placeholder="e.g. Small, Red, 100ml"
-                                                            value={(variant as any)[`name_${lang}`]}
-                                                            onChange={(e) => updateVariant(variant.id, `name_${lang}` as any, e.target.value)}
-                                                            className={cn("h-10 rounded-lg", lang === 'en' && errors[`variant_name_${index}`] ? "border-red-500" : "")}
-                                                            required={lang === 'en'}
-                                                        />
-                                                    </div>
-                                                </TabsContent>
-                                            ))}
+                                            {hasMultipleVariants && (
+                                                <>
+                                                    {['en', 'hi', 'mr'].map((lang) => (
+                                                        <TabsContent key={lang} value={lang} className="mt-0">
+                                                            <div className="space-y-2">
+                                                                <Label className="text-[10px] font-bold uppercase text-slate-400">Variant Name ({lang.toUpperCase()}) *</Label>
+                                                                <Input
+                                                                    placeholder="e.g. Small, Red, 100ml"
+                                                                    value={(variant as any)[`name_${lang}`]}
+                                                                    onChange={(e) => updateVariant(variant.id, `name_${lang}` as any, e.target.value)}
+                                                                    className={cn("h-10 rounded-lg", lang === 'en' && errors[`variant_name_${index}`] ? "border-red-500" : "")}
+                                                                    required={hasMultipleVariants && lang === 'en'}
+                                                                />
+                                                            </div>
+                                                        </TabsContent>
+                                                    ))}
 
-                                            <div className="space-y-2">
-                                                <Label className="text-[10px] font-bold uppercase text-slate-400">Variant Image</Label>
-                                                <div className="flex items-center gap-3">
-                                                    {variant.imagePreview ? (
-                                                        <div className="relative">
-                                                            <img src={variant.imagePreview} alt="Preview" className="w-16 h-16 object-cover rounded-md border" />
-                                                            <Button type="button" variant="destructive" size="icon" className="absolute -top-1 -right-1 h-5 w-5" onClick={() => removeVariantImage(variant.id)}>
-                                                                <X className="w-3 h-3" />
-                                                            </Button>
+                                                    <div className="space-y-2">
+                                                        <Label className="text-[10px] font-bold uppercase text-slate-400">Variant Image</Label>
+                                                        <div className="mt-2">
+                                                            {variant.imagePreview ? (
+                                                                <div className="relative inline-block">
+                                                                    <img src={variant.imagePreview} alt="Preview" className="w-24 h-24 object-cover rounded-xl border border-slate-200 shadow-sm" />
+                                                                    <Button type="button" variant="destructive" size="icon" className="absolute -top-2 -right-2 h-5 w-5 rounded-full" onClick={() => removeVariantImage(variant.id)}>
+                                                                        <X className="w-3 h-3" />
+                                                                    </Button>
+                                                                </div>
+                                                            ) : (
+                                                                <div className="flex items-center gap-4">
+                                                                    <div className="w-20 h-20 shrink-0 border-2 border-dashed border-slate-200 rounded-xl flex items-center justify-center bg-white">
+                                                                        <ImageIcon className="w-6 h-6 text-slate-400" />
+                                                                    </div>
+                                                                    <div className="flex-1">
+                                                                        <div className="relative flex items-center justify-center w-full h-11 border border-dashed border-[#7b4623] rounded-xl hover:bg-orange-50/50 transition-colors">
+                                                                            <input type="file" accept="image/*" onChange={(e) => handleVariantImageChange(variant.id, e)} className="absolute inset-0 opacity-0 cursor-pointer" />
+                                                                            <div className="flex items-center gap-2 text-[#7b4623] font-medium text-sm">
+                                                                                <ImageIcon className="w-4 h-4" />
+                                                                                Upload Variant Image
+                                                                            </div>
+                                                                        </div>
+                                                                    </div>
+                                                                </div>
+                                                            )}
                                                         </div>
-                                                    ) : (
-                                                        <div className="w-16 h-16 border-2 border-dashed border-input rounded-md flex items-center justify-center bg-white">
-                                                            <ImageIcon className="w-6 h-6 text-muted-foreground" />
-                                                        </div>
-                                                    )}
-                                                    <div className="flex-1">
-                                                        <Input type="file" accept="image/*" onChange={(e) => handleVariantImageChange(variant.id, e)} className="cursor-pointer text-xs h-9" />
                                                     </div>
-                                                </div>
-                                            </div>
+                                                </>
+                                            )}
 
                                             <div className="grid grid-cols-2 gap-4">
                                                 <div className="space-y-2">
@@ -513,9 +558,11 @@ export default function CreateTempleProductPage() {
                                             </div>
                                         </div>
                                     ))}
-                                    <Button type="button" variant="outline" size="sm" onClick={addVariant} className="w-full h-11 border-dashed border-[#7b4623] text-[#7b4623] hover:bg-orange-50 rounded-xl">
-                                        <Plus className="w-4 h-4 mr-2" /> Add More Variant
-                                    </Button>
+                                    {hasMultipleVariants && (
+                                        <Button type="button" variant="outline" size="sm" onClick={addVariant} className="w-full h-11 border-dashed border-[#7b4623] text-[#7b4623] hover:bg-orange-50 rounded-xl">
+                                            <Plus className="w-4 h-4 mr-2" /> Add More Variant
+                                        </Button>
+                                    )}
                                 </CardContent>
                             </Card>
                             <Button type="submit" disabled={isSubmitting} className="w-full h-14 text-lg font-bold rounded-2xl bg-[#7b4623] hover:bg-[#5d351a] shadow-lg shadow-orange-900/20">

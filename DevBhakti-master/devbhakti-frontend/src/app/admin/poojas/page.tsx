@@ -83,7 +83,7 @@ function PoojasContent() {
 
     const loadTemples = async () => {
         try {
-            const data = await fetchAllTemplesAdmin();
+            const data = await fetchAllTemplesAdmin({ isVerified: true, isActive: true });
             const actualTemples = data
                 .filter((user: any) => user.temple)
                 .map((user: any) => user.temple);
@@ -173,6 +173,15 @@ function PoojasContent() {
     };
 
     const handleToggleStatus = async (pooja: any) => {
+        // Block activation if pooja has no image
+        if (!pooja.status && (!pooja.image || pooja.image.trim() === '')) {
+            toast({
+                title: "⚠️ Image Required",
+                description: "Image is required. Please upload a pooja image before activating it.",
+                variant: "destructive"
+            });
+            return;
+        }
         try {
             await togglePoojaStatusAdmin(pooja.id);
             toast({
@@ -189,6 +198,7 @@ function PoojasContent() {
             });
         }
     };
+
 
     const filteredPoojas = poojas.filter(pooja => {
         const s = searchTerm.toLowerCase();

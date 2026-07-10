@@ -14,7 +14,7 @@ import { useToast } from "@/hooks/use-toast";
 import axios from "axios";
 import { API_URL, BASE_URL } from "@/config/apiConfig";
 import { notifyFailedPayment } from "@/api/adminController";
-import { parseLocalizedValue } from "@/utils/textUtils";
+import { parseLocalizedValue, isSequentialOrRepetitive } from "@/utils/textUtils";
 import { useLanguage } from "@/context/LanguageContext";
 
 export default function CheckoutPage() {
@@ -133,6 +133,8 @@ function CheckoutContent() {
         setAddress((prev) => ({ ...prev, [name]: value }));
     };
 
+    // Using shared `isSequentialOrRepetitive` from utils
+
     const hasInactiveItems = cartItems.some(item => item.isActive === false);
 
     const handlePlaceOrder = async () => {
@@ -151,6 +153,25 @@ function CheckoutContent() {
             toast({
                 title: "Missing Information",
                 description: "Please fill in all required shipping details.",
+                variant: "destructive",
+            });
+            return;
+        }
+
+        // Phone: must be 10 digits and not obvious sequential/repetitive patterns
+        if (address.phone.length !== 10) {
+            toast({
+                title: "Invalid Phone Number",
+                description: "Please enter a valid 10-digit phone number.",
+                variant: "destructive",
+            });
+            return;
+        }
+
+        if (isSequentialOrRepetitive(address.phone)) {
+            toast({
+                title: "Invalid Phone Number",
+                description: "Phone number looks invalid (sequential or repetitive). Please provide a real mobile number.",
                 variant: "destructive",
             });
             return;
@@ -302,6 +323,18 @@ function CheckoutContent() {
                             email: user.email || "",
                         },
                         theme: { color: "#794A05" },
+                        modal: {
+                            ondismiss: function () {
+                                setIsPaymentLoading(false);
+                                notifyFailedPayment({
+                                    orderType: "MARKETPLACE",
+                                    orderData: orderData,
+                                    userId: user.id,
+                                    phone: address.phone,
+                                    userName: address.fullName,
+                                }).catch(console.error);
+                            }
+                        }
                     };
 
                     const rzp = new (window as any).Razorpay(options);
@@ -316,17 +349,6 @@ function CheckoutContent() {
                             phone: address.phone,
                             userName: address.fullName,
                             error: response.error
-                        }).catch(console.error);
-                    });
-
-                    rzp.on('modal.dismiss', function () {
-                        setIsPaymentLoading(false);
-                        notifyFailedPayment({
-                            orderType: "MARKETPLACE",
-                            orderData: orderData,
-                            userId: user.id,
-                            phone: address.phone,
-                            userName: address.fullName,
                         }).catch(console.error);
                     });
 

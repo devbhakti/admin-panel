@@ -16,6 +16,13 @@ import { API_URL, BASE_URL } from "@/config/apiConfig";
 import { useLanguage } from "@/context/LanguageContext";
 import { getLocalized } from "@/utils/localization";
 
+const resolveAssetUrl = (path: string | any) => {
+    if (typeof path !== "string") return path;
+    if (path.startsWith("http://") || path.startsWith("https://")) return path;
+    if (path.startsWith("/")) return path;
+    return `${BASE_URL}/${path}`.replace(/([^:]\/)\/+/g, "$1");
+};
+
 
 interface VideoStory {
     id: string | number;
@@ -167,20 +174,13 @@ const VideoTestimonialsSection = () => {
                                 viewport={{ once: true }}
                                 transition={{ delay: index * 0.1 }}
                                 className="flex-shrink-0 w-[280px] md:w-[310px] aspect-[9/14] relative rounded-2xl overflow-hidden snap-center cursor-pointer group/card shadow-xl"
-                                onClick={() => {
-                                    // Only allow playback when real video data exists from CMS
-                                    if (dynamicStories.length > 0) {
-                                        setPlayingId(playingId === story.id ? null : story.id);
-                                    }
-                                }}
+                                onClick={() => setPlayingId(playingId === story.id ? null : story.id)}
                             >
                                 {/* Video or Thumbnail */}
                                 <div className="absolute inset-0 bg-black">
                                     {playingId === story.id ? (
                                         <video
-                                            src={typeof story.videoSrc === 'string' && (story.videoSrc.startsWith('/') || story.videoSrc.startsWith('http'))
-                                                ? (story.videoSrc.startsWith('http') ? story.videoSrc : `${BASE_URL}${story.videoSrc}`)
-                                                : story.videoSrc}
+                                            src={resolveAssetUrl(story.videoSrc)}
                                             className="w-full h-full object-cover"
                                             controls
                                             autoPlay

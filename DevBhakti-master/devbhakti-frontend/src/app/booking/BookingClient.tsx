@@ -85,6 +85,7 @@ function BookingForm() {
     kuldevi: "",
     kuldevta: "",
     dob: "",
+    gender: "",
     anniversary: "",
     nativePlace: "",
     additionalDevotees: [] as { name: string; gothra: string; kuldevi: string; kuldevta: string }[],
@@ -172,11 +173,8 @@ function BookingForm() {
           ? requestedPooja.id
           : requestedPooja?.masterPoojaId || poojaIdInUrl || undefined;
 
-        // If temple is pre-specified in URL (coming from temple event modal),
-        // fetch ALL temples without pooja filter so the dropdown is fully populated.
-        // Otherwise filter by pooja family to show only relevant temples.
+        // Fetch ALL temples so the dropdown is always fully populated, regardless of pooja selection.
         const templesData = await fetchPublicTemples({
-          ...(templeIdFromUrl ? {} : (poojaFamilyId ? { poojaId: poojaFamilyId } : {})),
           lang: language
         });
         setAllTemples(templesData);
@@ -205,11 +203,15 @@ function BookingForm() {
           const pooja = requestedPooja;
           if (pooja) {
             // Priority: URL temple param > pooja's own templeId
+            let resolvedTempleId = pooja.templeId;
             if (templeIdFromUrl) {
-              setSelectedTemple(templeIdFromUrl);
-            } else if (pooja.templeId) {
-              setSelectedTemple(pooja.templeId);
+              const matchedTemple = templesData.find((t: any) => t.id === templeIdFromUrl || t.slug === templeIdFromUrl);
+              resolvedTempleId = matchedTemple ? matchedTemple.id : templeIdFromUrl;
             }
+            if (resolvedTempleId) {
+              setSelectedTemple(resolvedTempleId);
+            }
+            
             // Normalize selectedPooja to actual ID if slug was used
             if (pooja.id !== poojaIdInUrl) {
               console.log(`Normalizing pooja slug "${poojaIdInUrl}" to ID "${pooja.id}"`);
@@ -217,7 +219,8 @@ function BookingForm() {
             }
           }
         } else if (templeIdFromUrl) {
-          setSelectedTemple(templeIdFromUrl);
+          const matchedTemple = templesData.find((t: any) => t.id === templeIdFromUrl || t.slug === templeIdFromUrl);
+          setSelectedTemple(matchedTemple ? matchedTemple.id : templeIdFromUrl);
         }
       } catch (error) {
         console.error("Failed to load booking data:", error);
@@ -240,7 +243,7 @@ function BookingForm() {
         const data = await response.json();
         if (data.success) {
           setAllPoojas(prev => {
-            const others = prev.filter(p => p.templeId !== selectedTemple);
+            const others = prev.filter(p => String(p.templeId) !== String(selectedTemple));
             return [...others, ...data.data];
           });
         }
@@ -277,19 +280,35 @@ function BookingForm() {
     }
 
     // If it's already a temple-specific pooja for the CORRECT temple, do nothing
-    if (currentPoojaData.templeId === selectedTemple) return;
+    if (String(currentPoojaData.templeId) === String(selectedTemple)) return;
 
     // Look for this master pooja's copy in the currently selected temple
-    const templeSpecificPooja = allPoojas.find(p => p.templeId === selectedTemple && p.masterPoojaId === masterId);
+    const templeSpecificPooja = allPoojas.find(p => String(p.templeId) === String(selectedTemple) && String(p.masterPoojaId) === String(masterId));
     
     if (templeSpecificPooja && templeSpecificPooja.id !== selectedPooja) {
       console.log(`Switching selection to temple-specific pooja: ${templeSpecificPooja.id}`);
       setSelectedPooja(templeSpecificPooja.id);
+    } else if (!templeSpecificPooja) {
+      // No temple-specific copy found. Prefer platform copy (if same master), else fallback to master pooja.
+      const platformCopy = allPoojas.find(p => String(p.masterPoojaId) === String(masterId) && (p.templeId === null || p.templeId === undefined));
+      if (platformCopy && platformCopy.id !== selectedPooja) {
+        console.log(`Falling back to platform copy: ${platformCopy.id}`);
+        setSelectedPooja(platformCopy.id);
+      } else {
+        const masterPooja = allPoojas.find(p => p.id === masterId);
+        if (masterPooja && masterPooja.id !== selectedPooja) {
+          console.log(`Falling back to master pooja: ${masterPooja.id}`);
+          setSelectedPooja(masterPooja.id);
+        } else if (!platformCopy && !masterPooja) {
+          // If nothing matches, clear selection so user explicitly chooses a pooja for this temple
+          setSelectedPooja("");
+        }
+      }
     }
   }, [selectedTemple, selectedPooja, allPoojas]);
 
   const availablePoojas = selectedTemple
-    ? allPoojas.filter(p => p.templeId === selectedTemple)
+    ? allPoojas.filter(p => String(p.templeId) === String(selectedTemple))
     : allPoojas.filter(p => p.isMaster);
 
   const selectedPoojaData = allPoojas.find(p => p.id === selectedPooja || p.slug === selectedPooja);
@@ -364,15 +383,23 @@ function BookingForm() {
 
     if (option.isPlatform) {
       setSelectedTemple("");
-      if (option.poojaId && option.poojaId !== selectedPooja) {
+      if (option.poojaId) {
         setSelectedPooja(option.poojaId);
+        router.push(`/booking?pooja=${option.poojaId}`);
+      } else {
+        setSelectedPooja("");
+        router.push(`/booking`);
       }
       return;
     }
 
     setSelectedTemple(option.templeId);
-    if (option.poojaId && option.poojaId !== selectedPooja) {
+    if (option.poojaId) {
       setSelectedPooja(option.poojaId);
+      router.push(`/booking?pooja=${option.poojaId}&temple=${option.templeId}`);
+    } else {
+      setSelectedPooja("");
+      router.push(`/booking?temple=${option.templeId}`);
     }
   };
 
@@ -472,8 +499,9 @@ function BookingForm() {
       }
 
       const isMaster = selectedPoojaData?.isMaster;
+      const isPlatform = selectedPoojaData?.templeId === null || selectedPoojaData?.templeId === undefined;
 
-      if (!selectedTemple && !isMaster) {
+      if (!selectedTemple && !isMaster && !isPlatform) {
         toast({ title: t("booking_client.toast_select_temple"), variant: "destructive" });
         return;
       }
@@ -489,7 +517,7 @@ function BookingForm() {
       }
     }
     if (step === 3) {
-      if (!formData.name || !formData.phone || !formData.email || !formData.gothra || !formData.kuldevi || !formData.kuldevta || !formData.dob || !formData.nativePlace) {
+      if (!formData.name || !formData.phone || !formData.dob || !formData.gender) {
         toast({ title: t("booking_client.toast_fill_fields"), description: t("booking_client.toast_fill_fields_desc"), variant: "destructive" });
         return;
       }
@@ -537,6 +565,7 @@ function BookingForm() {
         kuldevi: formData.kuldevi,
         kuldevta: formData.kuldevta,
         dob: formData.dob,
+        gender: formData.gender,
         anniversary: formData.anniversary,
         nativePlace: formData.nativePlace,
         additionalDevotees: formData.additionalDevotees,
@@ -619,12 +648,40 @@ function BookingForm() {
             email: formData.email,
           },
           theme: { color: "#794A05" },
+          modal: {
+            ondismiss: function () {
+              if (rzp && typeof rzp.close === "function") {
+                rzp.close();
+              }
+              setIsPaymentLoading(false);
+              toast({
+                title: t("booking_client.toast_payment_cancelled") || "Payment Cancelled",
+                description: t("booking_client.toast_payment_cancelled_desc") || "You have cancelled the payment. You can try again whenever you are ready.",
+                variant: "default",
+              });
+              console.log("Payment modal dismissed");
+              notifyFailedPayment({
+                orderType: "POOJA",
+                referenceId: res.data.id,
+                phone: formData.phone,
+                userName: formData.name,
+              }).catch(console.error);
+            }
+          }
         };
 
-        const rzp = new (window as any).Razorpay(options);
+        let rzp: any = new (window as any).Razorpay(options);
 
         rzp.on('payment.failed', function (response: any) {
+          if (rzp && typeof rzp.close === "function") {
+            rzp.close();
+          }
           setIsPaymentLoading(false);
+          toast({
+            title: t("booking_client.toast_payment_failed") || "Payment Failed",
+            description: t("booking_client.toast_payment_failed_desc") || "Your payment could not be completed. Please try again or use another payment method.",
+            variant: "destructive",
+          });
           console.error("Payment failed event:", response.error);
           notifyFailedPayment({
             orderType: "POOJA",
@@ -632,17 +689,6 @@ function BookingForm() {
             phone: formData.phone,
             userName: formData.name,
             error: response.error
-          }).catch(console.error);
-        });
-
-        rzp.on('modal.dismiss', function () {
-          setIsPaymentLoading(false);
-          console.log("Payment modal dismissed");
-          notifyFailedPayment({
-            orderType: "POOJA",
-            referenceId: res.data.id,
-            phone: formData.phone,
-            userName: formData.name,
           }).catch(console.error);
         });
 
@@ -746,9 +792,11 @@ function BookingForm() {
                       value={selectedTemple}
                       onValueChange={(val) => {
                         setSelectedTemple(val);
+                        setSelectedPooja("");
                         setSelectedDate("");
                         setSelectedPackage("");
                         setAvailabilityStatus(null);
+                        router.push(`/booking?temple=${val}`);
                       }}
                     >
                       <SelectTrigger className="w-full">
@@ -795,7 +843,13 @@ function BookingForm() {
                       </div>
                     </div>
                   ) : (
-                    <Select value={selectedTemple} onValueChange={setSelectedTemple}>
+                    <Select value={selectedTemple} onValueChange={(val) => {
+                        setSelectedTemple(val);
+                        setSelectedPooja("");
+                        setSelectedDate("");
+                        setSelectedPackage("");
+                        setAvailabilityStatus(null);
+                      }}>
                       <SelectTrigger className="w-full">
                         <SelectValue placeholder={t("booking_client.choose_temple")} />
                       </SelectTrigger>
@@ -1194,6 +1248,30 @@ function BookingForm() {
                       value={formData.anniversary}
                       onChange={(e) => setFormData({ ...formData, anniversary: e.target.value })}
                     />
+                  </div>
+                </div>
+
+                <div className="grid md:grid-cols-3 gap-4 border-t pt-4 mt-4">
+                  <div className="space-y-2">
+                    <Label>{t("booking_client.field_gender")}</Label>
+                    <RadioGroup
+                      value={formData.gender}
+                      onValueChange={(val) => setFormData({ ...formData, gender: val })}
+                      className="flex gap-4 pt-1"
+                    >
+                      <div className="flex items-center space-x-2">
+                        <RadioGroupItem value="Male" id="gender-male" />
+                        <Label htmlFor="gender-male" className="cursor-pointer font-normal">{t("booking_client.gender_male")}</Label>
+                      </div>
+                      <div className="flex items-center space-x-2">
+                        <RadioGroupItem value="Female" id="gender-female" />
+                        <Label htmlFor="gender-female" className="cursor-pointer font-normal">{t("booking_client.gender_female")}</Label>
+                      </div>
+                      <div className="flex items-center space-x-2">
+                        <RadioGroupItem value="Non Binary" id="gender-nonbinary" />
+                        <Label htmlFor="gender-nonbinary" className="cursor-pointer font-normal">{t("booking_client.gender_non_binary")}</Label>
+                      </div>
+                    </RadioGroup>
                   </div>
                 </div>
 

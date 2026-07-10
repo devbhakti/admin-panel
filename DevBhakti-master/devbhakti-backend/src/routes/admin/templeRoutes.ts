@@ -14,7 +14,8 @@ import {
     setPrimaryLive,
     getTempleCategories,
     getTempleLocations,
-    toggleShowPhone
+    toggleShowPhone,
+    toggleShowWebsite
 } from '../../controllers/admin/templeController';
 import { authenticate, authorize, checkPermission } from '../../middleware/authMiddleware';
 
@@ -56,6 +57,7 @@ router.put('/:id', checkPermission('temples.edit'), templeUpload, updateTemple);
 router.patch('/:id/status', checkPermission('temples.edit'), toggleTempleStatus);
 router.patch('/:id/live-config', checkPermission('temples.edit'), updateTempleLiveConfig);
 router.patch('/:id/show-phone', checkPermission('temples.edit'), toggleShowPhone);
+router.patch('/:id/show-website', checkPermission('temples.edit'), toggleShowWebsite);
 router.patch('/:id/set-primary-live', checkPermission('temples.edit'), setPrimaryLive);
 router.delete('/:id', checkPermission('temples.delete'), deleteTemple);
 

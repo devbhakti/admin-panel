@@ -1,6 +1,7 @@
 "use client";
 
 import React, { useState, useEffect } from "react";
+import { useSearchParams } from "next/navigation";
 import { motion, AnimatePresence } from "framer-motion";
 import {
     Heart,
@@ -22,7 +23,8 @@ import {
     ChevronRight,
     Building2,
     Trash2,
-    Calendar as CalendarIcon
+    Calendar as CalendarIcon,
+    Filter
 } from "lucide-react";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -55,6 +57,18 @@ const statusConfig = {
 };
 
 export default function DonationClient() {
+    const searchParams = useSearchParams();
+    const typeParam = searchParams.get("type")?.toUpperCase(); // "ONLINE" or "OFFLINE"
+    const [donationType, setDonationType] = useState<string>("all");
+
+    useEffect(() => {
+        if (typeParam === "ONLINE" || typeParam === "OFFLINE") {
+            setDonationType(typeParam);
+        } else {
+            setDonationType("all");
+        }
+    }, [typeParam]);
+
     const [searchQuery, setSearchQuery] = useState("");
     const debouncedSearch = useDebounce(searchQuery, 500);
     const [statusFilter, setStatusFilter] = useState("all");
@@ -88,6 +102,10 @@ export default function DonationClient() {
         totalAmount: 0,
         totalDonors: 0,
         avgDonation: 0,
+        onlineAmount: 0,
+        onlineCount: 0,
+        offlineAmount: 0,
+        offlineCount: 0,
         growth: 12.5,
         trend: [40, 70, 45, 90, 65, 80, 95]
     });
@@ -137,7 +155,8 @@ export default function DonationClient() {
                 page: page.toString(),
                 limit: "10",
                 ...(dateRange?.from && { startDate: dateRange.from.toISOString() }),
-                ...(dateRange?.to && { endDate: dateRange.to.toISOString() })
+                ...(dateRange?.to && { endDate: dateRange.to.toISOString() }),
+                ...(donationType !== "all" && { donationType })
             });
 
             const response = await axios.get(`${API_URL}/temple-admin/donations/${templeId}?${query}`, { validateStatus: () => true });
@@ -225,7 +244,11 @@ export default function DonationClient() {
                     ...prev,
                     totalAmount: s.totalAmount,
                     totalDonors: s.totalDonors,
-                    avgDonation: Math.round(s.totalAmount / (s.successCount || 1))
+                    avgDonation: Math.round(s.totalAmount / (s.successCount || 1)),
+                    onlineAmount: s.onlineAmount || 0,
+                    onlineCount: s.onlineCount || 0,
+                    offlineAmount: s.offlineAmount || 0,
+                    offlineCount: s.offlineCount || 0
                 }));
             }
         } catch (error) {
@@ -243,7 +266,7 @@ export default function DonationClient() {
         if (templeId) {
             fetchDonations(currentPage);
         }
-    }, [templeId, debouncedSearch, statusFilter, dateRange, currentPage]);
+    }, [templeId, debouncedSearch, statusFilter, dateRange, currentPage, donationType]);
 
     const handlePrintReceipt = (donation: any) => {
         const html = generateReceiptHTML({
@@ -356,13 +379,15 @@ export default function DonationClient() {
                     </p>
                 </div>
                 <div className="flex flex-wrap items-center gap-3">
-                    <Button
-                        variant="secondary"
-                        className="rounded-xl border-primary/20 text-primary hover:bg-primary/5"
-                        onClick={openAddDonationModal}
-                    >
-                        Add Donation
-                    </Button>
+                    {donationType === "OFFLINE" && (
+                        <Button
+                            variant="secondary"
+                            className="rounded-xl border-primary/20 text-primary hover:bg-primary/5"
+                            onClick={openAddDonationModal}
+                        >
+                            Add Donation
+                        </Button>
+                    )}
                     <Button variant="outline" className="rounded-xl border-primary/20 text-primary hover:bg-primary/5" onClick={handleDownloadReport}>
                         <Download className="w-4 h-4 mr-2" />
                         Download Excel
@@ -371,7 +396,7 @@ export default function DonationClient() {
             </div>
 
             {/* Premium Stats Grid */}
-            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
                 {[
                     {
                         label: "Total Collection",
@@ -382,20 +407,28 @@ export default function DonationClient() {
                         sub: "Total received till date"
                     },
                     {
+                        label: "Online Donations",
+                        value: `₹${stats.onlineAmount.toLocaleString()}`,
+                        icon: TrendingUp,
+                        color: "from-blue-500/10 to-indigo-500/10",
+                        textColor: "text-indigo-700",
+                        sub: `${stats.onlineCount} online transactions`
+                    },
+                    {
+                        label: "Offline Donations",
+                        value: `₹${stats.offlineAmount.toLocaleString()}`,
+                        icon: Heart,
+                        color: "from-emerald-500/10 to-teal-500/10",
+                        textColor: "text-teal-700",
+                        sub: `${stats.offlineCount} manual entries`
+                    },
+                    {
                         label: "Total Donors",
                         value: stats.totalDonors,
                         icon: Users,
-                        color: "from-blue-500/10 to-indigo-500/10",
-                        textColor: "text-indigo-700",
-                        sub: "Unique devotees"
-                    },
-                    {
-                        label: "Avg. Donation",
-                        value: `₹${stats.avgDonation.toLocaleString()}`,
-                        icon: TrendingUp,
-                        color: "from-emerald-500/10 to-teal-500/10",
-                        textColor: "text-teal-700",
-                        sub: "Gift per devotee"
+                        color: "from-purple-500/10 to-violet-500/10",
+                        textColor: "text-violet-700",
+                        sub: "Unique devotees count"
                     },
                 ].map((stat, i) => (
                     <motion.div
@@ -493,6 +526,21 @@ export default function DonationClient() {
                                             <X className="w-4 h-4" />
                                         </Button>
                                     )}
+                                    <div className="flex items-center gap-2 bg-background/50 p-1.5 rounded-xl border border-primary/10 transition-all min-w-0">
+                                        <Filter className="w-4 h-4 text-muted-foreground ml-1.5 flex-shrink-0" />
+                                        <select
+                                            className="bg-transparent text-xs font-semibold focus:outline-none cursor-pointer pr-2 min-w-0 text-muted-foreground"
+                                            value={donationType}
+                                            onChange={(e) => {
+                                                setDonationType(e.target.value);
+                                                setCurrentPage(1);
+                                            }}
+                                        >
+                                            <option value="all">All Types</option>
+                                            <option value="ONLINE">Online</option>
+                                            <option value="OFFLINE">Offline</option>
+                                        </select>
+                                    </div>
                                     <div className="relative">
                                         <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
                                         <Input

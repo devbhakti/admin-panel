@@ -54,6 +54,7 @@ export default function MerchantLedgerPage() {
     const [statusFilter, setStatusFilter] = useState("ALL");
     const [typeFilter, setTypeFilter] = useState("ALL");
     const [dateRange, setDateRange] = useState<any>({ from: undefined, to: undefined });
+    const handleDateRange = (value: any) => setDateRange(value || { from: undefined, to: undefined });
 
     useEffect(() => {
         if (merchantId) {
@@ -167,7 +168,7 @@ export default function MerchantLedgerPage() {
 
         // Date filter
         let matchesDate = true;
-        if (dateRange.from || dateRange.to) {
+        if (dateRange?.from || dateRange?.to) {
             const txDate = new Date(tx.createdAt);
             if (dateRange.from && txDate < startOfDay(dateRange.from)) matchesDate = false;
             if (dateRange.to && txDate > endOfDay(dateRange.to)) matchesDate = false;
@@ -305,7 +306,7 @@ export default function MerchantLedgerPage() {
                             <PopoverTrigger asChild>
                                 <Button variant="outline" className="h-10 justify-start text-left rounded-xl bg-slate-50 border-transparent min-w-[200px]">
                                     <CalendarIcon className="mr-2 h-4 w-4" />
-                                    {dateRange.from ? (
+                                    {dateRange?.from ? (
                                         dateRange.to ? `${format(dateRange.from, "dd MMM")} - ${format(dateRange.to, "dd MMM yyyy")}` : format(dateRange.from, "dd MMM yyyy")
                                     ) : "Select date range"}
                                 </Button>
@@ -314,14 +315,13 @@ export default function MerchantLedgerPage() {
                                 <CalendarComponent
                                     mode="range"
                                     selected={dateRange}
-                                    onSelect={setDateRange}
-                                    numberOfMonths={2}
+                                    onSelect={handleDateRange}
                                 />
                             </PopoverContent>
                         </Popover>
 
                         {/* Reset Button */}
-                        {(searchTerm || statusFilter !== "ALL" || typeFilter !== "ALL" || dateRange.from) && (
+                        {(searchTerm || statusFilter !== "ALL" || typeFilter !== "ALL" || dateRange?.from) && (
                             <Button
                                 variant="ghost"
                                 onClick={resetFilters}

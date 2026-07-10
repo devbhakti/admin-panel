@@ -395,6 +395,7 @@ async function main() {
   // 8. Create Pooja Bookings
   await prisma.poojaBooking.create({
     data: {
+        displayId: 'PB-001',
       userId: devotee.id,
       poojaId: createdPoojas[0].id,
       templeId: temple1.id,

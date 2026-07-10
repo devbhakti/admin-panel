@@ -25,7 +25,7 @@ import {
     Play,
     Phone,
     Info,
-
+     Globe,
     ExternalLink,
     FileText,
 } from "lucide-react";
@@ -150,6 +150,22 @@ export default function DesktopTempleDetail({
                                         <div className="flex items-center gap-2">
                                             <Phone className="h-4 w-4 text-primary" />
                                             <span>{temple.phone}</span>
+                                        </div>
+                                    )}
+                                    {temple.website && temple.showWebsite !== false && (
+                                        <div className="flex items-center gap-2">
+                                            <Globe className="h-4 w-4 text-primary" />
+                                            <a href={temple.website} target="_blank" rel="noopener noreferrer" className="hover:text-primary transition-colors hover:underline">
+                                                Official Website
+                                            </a>
+                                        </div>
+                                    )}
+                                    {temple.mapUrl && (
+                                        <div className="flex items-center gap-2">
+                                            <MapPin className="h-4 w-4 text-primary" />
+                                            <a href={temple.mapUrl} target="_blank" rel="noopener noreferrer" className="hover:text-primary transition-colors hover:underline">
+                                                Google Maps Location
+                                            </a>
                                         </div>
                                     )}
                                 </div>

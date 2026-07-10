@@ -69,3 +69,26 @@ export const getDeduplicatedPoojas = (poojas: any[], lang: string = 'en'): any[]
     
     return Array.from(uniqueMap.values());
 };
+
+/**
+ * Detects long sequential or repetitive digit patterns in a numeric string.
+ * Returns true for strings like '012345', '987654', '111111', or long repeated digits.
+ */
+export const isSequentialOrRepetitive = (num: string) => {
+    if (!num) return false;
+    if (/^(\d)\1+$/.test(num)) return true;
+
+    let maxRun = 1;
+    let inc = 1;
+    let dec = 1;
+    let rep = 1;
+    for (let i = 1; i < num.length; i++) {
+        const prev = Number(num[i - 1]);
+        const cur = Number(num[i]);
+        if (cur === (prev + 1) % 10) inc++; else inc = 1;
+        if (cur === (prev + 9) % 10) dec++; else dec = 1;
+        if (cur === prev) rep++; else rep = 1;
+        maxRun = Math.max(maxRun, inc, dec, rep);
+    }
+    return maxRun >= 6;
+};

@@ -140,7 +140,7 @@ export default function DonationClient() {
 
     const loadTemples = async () => {
         try {
-            const res = await fetchAllTemplesAdmin({ page: 1, limit: 1000 });
+            const res = await fetchAllTemplesAdmin({ page: 1, limit: 1000, isVerified: true, isActive: true });
             const data = Array.isArray(res) ? res : (res.data || []);
             setTemples(data);
         } catch (error) {

@@ -98,6 +98,7 @@ export const PoojaForm: React.FC<PoojaFormProps> = ({
     const [imagePreview, setImagePreview] = useState<string>("");
     const [showCropper, setShowCropper] = useState(false);
     const [tempImage, setTempImage] = useState<string | null>(null);
+    const [imageError, setImageError] = useState(false);
     const isMaster = poojaType === "template";
 
     useEffect(() => {
@@ -430,6 +431,18 @@ export const PoojaForm: React.FC<PoojaFormProps> = ({
 
     const handleFormSubmit = async (e: React.FormEvent) => {
         e.preventDefault();
+
+        // Image Validation:
+        // Create mode: a new imageFile must be selected
+        // Edit mode:   either a new imageFile OR an existing imagePreview is acceptable
+        const hasImage = !!imageFile || (mode === 'edit' && !!imagePreview);
+        if (!hasImage) {
+            setImageError(true);
+            document.getElementById('pooja-image-section')?.scrollIntoView({ behavior: 'smooth', block: 'center' });
+            return;
+        }
+        setImageError(false);
+
         const fd = new FormData();
 
         const isMasterVal = poojaType === "template";
@@ -869,23 +882,44 @@ export const PoojaForm: React.FC<PoojaFormProps> = ({
             </div>
 
             {/* Service Image Section (Global) */}
-            <div className="bg-white border rounded-xl p-6 shadow-sm space-y-6">
-                <Label className="text-sm font-bold text-slate-800 uppercase tracking-wider">Pooja Media Asset</Label>
-                <div className="flex flex-col md:flex-row items-center gap-8 p-6 bg-slate-50/50 rounded-2xl border border-slate-200 border-dashed">
-                    <div className="w-full md:w-48 aspect-square rounded-2xl border-2 border-dashed border-slate-200 bg-white flex items-center justify-center overflow-hidden relative group cursor-pointer shadow-sm">
+            <div id="pooja-image-section" className={`bg-white border rounded-xl p-6 shadow-sm space-y-6 ${imageError ? 'border-red-400 ring-2 ring-red-200' : ''}`}>
+                <div className="flex items-center justify-between">
+                    <Label className="text-sm font-bold text-slate-800 uppercase tracking-wider">Pooja Media Asset <span className="text-red-500">*</span></Label>
+                    {imageError && (
+                        <span className="text-xs font-semibold text-red-500 flex items-center gap-1">
+                            ⚠️ Image is required — please upload a pooja image before saving.
+                        </span>
+                    )}
+                </div>
+                <div className={`flex flex-col md:flex-row items-center gap-8 p-6 rounded-2xl border border-dashed ${imageError ? 'bg-red-50 border-red-300' : 'bg-slate-50/50 border-slate-200'}`}>
+                    <div className={`w-full md:w-48 aspect-square rounded-2xl border-2 border-dashed flex items-center justify-center overflow-hidden relative group cursor-pointer shadow-sm ${imageError ? 'border-red-400 bg-red-50' : 'border-slate-200 bg-white'}`}>
                         {imagePreview ? (
                             <>
                                 <img src={imagePreview} className="w-full h-full object-cover" alt="Preview" />
-                                <div className="absolute inset-0 bg-black/40 opacity-0 group-hover:opacity-100 flex items-center justify-center transition-opacity">
+                                <div className="absolute inset-0 bg-black/40 opacity-0 group-hover:opacity-100 flex items-center justify-center transition-opacity pointer-events-none">
                                     <Upload className="w-6 h-6 text-white" />
                                 </div>
+                                <button
+                                    type="button"
+                                    onClick={(e) => {
+                                        e.preventDefault();
+                                        e.stopPropagation();
+                                        setImageFile(null);
+                                        setImagePreview("");
+                                        const fileInput = document.getElementById('pooja-image-upload') as HTMLInputElement;
+                                        if (fileInput) fileInput.value = '';
+                                    }}
+                                    className="absolute top-2 right-2 bg-red-500 hover:bg-red-600 text-white p-1.5 rounded-full z-10 transition-colors opacity-0 group-hover:opacity-100"
+                                >
+                                    <X className="w-4 h-4" />
+                                </button>
                             </>
                         ) : (
                             <div className="flex flex-col items-center gap-2 text-slate-300">
                                 <Upload className="w-8 h-8" />
                             </div>
                         )}
-                        <input type="file" className="absolute inset-0 opacity-0 cursor-pointer" onChange={handleImageChange} accept="image/*" />
+                        <input id="pooja-image-upload" type="file" className="absolute inset-0 opacity-0 cursor-pointer z-0" onChange={handleImageChange} accept="image/*" />
                     </div>
                     <div className="flex-1 space-y-1">
                         <h3 className="font-bold text-slate-800 text-sm">Upload a high-quality image</h3>

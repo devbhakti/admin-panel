@@ -63,10 +63,9 @@ export default function AddOfflineDonationPage() {
     const loadTemples = async () => {
         try {
             setLoading(true);
-            const data = await fetchAllTemplesAdmin();
-            if (data.success) {
-                setTemples(data.data || []);
-            }
+            const res = await fetchAllTemplesAdmin({ page: 1, limit: 1000, isVerified: true, isActive: true });
+            const data = Array.isArray(res) ? res : (res.data || []);
+            setTemples(data);
         } catch (error) {
             console.error("Load Temples Error:", error);
             toast({ title: "Error", description: "Failed to load temples", variant: "destructive" });
@@ -124,14 +123,10 @@ export default function AddOfflineDonationPage() {
                 netEarning: Number(amount),
             };
 
-            const response = await axios.post(
-                `${API_URL}/admin/donations`,
-                donationData,
-                { validateStatus: () => true }
-            );
+            const res = await createDonationAdmin(donationData);
 
-            if (response.data?.success) {
-                const newDonation = response.data.data;
+            if (res?.success) {
+                const newDonation = res.data;
 
                 // Generate and print receipt
                 const receiptHTML = generateReceiptHTML({
@@ -157,7 +152,7 @@ export default function AddOfflineDonationPage() {
             } else {
                 toast({
                     title: "Error",
-                    description: response.data?.message || "Failed to create donation",
+                    description: res?.message || "Failed to create donation",
                     variant: "destructive",
                 });
             }
@@ -165,7 +160,7 @@ export default function AddOfflineDonationPage() {
             console.error("Submit Error:", error);
             toast({
                 title: "Error",
-                description: error.message || "Failed to create donation",
+                description: error.response?.data?.message || error.message || "Failed to create donation",
                 variant: "destructive",
             });
         } finally {

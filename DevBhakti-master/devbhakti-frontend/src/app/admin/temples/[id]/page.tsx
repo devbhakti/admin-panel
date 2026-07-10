@@ -29,7 +29,7 @@ import { Badge } from "@/components/ui/badge";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Switch } from "@/components/ui/switch";
 import { useLanguage, Language } from "@/context/LanguageContext";
-import { fetchAllTemplesAdmin, fetchCommissionSlabsAdmin, fetchProductsByTempleAdmin, toggleShowPhoneAdmin } from "@/api/adminController";
+import { fetchAllTemplesAdmin, fetchCommissionSlabsAdmin, fetchProductsByTempleAdmin, toggleShowPhoneAdmin, toggleShowWebsiteAdmin } from "@/api/adminController";
 import { API_URL } from "@/config/apiConfig";
 import { Card, CardContent } from "@/components/ui/card";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
@@ -63,6 +63,22 @@ export default function ViewTemplePage() {
         } catch (error) {
             console.error("Failed to toggle phone visibility", error);
             alert("Failed to update phone visibility.");
+        }
+    };
+
+    const handleToggleWebsite = async (checked: boolean) => {
+        try {
+            await toggleShowWebsiteAdmin(instId, checked);
+            setInst({
+                ...inst,
+                temple: {
+                    ...inst.temple,
+                    showWebsite: checked
+                }
+            });
+        } catch (error) {
+            console.error("Failed to toggle website visibility", error);
+            alert("Failed to update website visibility.");
         }
     };
 
@@ -632,9 +648,18 @@ export default function ViewTemplePage() {
 
                             <div className="pt-4 border-t space-y-3">
                                 {temple?.website && (
-                                    <a href={temple.website} target="_blank" className="flex items-center gap-2 text-sm text-blue-600 hover:underline">
-                                        <Globe className="w-4 h-4" /> Official Website <ExternalLink className="w-3 h-3" />
-                                    </a>
+                                    <div className="flex items-center justify-between text-sm text-slate-600">
+                                        <a href={temple.website} target="_blank" className="flex items-center gap-2 text-sm text-blue-600 hover:underline">
+                                            <Globe className="w-4 h-4" /> Official Website <ExternalLink className="w-3 h-3" />
+                                        </a>
+                                        <div className="flex items-center gap-2">
+                                            <span className="text-xs font-bold text-slate-400 uppercase">Visible</span>
+                                            <Switch 
+                                                checked={temple.showWebsite ?? true} 
+                                                onCheckedChange={handleToggleWebsite} 
+                                            />
+                                        </div>
+                                    </div>
                                 )}
                                 {temple?.mapUrl && (
                                     <a href={temple.mapUrl} target="_blank" className="flex items-center gap-2 text-sm text-emerald-600 hover:underline">

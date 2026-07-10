@@ -47,6 +47,7 @@ export const createBooking = async (req: Request, res: Response) => {
             kuldevi,
             kuldevta,
             dob,
+            gender,
             anniversary,
             nativePlace,
             additionalDevotees
@@ -286,6 +287,7 @@ export const createBooking = async (req: Request, res: Response) => {
                     kuldevi: kuldevi as string | null,
                     kuldevta: kuldevta as string | null,
                     dob: dob as string | null,
+                    gender: gender as string | null,
                     anniversary: anniversary as string | null,
                     nativePlace: nativePlace as string | null,
                     additionalDevotees: additionalDevotees || null,

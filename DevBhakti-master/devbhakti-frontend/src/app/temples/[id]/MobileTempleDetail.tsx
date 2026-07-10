@@ -24,7 +24,7 @@ import {
     ArrowRight,
     IndianRupee,
     ShoppingCart,
-
+    Globe,
     ExternalLink,
 } from "lucide-react";
 import { FaFacebook, FaInstagram, FaYoutube } from "react-icons/fa";
@@ -216,9 +216,33 @@ export default function MobileTempleDetail({
                     <h1 className="text-3xl font-serif font-black text-[#5c3a21] leading-tight">
                         {getLocalized(temple, "name", language)}
                     </h1>
-                    <div className="flex items-center gap-2 text-muted-foreground mt-2 text-sm">
-                        <MapPin className="h-4 w-4 text-[#7c4624] shrink-0" />
-                        <span className="truncate text-sm">{getLocalized(temple, "fullAddress", language)}</span>
+                    <div className="flex flex-col gap-2 mt-2">
+                        <div className="flex items-center gap-2 text-muted-foreground text-sm">
+                            <MapPin className="h-4 w-4 text-[#7c4624] shrink-0" />
+                            <span className="truncate text-sm">{getLocalized(temple, "fullAddress", language)}</span>
+                        </div>
+                        {temple.phone && temple.showPhone !== false && (
+                            <div className="flex items-center gap-2 text-muted-foreground text-sm">
+                                <Phone className="h-4 w-4 text-[#7c4624] shrink-0" />
+                                <span>{temple.phone}</span>
+                            </div>
+                        )}
+                        {temple.website && temple.showWebsite !== false && (
+                            <div className="flex items-center gap-2 text-muted-foreground text-sm">
+                                <Globe className="h-4 w-4 text-[#7c4624] shrink-0" />
+                                <a href={temple.website} target="_blank" rel="noopener noreferrer" className="hover:text-primary transition-colors hover:underline truncate">
+                                    Official Website
+                                </a>
+                            </div>
+                        )}
+                        {temple.mapUrl && (
+                            <div className="flex items-center gap-2 text-muted-foreground text-sm">
+                                <MapPin className="h-4 w-4 text-[#7c4624] shrink-0" />
+                                <a href={temple.mapUrl} target="_blank" rel="noopener noreferrer" className="hover:text-primary transition-colors hover:underline truncate">
+                                    Google Maps Location
+                                </a>
+                            </div>
+                        )}
                     </div>
 
                     {showRatings && temple.rating && (

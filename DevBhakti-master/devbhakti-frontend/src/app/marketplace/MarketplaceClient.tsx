@@ -229,6 +229,13 @@ export default function MarketplaceClient() {
     return result;
   }, [allProducts, searchQuery, selectedCategory, priceRange, sortBy, language]);
 
+  // Only show categories that have at least one product in inventory
+  const categoriesWithProducts = React.useMemo(() => {
+    return categories.filter((cat) =>
+      allProducts.some((product) => product.categoryId === cat.id || product.category === cat.id)
+    );
+  }, [categories, allProducts]);
+
   // Paginated view of filtered products
   const paginatedProducts = React.useMemo(() => {
     if (showAllProducts) return filteredProducts;
@@ -431,7 +438,7 @@ export default function MarketplaceClient() {
                   >
                     {t('marketplace.all_products')}
                   </button>
-                  {categories.map((cat) => (
+                  {categoriesWithProducts.map((cat) => (
                     <button 
                       key={cat.id} 
                       onClick={() => { setSelectedCategory(cat.id); setCurrentPage(1); }} 

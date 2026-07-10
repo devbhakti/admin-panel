@@ -291,7 +291,11 @@ export const getTempleById = async (req: Request, res: Response) => {
           status: true
         },
         include: {
-          Pooja: true
+          Pooja: {
+            where: {
+              status: true
+            }
+          }
         },
         orderBy: {
           date: 'asc'
@@ -355,6 +359,7 @@ export const getPoojaById = async (req: Request, res: Response) => {
 
     const pooja = await prisma.pooja.findFirst({
       where: {
+        status: true,
         AND: [
           {
             OR: [
@@ -368,6 +373,7 @@ export const getPoojaById = async (req: Request, res: Response) => {
               { templeId: null },
               {
                 temple: {
+                  isActive: true,
                   user: {
                     isVerified: true,
                     role: 'INSTITUTION'
@@ -384,7 +390,12 @@ export const getPoojaById = async (req: Request, res: Response) => {
           where: {
             status: true,
             OR: [
-              { temple: { user: { isVerified: true } } },
+              { 
+                temple: { 
+                  isActive: true,
+                  user: { isVerified: true } 
+                } 
+              },
               { templeId: null }
             ]
           },
@@ -446,6 +457,10 @@ export const getAllPoojas = async (req: Request, res: Response) => {
 
     if (templeId) {
       where.templeId = String(templeId);
+      where.temple = {
+        isActive: true,
+        user: { isVerified: true }
+      };
     } else {
       // Global View: Deduplicate - Show Master poojas (if they have at least one active copy) OR Standalone poojas
       where.OR = [
@@ -453,14 +468,24 @@ export const getAllPoojas = async (req: Request, res: Response) => {
           isMaster: true,
           templeCopies: {
             some: {
-              status: true
+              status: true,
+              temple: {
+                isActive: true,
+                user: { isVerified: true }
+              }
             }
           }
         },
         {
           AND: [
             { isMaster: false },
-            { masterPoojaId: null }
+            { masterPoojaId: null },
+            {
+              temple: {
+                isActive: true,
+                user: { isVerified: true }
+              }
+            }
           ]
         }
       ];
@@ -476,7 +501,10 @@ export const getAllPoojas = async (req: Request, res: Response) => {
       const locationFilter = { location: { path: ['en'], string_contains: String(location) } };
       
       if (templeId) {
-        where.temple = locationFilter;
+        where.temple = {
+          ...where.temple,
+          location: locationFilter.location
+        };
       } else {
         // Advanced Global Filtering: Master poojas with copies in this location OR Standalone poojas in this location
         where.AND = where.AND || [];
@@ -486,7 +514,11 @@ export const getAllPoojas = async (req: Request, res: Response) => {
               isMaster: true,
               templeCopies: {
                 some: {
-                  temple: locationFilter,
+                  temple: {
+                    location: locationFilter.location,
+                    isActive: true,
+                    user: { isVerified: true }
+                  },
                   status: true
                 }
               }
@@ -494,7 +526,11 @@ export const getAllPoojas = async (req: Request, res: Response) => {
             {
               isMaster: false,
               masterPoojaId: null,
-              temple: locationFilter
+              temple: {
+                location: locationFilter.location,
+                isActive: true,
+                user: { isVerified: true }
+              }
             }
           ]
         });

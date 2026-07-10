@@ -249,7 +249,7 @@ const Navbar: React.FC<NavbarProps> = ({ variant = "default", isSolid = false })
                 </Button>
               )}
                 {/* Login Button for Institution (Temple/Mandal) */}
-              {!isTempleRegistrationPage && !isMandalRegistrationPage && (
+              {isTempleRegistrationPage && (
                 <Button
                   variant="outline"
                   onClick={() => { setLoginType("temple"); setShowTempleLoginModal(true); }}

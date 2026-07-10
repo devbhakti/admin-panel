@@ -108,20 +108,20 @@ export default function TempleRegistrationForm({ onClose }: { onClose?: () => vo
 
     // Sync lead data periodically when user types more details
     useEffect(() => {
+        const phoneDigits = formData.phone.replace(/\D/g, '');
+        if (phoneDigits.length !== 10 || !formData.name.trim() || phoneError) return;
+
         const timeout = setTimeout(() => {
-            const phoneDigits = formData.phone.replace(/\\D/g, '');
-            if (phoneDigits.length === 10 && !phoneError) {
-                captureLead(
-                    phoneDigits, 
-                    "TEMPLE_ONBOARDING", 
-                    { templeName: formData.templeName },
-                    formData.name,
-                    formData.email
-                ).catch(e => console.error("Failed silent lead update", e));
-            }
-        }, 1000);
+            captureLead(
+                phoneDigits,
+                "TEMPLE_ONBOARDING",
+                { templeName: formData.templeName },
+                formData.name.trim(),
+                formData.email
+            ).catch(e => console.error("Failed silent lead update", e));
+        }, 1500); // 1.5s debounce after user stops typing
         return () => clearTimeout(timeout);
-    }, [formData.name, formData.email, formData.templeName]);
+    }, [formData.name, formData.email, formData.templeName, formData.phone, phoneError]);
 
     // Crop State
     const [showCropper, setShowCropper] = useState(false);

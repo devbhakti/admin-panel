@@ -166,7 +166,7 @@ export default function AdminEventsPage() {
 
     const loadTemples = async () => {
         try {
-            const templesData = await fetchAllTemplesAdmin();
+            const templesData = await fetchAllTemplesAdmin({ isVerified: true, isActive: true });
             const actualTemples = templesData
                 .filter((user: any) => user.temple)
                 .map((user: any) => user.temple);

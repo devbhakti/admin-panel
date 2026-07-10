@@ -44,8 +44,9 @@ export default function CreatePoojaPage() {
 
     const loadTemples = async () => {
         try {
-            const data = await fetchAllTemplesAdmin();
-            const actualTemples = data
+            // Request only verified and active temples from the API
+            const data = await fetchAllTemplesAdmin({ isVerified: true, isActive: true });
+            const actualTemples = (data || [])
                 .filter((user: any) => user.temple)
                 .map((user: any) => user.temple);
 
