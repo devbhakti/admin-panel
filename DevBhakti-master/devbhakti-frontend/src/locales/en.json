@@ -1283,7 +1283,9 @@
   "temple_login_modal": {
     "header": {
       "title": "Temple Portal",
-      "subtitle": "Verify your registered number to enter"
+      "subtitle": "Verify your registered number to enter",
+      "title_mandal": "Mandal Login",
+      "subtitle_mandal": "Manage your mandal and events"
     },
     "labels": {
       "phone": "Temple Owner/Authority's Mobile Number",
@@ -1303,7 +1305,9 @@
     "footer": {
       "staff_login": "Temple Staff? Login Here",
       "new_admin": "New Temple Administrator?",
-      "register": "Register Temple"
+      "register": "Register Temple",
+      "no_account_mandal": "Don't have a registered mandal?",
+      "register_now_mandal": "Register Mandal"
     },
     "messages": {
       "welcome_back": "Welcome Back",
