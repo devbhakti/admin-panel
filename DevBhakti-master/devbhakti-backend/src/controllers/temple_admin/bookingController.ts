@@ -2,6 +2,7 @@ import { Request, Response } from 'express';
 import { prisma } from '../../lib/prisma';
 import { notifyUser } from '../../services/firebaseService';
 import { getLang, localize, getEnglish } from '../../utils/localization';
+import { triggerPrasadShiprocketOrder } from '../../utils/prasadShiprocket';
 
 export const getTempleBookings = async (req: Request, res: Response) => {
     try {
@@ -69,10 +70,14 @@ export const getTempleBookings = async (req: Request, res: Response) => {
 export const updateBookingStatus = async (req: Request, res: Response) => {
     try {
         const { id } = req.params;
-        const { status } = req.body;
+        const { status, prasadStatus, awbCode, trackingUrl, courierName } = req.body;
 
-        if (!['PENDING', 'BOOKED', 'COMPLETED', 'REJECTED', 'CANCELLED'].includes(status)) {
+        if (status && !['PENDING', 'BOOKED', 'COMPLETED', 'REJECTED', 'CANCELLED'].includes(status)) {
             return res.status(400).json({ success: false, message: 'Invalid status' });
+        }
+
+        if (prasadStatus && !['NOT_APPLICABLE', 'PREPARING', 'DISPATCHED', 'IN_TRANSIT', 'DELIVERED'].includes(prasadStatus)) {
+            return res.status(400).json({ success: false, message: 'Invalid prasad status' });
         }
 
         // Check if booking belongs to a temple owned by this user
@@ -90,7 +95,12 @@ export const updateBookingStatus = async (req: Request, res: Response) => {
             return res.status(403).json({ success: false, message: 'Unauthorized' });
         }
 
-        const updateData: any = { status };
+        const updateData: any = {};
+        if (status) updateData.status = status;
+        if (prasadStatus) updateData.prasadStatus = prasadStatus;
+        if (awbCode !== undefined) updateData.awbCode = awbCode;
+        if (trackingUrl !== undefined) updateData.trackingUrl = trackingUrl;
+        if (courierName !== undefined) updateData.courierName = courierName;
 
         // Handle proof photos if status is COMPLETED
         if (status === 'COMPLETED' && req.files && Array.isArray(req.files)) {
@@ -112,6 +122,12 @@ export const updateBookingStatus = async (req: Request, res: Response) => {
                 where: { sourceId: id as string, type: "POOJA_EARNING" },
                 data: { status: "COMPLETED" }
             });
+            // Auto-trigger Prasad order creation if applicable
+            if (updatedBooking.isPrasadRequested) {
+                triggerPrasadShiprocketOrder(updatedBooking.id).catch(err => {
+                    console.error("Failed to trigger Prasad Shiprocket Order asynchronously:", err);
+                });
+            }
         } else if (status === "CANCELLED" || status === "REJECTED") {
             await prisma.templeLedger.updateMany({
                 where: { sourceId: id as string, type: "POOJA_EARNING" },
@@ -120,11 +136,13 @@ export const updateBookingStatus = async (req: Request, res: Response) => {
         }
 
         // Notify Devotee
-        await notifyUser(booking.userId, 'devotee', {
-            title: `Pooja Booking ${status === 'COMPLETED' ? 'Completed 🎊' : status === 'CANCELLED' ? 'Cancelled ❌' : status === 'REJECTED' ? 'Rejected ❌' : 'Updated'}`,
-            body: `Your booking for ${getEnglish(updatedBooking.pooja.name)} has been marked as ${status.toLowerCase()}.`,
-            data: { link: '/profile/bookings', bookingId: booking.id }
-        });
+        if (status) {
+            await notifyUser(booking.userId, 'devotee', {
+                title: `Pooja Booking ${status === 'COMPLETED' ? 'Completed 🎊' : status === 'CANCELLED' ? 'Cancelled ❌' : status === 'REJECTED' ? 'Rejected ❌' : 'Updated'}`,
+                body: `Your booking for ${getEnglish(updatedBooking.pooja.name)} has been marked as ${status.toLowerCase()}.`,
+                data: { link: '/profile/bookings', bookingId: booking.id }
+            });
+        }
 
         res.json({
             success: true,

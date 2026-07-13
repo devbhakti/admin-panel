@@ -63,7 +63,19 @@ export const fetchMyBookings = async () => {
         return { success: false, data: [] };
     }
 };
-
+export const fetchPrasadTracking = async (bookingId: string) => {
+    const token = localStorage.getItem("token");
+    if (!token) return { success: false, message: "Unauthorized" };
+    try {
+        const response = await axios.get(`${API_URL}/bookings/${bookingId}/prasad-tracking`, {
+            headers: { Authorization: `Bearer ${token}` }
+        });
+        return response.data;
+    } catch (error) {
+        console.error("Fetch prasad tracking failed", error);
+        return { success: false, message: "Failed to fetch tracking" };
+    }
+};
 export const fetchMyDonations = async () => {
     const token = localStorage.getItem("token");
     if (!token) return { success: false, data: [] };

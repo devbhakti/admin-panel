@@ -212,6 +212,8 @@ model Pooja {
   updatedAt     DateTime              @updatedAt
   status        Boolean               @default(true)
   slug          String?               @unique
+  hasPrasad     Boolean               @default(false)
+  prasadType    PrasadType            @default(FREE)
   about         Json? // {"en":"...","hi":"...","mr":"..."}
   benefits      Json? // {"en":[...],"hi":[...],"mr":[...]}
   bullets       Json? // {"en":[...],"hi":[...],"mr":[...]}
@@ -390,37 +392,47 @@ model CTACard {
 }
 
 model PoojaBooking {
-  id                 String        @id @default(cuid())
-  displayId          String
-  userId             String
-  poojaId            String
-  templeId           String?
-  packageName        String
-  packagePrice       Float
-  devoteeName        String
-  devoteePhone       String
-  devoteeEmail       String?
-  bookingDate        String?
-  address            String?
-  specialRequests    String?
-  gothra             String?
-  kuldevi            String?
-  kuldevta           String?
-  status             BookingStatus @default(BOOKED)
-  commissionAmount   Float         @default(0)
-  netEarning         Float         @default(0)
-  platformFee        Float         @default(0)
-  createdAt          DateTime      @default(now())
-  updatedAt          DateTime      @updatedAt
-  anniversary        String?
-  dob                String?
-  gender             String?
-  proofPhotos        String[]      @default([])
-  additionalDevotees Json?
-  nativePlace        String?
-  pooja              Pooja         @relation(fields: [poojaId], references: [id])
-  temple             Temple?       @relation(fields: [templeId], references: [id])
-  user               User          @relation(fields: [userId], references: [id])
+  id                    String        @id @default(cuid())
+  displayId             String
+  userId                String
+  poojaId               String
+  templeId              String?
+  packageName           String
+  packagePrice          Float
+  devoteeName           String
+  devoteePhone          String
+  devoteeEmail          String?
+  bookingDate           String?
+  address               String?       // Full address (legacy / display)
+  prasadStreet          String?       // Structured: Street / House No
+  prasadCity            String?       // Structured: City
+  prasadState           String?       // Structured: State
+  prasadPincode         String?       // Structured: Pincode (6 digits)
+  specialRequests       String?
+  gothra                String?
+  kuldevi               String?
+  kuldevta              String?
+  status                BookingStatus @default(BOOKED)
+  isPrasadRequested     Boolean       @default(false)
+  prasadStatus          PrasadStatus  @default(NOT_APPLICABLE)
+  shiprocketOrderId     String?       // Shiprocket order_id for prasad shipment
+  awbCode               String?       // AWB / Tracking ID from Shiprocket
+  trackingUrl           String?       // Tracking URL (auto-generated)
+  courierName           String?       // Assigned courier partner
+  commissionAmount      Float         @default(0)
+  netEarning            Float         @default(0)
+  platformFee           Float         @default(0)
+  createdAt             DateTime      @default(now())
+  updatedAt             DateTime      @updatedAt
+  anniversary           String?
+  dob                   String?
+  gender                String?
+  proofPhotos           String[]      @default([])
+  additionalDevotees    Json?
+  nativePlace           String?
+  pooja                 Pooja         @relation(fields: [poojaId], references: [id])
+  temple                Temple?       @relation(fields: [templeId], references: [id])
+  user                  User          @relation(fields: [userId], references: [id])
 }
 
 model Order {
@@ -841,4 +853,17 @@ model MandalWithdrawalRequest {
   createdAt     DateTime         @default(now())
   updatedAt     DateTime         @updatedAt
   mandal        Mandal?          @relation(fields: [mandalId], references: [id])
+}
+
+enum PrasadStatus {
+  NOT_APPLICABLE
+  PREPARING
+  DISPATCHED
+  IN_TRANSIT
+  DELIVERED
+}
+
+enum PrasadType {
+  FREE
+  PAID
 }

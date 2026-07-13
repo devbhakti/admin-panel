@@ -80,6 +80,10 @@ function BookingForm() {
     phone: "",
     email: "",
     address: "",
+    prasadStreet: "",
+    prasadCity: "",
+    prasadState: "",
+    prasadPincode: "",
     specialRequests: "",
     gothra: "",
     kuldevi: "",
@@ -96,6 +100,7 @@ function BookingForm() {
   const [unavailableDates, setUnavailableDates] = useState<string[]>([]);
   const [isCalendarOpen, setIsCalendarOpen] = useState(false);
   const [bookingId, setBookingId] = useState("");
+  const [isPrasadRequested, setIsPrasadRequested] = useState(false);
   const requestedPoojaParam = searchParams.get("pooja");
 
 
@@ -560,6 +565,10 @@ function BookingForm() {
         devoteeEmail: formData.email,
         bookingDate: selectedDate,
         address: formData.address,
+        prasadStreet: formData.prasadStreet,
+        prasadCity: formData.prasadCity,
+        prasadState: formData.prasadState,
+        prasadPincode: formData.prasadPincode,
         specialRequests: formData.specialRequests,
         gothra: formData.gothra,
         kuldevi: formData.kuldevi,
@@ -570,6 +579,7 @@ function BookingForm() {
         nativePlace: formData.nativePlace,
         additionalDevotees: formData.additionalDevotees,
         platformFee: platformFee, // Send platform fee to backend
+        isPrasadRequested: isPrasadRequested,
       };
 
       const response = await fetch(`${API_URL}/bookings`, {
@@ -1284,6 +1294,62 @@ function BookingForm() {
                     onChange={(e) => setFormData({ ...formData, address: e.target.value })}
                   />
                 </div>
+
+                {/* Structured Prasad Delivery Address — only shown when prasad is requested */}
+                {isPrasadRequested && (
+                  <div className="mt-4 p-4 rounded-2xl border border-orange-200 bg-orange-50/40 space-y-4">
+                    <p className="text-sm font-bold text-[#794A05] flex items-center gap-2">
+                      📦 Prasad Delivery Address
+                      <span className="text-xs font-normal text-slate-500">(Required for courier delivery)</span>
+                    </p>
+                    <div className="space-y-2">
+                      <Label htmlFor="prasadStreet">Street / House No / Area <span className="text-red-500">*</span></Label>
+                      <Textarea
+                        id="prasadStreet"
+                        placeholder="e.g. 12, Shanti Nagar, Near Park"
+                        value={formData.prasadStreet}
+                        onChange={(e) => setFormData({ ...formData, prasadStreet: e.target.value })}
+                        rows={2}
+                      />
+                    </div>
+                    <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
+                      <div className="space-y-2">
+                        <Label htmlFor="prasadCity">City <span className="text-red-500">*</span></Label>
+                        <input
+                          id="prasadCity"
+                          className="w-full h-10 px-3 rounded-lg border border-input bg-background text-sm focus:ring-1 focus:ring-orange-400 focus:outline-none"
+                          placeholder="e.g. Pune"
+                          value={formData.prasadCity}
+                          onChange={(e) => setFormData({ ...formData, prasadCity: e.target.value })}
+                        />
+                      </div>
+                      <div className="space-y-2">
+                        <Label htmlFor="prasadState">State <span className="text-red-500">*</span></Label>
+                        <input
+                          id="prasadState"
+                          className="w-full h-10 px-3 rounded-lg border border-input bg-background text-sm focus:ring-1 focus:ring-orange-400 focus:outline-none"
+                          placeholder="e.g. Maharashtra"
+                          value={formData.prasadState}
+                          onChange={(e) => setFormData({ ...formData, prasadState: e.target.value })}
+                        />
+                      </div>
+                      <div className="space-y-2">
+                        <Label htmlFor="prasadPincode">Pincode <span className="text-red-500">*</span></Label>
+                        <input
+                          id="prasadPincode"
+                          className="w-full h-10 px-3 rounded-lg border border-input bg-background text-sm focus:ring-1 focus:ring-orange-400 focus:outline-none"
+                          placeholder="e.g. 411001"
+                          maxLength={6}
+                          value={formData.prasadPincode}
+                          onChange={(e) => {
+                            const v = e.target.value.replace(/\D/g, "").slice(0, 6);
+                            setFormData({ ...formData, prasadPincode: v });
+                          }}
+                        />
+                      </div>
+                    </div>
+                  </div>
+                )}
                 <div className="space-y-2">
                   <Label htmlFor="requests">{t("booking_client.field_special_requests")}</Label>
                   <Textarea
@@ -1293,6 +1359,29 @@ function BookingForm() {
                     onChange={(e) => setFormData({ ...formData, specialRequests: e.target.value })}
                   />
                 </div>
+
+                {/* Free Prasad Option */}
+                {selectedPoojaData?.hasPrasad && (
+                  <div className="mt-6 p-4 border rounded-xl bg-orange-50/50 border-orange-100">
+                    <Label className="text-sm font-bold text-slate-800 flex items-center gap-2">
+                      🙏 Would you like to receive the free prasad?
+                    </Label>
+                    <RadioGroup
+                      value={isPrasadRequested ? "yes" : "no"}
+                      onValueChange={(val) => setIsPrasadRequested(val === "yes")}
+                      className="flex gap-6 mt-3"
+                    >
+                      <div className="flex items-center space-x-2">
+                        <RadioGroupItem value="yes" id="prasad-yes" />
+                        <Label htmlFor="prasad-yes" className="cursor-pointer font-normal">Yes, I want Prasad</Label>
+                      </div>
+                      <div className="flex items-center space-x-2">
+                        <RadioGroupItem value="no" id="prasad-no" />
+                        <Label htmlFor="prasad-no" className="cursor-pointer font-normal">No, Thank you</Label>
+                      </div>
+                    </RadioGroup>
+                  </div>
+                )}
 
                 {/* Dynamic Additional Devotee Fields */}
                 {formData.additionalDevotees.length > 0 && (
@@ -1377,8 +1466,14 @@ function BookingForm() {
                 <CardContent className="space-y-4">
                   <div className="flex justify-between py-2 border-b border-border">
                     <span className="text-muted-foreground">{t("booking_client.summary_temple")}</span>
-                    <span className="font-medium">{allTemples.find(t => t.id === selectedTemple)?.name || t("booking_client.default_temple")}</span>
-
+                    <div className="text-right">
+                      <span className="font-medium">{allTemples.find(t => t.id === selectedTemple)?.name || t("booking_client.default_temple")}</span>
+                      {allTemples.find(t => t.id === selectedTemple) && (
+                        <p className="text-xs text-muted-foreground">
+                          {parseLocalizedValue(allTemples.find(t => t.id === selectedTemple)?.location || allTemples.find(t => t.id === selectedTemple)?.fullAddress || allTemples.find(t => t.id === selectedTemple)?.city, language)}
+                        </p>
+                      )}
+                    </div>
                   </div>
                   <div className="flex justify-between py-2 border-b border-border">
                     <span className="text-muted-foreground">{t("booking_client.summary_service")}</span>
@@ -1392,6 +1487,12 @@ function BookingForm() {
                     <span className="text-muted-foreground">{t("booking_client.summary_package")}</span>
                     <span className="font-medium">{selectedPackageData?.name}</span>
                   </div>
+                  {selectedPoojaData?.hasPrasad && (
+                    <div className="flex justify-between py-2 border-b border-border">
+                      <span className="text-muted-foreground">Free Prasad Requested</span>
+                      <span className="font-medium">{isPrasadRequested ? "Yes" : "No"}</span>
+                    </div>
+                  )}
                   {/* <div className="flex justify-between py-2 border-b border-border">
                     <span className="text-muted-foreground">{t("booking_client.summary_service_price")}</span>
                     <span className="font-medium flex items-center">
@@ -1477,6 +1578,12 @@ function BookingForm() {
                     <span className="text-muted-foreground">{t("booking_client.confirmed_package")}</span>
                     <span className="font-medium">{selectedPackageData?.name}</span>
                   </div>
+                  {selectedPoojaData?.hasPrasad && (
+                    <div className="flex justify-between">
+                      <span className="text-muted-foreground">Free Prasad Requested</span>
+                      <span className="font-medium">{isPrasadRequested ? "Yes" : "No"}</span>
+                    </div>
+                  )}
                   {formData.nativePlace && (
                     <div className="flex justify-between">
                       <span className="text-muted-foreground">{t("booking_client.confirmed_native_place")}</span>

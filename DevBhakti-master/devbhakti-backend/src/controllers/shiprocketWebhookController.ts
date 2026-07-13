@@ -60,6 +60,71 @@ export const shiprocketWebhook = async (req: Request, res: Response) => {
                         console.error("Failed to send order status push notification:", notifyErr);
                     }
                 }
+            } else {
+                // Find PoojaBooking by shiprocketOrderId
+                const booking = await prisma.poojaBooking.findFirst({
+                    where: { shiprocketOrderId: order_id.toString() },
+                    include: { pooja: true }
+                });
+
+                if (booking) {
+                    const internalStatus = mapShiprocketStatus(srStatus);
+                    let prasadStatus: 'PREPARING' | 'DISPATCHED' | 'IN_TRANSIT' | 'DELIVERED' = 'PREPARING';
+
+                    if (internalStatus === 'ACCEPTED' || internalStatus === 'PICKED_UP') {
+                        prasadStatus = 'DISPATCHED';
+                    } else if (internalStatus === 'SHIPPED' || internalStatus === 'OUT_FOR_DELIVERY') {
+                        prasadStatus = 'IN_TRANSIT';
+                    } else if (internalStatus === 'DELIVERED') {
+                        prasadStatus = 'DELIVERED';
+                    }
+
+                    // Update PoojaBooking fields
+                    await prisma.poojaBooking.update({
+                        where: { id: booking.id },
+                        data: {
+                            awbCode: awb || booking.awbCode,
+                            trackingUrl: tracking_url || booking.trackingUrl,
+                            courierName: courier_name || booking.courierName,
+                            prasadStatus
+                        }
+                    });
+
+                    console.log(`Updated PoojaBooking ${booking.id} prasadStatus to ${prasadStatus} (from SR: ${srStatus})`);
+
+                    // Notify user about Prasad status update
+                    try {
+                        const { notifyUser } = require("../services/firebaseService");
+                        const { getEnglish } = require("../utils/localization");
+                        
+                        let title = "";
+                        let body = "";
+
+                        if (prasadStatus === 'DISPATCHED') {
+                            title = "Prasad Dispatched! 📦";
+                            body = `Your Prasad for ${getEnglish(booking.pooja.name)} has been dispatched via ${courier_name || 'courier'}. Tracking ID: ${awb || ''}`;
+                        } else if (prasadStatus === 'IN_TRANSIT') {
+                            title = "Prasad In Transit 🚚";
+                            body = `Your Prasad for ${getEnglish(booking.pooja.name)} is on the way!`;
+                        } else if (prasadStatus === 'DELIVERED') {
+                            title = "Prasad Delivered! 🎁";
+                            body = `Your Prasad for ${getEnglish(booking.pooja.name)} has been successfully delivered. Jai Mata Di!`;
+                        }
+
+                        if (title) {
+                            await notifyUser(booking.userId, 'devotee', {
+                                title,
+                                body,
+                                data: {
+                                    link: `/profile/bookings`,
+                                    bookingId: booking.id
+                                }
+                            });
+                        }
+                    } catch (notifyErr) {
+                        console.error("Failed to send prasad status push notification:", notifyErr);
+                    }
+                }
             }
         }
 

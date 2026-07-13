@@ -1,9 +1,10 @@
 "use client";
 
 import React, { useState, useEffect } from "react";
-import { fetchMyBookings, downloadBookingReceipt } from "@/api/userController";
+import { fetchMyBookings, downloadBookingReceipt, fetchPrasadTracking } from "@/api/userController";
 import { useToast } from "@/hooks/use-toast";
-import { Loader2, Download } from "lucide-react";
+import { Loader2, Download, Search } from "lucide-react";
+import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import Navbar from "@/components/landing/Navbar";
 import Footer from "@/components/landing/Footer";
 import { Card, CardContent } from "@/components/ui/card";
@@ -40,6 +41,65 @@ export default function MyBookingsPage() {
     const { toast } = useToast();
     const router = useRouter();
     const { t } = useLanguage();
+
+    const [isTrackingModalOpen, setIsTrackingModalOpen] = useState(false);
+    const [activeTrackingBooking, setActiveTrackingBooking] = useState<any | null>(null);
+    const [trackingDetails, setTrackingDetails] = useState<any | null>(null);
+    const [isTrackingLoading, setIsTrackingLoading] = useState(false);
+    const [manualAwb, setManualAwb] = useState("");
+    const [isManualTracking, setIsManualTracking] = useState(false);
+
+    const handleViewTracking = async (booking: any) => {
+        setIsTrackingModalOpen(true);
+        setActiveTrackingBooking(booking);
+        
+        if (!booking.awbCode) {
+            setIsTrackingLoading(false);
+            setTrackingDetails(null);
+            return;
+        }
+
+        setIsTrackingLoading(true);
+        setTrackingDetails(null);
+        try {
+            const res = await fetchPrasadTracking(booking.id);
+            if (res.success && res.trackingData) {
+                setTrackingDetails(res.trackingData);
+            } else {
+                toast({
+                    title: "Tracking Details",
+                    description: res.message || "Failed to fetch live tracking details. Using status estimation.",
+                });
+            }
+        } catch (error) {
+            console.error("Tracking fetch error:", error);
+        } finally {
+            setIsTrackingLoading(false);
+        }
+    };
+
+    const handleManualAwbTrack = async () => {
+        const code = manualAwb.trim();
+        if (!code) return;
+        setIsManualTracking(true);
+        setTrackingDetails(null);
+        try {
+            const token = typeof window !== "undefined" ? localStorage.getItem("token") : null;
+            const res = await fetch(`${process.env.NEXT_PUBLIC_API_URL || "http://localhost:5000/api"}/bookings/track-awb?awb=${encodeURIComponent(code)}`, {
+                headers: token ? { Authorization: `Bearer ${token}` } : {}
+            });
+            const data = await res.json();
+            if (data.success && data.trackingData) {
+                setTrackingDetails(data.trackingData);
+            } else {
+                toast({ title: "Not Found", description: data.message || "No tracking data found for this AWB code." });
+            }
+        } catch {
+            toast({ title: "Error", description: "Could not fetch tracking info. Please try again." });
+        } finally {
+            setIsManualTracking(false);
+        }
+    };
 
     useEffect(() => {
         loadBookings();
@@ -309,14 +369,100 @@ export default function MyBookingsPage() {
                                                                 </div>
                                                             </div>
 
-                                                            {/* <div className="bg-orange-50/30 p-6 rounded-3xl border border-orange-100/50 flex flex-col gap-4">
-                                                                <h4 className="text-xs font-bold text-slate-400 uppercase tracking-widest flex items-center gap-2">
-                                                                    <MapPin className="w-4 h-4 text-[#794A05]" />
-                                                                    Prasad Delivery Address
-                                                                </h4>
-                                                                <p className="text-sm text-slate-700 leading-relaxed font-medium italic">
-                                                                 </p>
-                                                            </div> */}
+                                                            {booking.isPrasadRequested && (
+                                                                <div className="md:col-span-2 bg-[#FAF9F6] p-6 rounded-3xl border border-orange-100/50 flex flex-col gap-6">
+                                                                    <div className="flex items-center justify-between border-b pb-3">
+                                                                        <h4 className="text-sm font-bold text-[#794A05] uppercase tracking-wider flex items-center gap-2">
+                                                                            <Sparkles className="w-4 h-4" />
+                                                                            Prasad Delivery & Tracking
+                                                                        </h4>
+                                                                        <Badge className="bg-orange-100 text-[#794A05] hover:bg-orange-200 border-none">
+                                                                            {booking.prasadStatus || "PREPARING"}
+                                                                        </Badge>
+                                                                    </div>
+
+                                                                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                                                                        <div className="space-y-1">
+                                                                            <span className="text-[10px] text-slate-400 font-bold uppercase tracking-widest flex items-center gap-1">
+                                                                                <MapPin className="w-3.5 h-3.5 text-orange-600" />
+                                                                                Delivery Address
+                                                                            </span>
+                                                                            {booking.prasadStreet ? (
+                                                                                <p className="text-sm font-semibold text-slate-700 leading-relaxed">
+                                                                                    {booking.prasadStreet}<br />
+                                                                                    {booking.prasadCity}, {booking.prasadState} - <span className="font-bold">{booking.prasadPincode}</span>
+                                                                                </p>
+                                                                            ) : (
+                                                                                <p className="text-sm font-medium text-slate-700">{booking.address || "No delivery address provided."}</p>
+                                                                            )}
+                                                                        </div>
+                                                                        <div className="flex items-center justify-start sm:justify-end">
+                                                                            <Button 
+                                                                                onClick={() => handleViewTracking(booking)}
+                                                                                className="bg-orange-600 hover:bg-orange-700 text-white rounded-2xl font-bold text-xs py-2 px-4 shadow-md transition-all duration-300 flex items-center gap-2"
+                                                                            >
+                                                                                🚚 Track Live Shipment
+                                                                            </Button>
+                                                                        </div>
+                                                                    </div>
+
+                                                                    <div className="relative flex flex-col md:flex-row items-center justify-between gap-4 py-4">
+                                                                        {[
+                                                                            { key: 'PREPARING', label: 'Preparing', icon: '🥣' },
+                                                                            { key: 'DISPATCHED', label: 'Dispatched', icon: '📦' },
+                                                                            { key: 'IN_TRANSIT', label: 'In Transit', icon: '🚚' },
+                                                                            { key: 'DELIVERED', label: 'Delivered', icon: '🎁' }
+                                                                        ].map((step, sIdx, arr) => {
+                                                                            const statuses = ['PREPARING', 'DISPATCHED', 'IN_TRANSIT', 'DELIVERED'];
+                                                                            const currentIdx = statuses.indexOf(booking.prasadStatus || 'PREPARING');
+                                                                            const isCompleted = sIdx <= currentIdx;
+                                                                            const isActive = sIdx === currentIdx;
+
+                                                                            return (
+                                                                                <React.Fragment key={step.key}>
+                                                                                    <div className="flex flex-col items-center z-10">
+                                                                                        <div className={cn(
+                                                                                            "w-10 h-10 rounded-full flex items-center justify-center text-lg shadow-sm border transition-all duration-300",
+                                                                                            isActive ? "bg-orange-500 border-orange-600 scale-110 text-white font-bold" :
+                                                                                            isCompleted ? "bg-[#794A05] border-[#794A05] text-white" :
+                                                                                            "bg-white border-slate-200 text-slate-400"
+                                                                                        )}>
+                                                                                            {step.icon}
+                                                                                        </div>
+                                                                                        <span className={cn(
+                                                                                            "text-xs font-semibold mt-2",
+                                                                                            isActive ? "text-orange-600 font-bold" :
+                                                                                            isCompleted ? "text-slate-800" :
+                                                                                            "text-slate-400"
+                                                                                        )}>
+                                                                                            {step.label}
+                                                                                        </span>
+                                                                                    </div>
+                                                                                    {sIdx < arr.length - 1 && (
+                                                                                        <div className={cn(
+                                                                                            "hidden md:block flex-1 h-1 rounded transition-all duration-300",
+                                                                                            sIdx < currentIdx ? "bg-[#794A05]" : "bg-slate-200"
+                                                                                        )} />
+                                                                                    )}
+                                                                                </React.Fragment>
+                                                                            );
+                                                                        })}
+                                                                    </div>
+
+                                                                    {booking.courierName && (
+                                                                        <div className="mt-2 p-4 bg-white rounded-2xl border border-slate-100 grid grid-cols-1 sm:grid-cols-2 gap-4">
+                                                                            <div>
+                                                                                <span className="text-[10px] text-slate-400 font-bold uppercase tracking-widest">Courier Partner</span>
+                                                                                <p className="text-sm font-bold text-slate-800">{booking.courierName}</p>
+                                                                            </div>
+                                                                            <div>
+                                                                                <span className="text-[10px] text-slate-400 font-bold uppercase tracking-widest">AWB / Tracking ID</span>
+                                                                                <p className="text-sm font-bold text-[#794A05] tracking-widest">{booking.awbCode || "Awaiting"}</p>
+                                                                            </div>
+                                                                        </div>
+                                                                    )}
+                                                                </div>
+                                                            )}
                                                         </div>
 
                                                         {(booking.gothra || booking.kuldevi || booking.kuldevta || booking.dob || booking.anniversary || booking.nativePlace) && (
@@ -469,6 +615,160 @@ export default function MyBookingsPage() {
                 </div>
             </main>
             <Footer />
+
+            {/* Live Prasad Tracking Dialog */}
+            <Dialog open={isTrackingModalOpen} onOpenChange={setIsTrackingModalOpen}>
+                <DialogContent className="max-w-md w-full bg-white rounded-3xl p-6 border-none shadow-2xl">
+                    <DialogHeader>
+                        <DialogTitle className="text-lg font-bold text-[#794A05] flex items-center gap-2">
+                            🚚 Live Prasad Tracking
+                        </DialogTitle>
+                    </DialogHeader>
+
+                    {isTrackingLoading ? (
+                        <div className="flex flex-col items-center justify-center py-12 gap-3">
+                            <Loader2 className="w-8 h-8 text-orange-600 animate-spin" />
+                            <p className="text-sm font-semibold text-slate-500">Fetching live shipment logs...</p>
+                        </div>
+                    ) : trackingDetails?.tracking_data?.shipment_track_activities ? (
+                        <div className="space-y-6 mt-4">
+                            {/* Header Info */}
+                            <div className="bg-[#FAF9F6] p-4 rounded-2xl border border-orange-100/50 space-y-1">
+                                <p className="text-[10px] text-slate-400 font-bold uppercase tracking-wider">Current Location / Status</p>
+                                <p className="text-sm font-bold text-slate-800">
+                                    {trackingDetails?.tracking_data?.shipment_track?.[0]?.current_status || "In Transit"}
+                                </p>
+                                <p className="text-xs text-slate-500">
+                                    AWB: <span className="font-semibold text-slate-700">{trackingDetails?.tracking_data?.shipment_track?.[0]?.awb_code}</span>
+                                </p>
+                            </div>
+
+                            {/* Timeline Log */}
+                            <div className="space-y-4 max-h-[300px] overflow-y-auto pr-1">
+                                {trackingDetails.tracking_data.shipment_track_activities.map((act: any, idx: number) => (
+                                    <div key={idx} className="flex gap-4">
+                                        {/* Dot & Line */}
+                                        <div className="flex flex-col items-center">
+                                            <div className={cn(
+                                                "w-4 h-4 rounded-full border-2 flex items-center justify-center shadow-sm",
+                                                idx === 0 ? "bg-orange-500 border-orange-600 scale-110" : "bg-white border-slate-300"
+                                            )}>
+                                                {idx === 0 && <div className="w-1.5 h-1.5 rounded-full bg-white" />}
+                                            </div>
+                                            {idx < trackingDetails.tracking_data.shipment_track_activities.length - 1 && (
+                                                <div className="w-0.5 flex-1 bg-slate-200 min-h-[40px] my-1" />
+                                            )}
+                                        </div>
+                                        {/* Details */}
+                                        <div className="flex-1 pb-4">
+                                            <p className={cn(
+                                                "text-xs font-bold",
+                                                idx === 0 ? "text-orange-600" : "text-slate-800"
+                                            )}>
+                                                {act.activity || act.status}
+                                            </p>
+                                            <p className="text-[11px] text-slate-500 font-semibold mt-0.5">
+                                                📍 {act.location || "In Transit"}
+                                            </p>
+                                            <p className="text-[10px] text-slate-400 mt-1 font-medium">
+                                                {act.date}
+                                            </p>
+                                        </div>
+                                    </div>
+                                ))}
+                            </div>
+                        </div>
+                    ) : activeTrackingBooking ? (
+                        <div className="space-y-5 mt-4">
+                            {/* Header Info */}
+                            <div className="bg-[#FAF9F6] p-4 rounded-2xl border border-orange-100/50 space-y-1">
+                                <p className="text-[10px] text-slate-400 font-bold uppercase tracking-wider">Current Status</p>
+                                <p className="text-sm font-bold text-[#794A05]">
+                                    {activeTrackingBooking.prasadStatus || "PREPARING"}
+                                </p>
+                                <p className="text-xs text-slate-500">
+                                    AWB Code: <span className="font-semibold text-[#794A05] tracking-widest">{activeTrackingBooking.awbCode || "Awaiting Dispatch"}</span>
+                                </p>
+                            </div>
+
+                            {/* Manual AWB Search */}
+                            <div className="space-y-2">
+                                <p className="text-[10px] text-slate-400 font-bold uppercase tracking-widest">Got your AWB? Track right here 👇</p>
+                                <div className="flex gap-2">
+                                    <input
+                                        type="text"
+                                        value={manualAwb}
+                                        onChange={(e) => setManualAwb(e.target.value)}
+                                        onKeyDown={(e) => e.key === "Enter" && handleManualAwbTrack()}
+                                        placeholder={activeTrackingBooking.awbCode || "Enter AWB / Tracking ID"}
+                                        className="flex-1 h-10 px-3 rounded-xl border border-slate-200 bg-[#FAF9F6] text-sm font-semibold text-slate-800 placeholder:text-slate-400 focus:outline-none focus:ring-2 focus:ring-orange-400 transition-all"
+                                    />
+                                    <Button
+                                        onClick={handleManualAwbTrack}
+                                        disabled={isManualTracking}
+                                        className="h-10 px-4 bg-[#794A05] hover:bg-[#5a3504] text-white rounded-xl font-bold text-xs flex items-center gap-1.5 transition-all"
+                                    >
+                                        {isManualTracking ? <Loader2 className="w-3.5 h-3.5 animate-spin" /> : <Search className="w-3.5 h-3.5" />}
+                                        Track
+                                    </Button>
+                                </div>
+                            </div>
+
+                            {/* Timeline Log */}
+                            <div className="space-y-4 max-h-[300px] overflow-y-auto pr-1">
+                                {[
+                                    { key: 'PREPARING', label: 'Pooja Completed & Prasad Preparing', desc: 'Prasad is being prepared and packed with blessings.', activeStatuses: ['PREPARING', 'DISPATCHED', 'IN_TRANSIT', 'DELIVERED'] },
+                                    { key: 'DISPATCHED', label: 'Dispatched from Temple', desc: 'Handed over to courier partner. Awaiting tracking info.', activeStatuses: ['DISPATCHED', 'IN_TRANSIT', 'DELIVERED'] },
+                                    { key: 'IN_TRANSIT', label: 'In Transit', desc: 'Package is on the way to the delivery terminal.', activeStatuses: ['IN_TRANSIT', 'DELIVERED'] },
+                                    { key: 'DELIVERED', label: 'Prasad Delivered Successfully', desc: 'Delivered at your address. Jai Mata Di! 🙏', activeStatuses: ['DELIVERED'] },
+                                ].map((step, idx, arr) => {
+                                    const currentStatus = activeTrackingBooking.prasadStatus || 'PREPARING';
+                                    const isStepPassed = step.activeStatuses.includes(currentStatus);
+                                    const isStepCurrent = currentStatus === step.key;
+
+                                    if (!isStepPassed && !isStepCurrent) return null;
+
+                                    return (
+                                        <div key={idx} className="flex gap-4">
+                                            <div className="flex flex-col items-center">
+                                                <div className={cn(
+                                                    "w-4 h-4 rounded-full border-2 flex items-center justify-center shadow-sm",
+                                                    isStepCurrent ? "bg-orange-500 border-orange-600 scale-110" : "bg-[#794A05] border-[#794A05]"
+                                                )}>
+                                                    {isStepCurrent && <div className="w-1.5 h-1.5 rounded-full bg-white" />}
+                                                </div>
+                                                {idx < arr.length - 1 && (
+                                                    <div className="w-0.5 flex-1 bg-slate-200 min-h-[40px] my-1" />
+                                                )}
+                                            </div>
+                                            <div className="flex-1 pb-4">
+                                                <p className={cn(
+                                                    "text-xs font-bold",
+                                                    isStepCurrent ? "text-orange-600" : "text-slate-800"
+                                                )}>
+                                                    {step.label}
+                                                </p>
+                                                <p className="text-[11px] text-slate-500 font-medium mt-0.5">
+                                                    {step.desc}
+                                                </p>
+                                                <p className="text-[10px] text-slate-400 mt-1 font-semibold">
+                                                    📍 {activeTrackingBooking.prasadCity || activeTrackingBooking.address || "Temple Location"}
+                                                </p>
+                                            </div>
+                                        </div>
+                                    );
+                                })}
+                            </div>
+                        </div>
+                    ) : (
+                        <div className="flex flex-col items-center justify-center py-12 gap-3 text-center">
+                            <span className="text-3xl">📦</span>
+                            <p className="text-sm font-bold text-slate-700">No active shipment updates yet.</p>
+                            <p className="text-xs text-slate-400 max-w-[250px]">Once the courier service updates the status, logs will appear here.</p>
+                        </div>
+                    )}
+                </DialogContent>
+            </Dialog>
         </div>
     );
 }

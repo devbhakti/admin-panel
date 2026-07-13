@@ -644,6 +644,14 @@ function BookingsContent() {
                                                     {selectedBooking.gothra}
                                                 </p>
                                             )}
+                                            <p className="text-xs font-semibold text-slate-500 mt-1 ml-0.5">
+                                                <span className="text-[10px] text-slate-400 font-bold uppercase tracking-widest">Prasad Requested: </span>
+                                                {selectedBooking.isPrasadRequested ? (
+                                                    <span className="text-emerald-600 font-bold">Yes</span>
+                                                ) : (
+                                                    <span className="text-slate-500 font-medium">No</span>
+                                                )}
+                                            </p>
                                         </div>
                                         <div>
                                             <p className="text-[10px] text-slate-400 font-bold uppercase tracking-widest mb-1">Contact Information</p>
@@ -747,6 +755,74 @@ function BookingsContent() {
                                         </p>
                                     </div>
                                 </div>
+
+                                {/* Prasad Section */}
+                                {selectedBooking.isPrasadRequested && (
+                                    <div className="pt-6 border-t border-slate-100 space-y-4">
+                                        <p className="text-[10px] text-slate-400 font-bold uppercase tracking-widest mb-1">Prasad Delivery & Tracking</p>
+                                        <div className="p-4 bg-orange-50/50 rounded-2xl border border-orange-100/50 grid grid-cols-1 sm:grid-cols-2 md:grid-cols-4 gap-4">
+                                            <div>
+                                                <label className="text-[10px] font-bold text-slate-400 uppercase">Prasad Status</label>
+                                                <select
+                                                    className="w-full h-10 px-3 rounded-lg border bg-white text-sm font-medium mt-1 focus:ring-1 focus:ring-primary focus:outline-none"
+                                                    value={selectedBooking.prasadStatus || 'PREPARING'}
+                                                    onChange={async (e) => {
+                                                        const newStatus = e.target.value;
+                                                        try {
+                                                            const res = await updateBookingStatusAdmin(selectedBooking.id, { prasadStatus: newStatus });
+                                                            if (res.success) {
+                                                                setSelectedBooking({ ...selectedBooking, prasadStatus: newStatus });
+                                                            }
+                                                        } catch (err) {
+                                                            console.error("Failed to update status");
+                                                        }
+                                                    }}
+                                                >
+                                                    <option value="PREPARING">Preparing</option>
+                                                    <option value="DISPATCHED">Dispatched</option>
+                                                    <option value="IN_TRANSIT">In Transit</option>
+                                                    <option value="DELIVERED">Delivered</option>
+                                                </select>
+                                            </div>
+                                            <div>
+                                                <label className="text-[10px] font-bold text-slate-400 uppercase">Courier Name</label>
+                                                <input
+                                                    className="w-full h-10 px-3 rounded-lg border bg-white text-sm font-medium mt-1"
+                                                    placeholder="e.g. BlueDart"
+                                                    value={selectedBooking.courierName || ""}
+                                                    onChange={(e) => setSelectedBooking({ ...selectedBooking, courierName: e.target.value })}
+                                                    onBlur={async () => {
+                                                        await updateBookingStatusAdmin(selectedBooking.id, { courierName: selectedBooking.courierName });
+                                                    }}
+                                                />
+                                            </div>
+                                            <div>
+                                                <label className="text-[10px] font-bold text-slate-400 uppercase">AWB/Tracking Code</label>
+                                                <input
+                                                    className="w-full h-10 px-3 rounded-lg border bg-white text-sm font-medium mt-1"
+                                                    placeholder="Tracking Code"
+                                                    value={selectedBooking.awbCode || ""}
+                                                    onChange={(e) => setSelectedBooking({ ...selectedBooking, awbCode: e.target.value })}
+                                                    onBlur={async () => {
+                                                        await updateBookingStatusAdmin(selectedBooking.id, { awbCode: selectedBooking.awbCode });
+                                                    }}
+                                                />
+                                            </div>
+                                            <div>
+                                                <label className="text-[10px] font-bold text-slate-400 uppercase">Tracking Link</label>
+                                                <input
+                                                    className="w-full h-10 px-3 rounded-lg border bg-white text-sm font-medium mt-1"
+                                                    placeholder="https://..."
+                                                    value={selectedBooking.trackingUrl || ""}
+                                                    onChange={(e) => setSelectedBooking({ ...selectedBooking, trackingUrl: e.target.value })}
+                                                    onBlur={async () => {
+                                                        await updateBookingStatusAdmin(selectedBooking.id, { trackingUrl: selectedBooking.trackingUrl });
+                                                    }}
+                                                />
+                                            </div>
+                                        </div>
+                                    </div>
+                                )}
 
                                 {/* Proof Photos */}
                                 {selectedBooking.status === 'COMPLETED' && selectedBooking.proofPhotos && selectedBooking.proofPhotos.length > 0 && (

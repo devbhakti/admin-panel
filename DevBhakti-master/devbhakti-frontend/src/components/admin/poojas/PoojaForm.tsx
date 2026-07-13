@@ -87,7 +87,8 @@ export const PoojaForm: React.FC<PoojaFormProps> = ({
         // Localized Arrays
         description: { en: [] as string[], hi: [] as string[], mr: [] as string[] },
         bullets: { en: [] as string[], hi: [] as string[], mr: [] as string[] },
-        slug: ""
+        slug: "",
+        hasPrasad: false,
     });
 
     const [packages, setPackages] = useState<any[]>([]);
@@ -173,7 +174,8 @@ export const PoojaForm: React.FC<PoojaFormProps> = ({
                     hi: parseArray(getL(initialData.bullets, "hi", [])),
                     mr: parseArray(getL(initialData.bullets, "mr", []))
                 },
-                slug: initialData.slug || ""
+                slug: initialData.slug || "",
+                hasPrasad: initialData.hasPrasad === true || initialData.hasPrasad === 'true',
             });
 
             // Resolve pooja type
@@ -479,6 +481,7 @@ export const PoojaForm: React.FC<PoojaFormProps> = ({
         fd.append("packages", JSON.stringify({ en: packages, hi: packages, mr: packages }));
         fd.append("faqs", JSON.stringify(faqs));
         fd.append("slug", formData.slug);
+        fd.append("hasPrasad", formData.hasPrasad.toString());
         if (imageFile) fd.append("image", imageFile);
 
         await onSubmit(fd);
@@ -603,6 +606,34 @@ export const PoojaForm: React.FC<PoojaFormProps> = ({
                                         className="h-12 rounded-xl focus:ring-primary/20 border-slate-200 bg-white font-medium"
                                     />
                                     <p className="text-[10px] text-slate-400 font-medium">Use lowercase letters, numbers, and hyphens only.</p>
+                                </div>
+
+                                {/* Free Prasad Toggle */}
+                                <div className="space-y-2.5">
+                                    <Label className="text-sm font-bold text-slate-700">Free Prasad Available</Label>
+                                    <div className="flex items-center gap-6 h-12 px-4 rounded-xl border border-slate-200 bg-white">
+                                        <label className="flex items-center gap-2 cursor-pointer text-sm font-medium">
+                                            <input
+                                                type="radio"
+                                                name="hasPrasad"
+                                                checked={formData.hasPrasad === true}
+                                                onChange={() => handleInputChange("hasPrasad", true)}
+                                                className="accent-orange-600 w-4 h-4"
+                                            />
+                                            Yes
+                                        </label>
+                                        <label className="flex items-center gap-2 cursor-pointer text-sm font-medium">
+                                            <input
+                                                type="radio"
+                                                name="hasPrasad"
+                                                checked={formData.hasPrasad === false}
+                                                onChange={() => handleInputChange("hasPrasad", false)}
+                                                className="accent-orange-600 w-4 h-4"
+                                            />
+                                            No
+                                        </label>
+                                    </div>
+                                    <p className="text-[10px] text-slate-400 font-medium">Enable this if the pooja includes free prasad for devotees.</p>
                                 </div>
 
                                 <div className="space-y-2.5">

@@ -1,6 +1,7 @@
 import { Request, Response } from 'express';
 import { prisma } from '../../lib/prisma';
 import { localize, getLang, getEnglish } from '../../utils/localization';
+import { getShiprocketTracking } from '../../services/shiprocketService';
 import PDFDocument from 'pdfkit';
 
 import path from 'path';
@@ -23,25 +24,19 @@ export const createBooking = async (req: Request, res: Response) => {
         const { userId } = (req as any).user;
 
         const {
-
             poojaId,
-
             templeId: requestedTempleId,
-
             packageName,
-
             packagePrice,
-
             devoteeName,
-
             devoteePhone,
-
             devoteeEmail,
-
             bookingDate,
-
             address,
-
+            prasadStreet,
+            prasadCity,
+            prasadState,
+            prasadPincode,
             specialRequests,
             gothra,
             kuldevi,
@@ -50,16 +45,12 @@ export const createBooking = async (req: Request, res: Response) => {
             gender,
             anniversary,
             nativePlace,
-            additionalDevotees
-
+            additionalDevotees,
+            isPrasadRequested
         } = req.body;
 
-
-
         if (!poojaId || !packageName || !packagePrice || !devoteeName || !devoteePhone) {
-
             return res.status(400).json({ success: false, message: 'All fields are required' });
-
         }
 
 
@@ -281,6 +272,10 @@ export const createBooking = async (req: Request, res: Response) => {
                     bookingDate: bookingDate as string,
 
                     address: address as string | null,
+                    prasadStreet: prasadStreet as string | null,
+                    prasadCity: prasadCity as string | null,
+                    prasadState: prasadState as string | null,
+                    prasadPincode: prasadPincode as string | null,
 
                     specialRequests: specialRequests as string | null,
                     gothra: gothra as string | null,
@@ -291,6 +286,10 @@ export const createBooking = async (req: Request, res: Response) => {
                     anniversary: anniversary as string | null,
                     nativePlace: nativePlace as string | null,
                     additionalDevotees: additionalDevotees || null,
+
+                    // Prasad tracking
+                    isPrasadRequested: pooja.hasPrasad && (isPrasadRequested === true || isPrasadRequested === 'true'),
+                    prasadStatus: (pooja.hasPrasad && (isPrasadRequested === true || isPrasadRequested === 'true')) ? 'PREPARING' : 'NOT_APPLICABLE',
 
                     status: 'PENDING', // Mark as pending until Razorpay payment is verified
 
@@ -407,6 +406,70 @@ export const getMyBookings = async (req: Request, res: Response) => {
 
     }
 
+};
+
+
+
+export const trackByAwb = async (req: Request, res: Response) => {
+    try {
+        const { awb } = req.query;
+
+        if (!awb) {
+            return res.status(400).json({ success: false, message: 'AWB code is required' });
+        }
+
+        const trackingResponse = await getShiprocketTracking(awb as string);
+
+        return res.json({
+            success: true,
+            trackingData: trackingResponse
+        });
+    } catch (error: any) {
+        console.error('Error tracking by AWB:', error);
+        return res.status(500).json({ success: false, message: 'Internal server error' });
+    }
+};
+
+export const getPrasadTracking = async (req: Request, res: Response) => {
+    try {
+        const { id } = req.params;
+        const { userId } = (req as any).user;
+
+        const booking = await prisma.poojaBooking.findUnique({
+            where: { id: id as string }
+        });
+
+        if (!booking) {
+            return res.status(404).json({ success: false, message: 'Booking not found' });
+        }
+
+        if (booking.userId !== userId) {
+            return res.status(403).json({ success: false, message: 'Unauthorized' });
+        }
+
+        if (!booking.isPrasadRequested) {
+            return res.status(400).json({ success: false, message: 'Prasad not requested for this booking' });
+        }
+
+        if (!booking.awbCode) {
+            return res.json({
+                success: true,
+                message: 'Shipment has not been dispatched yet.',
+                trackingData: null
+            });
+        }
+
+        console.log(`[Prasad Tracking] Fetching Shiprocket tracking details for AWB: ${booking.awbCode}...`);
+        const trackingResponse = await getShiprocketTracking(booking.awbCode);
+
+        res.json({
+            success: true,
+            trackingData: trackingResponse
+        });
+    } catch (error: any) {
+        console.error('Error fetching prasad tracking:', error);
+        res.status(500).json({ success: false, message: 'Internal server error' });
+    }
 };
 
 

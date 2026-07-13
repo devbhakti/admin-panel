@@ -4,6 +4,7 @@ import { notifyUser } from '../../services/firebaseService';
 import ExcelJS from 'exceljs';
 import { sendWhatsAppMessage } from '../../services/whatsappService';
 import { getLang, localize, getEnglish } from '../../utils/localization';
+import { triggerPrasadShiprocketOrder } from '../../utils/prasadShiprocket';
 
 export const getAllBookings = async (req: Request, res: Response) => {
     try {
@@ -154,10 +155,14 @@ export const deleteBookingByAdmin = async (req: Request, res: Response) => {
 export const updateBookingStatus = async (req: Request, res: Response) => {
     try {
         const { id } = req.params;
-        const { status } = req.body;
+        const { status, prasadStatus, awbCode, trackingUrl, courierName } = req.body;
 
-        if (!['PENDING', 'BOOKED', 'COMPLETED', 'REJECTED', 'CANCELLED'].includes(status)) {
+        if (status && !['PENDING', 'BOOKED', 'COMPLETED', 'REJECTED', 'CANCELLED'].includes(status)) {
             return res.status(400).json({ success: false, message: 'Invalid status' });
+        }
+
+        if (prasadStatus && !['NOT_APPLICABLE', 'PREPARING', 'DISPATCHED', 'IN_TRANSIT', 'DELIVERED'].includes(prasadStatus)) {
+            return res.status(400).json({ success: false, message: 'Invalid prasad status' });
         }
 
         const booking = await prisma.poojaBooking.findUnique({
@@ -168,7 +173,12 @@ export const updateBookingStatus = async (req: Request, res: Response) => {
             return res.status(404).json({ success: false, message: 'Booking not found' });
         }
 
-        const updateData: any = { status };
+        const updateData: any = {};
+        if (status) updateData.status = status;
+        if (prasadStatus) updateData.prasadStatus = prasadStatus;
+        if (awbCode !== undefined) updateData.awbCode = awbCode;
+        if (trackingUrl !== undefined) updateData.trackingUrl = trackingUrl;
+        if (courierName !== undefined) updateData.courierName = courierName;
 
         // Handle proof photos if status is COMPLETED
         if (status === 'COMPLETED' && req.files && Array.isArray(req.files) && req.files.length > 0) {
@@ -190,6 +200,12 @@ export const updateBookingStatus = async (req: Request, res: Response) => {
                 where: { sourceId: id as string, type: "POOJA_EARNING" },
                 data: { status: "COMPLETED" }
             });
+            // Auto-trigger Prasad order creation if applicable
+            if (updatedBooking.isPrasadRequested) {
+                triggerPrasadShiprocketOrder(updatedBooking.id).catch(err => {
+                    console.error("Failed to trigger Prasad Shiprocket Order asynchronously (Admin):", err);
+                });
+            }
         } else if (status === "CANCELLED" || status === "REJECTED") {
             await prisma.templeLedger.updateMany({
                 where: { sourceId: id as string, type: "POOJA_EARNING" },
@@ -200,11 +216,13 @@ export const updateBookingStatus = async (req: Request, res: Response) => {
         const poojaName = getEnglish((updatedBooking.pooja as any).name);
 
         // Notify Devotee via Firebase
-        await notifyUser(booking.userId, 'devotee', {
-            title: `Pooja Booking ${status === 'COMPLETED' ? 'Completed 🎊' : status === 'CANCELLED' ? 'Cancelled ❌' : status === 'REJECTED' ? 'Rejected ❌' : 'Updated'}`,
-            body: `Your booking for ${poojaName} has been marked as ${status.toLowerCase()}.`,
-            data: { link: '/profile/bookings', bookingId: booking.id }
-        });
+        if (status) {
+            await notifyUser(booking.userId, 'devotee', {
+                title: `Pooja Booking ${status === 'COMPLETED' ? 'Completed 🎊' : status === 'CANCELLED' ? 'Cancelled ❌' : status === 'REJECTED' ? 'Rejected ❌' : 'Updated'}`,
+                body: `Your booking for ${poojaName} has been marked as ${status.toLowerCase()}.`,
+                data: { link: '/profile/bookings', bookingId: booking.id }
+            });
+        }
 
         // Notify Devotee via WhatsApp
         try {

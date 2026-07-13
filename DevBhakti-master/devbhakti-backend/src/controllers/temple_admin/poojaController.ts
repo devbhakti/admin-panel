@@ -58,7 +58,9 @@ export const createMyPooja = async (req: Request, res: Response) => {
                 faqs: safeParse(data.faqs, []),
                 image: file ? `/uploads/poojas/${file.filename}` : null,
                 templeId,
-                status: data.status === 'false' ? false : true
+                status: data.status === 'false' ? false : true,
+                hasPrasad: data.hasPrasad === 'true' || data.hasPrasad === true,
+                prasadType: 'FREE'
             }
         });
 
@@ -111,6 +113,7 @@ export const updateMyPooja = async (req: Request, res: Response) => {
                 packages: safeParse(data.packages),
                 faqs: safeParse(data.faqs),
                 status: data.status === 'false' ? false : data.status === 'true' ? true : undefined,
+                ...(data.hasPrasad !== undefined && { hasPrasad: data.hasPrasad === 'true' || data.hasPrasad === true }),
                 ...(file && { image: `/uploads/poojas/${file.filename}` })
             }
         });

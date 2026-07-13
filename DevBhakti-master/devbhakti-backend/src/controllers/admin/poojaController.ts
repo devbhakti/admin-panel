@@ -130,7 +130,8 @@ export const createPooja = async (req: Request, res: Response) => {
             isMaster,
             masterPoojaId,
             templeDetails_en, templeDetails_hi, templeDetails_mr,
-            categoryId, categoryIds
+            categoryId, categoryIds,
+            hasPrasad
         } = req.body;
 
         // Validate temple exists if provided
@@ -203,7 +204,9 @@ export const createPooja = async (req: Request, res: Response) => {
                 categoryId: (categoryId && categoryId !== 'null') ? String(categoryId) : null,
                 categoryIds: safeParse(categoryIds, []),
                 packages: safeParse(packages),
-                faqs: safeParse(faqs)
+                faqs: safeParse(faqs),
+                hasPrasad: hasPrasad === 'true' || hasPrasad === true,
+                prasadType: 'FREE'
             }
         });
 
@@ -238,7 +241,8 @@ export const updatePooja = async (req: Request, res: Response) => {
             faqs,
             templeDetails_en, templeDetails_hi, templeDetails_mr,
             categoryId, categoryIds,
-            masterPoojaId
+            masterPoojaId,
+            hasPrasad
         } = req.body;
 
         // Validate temple exists if templeId is provided
@@ -288,7 +292,8 @@ export const updatePooja = async (req: Request, res: Response) => {
             categoryId: categoryId !== undefined ? ((categoryId === 'null' || !categoryId) ? null : String(categoryId)) : undefined,
             categoryIds: categoryIds !== undefined ? safeParse(categoryIds, []) : undefined,
             packages: safeParse(packages),
-            faqs: safeParse(faqs)
+            faqs: safeParse(faqs),
+            ...(hasPrasad !== undefined && { hasPrasad: hasPrasad === 'true' || hasPrasad === true })
         };
 
         if (req.body.slug !== undefined) {
