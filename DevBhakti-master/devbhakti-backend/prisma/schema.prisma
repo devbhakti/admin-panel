@@ -770,7 +770,7 @@ model Mandal{
   // Media
   image              String?  // Main image URL
   bannerImages       String[] @default([]) // Gallery/banner images
-  documentUrl        String?  // Verification document URL
+  documentUrl        String[] @default([]) // Verification document URL(s)
   // Routing
   slug               String?  @unique
   // Status

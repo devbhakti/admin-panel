@@ -18,7 +18,8 @@ const upload = multer({ storage });
 // Public route to submit a new Mandal Registration
 router.post('/register', (upload as any).fields([
     { name: 'image', maxCount: 1 },
-    { name: 'heroImages', maxCount: 5 }
+    { name: 'heroImages', maxCount: 5 },
+    { name: 'documentUrl', maxCount: 5 }
 ]), async (req, res) => {
     try {
         const files = req.files as any;
@@ -53,7 +54,7 @@ router.post('/register', (upload as any).fields([
                 email: data.email || undefined,
                 presidentName: data.presidentName || undefined,
                 registrationNumber: data.registrationNumber || undefined,
-                documentUrl: files?.documentUrl?.[0] ? `/uploads/mandals/${files.documentUrl[0].filename}` : undefined,
+                documentUrl: files?.documentUrl ? (files.documentUrl as any[]).map((f: any) => `/uploads/mandals/${f.filename}`) : undefined,
                 image: image || undefined,
                 bannerImages: heroImages,
                 status: 'PENDING'

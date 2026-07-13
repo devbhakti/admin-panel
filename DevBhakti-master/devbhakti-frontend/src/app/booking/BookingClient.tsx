@@ -983,6 +983,7 @@ function BookingForm() {
                       <PopoverContent className="w-auto p-0" align="start">
                         <CalendarComponent
                           mode="single"
+                          selectedDateShape="circle"
                           selected={selectedDate ? new Date(selectedDate) : undefined}
                           onSelect={(date) => {
                             if (date) {
