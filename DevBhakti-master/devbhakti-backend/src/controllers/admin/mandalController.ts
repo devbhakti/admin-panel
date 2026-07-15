@@ -159,6 +159,10 @@ export const createMandal = async (req: Request, res: Response): Promise<void> =
         res.status(201).json({ success: true, message: 'Mandal created successfully', data: mandal });
     } catch (error: any) {
         console.error('createMandal error:', error);
+        if (error.code === 'P2002' && error.meta?.target?.includes('slug')) {
+            res.status(400).json({ success: false, message: 'This slug is already in use by another mandal. Please provide a unique slug.' });
+            return;
+        }
         res.status(500).json({ success: false, message: 'Failed to create mandal', error: error.message });
     }
 };
@@ -219,6 +223,10 @@ export const updateMandal = async (req: Request, res: Response): Promise<void> =
         res.json({ success: true, message: 'Mandal updated successfully', data: mandal });
     } catch (error: any) {
         console.error('updateMandal error:', error);
+        if (error.code === 'P2002' && error.meta?.target?.includes('slug')) {
+            res.status(400).json({ success: false, message: 'This slug is already in use by another mandal. Please provide a unique slug.' });
+            return;
+        }
         res.status(500).json({ success: false, message: 'Failed to update mandal', error: error.message });
     }
 };

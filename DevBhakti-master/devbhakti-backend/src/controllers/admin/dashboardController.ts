@@ -228,8 +228,7 @@ export const getAdminDashboardStats = async (req: Request, res: Response) => {
     try {
         const lang = (req.headers['x-lang'] as string) || (req.query.lang as string) || 'en';
 
-        // Donation commission rate
-        const DONATION_COMMISSION_RATE = 0.02; // 2%
+        // Donation commission is now calculated dynamically from slabs
 
         // 1. Core Statistics - WITH COMPLETED FILTER
         const [
@@ -263,15 +262,17 @@ export const getAdminDashboardStats = async (req: Request, res: Response) => {
         
         try {
             const donationsResult: any = await prisma.$queryRaw`
-                SELECT SUM(CAST(amount AS INTEGER)) as total 
+                SELECT 
+                    SUM(CAST(amount AS INTEGER)) as total,
+                    SUM(CAST("commissionAmount" AS INTEGER)) as commission_total
                 FROM "Donation" 
                 WHERE status IN ('COMPLETED', 'SUCCESS')
             `;
             templeDonationAmount = Number(donationsResult[0]?.total) || 0;
+            donationCommission = Number(donationsResult[0]?.commission_total) || 0;
             
-            // Calculate gross amount (what devotee paid) including 2% commission
-            donationGrossAmount = templeDonationAmount * (1 + DONATION_COMMISSION_RATE);
-            donationCommission = templeDonationAmount * DONATION_COMMISSION_RATE;
+            // Calculate gross amount (what devotee paid)
+            donationGrossAmount = templeDonationAmount + donationCommission;
             
             console.log('Donations - Temple Amount:', templeDonationAmount);
             console.log('Donations - Gross Amount (Devotee Paid):', donationGrossAmount);

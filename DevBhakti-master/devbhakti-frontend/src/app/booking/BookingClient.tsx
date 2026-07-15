@@ -522,8 +522,14 @@ function BookingForm() {
       }
     }
     if (step === 3) {
-      if (!formData.name || !formData.phone || !formData.dob || !formData.gender) {
+      if (!formData.name || !formData.phone) {
         toast({ title: t("booking_client.toast_fill_fields"), description: t("booking_client.toast_fill_fields_desc"), variant: "destructive" });
+        return;
+      }
+
+      // If prasad is requested, delivery address fields are required
+      if (isPrasadRequested && (!formData.prasadStreet || !formData.prasadCity || !formData.prasadState || !formData.prasadPincode)) {
+        toast({ title: t("booking_client.toast_fill_fields"), description: t("booking_client.prasad_address_required"), variant: "destructive" });
         return;
       }
 
@@ -984,6 +990,7 @@ function BookingForm() {
                         <CalendarComponent
                           mode="single"
                           selectedDateShape="circle"
+                          showOutsideDays={false}
                           selected={selectedDate ? new Date(selectedDate) : undefined}
                           onSelect={(date) => {
                             if (date) {
@@ -1286,28 +1293,31 @@ function BookingForm() {
                   </div>
                 </div>
 
-                <div className="space-y-2 border-t pt-4 mt-4">
-                  <Label htmlFor="address">{t("booking_client.field_address")}</Label>
-                  <Textarea
-                    id="address"
-                    placeholder={t("booking_client.placeholder_address")}
-                    value={formData.address}
-                    onChange={(e) => setFormData({ ...formData, address: e.target.value })}
-                  />
-                </div>
+                {/* General address — hidden when prasad delivery address is filled */}
+                {!isPrasadRequested && (
+                  <div className="space-y-2 border-t pt-4 mt-4">
+                    <Label htmlFor="address">{t("booking_client.field_address")}</Label>
+                    <Textarea
+                      id="address"
+                      placeholder={t("booking_client.placeholder_address")}
+                      value={formData.address}
+                      onChange={(e) => setFormData({ ...formData, address: e.target.value })}
+                    />
+                  </div>
+                )}
 
                 {/* Structured Prasad Delivery Address — only shown when prasad is requested */}
                 {isPrasadRequested && (
                   <div className="mt-4 p-4 rounded-2xl border border-orange-200 bg-orange-50/40 space-y-4">
                     <p className="text-sm font-bold text-[#794A05] flex items-center gap-2">
-                      📦 Prasad Delivery Address
-                      <span className="text-xs font-normal text-slate-500">(Required for courier delivery)</span>
+                      📦 {t("booking_client.prasad_delivery_title")}
+                      <span className="text-xs font-normal text-slate-500">({t("booking_client.prasad_delivery_subtitle")})</span>
                     </p>
                     <div className="space-y-2">
-                      <Label htmlFor="prasadStreet">Street / House No / Area <span className="text-red-500">*</span></Label>
+                      <Label htmlFor="prasadStreet">{t("booking_client.prasad_field_street")} <span className="text-red-500">*</span></Label>
                       <Textarea
                         id="prasadStreet"
-                        placeholder="e.g. 12, Shanti Nagar, Near Park"
+                        placeholder={t("booking_client.prasad_placeholder_street")}
                         value={formData.prasadStreet}
                         onChange={(e) => setFormData({ ...formData, prasadStreet: e.target.value })}
                         rows={2}
@@ -1315,31 +1325,31 @@ function BookingForm() {
                     </div>
                     <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
                       <div className="space-y-2">
-                        <Label htmlFor="prasadCity">City <span className="text-red-500">*</span></Label>
+                        <Label htmlFor="prasadCity">{t("booking_client.prasad_field_city")} <span className="text-red-500">*</span></Label>
                         <input
                           id="prasadCity"
                           className="w-full h-10 px-3 rounded-lg border border-input bg-background text-sm focus:ring-1 focus:ring-orange-400 focus:outline-none"
-                          placeholder="e.g. Pune"
+                          placeholder={t("booking_client.prasad_placeholder_city")}
                           value={formData.prasadCity}
                           onChange={(e) => setFormData({ ...formData, prasadCity: e.target.value })}
                         />
                       </div>
                       <div className="space-y-2">
-                        <Label htmlFor="prasadState">State <span className="text-red-500">*</span></Label>
+                        <Label htmlFor="prasadState">{t("booking_client.prasad_field_state")} <span className="text-red-500">*</span></Label>
                         <input
                           id="prasadState"
                           className="w-full h-10 px-3 rounded-lg border border-input bg-background text-sm focus:ring-1 focus:ring-orange-400 focus:outline-none"
-                          placeholder="e.g. Maharashtra"
+                          placeholder={t("booking_client.prasad_placeholder_state")}
                           value={formData.prasadState}
                           onChange={(e) => setFormData({ ...formData, prasadState: e.target.value })}
                         />
                       </div>
                       <div className="space-y-2">
-                        <Label htmlFor="prasadPincode">Pincode <span className="text-red-500">*</span></Label>
+                        <Label htmlFor="prasadPincode">{t("booking_client.prasad_field_pincode")} <span className="text-red-500">*</span></Label>
                         <input
                           id="prasadPincode"
                           className="w-full h-10 px-3 rounded-lg border border-input bg-background text-sm focus:ring-1 focus:ring-orange-400 focus:outline-none"
-                          placeholder="e.g. 411001"
+                          placeholder={t("booking_client.prasad_placeholder_pincode")}
                           maxLength={6}
                           value={formData.prasadPincode}
                           onChange={(e) => {
@@ -1365,7 +1375,7 @@ function BookingForm() {
                 {selectedPoojaData?.hasPrasad && (
                   <div className="mt-6 p-4 border rounded-xl bg-orange-50/50 border-orange-100">
                     <Label className="text-sm font-bold text-slate-800 flex items-center gap-2">
-                      🙏 Would you like to receive the free prasad?
+                      🙏 {t("booking_client.prasad_question")}
                     </Label>
                     <RadioGroup
                       value={isPrasadRequested ? "yes" : "no"}
@@ -1374,11 +1384,11 @@ function BookingForm() {
                     >
                       <div className="flex items-center space-x-2">
                         <RadioGroupItem value="yes" id="prasad-yes" />
-                        <Label htmlFor="prasad-yes" className="cursor-pointer font-normal">Yes, I want Prasad</Label>
+                        <Label htmlFor="prasad-yes" className="cursor-pointer font-normal">{t("booking_client.prasad_yes")}</Label>
                       </div>
                       <div className="flex items-center space-x-2">
                         <RadioGroupItem value="no" id="prasad-no" />
-                        <Label htmlFor="prasad-no" className="cursor-pointer font-normal">No, Thank you</Label>
+                        <Label htmlFor="prasad-no" className="cursor-pointer font-normal">{t("booking_client.prasad_no")}</Label>
                       </div>
                     </RadioGroup>
                   </div>
@@ -1490,8 +1500,8 @@ function BookingForm() {
                   </div>
                   {selectedPoojaData?.hasPrasad && (
                     <div className="flex justify-between py-2 border-b border-border">
-                      <span className="text-muted-foreground">Free Prasad Requested</span>
-                      <span className="font-medium">{isPrasadRequested ? "Yes" : "No"}</span>
+                      <span className="text-muted-foreground">{t("booking_client.prasad_requested_label")}</span>
+                      <span className="font-medium">{isPrasadRequested ? t("booking_client.prasad_yes_short") : t("booking_client.prasad_no_short")}</span>
                     </div>
                   )}
                   {/* <div className="flex justify-between py-2 border-b border-border">
@@ -1581,8 +1591,8 @@ function BookingForm() {
                   </div>
                   {selectedPoojaData?.hasPrasad && (
                     <div className="flex justify-between">
-                      <span className="text-muted-foreground">Free Prasad Requested</span>
-                      <span className="font-medium">{isPrasadRequested ? "Yes" : "No"}</span>
+                      <span className="text-muted-foreground">{t("booking_client.prasad_requested_label")}</span>
+                      <span className="font-medium">{isPrasadRequested ? t("booking_client.prasad_yes_short") : t("booking_client.prasad_no_short")}</span>
                     </div>
                   )}
                   {formData.nativePlace && (

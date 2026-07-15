@@ -44,20 +44,6 @@ export default function CommissionSlabsPage() {
             const data = await response.json();
             if (data.success) {
                 setSlabs(data.data);
-                // If it's donation and we have slabs, use the one that starts at 0
-                if (activeCategory === 'DONATION') {
-                    const catchAllSlab = data.data.find((s: any) => s.minAmount === 0) || data.data[0];
-                    if (catchAllSlab) {
-                        setFormData({
-                            minAmount: '0',
-                            maxAmount: '',
-                            platformFee: '0',
-                            percentage: catchAllSlab.percentage.toString()
-                        });
-                        // If we found a catch-all but there are others, we show only this one in the slabs state
-                        setSlabs([catchAllSlab]);
-                    }
-                }
             }
         } catch (error) {
             console.error('Error fetching slabs:', error);
@@ -69,9 +55,7 @@ export default function CommissionSlabsPage() {
     const handleCreate = async () => {
         try {
             const token = localStorage.getItem('admin_token');
-            const body = activeCategory === 'DONATION' 
-                ? { minAmount: 0, maxAmount: null, platformFee: 0, percentage: parseFloat(formData.percentage), slabType: 'GLOBAL', category: 'DONATION' }
-                : { ...formData, slabType: 'GLOBAL', category: activeCategory };
+            const body = { ...formData, slabType: 'GLOBAL', category: activeCategory };
 
             const response = await fetch(`${API_URL}/admin/commission-slabs`, {
                 method: 'POST',
@@ -86,9 +70,7 @@ export default function CommissionSlabsPage() {
             if (data.success) {
                 fetchSlabs();
                 setIsCreating(false);
-                if (activeCategory !== 'DONATION') {
-                    setFormData({ minAmount: '0', maxAmount: '', platformFee: '0', percentage: '' });
-                }
+                setFormData({ minAmount: '0', maxAmount: '', platformFee: '0', percentage: '' });
                 alert('Success!');
             } else {
                 alert(`Error: ${data.message}`);
@@ -101,9 +83,7 @@ export default function CommissionSlabsPage() {
     const handleUpdate = async (id: string) => {
         try {
             const token = localStorage.getItem('admin_token');
-            const body = activeCategory === 'DONATION'
-                ? { minAmount: 0, maxAmount: null, platformFee: 0, percentage: parseFloat(formData.percentage), category: 'DONATION' }
-                : { ...formData, category: activeCategory };
+            const body = { ...formData, category: activeCategory };
 
             const response = await fetch(`${API_URL}/admin/commission-slabs/${id}`, {
                 method: 'PUT',
@@ -118,9 +98,7 @@ export default function CommissionSlabsPage() {
                 fetchSlabs();
                 setEditingId(null);
                 setIsCreating(false);
-                if (activeCategory !== 'DONATION') {
-                    setFormData({ minAmount: '0', maxAmount: '', platformFee: '0', percentage: '' });
-                }
+                setFormData({ minAmount: '0', maxAmount: '', platformFee: '0', percentage: '' });
                 alert('Updated successfully!');
             }
         } catch (error) {
@@ -157,9 +135,7 @@ export default function CommissionSlabsPage() {
     const cancelEdit = () => {
         setEditingId(null);
         setIsCreating(false);
-        if (activeCategory !== 'DONATION') {
-            setFormData({ minAmount: '0', maxAmount: '', platformFee: '0', percentage: '' });
-        }
+        setFormData({ minAmount: '0', maxAmount: '', platformFee: '0', percentage: '' });
     };
 
     return (
@@ -172,15 +148,13 @@ export default function CommissionSlabsPage() {
                         Manage platform fees for Marketplace, Pooja, and Donations.
                     </p>
                 </div>
-                {activeCategory !== 'DONATION' && (
-                    <button
-                        onClick={() => setIsCreating(true)}
-                        className="w-full sm:w-auto flex items-center justify-center gap-2 bg-orange-600 text-white px-4 py-2 rounded-lg hover:bg-orange-700 transition shadow-lg shadow-orange-200"
-                    >
-                        <Plus size={20} />
-                        Add New Slab
-                    </button>
-                )}
+                <button
+                    onClick={() => setIsCreating(true)}
+                    className="w-full sm:w-auto flex items-center justify-center gap-2 bg-orange-600 text-white px-4 py-2 rounded-lg hover:bg-orange-700 transition shadow-lg shadow-orange-200"
+                >
+                    <Plus size={20} />
+                    Add New Slab
+                </button>
             </div>
 
             {/* Category Tabs */}
@@ -203,62 +177,8 @@ export default function CommissionSlabsPage() {
                 ))}
             </div>
 
-            {/* Donation Config (Internal Only) */}
-            {activeCategory === 'DONATION' && (
-                <div className="bg-white rounded-3xl shadow-xl p-8 mb-8 border border-orange-100 relative overflow-hidden group">
-                    <div className="absolute top-0 right-0 w-32 h-32 bg-orange-50 rounded-bl-full -mr-16 -mt-16 transition-transform group-hover:scale-110 duration-500" />
-                    
-                    <div className="relative z-10">
-                        <div className="flex items-center gap-3 mb-6">
-                            <div className="w-12 h-12 bg-orange-600 rounded-2xl flex items-center justify-center shadow-lg shadow-orange-200">
-                                <Save className="text-white w-6 h-6" />
-                            </div>
-                            <div>
-                                <h3 className="text-2xl font-bold text-gray-900">Platform Split Percentage</h3>
-                                <p className="text-gray-500 text-sm italic">Internal setting for administrative commission</p>
-                            </div>
-                        </div>
-
-                        <div className="max-w-md">
-                            <label className="block text-sm font-bold text-gray-700 mb-3 uppercase tracking-wider">
-                                Commission Percentage (%)
-                            </label>
-                            <div className="flex flex-col sm:flex-row gap-4">
-                                <div className="relative flex-1">
-                                    <input
-                                        type="number"
-                                        step="0.1"
-                                        value={formData.percentage}
-                                        onChange={(e) => setFormData({ ...formData, percentage: e.target.value })}
-                                        className="w-full pl-6 pr-12 py-4 bg-gray-50 border-2 border-transparent focus:border-orange-500 focus:bg-white rounded-2xl outline-none transition-all text-xl font-bold"
-                                        placeholder="0.0"
-                                    />
-                                    <span className="absolute right-6 top-1/2 -translate-y-1/2 font-bold text-gray-400 text-xl">%</span>
-                                </div>
-                                <button
-                                    onClick={() => slabs.length > 0 ? handleUpdate(slabs[0].id) : handleCreate()}
-                                    className="bg-orange-600 hover:bg-orange-700 text-white px-10 py-4 rounded-2xl font-bold transition shadow-lg shadow-orange-200 active:scale-95"
-                                >
-                                    Save
-                                </button>
-                            </div>
-                        </div>
-
-                        <div className="mt-8 flex items-start gap-4 p-4 bg-blue-50 rounded-2xl border border-blue-100">
-                            <div className="w-10 h-10 bg-blue-100 rounded-xl flex items-center justify-center flex-shrink-0">
-                                <span className="text-blue-600 font-bold text-xl">!</span>
-                            </div>
-                            <p className="text-sm text-blue-800 leading-relaxed font-medium">
-                                This percentage is added on top of the devotee's donation amount.
-                                <strong> Devotees (Users) will pay this fee</strong> — the temple receives the full base donation amount.
-                            </p>
-                        </div>
-                    </div>
-                </div>
-            )}
-
-            {/* Marketplace/Pooja Slabs Form */}
-            {activeCategory !== 'DONATION' && isCreating && (
+            {/* Slabs Form */}
+            {isCreating && (
                 <div className="bg-white rounded-2xl shadow-lg p-6 mb-8 border-2 border-orange-500 animate-in fade-in slide-in-from-top-4 duration-300">
                     <h3 className="text-xl font-bold mb-6">{editingId ? 'Edit' : 'Create New'} {activeCategory} Slab</h3>
                     <div className="grid grid-cols-1 md:grid-cols-4 gap-6">
@@ -310,9 +230,8 @@ export default function CommissionSlabsPage() {
                 </div>
             )}
 
-            {/* Slabs Table for Marketplace/Pooja */}
-            {activeCategory !== 'DONATION' && (
-                <div className="bg-white rounded-3xl shadow-xl overflow-hidden border border-gray-100">
+            {/* Slabs Table */}
+            <div className="bg-white rounded-3xl shadow-xl overflow-hidden border border-gray-100">
                     <div className="overflow-x-auto">
                         <table className="w-full">
                             <thead>
@@ -347,7 +266,6 @@ export default function CommissionSlabsPage() {
                         </table>
                     </div>
                 </div>
-            )}
         </div>
     );
 }
