@@ -14,6 +14,7 @@ export const initiateDonation = async (req: Request, res: Response) => {
     try {
         const {
             templeId,
+            mandalId,
             amount,
             donorName,
             donorPhone,
@@ -26,7 +27,7 @@ export const initiateDonation = async (req: Request, res: Response) => {
             userId
         } = req.body;
 
-        if (!templeId || !amount || !donorName || !donorPhone || !donorEmail) {
+        if ((!templeId && !mandalId) || !amount || !donorName || !donorPhone || !donorEmail) {
             return res.status(400).json({ success: false, message: "Missing required fields" });
         }
 
@@ -34,8 +35,13 @@ export const initiateDonation = async (req: Request, res: Response) => {
             return res.status(400).json({ success: false, message: "Donation amount exceeds the maximum limit of ₹1 Crore" });
         }
 
-        const temple = await prisma.temple.findUnique({ where: { id: templeId } });
-        if (!temple) return res.status(404).json({ success: false, message: "Temple not found" });
+        if (templeId) {
+            const temple = await prisma.temple.findUnique({ where: { id: templeId } });
+            if (!temple) return res.status(404).json({ success: false, message: "Temple not found" });
+        } else if (mandalId) {
+            const mandal = await prisma.mandal.findUnique({ where: { id: mandalId } });
+            if (!mandal) return res.status(404).json({ success: false, message: "Mandal not found" });
+        }
 
         // Calculate Commission
         const commissionData = await getCommissionForAmount(
@@ -65,7 +71,8 @@ export const initiateDonation = async (req: Request, res: Response) => {
         const donation = await prisma.donation.create({
             data: {
                 displayId,
-                templeId,
+                templeId: templeId || null,
+                mandalId: mandalId || null,
                 amount,
                 commissionAmount,
                 netEarning,
@@ -99,7 +106,8 @@ export const generateDonationReceiptBuffer = async (donationId: string): Promise
         const donation = await prisma.donation.findFirst({
             where: { id: donationId, status: 'SUCCESS' },
             include: {
-                temple: true
+                temple: true,
+                mandal: true
             }
         });
 
@@ -158,15 +166,20 @@ export const generateDonationReceiptBuffer = async (donationId: string): Promise
             // Temple Column (Right)
             doc.fillColor(primaryColor).fontSize(11).font('Helvetica-Bold').text('DONATED TO', 350, topOfDetails);
             doc.moveDown(0.5);
-            doc.fillColor(textColor).font('Helvetica-Bold').fontSize(12).text(getEnglish((donation.temple as any).name));
-            doc.font('Helvetica').fontSize(10).text(getEnglish((donation.temple as any).location));
+            
+            const placeName = donation.temple ? getEnglish((donation.temple as any).name) : (donation.mandal ? getEnglish((donation.mandal as any).name) : "Dev Bhakti");
+            const locationStr = donation.temple ? getEnglish((donation.temple as any).location) : (donation.mandal ? ((donation.mandal as any).city || "India") : "");
+            
+            doc.fillColor(textColor).font('Helvetica-Bold').fontSize(12).text(placeName);
+            doc.font('Helvetica').fontSize(10).text(locationStr);
             doc.fillColor('#059669').fontSize(10).font('Helvetica-Bold').text('STATUS: SUCCESSFUL', 350, doc.y + 10);
 
             doc.moveDown(4);
 
             // --- Donation Amount Box ---
             doc.fillColor(lightGray).rect(50, doc.y, 500, 80).fill();
-            doc.fillColor(primaryColor).fontSize(10).font('Helvetica-Bold').text('CONTRIBUTION TO TEMPLE', 60, doc.y + 15);
+            const contributionLabel = donation.mandal ? 'CONTRIBUTION TO MANDAL' : 'CONTRIBUTION TO TEMPLE';
+            doc.fillColor(primaryColor).fontSize(10).font('Helvetica-Bold').text(contributionLabel, 60, doc.y + 15);
             doc.fontSize(20).text(`INR ${donation.amount.toLocaleString('en-IN')}`, 60, doc.y + 5);
             
             if (donation.commissionAmount && donation.commissionAmount > 0) {
@@ -193,7 +206,8 @@ export const generateDonationReceiptBuffer = async (donationId: string): Promise
 
             // --- Footer ---
             doc.moveDown(8);
-            doc.fillColor('#94a3b8').fontSize(9).font('Helvetica-Oblique').text('Your contribution helps us preserve our sacred heritage and support the temple community.', { align: 'center' });
+            const footerText = donation.mandal ? 'Your contribution helps support the mandal activities and community.' : 'Your contribution helps us preserve our sacred heritage and support the temple community.';
+            doc.fillColor('#94a3b8').fontSize(9).font('Helvetica-Oblique').text(footerText, { align: 'center' });
             doc.moveDown(0.5);
             doc.text('This is a computer-generated receipt and does not require a physical signature.', { align: 'center' });
             doc.moveDown(1.5);

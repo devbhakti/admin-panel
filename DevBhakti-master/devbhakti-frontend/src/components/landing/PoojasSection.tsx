@@ -200,7 +200,7 @@ const PoojasSection: React.FC = () => {
 
           <div
             ref={scrollContainerRef}
-            className="flex gap-6 overflow-x-auto scrollbar-hide pb-4 scroll-smooth"
+            className="flex gap-6 overflow-x-auto scrollbar-hide pb-4 scroll-smooth snap-x snap-mandatory"
             style={{
               scrollbarWidth: "none",
               msOverflowStyle: "none",
@@ -213,7 +213,7 @@ const PoojasSection: React.FC = () => {
                 whileInView={{ opacity: 1, x: 0 }}
                 viewport={{ once: true }}
                 transition={{ duration: 0.4, delay: index * 0.1 }}
-                className="flex-shrink-0 w-[300px] md:w-[340px]"
+                className="flex-shrink-0 w-[300px] md:w-[350px] snap-start"
               >
                 <div className="relative group/card h-[400px]">
                   <Link href={`/poojas/${pooja.slug || pooja.id}`}>

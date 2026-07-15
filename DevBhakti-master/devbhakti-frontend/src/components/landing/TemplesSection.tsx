@@ -179,7 +179,7 @@ const TemplesSection: React.FC = () => {
 
           <div
             ref={scrollContainerRef}
-            className="flex gap-6 overflow-x-auto scrollbar-hide pb-4 scroll-smooth"
+            className="flex gap-6 overflow-x-auto scrollbar-hide pb-4 scroll-smooth snap-x snap-mandatory"
             style={{
               scrollbarWidth: "none",
               msOverflowStyle: "none",
@@ -192,7 +192,7 @@ const TemplesSection: React.FC = () => {
                 whileInView={{ opacity: 1, x: 0 }}
                 viewport={{ once: true }}
                 transition={{ duration: 0.4, delay: index * 0.1 }}
-                className="flex-shrink-0 w-[320px] md:w-[380px]"
+                className="flex-shrink-0 w-[320px] md:w-[380px] snap-start"
               >
                 <div className="relative group/card h-full">
                   <Link href={getTempleUrl(temple)}>

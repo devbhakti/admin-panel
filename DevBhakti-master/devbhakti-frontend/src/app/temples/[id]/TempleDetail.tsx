@@ -31,6 +31,8 @@ export interface TempleDetailProps {
     showRatings: boolean;
     selectedEvent: any;
     setSelectedEvent: React.Dispatch<React.SetStateAction<any>>;
+    selectedNews: any | null;
+    setSelectedNews: React.Dispatch<React.SetStateAction<any | null>>;
     videoPlayUrl: string | null;
     setVideoPlayUrl: React.Dispatch<React.SetStateAction<string | null>>;
     showAllEvents: boolean;
@@ -77,6 +79,7 @@ export default function TempleDetail() {
     const [selectedPurposes, setSelectedPurposes] = useState<string[]>([]);
     const [showRatings, setShowRatings] = useState(false);
     const [selectedEvent, setSelectedEvent] = useState<any>(null);
+    const [selectedNews, setSelectedNews] = useState<any | null>(null);
     const [videoPlayUrl, setVideoPlayUrl] = useState<string | null>(null);
     const [showAllEvents, setShowAllEvents] = useState(false);
 
@@ -215,6 +218,21 @@ export default function TempleDetail() {
         setActiveImageIndex(index);
     };
 
+    // Keyboard navigation for Full View Modal
+    useEffect(() => {
+        const handleKeyDown = (e: KeyboardEvent) => {
+            if (!isFullViewOpen) return;
+            if (e.key === "ArrowRight") {
+                goToNext();
+            } else if (e.key === "ArrowLeft") {
+                goToPrev();
+            }
+        };
+
+        window.addEventListener("keydown", handleKeyDown);
+        return () => window.removeEventListener("keydown", handleKeyDown);
+    }, [isFullViewOpen, galleryMedia.length]);
+
     const toggleFavorite = async () => {
         const templeId = params?.id || params?.subdomain;
         if (!user) {
@@ -318,6 +336,8 @@ export default function TempleDetail() {
         showRatings,
         selectedEvent,
         setSelectedEvent,
+        selectedNews,
+        setSelectedNews,
         videoPlayUrl,
         setVideoPlayUrl,
         showAllEvents,

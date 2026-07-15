@@ -53,6 +53,8 @@ export default function DesktopTempleDetail({
     showRatings,
     selectedEvent,
     setSelectedEvent,
+    selectedNews,
+    setSelectedNews,
     videoPlayUrl,
     setVideoPlayUrl,
     showAllEvents,
@@ -144,7 +146,13 @@ export default function DesktopTempleDetail({
                                 <div className="flex flex-wrap gap-4 text-muted-foreground mb-6">
                                     <div className="flex items-center gap-2">
                                         <MapPin className="h-4 w-4 text-primary" />
-                                        <span>{getLocalized(temple, "fullAddress", language)}</span>
+                                        {temple.mapUrl ? (
+                                            <a href={temple.mapUrl} target="_blank" rel="noopener noreferrer" className="hover:text-primary transition-colors hover:underline">
+                                                {getLocalized(temple, "fullAddress", language)}
+                                            </a>
+                                        ) : (
+                                            <span>{getLocalized(temple, "fullAddress", language)}</span>
+                                        )}
                                     </div>
                                     {(temple.phone && temple.showPhone !== false) && (
                                         <div className="flex items-center gap-2">
@@ -460,6 +468,16 @@ export default function DesktopTempleDetail({
                                     </div>
 
                                     {/* Prominent Donation Button */}
+                                    <Button
+                                        variant="outline"
+                                        className="w-full h-12 rounded-2xl border-dashed border-primary/30 text-primary hover:bg-primary/5 font-bold gap-2"
+                                        onClick={handleDonation}
+                                    >
+                                        <Heart className="h-4 w-4" />
+                                        Donation
+                                    </Button>
+
+                                    {/* Operating Hours */}
                                     <div className="space-y-4">
                                         {((temple.operatingHours && Array.isArray(temple.operatingHours) && temple.operatingHours.filter((s: any) => s.active).length > 0) || temple.openTime) && (
                                             <div className="flex items-start gap-3 p-3 bg-primary/5 rounded-xl border border-primary/10">
@@ -485,82 +503,6 @@ export default function DesktopTempleDetail({
                                         )}
                                     </div>
                                 </div>
-
-                                {/* Creative Location Integration */}
-                                {temple.mapUrl && (
-                                    <div className="space-y-3 pt-2">
-                                        <a
-                                            href={temple.mapUrl}
-                                            target="_blank"
-                                            rel="noopener noreferrer"
-                                            className="flex items-center gap-4 p-4 rounded-2xl bg-primary/5 border border-primary/10 hover:bg-primary/10 hover:border-primary/20 transition-all duration-300 group"
-                                        >
-                                            <div className="h-11 w-11 shrink-0 bg-primary/20 rounded-xl flex items-center justify-center group-hover:scale-110 transition-transform duration-300 shadow-sm">
-                                                <MapPin className="h-6 w-6 text-primary" />
-                                            </div>
-                                            <div className="flex-1 min-w-0">
-                                                <p className="text-[10px] uppercase tracking-[0.15em] font-bold text-primary/60 leading-tight">{t("temple_detail.sacred_location")}</p>
-                                                <p className="font-bold text-foreground text-sm mt-0.5">{t("temple_detail.explore_on_maps")}</p>
-                                            </div>
-                                            <ChevronRight className="h-4 w-4 text-primary/30 group-hover:text-primary transition-all group-hover:translate-x-1" />
-                                        </a>
-                                    </div>
-                                )}
-
-                                <Button
-                                    variant="outline"
-                                    className="w-full h-12 rounded-2xl border-dashed border-primary/30 text-primary hover:bg-primary/5 font-bold gap-2"
-                                    onClick={handleDonation}
-                                >
-                                    <Heart className="h-4 w-4" />
-                                    Donation
-                                </Button>
-
-                                
-                                {/* Compact Upcoming Events */}
-                                {temple.events && temple.events.length > 0 && (
-                                    <div className="pt-2 space-y-4">
-                                        <div className="flex items-center gap-2 px-1">
-                                            <div className="h-1 w-8 bg-primary/20 rounded-full" />
-                                            <h3 className="text-[11px] font-black uppercase tracking-[0.2em] text-muted-foreground">{t("temple_detail.upcoming_events")}</h3>
-                                        </div>
-                                        <div className="space-y-3">
-                                            {temple.events.slice(0, showAllEvents ? undefined : 3).map((event: any, index: number) => (
-                                                <div
-                                                    key={index}
-                                                    onClick={() => setSelectedEvent(event)}
-                                                    className="relative pl-4 border-l-2 border-primary/10 hover:border-primary/40 transition-all py-1 group cursor-pointer hover:bg-primary/5 rounded-r-lg"
-                                                >
-                                                    <div className="absolute -left-[5px] top-2 h-2 w-2 rounded-full bg-primary/20 group-hover:bg-primary transition-colors" />
-                                                    <div className="flex items-center gap-2 mb-0.5">
-                                                        <h4 className="font-bold text-sm text-foreground leading-tight group-hover:text-primary transition-colors">{getLocalized(event, "name", language)}</h4>
-                                                        {!event.templeId && (
-                                                            <Badge className="bg-orange-100 text-orange-700 hover:bg-orange-200 border-none text-[8px] px-1.5 h-4 font-black uppercase tracking-tighter">
-                                                                Global
-                                                            </Badge>
-                                                        )}
-                                                    </div>
-                                                    <p className="text-[11px] font-medium text-muted-foreground flex items-center gap-1.5">
-                                                        <Clock className="w-3 h-3" />
-                                                        {event.date}
-                                                    </p>
-                                                </div>
-                                            ))}
-                                        </div>
-                                        {temple.events.length > 3 && (
-                                            <button 
-                                                onClick={() => setShowAllEvents(!showAllEvents)}
-                                                className="w-full mt-2 text-[10px] font-bold text-primary hover:text-primary/80 uppercase tracking-widest flex items-center justify-center gap-1 transition-colors"
-                                            >
-                                                {showAllEvents ? (
-                                                    <>Show Less <ChevronUp className="w-3 h-3" /></>
-                                                ) : (
-                                                    <>+ {temple.events.length - 3} More Events <ChevronDown className="w-3 h-3" /></>
-                                                )}
-                                            </button>
-                                        )}
-                                    </div>
-                                )}
 
                                 {/* Sidebar: Gallery Grid */}
                                 {galleryMedia.length > 0 && (
@@ -621,31 +563,72 @@ export default function DesktopTempleDetail({
                                         </div>
                                         <div className="grid grid-cols-2 gap-2">
                                             {(temple.newsCuttings as any[]).map((item: any, idx: number) => (
-                                                <a
+                                                <div
                                                     key={idx}
-                                                    href={item.link || undefined}
-                                                    target="_blank"
-                                                    rel="noopener noreferrer"
-                                                    className="relative group rounded-xl overflow-hidden border border-slate-200 shadow-sm block aspect-[4/3]"
-                                                    style={{ cursor: item.link ? 'pointer' : 'default' }}
+                                                    onClick={() => setSelectedNews(item)}
+                                                    className="relative group rounded-xl overflow-hidden border border-slate-200 shadow-sm block aspect-[4/3] cursor-pointer"
                                                 >
                                                     <img
                                                         src={getFullImageUrl(item.image)}
                                                         alt={`News cutting ${idx + 1}`}
                                                         className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500"
                                                     />
-                                                    {item.link && (
-                                                        <div className="absolute inset-0 bg-black/40 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center">
-                                                            <div className="bg-white/20 backdrop-blur-md p-1.5 rounded-full">
-                                                                <ExternalLink className="h-4 w-4 text-white" />
-                                                            </div>
+                                                    <div className="absolute inset-0 bg-black/40 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center">
+                                                        <div className="bg-white/20 backdrop-blur-md p-1.5 rounded-full">
+                                                            <Maximize2 className="h-4 w-4 text-white" />
                                                         </div>
-                                                    )}
-                                                </a>
+                                                    </div>
+                                                </div>
                                             ))}
                                         </div>
                                     </div>
                                 )}
+                                
+                                {/* Compact Upcoming Events */}
+                                {temple.events && temple.events.length > 0 && (
+                                    <div className="pt-2 space-y-4">
+                                        <div className="flex items-center gap-2 px-1">
+                                            <div className="h-1 w-8 bg-primary/20 rounded-full" />
+                                            <h3 className="text-[11px] font-black uppercase tracking-[0.2em] text-muted-foreground">{t("temple_detail.upcoming_events")}</h3>
+                                        </div>
+                                        <div className="space-y-3">
+                                            {temple.events.slice(0, showAllEvents ? undefined : 3).map((event: any, index: number) => (
+                                                <div
+                                                    key={index}
+                                                    onClick={() => setSelectedEvent(event)}
+                                                    className="relative pl-4 border-l-2 border-primary/10 hover:border-primary/40 transition-all py-1 group cursor-pointer hover:bg-primary/5 rounded-r-lg"
+                                                >
+                                                    <div className="absolute -left-[5px] top-2 h-2 w-2 rounded-full bg-primary/20 group-hover:bg-primary transition-colors" />
+                                                    <div className="flex items-center gap-2 mb-0.5">
+                                                        <h4 className="font-bold text-sm text-foreground leading-tight group-hover:text-primary transition-colors">{getLocalized(event, "name", language)}</h4>
+                                                        {!event.templeId && (
+                                                            <Badge className="bg-orange-100 text-orange-700 hover:bg-orange-200 border-none text-[8px] px-1.5 h-4 font-black uppercase tracking-tighter">
+                                                                Global
+                                                            </Badge>
+                                                        )}
+                                                    </div>
+                                                    <p className="text-[11px] font-medium text-muted-foreground flex items-center gap-1.5">
+                                                        <Clock className="w-3 h-3" />
+                                                        {event.date}
+                                                    </p>
+                                                </div>
+                                            ))}
+                                        </div>
+                                        {temple.events.length > 3 && (
+                                            <button 
+                                                onClick={() => setShowAllEvents(!showAllEvents)}
+                                                className="w-full mt-2 text-[10px] font-bold text-primary hover:text-primary/80 uppercase tracking-widest flex items-center justify-center gap-1 transition-colors"
+                                            >
+                                                {showAllEvents ? (
+                                                    <>Show Less <ChevronUp className="w-3 h-3" /></>
+                                                ) : (
+                                                    <>+ {temple.events.length - 3} More Events <ChevronDown className="w-3 h-3" /></>
+                                                )}
+                                            </button>
+                                        )}
+                                    </div>
+                                )}
+
                                 {/* Social Media Links */}
                                 {(temple.instagramUrl || temple.facebookUrl || temple.youtubeUrl) && (
                                     <div className="pt-2 space-y-3">
@@ -701,7 +684,7 @@ export default function DesktopTempleDetail({
 
             {/* Video Play Modal */}
             <Dialog open={!!videoPlayUrl} onOpenChange={(open) => !open && setVideoPlayUrl(null)}>
-                <DialogContent className="max-w-2xl w-full p-0 border-none bg-black overflow-hidden rounded-2xl">
+                <DialogContent className="max-w-6xl w-[95vw] p-0 border-none bg-black overflow-hidden rounded-2xl">
                     <DialogTitle className="sr-only">YouTube Video</DialogTitle>
                     {videoPlayUrl && (
                         <div className="aspect-video w-full">
@@ -739,7 +722,7 @@ export default function DesktopTempleDetail({
                                     key={activeImageIndex}
                                     initial={{ opacity: 0 }}
                                     animate={{ opacity: 1 }}
-                                    className="w-full max-w-4xl aspect-video rounded-2xl overflow-hidden shadow-2xl border border-white/10"
+                                    className="w-[90vw] max-w-6xl aspect-video rounded-2xl overflow-hidden shadow-2xl border border-white/10"
                                 >
                                     <iframe
                                         width="100%"
@@ -883,6 +866,35 @@ export default function DesktopTempleDetail({
                                     </div>
                                 )}
                             </div>
+                        </div>
+                    )}
+                </DialogContent>
+            </Dialog>
+            {/* News Cutting Modal */}
+            <Dialog open={!!selectedNews} onOpenChange={(open) => !open && setSelectedNews(null)}>
+                <DialogContent className="max-w-4xl w-full p-4 border-none bg-black/95 flex flex-col items-center justify-center overflow-hidden h-[90vh]">
+                    <DialogTitle className="sr-only">News Cutting</DialogTitle>
+                    {selectedNews && (
+                        <div className="relative w-full h-full flex flex-col items-center justify-center gap-6">
+                            <motion.img
+                                initial={{ opacity: 0, scale: 0.9 }}
+                                animate={{ opacity: 1, scale: 1 }}
+                                src={getFullImageUrl(selectedNews.image)}
+                                alt="News Cutting"
+                                className="max-w-full max-h-[75vh] object-contain shadow-2xl rounded-lg"
+                            />
+                            {selectedNews.link && (
+                                <Button 
+                                    asChild
+                                    size="lg"
+                                    className="bg-primary hover:bg-[#a05a2c] text-white font-bold tracking-wide rounded-full px-8 shadow-xl mt-2"
+                                >
+                                    <a href={selectedNews.link} target="_blank" rel="noopener noreferrer">
+                                        Navigate to news
+                                        <ExternalLink className="ml-2 w-4 h-4" />
+                                    </a>
+                                </Button>
+                            )}
                         </div>
                     )}
                 </DialogContent>

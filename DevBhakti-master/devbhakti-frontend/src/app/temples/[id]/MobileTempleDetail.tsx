@@ -26,6 +26,7 @@ import {
     ShoppingCart,
     Globe,
     ExternalLink,
+    Maximize2,
 } from "lucide-react";
 import { FaFacebook, FaInstagram, FaYoutube } from "react-icons/fa";
 import { Dialog, DialogContent, DialogTitle } from "@/components/ui/dialog";
@@ -52,6 +53,8 @@ export default function MobileTempleDetail({
     showRatings,
     selectedEvent,
     setSelectedEvent,
+    selectedNews,
+    setSelectedNews,
     videoPlayUrl,
     setVideoPlayUrl,
     showAllEvents,
@@ -689,28 +692,24 @@ export default function MobileTempleDetail({
                     </div>
                     <div className="flex gap-3 overflow-x-auto pb-3 scrollbar-none snap-x snap-mandatory">
                         {(temple.newsCuttings as any[]).map((item: any, idx: number) => (
-                            <a
+                            <div
                                 key={idx}
-                                href={item.link || undefined}
-                                target="_blank"
-                                rel="noopener noreferrer"
-                                className="w-[200px] shrink-0 snap-start rounded-3xl overflow-hidden relative border border-orange-50 shadow-sm block active:scale-[0.98] transition-transform"
-                                style={{ cursor: item.link ? 'pointer' : 'default' }}
+                                onClick={() => setSelectedNews(item)}
+                                className="w-[200px] shrink-0 snap-start rounded-3xl overflow-hidden relative border border-orange-50 shadow-sm block active:scale-[0.98] transition-transform cursor-pointer"
                             >
-                                <div className="aspect-[4/3] bg-orange-50 overflow-hidden">
+                                <div className="aspect-[4/3] bg-orange-50 overflow-hidden relative">
                                     <img
                                         src={getFullImageUrl(item.image)}
                                         alt={`Press cutting ${idx + 1}`}
                                         className="w-full h-full object-cover"
                                     />
-                                </div>
-                                {item.link && (
-                                    <div className="absolute bottom-0 left-0 right-0 bg-gradient-to-t from-black/60 to-transparent p-2 flex items-center gap-1">
-                                        <ExternalLink className="h-3.5 w-3.5 text-white" />
-                                        <span className="text-[10px] font-bold text-white">Read Article</span>
+                                    <div className="absolute inset-0 bg-black/40 opacity-0 hover:opacity-100 transition-opacity flex items-center justify-center">
+                                        <div className="bg-white/20 backdrop-blur-md p-1.5 rounded-full">
+                                            <Maximize2 className="h-4 w-4 text-white" />
+                                        </div>
                                     </div>
-                                )}
-                            </a>
+                                </div>
+                            </div>
                         ))}
                     </div>
                 </div>
@@ -1188,7 +1187,7 @@ export default function MobileTempleDetail({
 
             {/* ═══ Video Play Dialog ═══ */}
             <Dialog open={!!videoPlayUrl} onOpenChange={(open) => !open && setVideoPlayUrl(null)}>
-                <DialogContent className="max-w-md w-[95vw] p-0 border-none bg-black overflow-hidden rounded-2xl">
+                <DialogContent className="max-w-4xl w-[95vw] p-0 border-none bg-black overflow-hidden rounded-2xl">
                     <DialogTitle className="sr-only">Temple Video</DialogTitle>
                     {videoPlayUrl && (
                         <div className="aspect-video w-full">
@@ -1206,7 +1205,7 @@ export default function MobileTempleDetail({
                         {galleryMedia[activeImageIndex]?.type === "image" ? (
                             <img src={getFullImageUrl(galleryMedia[activeImageIndex].url)} alt="Temple view" className="max-w-full max-h-full object-contain rounded-lg" />
                         ) : (
-                            <div className="w-full max-w-4xl aspect-video rounded-2xl overflow-hidden border border-white/10">
+                            <div className="w-[95vw] max-w-4xl aspect-video rounded-2xl overflow-hidden border border-white/10">
                                 <iframe width="100%" height="100%" src={`https://www.youtube.com/embed/${getYouTubeId(galleryMedia[activeImageIndex].url)}?autoplay=1`} title="YouTube video" frameBorder="0" allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture" allowFullScreen></iframe>
                             </div>
                         )}
@@ -1224,6 +1223,33 @@ export default function MobileTempleDetail({
                             {activeImageIndex + 1} / {galleryMedia.length}
                         </div>
                     </div>
+                </DialogContent>
+            </Dialog>
+            {/* ═══ News Cutting Modal ═══ */}
+            <Dialog open={!!selectedNews} onOpenChange={(open) => !open && setSelectedNews(null)}>
+                <DialogContent className="max-w-[95vw] w-full p-4 border-none bg-black/95 flex flex-col items-center justify-center overflow-hidden h-[90vh]">
+                    <DialogTitle className="sr-only">News Cutting</DialogTitle>
+                    {selectedNews && (
+                        <div className="relative w-full h-full flex flex-col items-center justify-center gap-6">
+                            <img
+                                src={getFullImageUrl(selectedNews.image)}
+                                alt="News Cutting"
+                                className="max-w-full max-h-[70vh] object-contain shadow-2xl rounded-lg"
+                            />
+                            {selectedNews.link && (
+                                <Button 
+                                    asChild
+                                    size="lg"
+                                    className="bg-primary hover:bg-[#a05a2c] text-white font-bold tracking-wide rounded-full px-8 shadow-xl mt-2 w-full max-w-xs"
+                                >
+                                    <a href={selectedNews.link} target="_blank" rel="noopener noreferrer">
+                                        Navigate to news
+                                        <ExternalLink className="ml-2 w-4 h-4" />
+                                    </a>
+                                </Button>
+                            )}
+                        </div>
+                    )}
                 </DialogContent>
             </Dialog>
         </div>

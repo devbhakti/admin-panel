@@ -549,13 +549,24 @@ export function TempleForm({
             )}
 
             <Tabs value={activeFormLang} onValueChange={(v) => setActiveFormLang(v as Language)} className="w-full">
-                <TabsList className="mb-6 grid w-full max-w-md grid-cols-3">
-                    <TabsTrigger value="en">English (EN)</TabsTrigger>
-                    <TabsTrigger value="hi">हिंदी (HI)</TabsTrigger>
-                    <TabsTrigger value="mr">मराठी (MR)</TabsTrigger>
-                </TabsList>
+                <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 mb-6">
+                    <TabsList className="grid w-full max-w-md grid-cols-3">
+                        <TabsTrigger value="en">English (EN)</TabsTrigger>
+                        <TabsTrigger value="hi">हिंदी (HI)</TabsTrigger>
+                        <TabsTrigger value="mr">मराठी (MR)</TabsTrigger>
+                    </TabsList>
+                    <Button 
+                        type="submit" 
+                        form="temple-form"
+                        size="lg" 
+                        disabled={isLoading} 
+                        className="px-8 rounded-full font-bold shadow-sm w-full sm:w-auto"
+                    >
+                        {isLoading ? "Processing..." : (mode === "create" ? "Create Temple Account" : "Save Changes")}
+                    </Button>
+                </div>
 
-                <form onSubmit={handleSubmit} className="space-y-8">
+                <form id="temple-form" onSubmit={handleSubmit} className="space-y-8">
                     {/* Multilingual Contents */}
                     {["en", "hi", "mr"].map((lang) => (
                         <TabsContent key={lang} value={lang} className="space-y-8 mt-0">

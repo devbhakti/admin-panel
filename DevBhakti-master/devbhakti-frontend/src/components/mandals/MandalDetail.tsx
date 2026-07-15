@@ -124,7 +124,7 @@ export function MandalDetail({ slug }: { slug: string }) {
 
     setIsDonating(true);
     try {
-      const response = await fetch(`${API_URL}/public/donations/create`, {
+      const response = await fetch(`${API_URL}/donations`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
@@ -138,21 +138,52 @@ export function MandalDetail({ slug }: { slug: string }) {
         }),
       });
       const data = await response.json();
-      if (data.success && data.data.orderId) {
+      if (data.success && data.order && data.order.id) {
         const options = {
           key: process.env.NEXT_PUBLIC_RAZORPAY_KEY_ID,
           amount: amount * 100,
           currency: "INR",
           name: mandal.name?.en || "Mandal",
           description: `Donation to ${mandal.name?.en || "Mandal"}`,
-          order_id: data.data.orderId,
-          handler: function (response: any) {
-            toast({
-              title: "Donation Successful! 🙏",
-              description: "Thank you for your generous contribution.",
-            });
-            setShowDonateModal(false);
-            loadMandal();
+          order_id: data.order.id,
+          handler: async function (response: any) {
+            try {
+              const verifyRes = await fetch(`${API_URL}/payments/verify`, {
+                method: "POST",
+                headers: { "Content-Type": "application/json" },
+                body: JSON.stringify({
+                  razorpay_order_id: response.razorpay_order_id,
+                  razorpay_payment_id: response.razorpay_payment_id,
+                  razorpay_signature: response.razorpay_signature,
+                  orderType: "DONATION",
+                  referenceId: data.donationId,
+                  orderData: { donationId: data.donationId },
+                })
+              });
+              const verifyData = await verifyRes.json();
+              
+              if (verifyData.success) {
+                toast({
+                  title: "Donation Successful! 🙏",
+                  description: "Thank you for your generous contribution.",
+                });
+                setShowDonateModal(false);
+                loadMandal();
+              } else {
+                toast({
+                  title: "Verification Failed",
+                  description: verifyData.message || "Payment verification failed",
+                  variant: "destructive",
+                });
+              }
+            } catch (error) {
+              console.error("Verification Error:", error);
+              toast({
+                title: "Error",
+                description: "Something went wrong during verification",
+                variant: "destructive",
+              });
+            }
           },
           prefill: {
             name: donorName,

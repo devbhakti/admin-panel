@@ -179,7 +179,7 @@ const MarketplaceSection: React.FC = () => {
           ) : products.length > 0 ? (
             <div 
               ref={scrollContainerRef}
-              className="flex gap-6 overflow-x-auto pb-8 premium-scrollbar scrollbar-hide snap-x scroll-smooth"
+              className="flex gap-6 overflow-x-auto pb-8 premium-scrollbar scrollbar-hide snap-x snap-mandatory scroll-smooth"
             >
               {products.map((product, index) => (
                 <motion.div

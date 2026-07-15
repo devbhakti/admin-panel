@@ -200,7 +200,7 @@ export const verifyPayment = async (req: Request, res: Response) => {
             // Create ledger entry for donation earning
             const donation = await prisma.donation.findUnique({
                 where: { id: referenceId },
-                include: { temple: true }
+                include: { temple: true, mandal: true }
             });
 
             if (donation && donation.templeId) {
@@ -216,17 +216,34 @@ export const verifyPayment = async (req: Request, res: Response) => {
                         status: "COMPLETED"
                     }
                 });
+            } else if (donation && donation.mandalId) {
+                await prisma.mandalLedger.create({
+                    data: {
+                        mandalId: donation.mandalId,
+                        amount: donation.netEarning || donation.amount,
+                        grossAmount: donation.amount + (donation.commissionAmount || 0),
+                        commission: donation.commissionAmount || 0,
+                        type: "DONATION_EARNING",
+                        sourceId: donation.id,
+                        description: `Donation: ${donation.donorName}${donation.isAnonymous ? ' (Anonymous)' : ''}`,
+                        status: "COMPLETED"
+                    }
+                });
+            }
+            
+            if (donation) {
 
                 // Send WhatsApp Confirmation
                 try {
                     const phone = donation.donorPhone.startsWith('+') ? donation.donorPhone : `+91${donation.donorPhone}`;
+                    const placeName = getEnglish(donation.temple?.name) || getEnglish(donation.mandal?.name) || "Dev Bhakti";
                     await sendWhatsAppMessage(
                         phone,
                         donation.donorName,
                         "donation_confirmation",
                         [
                             donation.donorName,
-                            getEnglish(donation.temple?.name) || "Dev Bhakti"
+                            placeName
                         ]
                     );
                 } catch (waError) {
@@ -238,9 +255,10 @@ export const verifyPayment = async (req: Request, res: Response) => {
                     const { notifyUser, notifyAdmins } = require("../services/firebaseService");
                     
                     if (donation.userId) {
+                        const placeName = getEnglish(donation.temple?.name) || getEnglish(donation.mandal?.name) || "Dev Bhakti";
                         await notifyUser(donation.userId, 'devotee', {
                             title: 'Donation Successful! 🙏',
-                            body: `Thank you for your generous donation of ₹${donation.amount} to ${getEnglish(donation.temple?.name) || "Dev Bhakti"}.`,
+                            body: `Thank you for your generous donation of ₹${donation.amount} to ${placeName}.`,
                             data: {
                                 link: `/profile`,
                                 type: 'DONATION_SUCCESS',
@@ -277,12 +295,13 @@ export const verifyPayment = async (req: Request, res: Response) => {
                         try {
                             const receiptData = await generateDonationReceiptBuffer(donation.id);
                             if (receiptData) {
+                                const placeName = getEnglish(donation.temple?.name) || getEnglish(donation.mandal?.name) || "Dev Bhakti";
                                 await sendDonationReceiptEmail({
                                     donationId: donation.id,
                                     donorName: donation.donorName,
                                     donorPhone: donation.donorPhone,
                                     donorEmail: donation.donorEmail,
-                                    templeName: getEnglish(donation.temple?.name) || "Dev Bhakti",
+                                    templeName: placeName,
                                     amount: donation.amount,
                                     status: "SUCCESSFUL",
                                     createdAt: donation.createdAt.toISOString(),
