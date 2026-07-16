@@ -61,7 +61,7 @@ export function MandalDetail({ slug }: { slug: string }) {
   const [isAnonymous, setIsAnonymous] = useState(false);
   const [isDonating, setIsDonating] = useState(false);
   const [activeTab, setActiveTab] = useState<'about' | 'events' | 'gallery'>('about');
-  const { language, t } = useLanguage();
+  const { t } = useLanguage();
 
   // Load Razorpay script
   useEffect(() => {
@@ -89,16 +89,16 @@ export function MandalDetail({ slug }: { slug: string }) {
         setMandal(data.data);
       } else {
         toast({
-          title: "Error",
-          description: data.message || "Failed to load mandal",
+          title: t("common.error"),
+          description: data.message || t("mandal_detail.load_error_desc"),
           variant: "destructive",
         });
       }
     } catch (error) {
       console.error("Error loading mandal:", error);
       toast({
-        title: "Error",
-        description: "Failed to load mandal details",
+        title: t("common.error"),
+        description: t("mandal_detail.load_failed"),
         variant: "destructive",
       });
     }
@@ -115,8 +115,8 @@ export function MandalDetail({ slug }: { slug: string }) {
     const amount = selectedAmount || parseInt(customAmount);
     if (!amount || amount <= 0) {
       toast({
-        title: "Invalid Amount",
-        description: "Please select or enter a valid donation amount",
+        title: t("mandal_detail.invalid_amount_title"),
+        description: t("mandal_detail.invalid_amount_desc"),
         variant: "destructive",
       });
       return;
@@ -143,8 +143,8 @@ export function MandalDetail({ slug }: { slug: string }) {
           key: process.env.NEXT_PUBLIC_RAZORPAY_KEY_ID,
           amount: amount * 100,
           currency: "INR",
-          name: mandal.name?.en || "Mandal",
-          description: `Donation to ${mandal.name?.en || "Mandal"}`,
+          name: mandal.name?.en || t("mandal_detail.mandal_default_name"),
+          description: t("mandal_detail.donation_to", { name: mandal.name?.en || t("mandal_detail.mandal_default_name") }),
           order_id: data.order.id,
           handler: async function (response: any) {
             try {
@@ -164,23 +164,23 @@ export function MandalDetail({ slug }: { slug: string }) {
               
               if (verifyData.success) {
                 toast({
-                  title: "Donation Successful! 🙏",
-                  description: "Thank you for your generous contribution.",
+                  title: t("mandal_detail.donation_success_title"),
+                  description: t("mandal_detail.donation_success_desc"),
                 });
                 setShowDonateModal(false);
                 loadMandal();
               } else {
                 toast({
-                  title: "Verification Failed",
-                  description: verifyData.message || "Payment verification failed",
+                  title: t("mandal_detail.verification_failed_title"),
+                  description: verifyData.message || t("mandal_detail.verification_failed_desc"),
                   variant: "destructive",
                 });
               }
             } catch (error) {
               console.error("Verification Error:", error);
               toast({
-                title: "Error",
-                description: "Something went wrong during verification",
+                title: t("common.error"),
+                description: t("mandal_detail.verification_error_desc"),
                 variant: "destructive",
               });
             }
@@ -198,16 +198,16 @@ export function MandalDetail({ slug }: { slug: string }) {
         razorpay.open();
       } else {
         toast({
-          title: "Error",
-          description: data.message || "Failed to initiate payment",
+          title: t("common.error"),
+          description: data.message || t("mandal_detail.payment_init_error_desc"),
           variant: "destructive",
         });
       }
     } catch (error) {
       console.error("Donation error:", error);
       toast({
-        title: "Error",
-        description: "Something went wrong. Please try again.",
+        title: t("common.error"),
+        description: t("mandal_detail.payment_error_desc"),
         variant: "destructive",
       });
     }
@@ -231,8 +231,8 @@ export function MandalDetail({ slug }: { slug: string }) {
       <div className="min-h-screen bg-background">
         <Navbar />
         <div className="flex flex-col items-center justify-center py-20">
-          <h2 className="text-2xl font-serif text-foreground mb-2">Mandal Not Found</h2>
-          <p className="text-muted-foreground mb-4">The mandal you're looking for doesn't exist.</p>
+          <h2 className="text-2xl font-serif text-foreground mb-2">{t("mandal_detail.not_found_title")}</h2>
+          <p className="text-muted-foreground mb-4">{t("mandal_detail.not_found_message")}</p>
          
         </div>
         <Footer />
@@ -240,7 +240,7 @@ export function MandalDetail({ slug }: { slug: string }) {
     );
   }
 
-  const name = getLocalized(mandal, 'name') || "Mandal";
+  const name = getLocalized(mandal, 'name') || t("mandal_detail.mandal_default_name");
   const description = getLocalized(mandal, 'description') || "";
   const donationAmounts = [500, 1000, 2500, 5000, 10000];
 
@@ -256,7 +256,7 @@ export function MandalDetail({ slug }: { slug: string }) {
           onClick={() => router.push("/mandals")}
         >
           <ArrowLeft className="w-4 h-4" />
-          Back to Mandals
+          {t("mandal_detail.back_to_mandals")}
         </Button>
       </div>
 
@@ -285,7 +285,7 @@ export function MandalDetail({ slug }: { slug: string }) {
                   <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-white opacity-75"></span>
                   <span className="relative inline-flex rounded-full h-3 w-3 bg-white"></span>
                 </span>
-                LIVE NOW
+                {t("mandal_detail.live_now")}
               </Badge>
             </div>
           )}
@@ -339,12 +339,12 @@ export function MandalDetail({ slug }: { slug: string }) {
                     onClick={() => window.open(mandal.liveUrl, "_blank")}
                   >
                     <Video className="w-5 h-5 text-red-400" />
-                    Watch Live Darshan
+                    {t("mandal_detail.watch_live_darshan")}
                     <ExternalLink className="w-4 h-4 ml-1" />
                   </Button>
                 )}
 
-                <Button
+                {/* <Button
                   variant="outline"
                   className="bg-white/10 backdrop-blur-sm border-white/30 text-white hover:bg-white/20 hover:text-white px-6 py-6 text-base gap-2"
                   onClick={() => {
@@ -359,7 +359,7 @@ export function MandalDetail({ slug }: { slug: string }) {
                 >
                   <Share2 className="w-5 h-5" />
                   Share
-                </Button>
+                </Button> */}
 
                 <Button
                   variant="outline"
@@ -367,7 +367,7 @@ export function MandalDetail({ slug }: { slug: string }) {
                   onClick={() => setIsLiked(!isLiked)}
                 >
                   <Heart className={`w-5 h-5 ${isLiked ? "fill-red-500 text-red-500" : ""}`} />
-                  {isLiked ? "Liked" : "Like"}
+                  {isLiked ? t("mandal_detail.liked") : t("mandal_detail.like")}
                 </Button>
               </div>
             </div>
@@ -422,13 +422,13 @@ export function MandalDetail({ slug }: { slug: string }) {
             <Tabs defaultValue="about" className="w-full">
               <TabsList className="grid w-full grid-cols-3 bg-muted/50">
                 <TabsTrigger value="about" className="data-[state=active]:bg-primary data-[state=active]:text-white">
-                  About
+                  {t("mandal_detail.tab_about")}
                 </TabsTrigger>
                 <TabsTrigger value="events" className="data-[state=active]:bg-primary data-[state=active]:text-white">
-                  Events
+                  {t("mandal_detail.tab_events")}
                 </TabsTrigger>
                 <TabsTrigger value="gallery" className="data-[state=active]:bg-primary data-[state=active]:text-white">
-                  Gallery
+                  {t("mandal_detail.tab_gallery")}
                 </TabsTrigger>
               </TabsList>
 
@@ -437,10 +437,10 @@ export function MandalDetail({ slug }: { slug: string }) {
                   <CardContent className="p-6">
                     <h2 className="text-xl font-bold mb-4 flex items-center gap-2">
                       <Building2 className="w-5 h-5 text-primary" />
-                      About Mandal
+                      {t("mandal_detail.about_mandal")}
                     </h2>
                     <p className="text-muted-foreground leading-relaxed">
-                      {description || "No description available."}
+                      {description || t("mandal_detail.no_description")}
                     </p>
                     
                     <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mt-4">
@@ -448,17 +448,17 @@ export function MandalDetail({ slug }: { slug: string }) {
                         <div className="p-4 bg-primary/5 rounded-lg">
                           <h4 className="font-semibold text-sm flex items-center gap-2">
                             <Sparkles className="w-4 h-4 text-primary" />
-                            Presiding Deity
+                            {t("mandal_detail.presiding_deity")}
                           </h4>
                           <p className="text-lg font-medium mt-1">{mandal.presiding_deity}</p>
                         </div>
                       )}
                       
                       {mandal.festivals && (
-                        <div className="p-4 bg-secondary/5 rounded-lg">
+                        <div className="p-4 bg-variant/5 rounded-lg">
                           <h4 className="font-semibold text-sm flex items-center gap-2">
                             <Calendar className="w-4 h-4 text-secondary" />
-                            Festivals
+                            {t("mandal_detail.festivals")}
                           </h4>
                           <div className="flex flex-wrap gap-2 mt-1">
                             {mandal.festivals.split(",").map((festival: string, i: number) => (
@@ -479,7 +479,7 @@ export function MandalDetail({ slug }: { slug: string }) {
                   <CardContent className="p-6">
                     <h2 className="text-xl font-bold mb-4 flex items-center gap-2">
                       <Calendar className="w-5 h-5 text-primary" />
-                      Upcoming Events
+                      {t("mandal_detail.upcoming_events")}
                     </h2>
                     {mandal.events && mandal.events.length > 0 ? (
                       <div className="space-y-4">
@@ -507,14 +507,14 @@ export function MandalDetail({ slug }: { slug: string }) {
                                 </div>
                               </div>
                               <Button variant="outline" size="sm" className="gap-1">
-                                Register
+                                {t("mandal_detail.register")}
                               </Button>
                             </div>
                           </div>
                         ))}
                       </div>
                     ) : (
-                      <p className="text-muted-foreground text-center py-8">No upcoming events</p>
+                      <p className="text-muted-foreground text-center py-8">{t("mandal_detail.no_upcoming_events")}</p>
                     )}
                   </CardContent>
                 </Card>
@@ -525,7 +525,7 @@ export function MandalDetail({ slug }: { slug: string }) {
                   <CardContent className="p-6">
                     <h2 className="text-xl font-bold mb-4 flex items-center gap-2">
                       <Building2 className="w-5 h-5 text-primary" />
-                      Gallery
+                      {t("mandal_detail.gallery")}
                     </h2>
                     {mandal.bannerImages && mandal.bannerImages.length > 0 ? (
                       <div className="grid grid-cols-2 md:grid-cols-3 gap-4">
@@ -543,7 +543,7 @@ export function MandalDetail({ slug }: { slug: string }) {
                         ))}
                       </div>
                     ) : (
-                      <p className="text-muted-foreground text-center py-8">No images available</p>
+                      <p className="text-muted-foreground text-center py-8">{t("mandal_detail.no_images_available")}</p>
                     )}
                   </CardContent>
                 </Card>
@@ -560,8 +560,8 @@ export function MandalDetail({ slug }: { slug: string }) {
                   <div className="w-12 h-12 rounded-full bg-primary/10 flex items-center justify-center mx-auto mb-3">
                     <Gift className="w-6 h-6 text-primary" />
                   </div>
-                  <h3 className="text-lg font-bold">Support This Mandal</h3>
-                  <p className="text-sm text-muted-foreground">Your contribution matters</p>
+                  <h3 className="text-lg font-bold">{t("mandal_detail.support_title")}</h3>
+                  <p className="text-sm text-muted-foreground">{t("mandal_detail.support_subtitle")}</p>
                 </div>
                 <div className="grid grid-cols-3 gap-2 mb-4">
                   {donationAmounts.map((amount) => (
@@ -581,7 +581,7 @@ export function MandalDetail({ slug }: { slug: string }) {
                 <div className="mb-4">
                   <input
                     type="number"
-                    placeholder="Custom amount"
+                    placeholder={t("mandal_detail.custom_amount")}
                     value={customAmount}
                     onChange={(e) => {
                       setCustomAmount(e.target.value);
@@ -595,10 +595,10 @@ export function MandalDetail({ slug }: { slug: string }) {
                   onClick={() => setShowDonateModal(true)}
                 >
                   <Gift className="w-4 h-4 mr-2" />
-                  Donate Now
+                  {t("mandal_detail.donate_now")}
                 </Button>
                 <p className="text-xs text-muted-foreground text-center mt-2">
-                  💚 100% of donations go to the mandal
+                  {t("mandal_detail.donation_note")}
                 </p>
               </CardContent>
             </Card>
@@ -614,18 +614,18 @@ export function MandalDetail({ slug }: { slug: string }) {
                         <span className="relative inline-flex rounded-full h-3 w-3 bg-red-500"></span>
                       </span>
                     </div>
-                    <h3 className="font-bold text-red-500">Live Darshan</h3>
+                    <h3 className="font-bold text-red-500">{t("mandal_detail.live_darshan")}</h3>
                     <Badge className="bg-red-500 text-white ml-auto animate-pulse">LIVE</Badge>
                   </div>
                   <p className="text-sm text-muted-foreground mb-3">
-                    Watch the live stream of this mandal's activities
+                    {t("mandal_detail.live_darshan_desc")}
                   </p>
                   <Button
                     className="w-full bg-red-500 hover:bg-red-600 text-white gap-2"
                     onClick={() => window.open(mandal.liveUrl, "_blank")}
                   >
                     <Video className="w-4 h-4" />
-                    Watch Now
+                    {t("mandal_detail.watch_now")}
                     <ExternalLink className="w-3 h-3" />
                   </Button>
                 </CardContent>
@@ -637,7 +637,7 @@ export function MandalDetail({ slug }: { slug: string }) {
               <CardContent className="p-6">
                 <h3 className="font-bold mb-4 flex items-center gap-2">
                   <Phone className="w-4 h-4 text-primary" />
-                  Contact Information
+                  {t("mandal_detail.contact_info")}
                 </h3>
                 <div className="space-y-3 text-sm">
                   {mandal.contactNumber && (
@@ -659,7 +659,7 @@ export function MandalDetail({ slug }: { slug: string }) {
                   {mandal.presidentName && (
                     <div className="flex items-center gap-3 p-2 hover:bg-muted/50 rounded-lg transition-colors">
                       <Users className="w-4 h-4 text-muted-foreground" />
-                      <span>President: <span className="font-medium">{mandal.presidentName}</span></span>
+                      <span>{t("mandal_detail.president_label")}: <span className="font-medium">{mandal.presidentName}</span></span>
                     </div>
                   )}
                   {mandal.address && (
@@ -678,12 +678,12 @@ export function MandalDetail({ slug }: { slug: string }) {
                 <CardContent className="p-6">
                   <h3 className="font-bold mb-2 flex items-center gap-2">
                     <Award className="w-4 h-4 text-primary" />
-                    Mandal Type
+                    {t("mandal_detail.mandal_type")}
                   </h3>
                   <Badge className="text-lg py-1 px-3">{mandal.mandalType}</Badge>
                   {mandal.registrationNumber && (
                     <p className="mt-2 text-xs text-muted-foreground">
-                      Reg. No: {mandal.registrationNumber}
+                      {t("mandal_detail.registration_no")}: {mandal.registrationNumber}
                     </p>
                   )}
                 </CardContent>
@@ -701,15 +701,15 @@ export function MandalDetail({ slug }: { slug: string }) {
           <DialogHeader>
             <DialogTitle className="text-center">
               <span className="text-3xl block mb-2">🙏</span>
-              Donate to {name}
+              {t("mandal_detail.donate_to", { name })}
             </DialogTitle>
             <DialogDescription className="text-center">
-              Support this mandal's activities and events
+              {t("mandal_detail.donation_support")}
             </DialogDescription>
           </DialogHeader>
           <div className="space-y-4 py-4">
             <div>
-              <label className="text-sm font-medium">Select Amount (₹)</label>
+              <label className="text-sm font-medium">{t("mandal_detail.select_amount")}</label>
               <div className="grid grid-cols-3 gap-2 mt-2">
                 {donationAmounts.map((amount) => (
                   <Button
@@ -728,7 +728,7 @@ export function MandalDetail({ slug }: { slug: string }) {
               <div className="mt-2">
                 <input
                   type="number"
-                  placeholder="Custom amount"
+                  placeholder={t("mandal_detail.custom_amount")}
                   value={customAmount}
                   onChange={(e) => {
                     setCustomAmount(e.target.value);
@@ -740,11 +740,11 @@ export function MandalDetail({ slug }: { slug: string }) {
             </div>
 
             <div>
-              <label className="text-sm font-medium">Your Details</label>
+              <label className="text-sm font-medium">{t("mandal_detail.your_details")}</label>
               <div className="space-y-2 mt-2">
                 <input
                   type="text"
-                  placeholder="Full Name"
+                  placeholder={t("mandal_detail.full_name")}
                   value={donorName}
                   onChange={(e) => setDonorName(e.target.value)}
                   className="w-full px-3 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-primary"
@@ -752,20 +752,20 @@ export function MandalDetail({ slug }: { slug: string }) {
                 />
                 <input
                   type="email"
-                  placeholder="Email"
+                  placeholder={t("mandal_detail.email")}
                   value={donorEmail}
                   onChange={(e) => setDonorEmail(e.target.value)}
                   className="w-full px-3 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-primary"
                 />
                 <input
                   type="tel"
-                  placeholder="Phone"
+                  placeholder={t("mandal_detail.phone")}
                   value={donorPhone}
                   onChange={(e) => setDonorPhone(e.target.value)}
                   className="w-full px-3 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-primary"
                 />
                 <textarea
-                  placeholder="Message (Optional)"
+                  placeholder={t("mandal_detail.message_optional")}
                   value={donationMessage}
                   onChange={(e) => setDonationMessage(e.target.value)}
                   className="w-full px-3 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-primary"
@@ -784,7 +784,7 @@ export function MandalDetail({ slug }: { slug: string }) {
                   if (e.target.checked) setDonorName("");
                 }}
               />
-              <label htmlFor="anonymous" className="text-sm">Donate Anonymously</label>
+              <label htmlFor="anonymous" className="text-sm">{t("mandal_detail.donate_anonymously")}</label>
             </div>
 
             <Button
@@ -792,7 +792,7 @@ export function MandalDetail({ slug }: { slug: string }) {
               onClick={handleDonate}
               disabled={isDonating}
             >
-              {isDonating ? "Processing..." : `Donate ₹${selectedAmount || customAmount || "..."}`}
+              {isDonating ? t("mandal_detail.processing") : t("mandal_detail.donate_amount", { amount: selectedAmount || customAmount || "..." })}
             </Button>
           </div>
         </DialogContent>

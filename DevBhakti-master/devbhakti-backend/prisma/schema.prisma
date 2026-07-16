@@ -784,7 +784,7 @@ model Mandal{
   liveStatus         Boolean  @default(false)
   isLive             Boolean  @default(false)
   isPrimaryLive      Boolean  @default(false)
-  
+
   events             Event[]
   donations          Donation[]
   favorites          Favorite[]
